@@ -124,6 +124,9 @@ auto runtimeTypeInfo(T)()
         else static if (is(TT == wchar)) type = _wchar;
         else static if (is(TT == dchar)) type = _dchar;
 
+        else static if (is(TT == enum))  type =
+            (runtimeTypeInfo!(EnumValueType!TT)()).type;
+
         else static if (is(TT == string))type = _string;
         else static if (is(TT == wstring))type = _wstring;
 
@@ -159,6 +162,10 @@ unittest
     RuntimeTypeInfo d_rtti = runtimeTypeInfo(d);
     assert(d_rtti.arrayDimensions == 2);
     assert(d_rtti.type == RuntimeType._int);
+    enum E : ubyte {e0}
+    E e = E.e0;
+    RuntimeTypeInfo e_rtti = runtimeTypeInfo(e);
+    assert(e_rtti.type == RuntimeType._ubyte);
 }
 
 /**
@@ -303,5 +310,30 @@ unittest
     static assert(is(ArrayElementType!(int[][]) == int));
     static assert(is(ArrayElementType!(char[][][][][]) == char));
     static assert(is(ArrayElementType!(wchar[]) == wchar));
+}
+
+/**
+ * Indicates the type of enum members.
+ *
+ * Params:
+ *      T = an enum
+ *
+ * Returns:
+ *      the type of T members.
+ */
+template EnumValueType(T)
+if (is(T == enum))
+{
+    import std.traits;
+    static if (is(typeof((EnumMembers!T)[$-1]) M == enum))
+        alias EnumValueType = M;
+}
+///
+unittest
+{
+    enum I: int {i0}
+    enum F: float {f0}
+    static assert(is(EnumValueType!I == int));
+    static assert(is(EnumValueType!F == float));
 }
 

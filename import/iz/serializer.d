@@ -2022,6 +2022,7 @@ version(unittest)
 
     // test the RuntimeTypeInfo-based serialization ----+
 
+    enum E:short {e0 = -1, e1 = 1}
     class SubPublisher: PropertyPublisher
     {
         // fully serialized (initializer is MainPub)
@@ -2048,6 +2049,7 @@ version(unittest)
         RefPublisher _refPublisherSource;
         string dgTest;
 
+        @SetGet E _e;
         @SetGet ubyte _a = 12;
         @SetGet byte _b = 21;
         @SetGet byte _c = 31;
@@ -2102,6 +2104,7 @@ version(unittest)
         void delegatetarget(uint param){dgTest = "awyesss";}
         void reset()
         {
+            _e = E.e1;
             _a = 0; _b = 0; _c = 0; _t = _t.init;
             _subPublisher.destruct;
             _subPublisher = null; // wont be found anymore during deser.
@@ -2150,6 +2153,7 @@ version(unittest)
         assert(c._a == 12);
         assert(c._b == 21);
         assert(c._c == 31);
+        assert(c._e == E.e0);
         assert(c._t == "line1\"inside dq\"\nline2\nline3");
         assert(c._refPublisher is c._refPublisherSource);
         assert(c._anotherSubPubliser._someChars == "awhyes");
