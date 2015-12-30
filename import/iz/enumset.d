@@ -627,7 +627,7 @@ public:
      * rhs = either an E member or a set (or its container) with the same type,
      * in the last case, calling opIn_r is equivalent to test for greater or equal.
      */
-    nothrow @safe bool opIn_r(T)(T rhs)
+    nothrow @safe bool opIn_r(T)(T rhs) const
     {
         static if (is(T == E))
             return isIncluded(rhs);
@@ -723,7 +723,7 @@ public:
      * Params:
      * aMember = an  E member.
      */
-    nothrow @safe bool isIncluded(E aMember)
+    nothrow @safe bool isIncluded(E aMember) const
     {
         return (_container == (_container | _1 << _infs[aMember]));
     }
