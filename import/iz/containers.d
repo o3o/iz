@@ -1428,31 +1428,31 @@ private:
 public:
 
     /// See $(D initialize()).
-    this(T t) @safe
+    this(T t)
     {
         initialize(t);
     }
 
     /// Initializes the range from a parent.
-    void initialize(T t) @safe @nogc
+    void initialize(T t)
     {
         _front = t.firstChild;
     }
 
     ///
-    T front() @safe @nogc
+    T front()
     {
         return _front;
     }
 
     ///
-    void popFront() @safe @nogc
+    void popFront()
     {
         _front = _front.nextSibling;
     }
 
     ///
-    bool empty() @safe @nogc
+    bool empty()
     {
         return _front is null;
     }
@@ -1461,7 +1461,7 @@ public:
      * Support for the array syntax.
      * Should be avoided in for loops.
      */
-    T opIndex(ptrdiff_t index) @safe @nogc
+    T opIndex(ptrdiff_t index)
     in
     {
         assert(_front);
@@ -1517,13 +1517,13 @@ private:
 public:
 
     /// See $(D initialize()).
-    this(T t) @safe @nogc
+    this(T t)
     {
         initialize(t);
     }
 
     /// Initializes the range from one of the siblings.
-    void initialize(T t) @safe @nogc
+    void initialize(T t)
     {
         if (t.parent)
             _front = t.parent.firstChild;
@@ -1538,19 +1538,19 @@ public:
     }
 
     ///
-    T front() @safe @nogc
+    T front()
     {
         return _front;
     }
 
     ///
-    void popFront() @safe @nogc
+    void popFront()
     {
         _front = _front.nextSibling;
     }
 
     ///
-    bool empty() @safe @nogc
+    bool empty()
     {
         return _front is null;
     }
@@ -1559,7 +1559,7 @@ public:
      * Support for the array syntax.
      * Should be avoided in for loops.
      */
-    T opIndex(ptrdiff_t index) @safe
+    T opIndex(ptrdiff_t index)
     in
     {
         assert(_front);
@@ -1630,7 +1630,7 @@ protected:
 public:
 
     /// Returns $(D this) when mixed in a class or $(D &this) in a struct.
-    TreeItemType self() @safe @nogc
+    TreeItemType self()
     {
         static if (isStruct)
             return &this;
@@ -1641,7 +1641,7 @@ public:
     /**
      * Returns the previous TreeItem.
      */
-    TreeItemType prevSibling() @safe @nogc
+    TreeItemType prevSibling()
     {
         return _prevSibling;
     }
@@ -1649,7 +1649,7 @@ public:
     /**
      * Returns the next TreeItem.
      */
-    TreeItemType nextSibling() @safe @nogc
+    TreeItemType nextSibling()
     {
         return _nextSibling;
     }
@@ -1657,7 +1657,7 @@ public:
     /**
      * Retuens the parent.
      */
-    TreeItemType parent() @safe @nogc
+    TreeItemType parent()
     {
         return _parent;
     }
@@ -1665,7 +1665,7 @@ public:
     /**
      * Returns the first child.
      */
-    TreeItemType firstChild() @safe @nogc
+    TreeItemType firstChild()
     {
         return _firstChild;
     }
@@ -1674,7 +1674,7 @@ public:
      * Return an input range that allows to iterate the siblings.
      * The array syntax is also supported.
      */
-    TreeItemSiblings!TreeItemType siblings() @safe @nogc
+    TreeItemSiblings!TreeItemType siblings()
     {
         _siblings.initialize(self);
         return _siblings;
@@ -1684,7 +1684,7 @@ public:
      * Return an input range that allows to iterate the children.
      * The array syntax is also supported.
      */
-    TreeItemChildren!TreeItemType children() @safe @nogc
+    TreeItemChildren!TreeItemType children()
     {
         _children.initialize(self);
         return _children;
@@ -1696,7 +1696,7 @@ public:
      * Allocates, adds to the back, and returns a new sibling of type IT.
      * This method should be preferred over addSibling/insertSibling if deleteChildren() is used.
      */
-    IT addNewSibling(IT, A...)(A a) @trusted
+    IT addNewSibling(IT, A...)(A a)
     if (is(IT : TreeItemType))
     {
         auto result = construct!IT(a);
@@ -1708,7 +1708,7 @@ public:
      * Returns the last item.
      * The value returned is never null.
      */
-    TreeItemType lastSibling() @safe @nogc
+    TreeItemType lastSibling()
     {
         TreeItemType result;
         result = self;
@@ -1723,7 +1723,7 @@ public:
      * Returns the first item.
      * The value returned is never null.
      */
-    TreeItemType firstSibling() @safe @nogc
+    TreeItemType firstSibling()
     {
         if (_parent)
             return _parent._firstChild;
@@ -1742,7 +1742,7 @@ public:
     /**
      * Returns the index of sibling if it's found otherwise -1.
      */
-    ptrdiff_t findSibling(TreeItemType sibling) @safe @nogc
+    ptrdiff_t findSibling(TreeItemType sibling)
     in
     {
         assert(sibling);
@@ -1771,7 +1771,7 @@ public:
     /**
      * Adds an item at the end of list.
      */
-    void addSibling(TreeItemType sibling) @safe @nogc
+    void addSibling(TreeItemType sibling)
     in
     {
         assert(sibling);
@@ -1797,7 +1797,7 @@ public:
     /**
      * Inserts an item at the beginning of the list.
      */
-    void insertSibling(TreeItemType sibling) @safe @nogc
+    void insertSibling(TreeItemType sibling)
     in
     {
         assert(sibling);
@@ -1831,7 +1831,7 @@ public:
      *      index = The position where to insert.
      *      sibling = the item to insert.
      */
-    void insertSibling(size_t index, TreeItemType sibling) @safe @nogc
+    void insertSibling(size_t index, TreeItemType sibling)
     in
     {
         assert(sibling);
@@ -1877,7 +1877,7 @@ public:
     /**
      * Exchanges the position of two siblings.
      */
-    void exchangeSibling(TreeItemType sibling1, TreeItemType sibling2) @safe
+    void exchangeSibling(TreeItemType sibling1, TreeItemType sibling2)
     in
     {
         assert(sibling1);
@@ -1913,7 +1913,7 @@ public:
      * Returns:
      *      true if the item is a sibling otherwise false.
      */
-    bool removeSibling(TreeItemType sibling) @safe @nogc
+    bool removeSibling(TreeItemType sibling)
     in
     {
         assert(sibling);
@@ -1933,7 +1933,7 @@ public:
      *  Returns:
      *      The item if the index is valid, otherwise null.
      */
-    TreeItemType removeSibling(size_t index) @safe @nogc
+    TreeItemType removeSibling(size_t index)
     {
         auto result = siblings[index];
         if (result)
@@ -1959,7 +1959,7 @@ public:
      * Returns the count of sibling in the branch.
      * The value returned is always greater than 0.
      */
-    size_t siblingCount() @safe @nogc
+    size_t siblingCount()
     {
         size_t toFront, toBack;
         auto current = self;
@@ -1980,7 +1980,7 @@ public:
     /**
      * Returns the item position in the list.
      */
-    ptrdiff_t siblingIndex() @safe @nogc
+    ptrdiff_t siblingIndex()
     {
         size_t result = size_t.max; // -1
         auto current = self;
@@ -1996,7 +1996,7 @@ public:
      * Sets the item position in the list.
      * The new position of the previous item is undetermined.
      */
-    void siblingIndex(size_t position) @safe @nogc
+    void siblingIndex(size_t position)
     {
         auto old = siblings[position];
         version(none) exchangeSibling(old,self);
@@ -2010,7 +2010,7 @@ public:
     /**
      * Indicates if the item has neighboors.
      */
-    bool hasSibling() @safe @nogc
+    bool hasSibling()
     {
         return prevSibling !is null || nextSibling !is null;
     }
@@ -2023,7 +2023,7 @@ public:
      * This method should be prefered over addChildren/insertChildren
      * if $(D deleteChildren()) is used.
      */
-    IT addNewChildren(IT,A...)(A a) @trusted
+    IT addNewChildren(IT,A...)(A a)
     if (is(IT : TreeItemType))
     {
         auto result = construct!IT(a);
@@ -2032,9 +2032,9 @@ public:
     }
 
     /**
-     * Returns the distance to the root2.
+     * Returns the distance to the root.
      */
-    size_t level() @safe @nogc
+    size_t level()
     {
         size_t result;
         auto current = self;
@@ -2047,9 +2047,9 @@ public:
     }
 
     /**
-     * Returns the root2.
+     * Returns the root.
      */
-    TreeItemType root2() @safe @nogc
+    TreeItemType root()
     {
         auto current = self;
         while(current._parent)
@@ -2060,7 +2060,7 @@ public:
     /**
      * Returns the children count.
      */
-    size_t childrenCount() @safe @nogc
+    size_t childrenCount()
     {
         if ( _firstChild is null)
             return 0;
@@ -2071,7 +2071,7 @@ public:
     /**
      * Adds child to the back.
      */
-    void addChild(TreeItemType child) @safe @nogc
+    void addChild(TreeItemType child)
     {
         if (child.parent)
         {
@@ -2092,7 +2092,7 @@ public:
     /**
      * Inserts the first child.
      */
-    void insertChild(TreeItemType child) @safe @nogc
+    void insertChild(TreeItemType child)
     {
         if (!_firstChild)
         {
@@ -2110,7 +2110,7 @@ public:
      *      index = The position in the children list.
      *      child = The child to insert.
      */
-    void insertChild(size_t index, TreeItemType child) @safe @nogc
+    void insertChild(size_t index, TreeItemType child)
     in
     {
         assert(child);
@@ -2134,7 +2134,7 @@ public:
      * Returns:
      *      true if child is removed.
      */
-    bool removeChild(TreeItemType child) @safe @nogc
+    bool removeChild(TreeItemType child)
     in
     {
         assert(child);
@@ -2154,7 +2154,7 @@ public:
      * Returns:
      *      The child if index was valid, otherwise null.
      */
-    TreeItemType removeChild(size_t index) @safe @nogc
+    TreeItemType removeChild(size_t index)
     {
         auto result = children[index];
         if (result)
@@ -2176,7 +2176,7 @@ public:
      * Removes the children, without destructing them.
      * After the call, the links to the items siblings are also reset to null.
      */
-    void removeChildren() @safe @nogc
+    void removeChildren()
     {
         auto current = _firstChild;
         while(current)
@@ -2199,7 +2199,7 @@ public:
      * $(D addNewSiblings()). If $(D add()) or $(D insert()) have been used to
      * build the tree then initial references will be dangling.
      */
-    void deleteChildren() @trusted
+    void deleteChildren()
     {
         while(_firstChild)
         {
@@ -2223,7 +2223,7 @@ public:
      * Converts the node to a string.
      * This is used to represent the whole tree in $(D saveToStream()).
      */
-    char[] itemToTextNative() @trusted
+    char[] itemToTextNative()
     {
         import std.format: format;
         char[] result;
@@ -2423,8 +2423,8 @@ unittest
     assert(root2.children[1].children[3].childrenCount == 3);
     assert(root2.children[1].children[3].children[0].level == 3);
 
-    assert(root2.children[1].children[3].children[0].root2 is root2);
-    assert(root2.children[1].children[3].root2 is root2);
+    assert(root2.children[1].children[3].children[0].root is root2);
+    assert(root2.children[1].children[3].root is root2);
 
     auto str = construct!MemoryStream;
     root2.saveToStream(str);
