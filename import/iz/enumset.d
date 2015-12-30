@@ -341,7 +341,7 @@ public:
      * Returns the string representation of the set as a binary representation.
      * Note that the result is preffixed with "0b", as a binary litteral.
      */
-    nothrow @safe string asBitString()
+    nothrow @safe string asBitString() const
     {
         static immutable char[2] bitsCh = ['0', '1'];
         string result = "";
@@ -356,7 +356,7 @@ public:
      * The format is the same as the one used in this() and fromString(),
      * similar to an array litteral.
      */
-    @safe string toString()
+    @safe string toString() const
     {
         import std.conv: to;
         scope(failure){}
@@ -453,7 +453,7 @@ public:
      * Params:
      * index = either an unsigned integer or an E member.
      */
-    nothrow @safe bool opIndex(I)(I index)
+    nothrow @safe bool opIndex(I)(I index) const
     {
         static if (isSigned!I || is(I == SetType))
             return (_container == (_container | _1 << index));
@@ -591,7 +591,7 @@ public:
     }
 
     /// Support for comparison "=" and "!=" operators.
-    nothrow @safe bool opEquals(T)(T rhs)
+    nothrow @safe bool opEquals(T)(T rhs) const
     {
         static if (is(T == SetType))
             return (_container == rhs);
@@ -614,7 +614,7 @@ public:
     }
     
     /// see range()
-    nothrow @safe Range opSlice()
+    nothrow @safe Range opSlice() const
     {
         return Range(_container);
     }
@@ -646,7 +646,7 @@ public:
      * Params:
      * rhs = either a set with the same type or a set container with the same size.
      */
-    nothrow @safe EnumSetType difference(R)(R rhs)
+    nothrow @safe EnumSetType difference(R)(R rhs) const
     if (is(R == EnumSetType) || is(R == SetType))
     {
         SetType s;
@@ -662,7 +662,7 @@ public:
      * Params:
      * rhs = either a set with the same type or a set container with the same size.
      */
-    nothrow @safe EnumSetType intersection(R)(R rhs)
+    nothrow @safe EnumSetType intersection(R)(R rhs) const
     if (is(R == EnumSetType) || is(R == SetType))
     {
         SetType s;
@@ -731,31 +731,31 @@ public:
 // misc helpers ---------------------------------------------------------------+
 
     /// Returns a range allowing to iterate for each member included in the set.
-    @safe Range range()
+    @safe Range range() const
     {
         return Range(_container);
     }
 
     /// Returns true if the set is empty.
-    nothrow @safe @nogc bool none()
+    nothrow @safe @nogc bool none() const
     {
         return _container == 0;
     }
 
     /// Returns true if at least one member is included.
-    nothrow @safe @nogc bool any()
+    nothrow @safe @nogc bool any() const
     {
         return _container != 0;
     }
 
     /// Returns true if all the members are included.
-    nothrow @safe @nogc bool all()
+    nothrow @safe @nogc bool all() const
     {
         return _container == _max;
     }
 
     /// Returns the count of member included
-    nothrow @safe size_t memberCount()
+    nothrow @safe size_t memberCount() const
     {
         size_t result;
         foreach(e; EnumMembers!E)
