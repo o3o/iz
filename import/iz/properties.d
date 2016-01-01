@@ -1168,6 +1168,69 @@ unittest
 }
 
 /**
+ * Destructs the PropertyPublishers that are published and owned by an object.
+ *
+ * Note that after the call, the references to the objects that are destructed
+ * are dangling.
+ *
+ * Params:
+ *      recursive = If set to true, the default, the function is called on the
+ *      sub-publishers before being destructed.
+ *      pub = The PropertyPublisher whose sub-publishers have to be destructed.
+ */
+void destructOwnedPublishers(bool recursive = true)(PropertyPublisher pub)
+{
+    foreach(immutable i; 0 .. pub.publicationCount)
+    {
+        PropDescriptor!Object* d = cast(PropDescriptor!Object*)
+            pub.publicationFromIndex(i);
+
+        if (!d || d.rtti.type != RuntimeType._object || !d.declarator)
+            continue;
+
+        Object obj = d.get();
+        if (!obj)
+            continue;
+
+        PropertyPublisher sub =  cast(PropertyPublisher) obj;
+        if (!sub || !sub.declarator)
+            continue;
+
+        if (sub.declarator !is d.declarator)
+            continue;
+
+        static if (recursive)
+            destructOwnedPublishers(sub);
+        destruct(obj);
+    }
+}
+///
+unittest
+{
+    class A: PropertyPublisher
+    {mixin PropertyPublisherImpl; string c;}
+
+    class B: PropertyPublisher
+    {
+        mixin PropertyPublisherImpl;
+        @SetGet A _a0;
+        @SetGet A _a1;
+        this()
+        {
+            _a0 = construct!A;
+            collectPublications!B;
+            // _a1 not seen by the scanner so not owned
+            _a1 = new A;
+        }
+    }
+    B b = construct!B;
+    // implicitly destructs b._a0.
+    destructOwnedPublishers(b);
+    destruct(b);
+    // b._a1 still exists.
+}
+
+/**
  * Finds a sub-publisher in an object's publications tree.
  *
  * Params:
