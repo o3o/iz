@@ -1168,6 +1168,72 @@ unittest
 }
 
 /**
+ * Finds a sub-publisher in an object's publications tree.
+ *
+ * Params:
+ *      pub = The root publisher.
+ *      accessChain = A string made of property names separated by dots.
+ *      It must not starts with the name of the root.
+ * Returns:
+ *      null if the sub-publisher could not be found.
+ *      null if the sub-publisher could be found but doesn't exist yet.
+ *      The matching publisher otherwise.
+ */
+PropertyPublisher findPublisher(PropertyPublisher pub, string accessChain)
+{
+    import iz.strings: bySeparated;
+    auto names = accessChain.bySeparated('.');
+
+    while(true)
+    {
+        if (!pub || names.empty)
+            return pub;
+        if (auto descr = cast(PropDescriptor!Object*) pub.publicationFromName(names.front.idup))
+        {
+            pub = null;
+            if (descr.rtti.type == RuntimeType._object)
+                if (Object o = descr.get())
+                    pub = cast(PropertyPublisher) o;
+        }
+        else pub = null;
+        names.popFront;
+    }
+}
+///
+unittest
+{
+    class A: PropertyPublisher
+    {mixin PropertyPublisherImpl;}
+
+    class B: PropertyPublisher
+    {
+        mixin PropertyPublisherImpl;
+        @SetGet A _a;
+        this()
+        {
+            _a = new A;
+            collectPublications!B;
+        }
+    }
+
+    class C: PropertyPublisher
+    {
+        mixin PropertyPublisherImpl;
+        @SetGet B _b;
+        this()
+        {
+            _b = new B;
+            collectPublications!C;
+        }
+    }
+
+    C c = new C;
+    assert(c.findPublisher("b") == c._b);
+    assert(c.findPublisher("b.a") == c._b._a);
+    assert(c.findPublisher("b.a.g") is null);
+}
+
+/**
  * Returns true if two property descriptors are bindable.
  * To be bindable, the property name must be identical but also their types.
  * Type checking is based on RTTI and neither source nor target
