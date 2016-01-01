@@ -1566,11 +1566,14 @@ unittest
  *      format = Optional, the serialization format, by default iztext.
  */
 void publisherToFile(Object pub, in char[] filename,
-    SerializationFormat format = defaultFormat)
+    SerializationFormat format = defaultFormat,
+    WantObjectEvent woe = null, WantDescriptorEvent wde = null)
 {
     MemoryStream str = construct!MemoryStream;
     Serializer ser = construct!Serializer;
     scope(exit) destruct(str, ser);
+    ser.onWantObject = woe;
+    ser.onWantDescriptor = wde;
     //
     ser.publisherToStream(pub, str, format);
     str.saveToFile(filename);
@@ -1588,11 +1591,14 @@ void publisherToFile(Object pub, in char[] filename,
  *      format = optional, the serialization format, by default iztext.
  */
 void fileToPublisher(in char[] filename, Object pub,
-    SerializationFormat format = defaultFormat)
+    SerializationFormat format = defaultFormat,
+    WantObjectEvent woe = null, WantDescriptorEvent wde = null)
 {
     MemoryStream str = construct!MemoryStream;
     Serializer ser = construct!Serializer;
     scope(exit) destruct(str, ser);
+    ser.onWantObject = woe;
+    ser.onWantDescriptor = wde;
     //
     str.loadFromFile(filename);
     ser.streamToPublisher(str, pub, format);
