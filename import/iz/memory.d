@@ -86,10 +86,13 @@ if (isPointer!T && isBasicType!(pointerTarget!T))
 CT construct(CT, A...)(A a) @trusted
 if (is(CT == class))
 {
-    auto memory = getMem(typeid(CT).init.length);
-    memory[0 .. typeid(CT).init.length] = typeid(CT).init[];
+    auto size = typeid(CT).init.length;
+    auto memory = getMem(size);
+    memory[0 .. size] = typeid(CT).init[];
     static if (__traits(hasMember, CT, "__ctor"))
         (cast(CT) (memory)).__ctor(a);
+    import core.memory: GC;
+    GC.addRange(memory, size, typeid(CT));
     return cast(CT) memory;
 }
 
@@ -100,12 +103,14 @@ if (is(CT == class))
  *      ST = A struct type.
  *      a = Variadic parameters passed to the constructor.
  */
-ST * construct(ST, A...)(A a) @trusted
+ST* construct(ST, A...)(A a) @trusted
 if(is(ST==struct) || is(ST==union))
 {
     import std.conv : emplace;
     auto size = ST.sizeof;
     auto memory = getMem(size)[0 .. size];
+    import core.memory: GC;
+    GC.addRange(memory.ptr, size, typeid(ST));
     return emplace!(ST, A)(memory, a);
 }
        
@@ -124,17 +129,11 @@ void destruct(T)(auto ref T instance)
 if (is(T == class) || (isPointer!T && is(PointerTarget!T == struct))
     || (isPointer!T && is(PointerTarget!T == union)))
 {
-
     if (!instance) return;
+    import core.memory: GC;
+    GC.removeRange(&instance);
     destroy(instance);
-
-    /*static if (__traits(hasMember, T, "__dtor"))
-        instance.__dtor();
-    static if (__traits(hasMember, T, "__xdtor"))
-        instance.__xdtor();*/
-
     freeMem(cast(void*)instance);
-
     instance = null;
 }
 

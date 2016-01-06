@@ -20,7 +20,7 @@ immutable int cmNotThere = 1;
 /// FileStream creation mode 'Always': creates if not exists otherwise open.
 immutable int cmAlways   = 2;
 
-version (Windows) 
+version (Windows)
 {
     import core.sys.windows.windows, std.windows.syserror, std.c.windows.windows;
 
@@ -81,7 +81,7 @@ version (Windows)
     }
 
 }
-version (Posix) 
+version (Posix)
 {
     import core.sys.posix.fcntl, core.sys.posix.unistd;
     import core.sys.posix.stdio;
@@ -136,9 +136,9 @@ version (Posix)
  * Bugs:
  *      https://issues.dlang.org/show_bug.cgi?id=13975
  */
-enum SeekMode 
+enum SeekMode
 {
-    beg = skBeg, /// seek from the beginning. 
+    beg = skBeg, /// seek from the beginning.
     cur = skCur, /// seek from the current position.
     end = skEnd  /// seek from the ending.
 }
@@ -331,9 +331,9 @@ auto streamRange(T, ST)(ST st)
 if (is(ST : Stream))
 {
     return construct!(StreamRange!(ST,T))(st);
-} 
- 
-/** 
+}
+
+/**
  * Input, forward and bidirectional range for an Stream.
  *
  * Params:
@@ -344,19 +344,19 @@ struct StreamRange(ST, T)
 if (is(ST : Stream))
 {
     private:
-    
+
         ulong _fpos, _bpos;
         ST _str;
-    
+
     public:
-        
+
         /// initializes a StreamRange with a Stream instance.
         this(ST stream)
         {
             _str = stream;
             _bpos = stream.size - T.sizeof;
         }
-        
+
         /// InputRange primitive.
         @property T front()
         {
@@ -366,7 +366,7 @@ if (is(ST : Stream))
             _str.position = _fpos;
             return result;
         }
-        
+
         /// Bidirectional primitive.
         @property T back()
         {
@@ -374,49 +374,49 @@ if (is(ST : Stream))
             _str.position = _bpos;
             _str.read(&result, T.sizeof);
             _str.position = _bpos;
-            return result;        
+            return result;
         }
-        
+
         /// InputRange primitive.
         @safe void popFront()
         {
             _fpos += T.sizeof;
         }
-        
+
         /// Bidirectional primitive.
         @safe void popBack()
         {
-            _bpos -= T.sizeof; 
+            _bpos -= T.sizeof;
         }
-        
+
         /// InputRange & BidirectionalRange primitive.
         @property bool empty()
         {
             return (_fpos == _str.size) || (_fpos + T.sizeof > _str.size)
-                    || (_bpos == 0) || (_bpos - T.sizeof < 0); 
+                    || (_bpos == 0) || (_bpos - T.sizeof < 0);
         }
-        
+
         /// ForwardRange primitive.
         typeof(this) save()
         {
             typeof(this) result = typeof(this)(_str);
-            result._fpos = _fpos; 
-            result._bpos = _bpos; 
-            return result; 
+            result._fpos = _fpos;
+            result._bpos = _bpos;
+            return result;
         }
-} 
+}
 
 unittest
 {
     uint i;
     MemoryStream str = construct!MemoryStream;
     scope(exit) destruct(str);
-    
+
     ushort[] src1 = [0,1,2,3,4,5,6,7,8,9];
-    str.write(src1.ptr, src1.length * ushort.sizeof); 
+    str.write(src1.ptr, src1.length * ushort.sizeof);
     auto rng1 = construct!(StreamRange!(MemoryStream,ushort))(str);
     scope(exit) destruct(rng1);
-    
+
     // foreach processes a copy of rng.
     // http://forum.dlang.org/thread/jp16ni$fug$1@digitalmars.com
     foreach(ushort v; *rng1)
@@ -425,15 +425,15 @@ unittest
         ++i;
     }
     assert(rng1._fpos == 0);
-    
+
     // bidir
     foreach_reverse(ushort v; *rng1)
     {
         --i;
-        assert(v == src1[i]);        
+        assert(v == src1[i]);
     }
-    assert(rng1._fpos == 0);    
-    
+    assert(rng1._fpos == 0);
+
     i = 0;
     while(!rng1.empty)
     {
@@ -442,7 +442,7 @@ unittest
         rng1.popFront;
     }
     assert(rng1.empty);
-     
+
     // other type + streamRange type inference
     str.clear;
     long[] src2 = [10,11,12,13,14,15,16,17,18,19];
@@ -454,7 +454,7 @@ unittest
         assert(v == src2[i - 10]);
         ++i;
     }
-    
+
     // test empty with a non full element at the tail
     ubyte tail = 98;
     str.position = str.size;
@@ -466,11 +466,11 @@ unittest
     tail = 0;
     str.read(&tail,1);
     assert(tail == 98);
-    
-    
-    writeln("StreamRange passed the tests (InputRange)");   
+
+
+    writeln("StreamRange passed the tests (InputRange)");
 }
- 
+
 
 /**
  * Copies the content of a Stream to another one.
@@ -483,21 +483,21 @@ unittest
  */
 void copyStream(Stream source, Stream target)
 {
-    auto immutable oldpos = source.position; 
+    auto immutable oldpos = source.position;
     auto buffsz = 4096;
     auto buff = getMem(buffsz);
     if (!buff) throw new OutOfMemoryError();
-    
+
     scope(exit)
     {
         source.position = oldpos;
         freeMem(buff);
     }
-    
+
     source.position = 0;
     target.size = source.size;
     target.position = 0;
-    
+
     while(source.position != source.size)
     {
         auto cnt = source.read(buff, buffsz);
@@ -545,7 +545,7 @@ if (isInputRange!R)
         t = r.front;
         c = target.write(&t, T.sizeof);
         if (!c) break;
-        r.popFront;        
+        r.popFront;
     }
 }
 
@@ -564,7 +564,7 @@ unittest
         rng1.popFront;
         rng2.popFront;
     }
-} 
+}
 
 
 /**
@@ -791,7 +791,7 @@ class SystemStream: Stream, StreamPersist
 
 /**
  * System stream specialized into reading and writing files, including huge ones
- * (up to 2^64 bytes). Several constructors are avalaible with predefined options. 
+ * (up to 2^64 bytes). Several constructors are avalaible with predefined options.
  */
 class FileStream: SystemStream
 {
@@ -910,7 +910,7 @@ class FileStream: SystemStream
             }
             _filename = "";
         }
-        
+
         /**
          * Exposes the filename.
          */
@@ -934,13 +934,13 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
     {
         size_t _size;
         Ptr _memory;
-        
+
         size_t _position;
         string _filename;
-        
+
         struct Ubytes{size_t length; void* ptr;}
         Ubytes fBytes;
-        
+
         void freeNonGc(ref Ptr ptr)
         {
             import core.memory : GC;
@@ -957,7 +957,7 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
             _memory = getMem(16);
             if (!_memory) throw new OutOfMemoryError();
         }
-        
+
         /**
          * Constructs a MemoryStream and write the input argument.
          * Params:
@@ -968,26 +968,26 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
         {
             _memory = getMem(16);
             if (!_memory) throw new OutOfMemoryError();
-            
+
             import std.traits: isArray;
             static if (isArray!A)
                 write(a.ptr, a.length * (ElementType!A).sizeof);
             else static if (isInputRange!A)
                 this.writeRange(a);
             else static if (isFixedSize!A)
-                write(&a, A.sizeof); 
+                write(&a, A.sizeof);
             else static if (is(A : Stream))
                 copyStream(a, this);
             else static assert(0, "unsupported MemoryStream __ctor argument");
-                
-            position = 0;  
+
+            position = 0;
         }
-        
+
         ~this()
         {
             freeNonGc(_memory);
         }
-        
+
 // read & write ---------------------------------------------------------------+
 
         /// see the Stream interface.
@@ -1008,35 +1008,35 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
             return count;
         }
 
-// -----------------------------------------------------------------------------     
+// -----------------------------------------------------------------------------
 // seek -----------------------------------------------------------------------+
 
         /// see the Stream interface.
         long seek(long offset, SeekMode mode)
         {
-            with(SeekMode) final switch(mode) 
+            with(SeekMode) final switch(mode)
             {
                 case beg:
                     _position = cast(typeof(_position)) offset;
                     if (_position > _size) _position = _size;
-                    return _position;       
+                    return _position;
                 case cur:
                     _position += offset;
                     if (_position > _size) _position = _size;
-                    return _position;   
+                    return _position;
                 case end:
                     return _size;
             }
         }
-        
+
         /// ditto
         int seek(int offset, SeekMode mode)
         {
             long longOffs = offset;
             return cast(int) seek(longOffs, mode);
         }
-        
-// -----------------------------------------------------------------------------        
+
+// -----------------------------------------------------------------------------
 // size -----------------------------------------------------------------------+
 
         /// see the Stream interface.
@@ -1044,7 +1044,7 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
         {
             return _size;
         }
-        
+
         /// ditto
         @property void size(int value)
         {
@@ -1056,9 +1056,9 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
             }
             _memory = reallocMem(_memory, value);
             if (!_memory) throw new OutOfMemoryError();
-            else _size = value;            
+            else _size = value;
         }
-        
+
         /// ditto
         @property void size(long value)
         {
@@ -1069,29 +1069,29 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
             }
             size(cast(int) value);
         }
-        
-// -----------------------------------------------------------------------------  
+
+// -----------------------------------------------------------------------------
 // position -------------------------------------------------------------------+
-        
+
         /// see the Stream interface.
         @property long position()
         {
             return _position;
         }
-        
+
         /// ditto
         @property void position(long value)
         {
             seek(value, SeekMode.beg);
         }
-        
+
         /// ditto
         @property void position(int value)
         {
             seek(value, SeekMode.beg);
         }
-        
-// -----------------------------------------------------------------------------    
+
+// -----------------------------------------------------------------------------
 // misc -----------------------------------------------------------------------+
 
         /// see the Stream interface.
@@ -1123,7 +1123,7 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
             _memory = ptr;
             return result;
         }
-        
+
         /**
          * Read-only access to the memory chunk.
          */
@@ -1141,10 +1141,10 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
             fBytes.ptr = _memory;
             return *cast(ubyte[]*) &fBytes;
         }
-        
-// -----------------------------------------------------------------------------     
+
+// -----------------------------------------------------------------------------
 // StreamPersist --------------------------------------------------------------+
-    
+
         /// see the StreamPersist interface.
         void saveToStream(Stream stream)
         {
@@ -1153,42 +1153,42 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
                 auto target = cast(MemoryStream) stream;
                 auto immutable oldpos = target.position;
                 scope(exit) target.position = oldpos;
-                
+
                 position = 0;
                 stream.size = size;
                 stream.position = 0;
-                
+
                 size_t sz = cast(size_t) size;
                 size_t buffsz = 8192;
                 immutable size_t blocks = sz / buffsz;
                 size_t tail = sz - blocks * buffsz;
-                
+
                 size_t pos;
                 foreach(immutable i; 0 .. blocks)
                 {
                     moveMem(target._memory + pos, _memory + pos, buffsz);
                     pos += buffsz;
                 }
-                if (tail) moveMem(target._memory + pos, _memory + pos, tail);   
+                if (tail) moveMem(target._memory + pos, _memory + pos, tail);
             }
             else
             {
                 this.copyStream(stream);
             }
         }
-        
+
         /// see the StreamPersist interface.
         void loadFromStream(Stream stream)
         {
-            if (auto source = cast(MemoryStream) stream) 
+            if (auto source = cast(MemoryStream) stream)
                 source.saveToStream(this);
             else
                 copyStream(stream, this);
         }
-        
+
 // -----------------------------------------------------------------------------
 // FilePersist8 ---------------------------------------------------------------+
-        
+
         /// see the FilePersist8 interface.
         void saveToFile(in char[] aFilename)
         {
@@ -1196,15 +1196,15 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
             {
                 auto hdl = CreateFileA( aFilename.toStringz, GENERIC_WRITE, 0,
                     (SECURITY_ATTRIBUTES*).init, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, HANDLE.init);
-                
+
                 if (hdl == INVALID_HANDLE_VALUE)
                     throw new Exception(format("stream exception: cannot create or overwrite '%s'", aFilename));
-                
-                scope(exit) CloseHandle(hdl); 
+
+                scope(exit) CloseHandle(hdl);
                 uint numRead;
                 SetFilePointer(hdl, 0, null, FILE_BEGIN);
                 WriteFile(hdl, _memory, cast(uint)_size, &numRead, null);
-                
+
                 if (numRead != _size)
                     throw new Exception(format("stream exception: '%s' is corrupted", aFilename));
             }
@@ -1224,25 +1224,25 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
             }
             _filename = aFilename.idup;
         }
-        
+
         /// see the FilePersist8 interface.
-        void loadFromFile(in char[] aFilename)      
+        void loadFromFile(in char[] aFilename)
         {
             version(Windows)
             {
                 auto hdl = CreateFileA(aFilename.toStringz, GENERIC_READ, 0,
                     (SECURITY_ATTRIBUTES*).init, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, HANDLE.init);
-                        
+
                 if (hdl == INVALID_HANDLE_VALUE)
                     throw new Exception(format("stream exception: cannot open '%s'", aFilename));
-                    
+
                 uint numRead;
                 scope(exit) CloseHandle(hdl);
                 size( SetFilePointer(hdl, 0, null, FILE_END));
                 SetFilePointer(hdl, 0, null, FILE_BEGIN);
                 ReadFile(hdl, _memory, cast(uint)_size, &numRead, null);
                 position = 0;
-                
+
                 if (numRead != _size)
                     throw new Exception(format("stream exception: '%s' is not correctly loaded", aFilename));
             }
@@ -1264,14 +1264,14 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
                     throw new Exception(format("stream exception: '%s' is not correctly loaded", aFilename));
             }
             _filename = aFilename.idup;
-        }   
-        
+        }
+
         /// see the FilePersist8 interface.
         @property string filename()
         {
             return _filename;
         }
-// ---- 
+// ----
     }
 }
 
@@ -1297,7 +1297,7 @@ unittest
     str.position = arr[0].sizeof * 3;
     typeof(arr[0]) value;
     str.read(&value, value.sizeof);
-    assert(value == arr[3]);    
+    assert(value == arr[3]);
 }
 
 unittest
@@ -1314,11 +1314,11 @@ unittest
     str2.position = 0;
     str1 ~= str2;
     assert(str2.position == 0);
-    assert(str1.size == dat1.length + dat2.length); 
+    assert(str1.size == dat1.length + dat2.length);
     auto dat3 = new char[](8);
     str1.position = 0;
     str1.read(cast(void*) dat3.ptr, dat3.length);
-    assert(dat3 == "12345678");     
+    assert(dat3 == "12345678");
 }
 
 unittest
