@@ -96,6 +96,28 @@ if (is(CT == class))
     return cast(CT) memory;
 }
 
+/**
+ * Returns a new, GC-free, class instance.
+ *
+ * This overload is designed to create factories and like the default
+ * Object.factory method, it only calls, if possible, the default constructor.
+ *
+ * Params:
+ *      tic = The TypeInfo_Class of the Object to create.
+ */
+Object construct(TypeInfo_Class tic) @trusted
+{
+    auto size = tic.init.length;
+    auto memory = getMem(size);
+    memory[0 .. size] = tic.init[];
+    Object result = cast(Object) memory;
+    if (tic.defaultConstructor)
+        tic.defaultConstructor(result);
+    import core.memory: GC;
+    GC.addRange(memory, size, tic);
+    return result;
+}
+
 /**  
  * Returns a new, GC-free, pointer to a struct.
  *
@@ -285,5 +307,20 @@ unittest
     assert(!ptr);
 
     writeln("newPtr passed the tests");
+}
+
+unittest
+{
+    class A{string text; this(){text = "A";}}
+    class B{string text; this(){text = "B";}}
+    class C{int[] array; this(){array = [1,2,3];}}
+    TypeInfo_Class[3] tics = [typeid(A),typeid(B),typeid(C)];
+
+    A a = cast(A) construct(tics[0]);
+    assert(a.text == "A");
+    B b = cast(B) construct(tics[1]);
+    assert(b.text == "B");
+    C c = cast(C) construct(tics[2]);
+    assert(c.array == [1,2,3]);
 }
 
