@@ -3,8 +3,10 @@
  */
 module iz.enumset;
 
-import std.traits;
-import std.range: isInputRange, ElementType;
+import
+    std.traits, std.range;
+import
+    iz.types;
 
 private enum hasInt128 = is(ucent);
 
@@ -47,11 +49,17 @@ bool isSetSuitable(S)()
  * Params:
  * E = an enum.
  */
-ulong enumMemberCount(E)() if (is(E==enum))
+size_t enumMemberCount(E)()
+if (is(E==enum))
 {
-    ulong result;
-    foreach(member; EnumMembers!E) result++;
-    return result;
+    static if (isOrderedEnum!E)
+        return 1 + E.max - E.min;
+    else
+    {
+        size_t result;
+        foreach(member; EnumMembers!E) result++;
+        return result;
+    }
 }
 
 /**
@@ -65,12 +73,17 @@ struct EnumRankInfo(E) if (is(E==enum))
 
 private:
 
-    static immutable size_t[E] _rankLUT;
-    static immutable E[size_t] _membLUT;
-    static immutable size_t _count;
+    enum isOrdered = isOrderedEnum!E;
+    static if (!isOrdered)
+    {
+        static immutable size_t[E] _rankLUT;
+        static immutable E[size_t] _membLUT;
+        static immutable size_t _count;
+    }
 
 public:
 
+    static if (!isOrdered)
     nothrow @safe static this()
     {
         if (__ctfe){}
@@ -85,55 +98,70 @@ public:
     /// Returns the rank of the last member.
     nothrow @safe @nogc static @property size_t max()
     {
-        return _count-1;
+        static if (isOrdered)
+            return E.max - E.min;
+        else
+            return _count-1;
     }
 
     /// Returns the member count. It's always equal to max + 1.
     nothrow @safe @nogc static @property size_t count()
     {
-        return _count;
+        static if (isOrdered)
+            return 1 + E.max - E.min;
+        else
+            return _count;
     }
 
     /// Always returns 0.
-    nothrow @safe @nogc static @property size_t min()
-    {
-        return 0;
-    }
+    nothrow @safe @nogc static @property enum min = 0;
 
     /// Returns the rank of aMember.
     nothrow @safe static size_t opIndex(E aMember)
     {
-        if (__ctfe)
-        //static if (!is(__ctfe))
+        static if (isOrdered)
         {
-            size_t result;
-            foreach(member; EnumMembers!E)
-            {
-                if (member == aMember)
-                    return result;
-                ++result;
-            }
-            assert(0);
+            return aMember - E.min;
         }
-        else return _rankLUT[aMember];
+        else
+        {
+            if (__ctfe)
+            {
+                size_t result;
+                foreach(member; EnumMembers!E)
+                {
+                    if (member == aMember)
+                        return result;
+                    ++result;
+                }
+                assert(0);
+            }
+            else return _rankLUT[aMember];
+        }
     }
 
     /// Returns the member at aRank.
     nothrow @safe static E opIndex(size_t aRank)
     {
-        if (__ctfe)
-        //static if (!is(__ctfe))
+        static if (isOrdered)
         {
-            size_t rank;
-            foreach(member; EnumMembers!E)
-            {
-                if (rank == aRank)
-                    return member;
-                ++rank;
-            }
-            assert(0);
+            return cast(E) (E.min + aRank);
         }
-        else return _membLUT[aRank];
+        else
+        {
+            if (__ctfe)
+            {
+                size_t rank;
+                foreach(member; EnumMembers!E)
+                {
+                    if (rank == aRank)
+                        return member;
+                    ++rank;
+                }
+                assert(0);
+            }
+            else return _membLUT[aRank];
+        }
     }
 }
 
@@ -254,7 +282,8 @@ private:
         nothrow @safe @property E front()
         in
         {
-            assert(frontIndex >= 0 && frontIndex <= infs.max);
+            assert(frontIndex >= 0);
+            assert(frontIndex <= infs.max);
         }
         body
         {
@@ -264,7 +293,8 @@ private:
         nothrow @safe void popFront()
         in
         {
-            assert(frontIndex >= 0 && frontIndex <= infs.max);
+            assert(frontIndex >= 0);
+            assert(frontIndex <= infs.max);
         }
         body
         {
@@ -860,10 +890,8 @@ public:
     {
         static assert(a.length == enumMemberCount!E);
         initLength;
-        foreach(i, item; a)
-        {
-            _procs[i] = a[i];
-        }
+        foreach(immutable i, item; a)
+            _procs[i] = item;
     }
 
     /**
@@ -1393,7 +1421,6 @@ version(unittest)
         assert(arr3[0] == 7);
         assert(arr3[1] == 8);
         assert(arr3[2] == 9);
-
 
         writeln("EnumProcs passed the tests");
     }
