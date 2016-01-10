@@ -129,7 +129,7 @@ public:
      */
     final ItemClass[] items()
     {
-        return _items.dup;
+        return _items;
     }
 
     /**
@@ -143,6 +143,11 @@ public:
 
     /// Support for accessing an indexed item with $(D []).
     ItemClass opIndex(size_t i)
+    in
+    {
+        assert(i < _items.length);
+    }
+    body
     {
         return _items[i];
     }
@@ -174,7 +179,19 @@ public:
     /// Same as $(D items()).
     ItemClass[] opSlice()
     {
-        return _items.dup;
+        return _items;
+    }
+
+    /// Same as $(D items()) but with bounds.
+    ItemClass[] opSlice(size_t lo, size_t hi)
+    in
+    {
+        assert(lo <= hi);
+        assert(hi < _items.length);
+    }
+    body
+    {
+        return _items[lo .. hi];
     }
 }
 ///
@@ -356,15 +373,18 @@ public:
         keyApp.reserve(aa.length);
         valApp.reserve(aa.length);
 
-        foreach(k; aa.byKey) keyApp.put(k);
-        foreach(v; aa.byValue) valApp.put(v);
+        foreach(kv; aa.byKeyValue)
+        {
+            keyApp.put(kv.key);
+            valApp.put(kv.value);
+        }
 
         _keys = keyApp.data;
         _content = valApp.data;
     }
 
     /**
-     * Resets then fills an  associative array using the internal containers.
+     * Resets then fills an associative array using the internal containers.
      *
      * Typically called after serializing and if the instance is created
      * using the default constructor.
