@@ -312,3 +312,51 @@ unittest
     static assert(is(ArrayElementType!(wchar[]) == wchar));
 }
 
+/**
+ * Indicates wether an enum is ordered.
+ *
+ * Params:
+ *      T = enum to be tested.
+ *
+ * Returns:
+ *      true if T members are integral and if the delta between each member is one,
+ *      false otherwise.
+ */
+template isOrderedEnum(T)
+if (is(T == enum))
+{
+    static if (!isIntegral!(OriginalType!T))
+    {
+        enum f = false;
+        alias isOrderedEnum = f;
+    }
+    else
+    {
+        bool checker()
+        {
+            OriginalType!T previous = T.min;
+            foreach(member; EnumMembers!T[1..$])
+            {
+                if (member != previous + 1)
+                    return false;
+                previous = member;
+            }
+            return true;
+        }
+        alias isOrderedEnum = checker;
+    }
+}
+///
+unittest
+{
+    enum A {a,z,e,r}
+    static assert(isOrderedEnum!A);
+    enum B: ubyte {a = 2,z,e,r}
+    static assert(isOrderedEnum!B);
+
+    enum C: float {a,z,e,r}
+    static assert(!isOrderedEnum!C);
+    enum D: uint {a,z = 8,e,r}
+    static assert(!isOrderedEnum!D);
+}
+
