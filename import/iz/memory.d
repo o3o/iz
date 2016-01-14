@@ -101,6 +101,8 @@ if (is(CT == class))
  *
  * This overload is designed to create factories and like the default
  * Object.factory method, it only calls, if possible, the default constructor.
+ * The factory() function implemented in this iz.memory is based on this
+ * construct() overload.
  *
  * Params:
  *      tic = The TypeInfo_Class of the Object to create.
@@ -186,7 +188,7 @@ if (is(I == interface))
  *      T = The type of the pointer to return.
  *      preFill = Optional, boolean indicating if the result has to be initialized.
  */
-T * newPtr(T, bool preFill = false)() @trusted @nogc
+T* newPtr(T, bool preFill = false)() @trusted @nogc
 if (isBasicType!T)
 {
     static if(!preFill)
@@ -210,7 +212,52 @@ static void destruct(Objs...)(auto ref Objs objs)
 {
     foreach(ref obj; objs)
         obj.destruct;
-} 
+}
+
+private __gshared TypeInfo_Class[string] registeredClasses;
+
+/**
+ * Register a class type that can be created dynamically, using its name.
+ *
+ * Params:
+ *      T = A class.
+ *      name = The name used to register the class.
+ *      By default the T.stringof is used.
+ */
+void registerFactoryClass(T)(string name = "")
+if (is(T == class))
+{
+    if (!name.length)
+        name = T.stringof;
+    registeredClasses[name] = typeid(T);
+}
+
+/**
+ * Calls registerClass() for each template argument.
+ */
+void registerFactoryClasses(A...)()
+{
+    foreach(T; A)
+        registerClass!T();
+}
+
+/**
+ * Constructs a class instance using a gc-free factory.
+ * The usage is similar to Object.factory() except that by default
+ * registered classes don't take the module in account.
+ *
+ * Params:
+ *      className = the class name, as registered in registerFactoryClass().
+ * Throws:
+ *      An Exception if the class is not registered.
+ */
+Object factory(string className)
+{
+    TypeInfo_Class* tic = className in registeredClasses;
+    if (!tic) throw new Exception("Kheops factory exception, the class: '" ~
+        className ~ "' is not registered.");
+    return construct(*tic);
+}
 
 unittest
 {
@@ -322,5 +369,26 @@ unittest
     assert(b.text == "B");
     C c = cast(C) construct(tics[2]);
     assert(c.array == [1,2,3]);
+
+    writeln("construct from TI passed the tests");
+}
+
+unittest
+{
+    class A{string text; this(){text = "A";}}
+    class B{string text; this(){text = "B";}}
+    class C{int[] array; this(){array = [1,2,3];}}
+    registerFactoryClass!A;
+    registerFactoryClass!B;
+    registerFactoryClass!C;
+
+    A a = cast(A) factory("A");
+    assert(a.text == "A");
+    B b = cast(B) factory("B");
+    assert(b.text == "B");
+    C c = cast(C) factory("C");
+    assert(c.array == [1,2,3]);
+
+    writeln("factory passed the tests");
 }
 
