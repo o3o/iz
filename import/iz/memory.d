@@ -63,7 +63,7 @@ Ptr moveMem(Ptr dst, Ptr src, size_t count) nothrow @trusted @nogc
 }
 
 /**
- * Frees a manually allocated pointer to a basic type. 
+ * Frees a manually allocated pointer to a basic type.
  * Like free() but for @safe context.
  *
  * Params:
@@ -76,7 +76,7 @@ if (isPointer!T && isBasicType!(pointerTarget!T))
     src = null;
 }
 
-/**  
+/**
  * Returns a new, GC-free, class instance.
  *
  * Params:
@@ -120,7 +120,7 @@ Object construct(TypeInfo_Class tic) @trusted
     return result;
 }
 
-/**  
+/**
  * Returns a new, GC-free, pointer to a struct.
  *
  * Params:
@@ -137,8 +137,8 @@ if(is(ST==struct) || is(ST==union))
     GC.addRange(memory.ptr, size, typeid(ST));
     return emplace!(ST, A)(memory, a);
 }
-       
-/** 
+
+/**
  * Destructs a class or a struct that's been previously
  * constructed with $(D construct()).
  *
@@ -197,12 +197,12 @@ if (isBasicType!T)
     {
         auto result = cast(T*) getMem(T.sizeof);
         *result = T.init;
-        return result; 
+        return result;
     }
 }
 
-/** 
- * Frees and invalidates a list of classes instances or struct pointers. 
+/**
+ * Frees and invalidates a list of classes instances or struct pointers.
  * $(D destruct()) is called for each item.
  *
  * Params:
@@ -254,7 +254,7 @@ void registerFactoryClasses(A...)()
 Object factory(string className)
 {
     TypeInfo_Class* tic = className in registeredClasses;
-    if (!tic) throw new Exception("Kheops factory exception, the class: '" ~
+    if (!tic) throw new Exception("factory exception, the class: '" ~
         className ~ "' is not registered.");
     return construct(*tic);
 }
@@ -287,7 +287,7 @@ unittest
     assert( GC.addrOf(cast(void*)bar) != null );
     foo.destruct;
     bar.destroy;
-    
+
     struct Foo{size_t a,b,c;}
     Foo * foos = construct!Foo(1,2,3);
     Foo * bars = new Foo(4,5,6);
@@ -295,7 +295,7 @@ unittest
     assert(foos.b == 2);
     assert(foos.c == 3);
     assert( GC.addrOf(cast(void*)foos) == null );
-    assert( GC.addrOf(cast(void*)bars) != null );   
+    assert( GC.addrOf(cast(void*)bars) != null );
     foos.destruct;
     bars.destroy;
     assert(!foos);
@@ -320,33 +320,33 @@ unittest
 {
     import core.memory: GC;
     import std.math: isNaN;
-    
+
     auto f = newPtr!(float,true);
     assert(isNaN(*f));
     auto ui = newPtr!int;
     auto i = newPtr!uint;
     auto l = new ulong;
-    
+
     assert(ui);
     assert(i);
     assert(f);
-    
+
     assert(GC.addrOf(f) == null);
     assert(GC.addrOf(i) == null);
     assert(GC.addrOf(ui) == null);
     assert(GC.addrOf(l) != null);
-    
+
     *i = 8u;
     assert(*i == 8u);
-    
+
     freeMem(ui);
     freeMem(i);
     freeMem(f);
-    
+
     assert(ui == null);
     assert(i == null);
     assert(f == null);
-    
+
     auto ptr = getMem(16);
     assert(ptr);
     assert(GC.addrOf(ptr) == null);
@@ -391,4 +391,5 @@ unittest
 
     writeln("factory passed the tests");
 }
+
 
