@@ -870,12 +870,8 @@ private:
 
     static immutable EnumRankInfo!E _infs;
     alias retT = ReturnType!T;
-    T[] _procs;
-
-    void initLength()
-    {
-        _procs.length = _infs.count;
-    }
+    enum procLen = enumMemberCount!E;
+    T[procLen] _procs;
 
 public:
 
@@ -887,9 +883,14 @@ public:
      * a = a list of T.
      */
     nothrow this(A...)(A a)
+    in
     {
         static assert(a.length == enumMemberCount!E);
-        initLength;
+        foreach(callable; a)
+            static assert(is(A[0] == T));
+    }
+    body
+    {
         foreach(immutable i, item; a)
             _procs[i] = item;
     }
@@ -900,9 +901,13 @@ public:
      * someItems = an array of T.
      */
     nothrow this(T[] someItems)
+    in
     {
-        assert(someItems.length == _infs.count);
-        initLength;
+        assert(someItems.length == enumMemberCount!E);
+        assert(is(typeof(someItems[0]) == T));
+    }
+    body
+    {
         foreach(i, item; someItems)
         {
             _procs[i] = someItems[i];
@@ -985,7 +990,7 @@ public:
 // misc. ----------------------------------------------------------------------+
 
     /// Returns the array of callable for additional containers operations.
-    ref T[] procs()
+    ref T[procLen] procs()
     {
         return _procs;
     }
@@ -997,12 +1002,21 @@ public:
  * Encapsulates an array of T and uses the rank of the enum members
  * E to perform the actions usually done with integer indexes.
  */
-struct EnumIndexedArray(E,T) if (is(E==enum))
+struct EnumIndexedArray(E,T,bool staticArray = false) if (is(E==enum))
 {
 
 private:
 
-    T[] _array;
+    static if (staticArray)
+    {
+        enum arrayLen = enumMemberCount!E;
+        alias arrayT = T[arrayLen];
+    }
+    else
+    {
+        alias arrayT = T[];
+        arrayT _array;
+    }
     static immutable EnumRankInfo!E _infs;
 
 public:
@@ -1024,6 +1038,7 @@ public:
      * Unless  bounds checking is turned off, the parameter is dynamically
      * checked according to E highest rank.
      */
+    static if (!staticArray)
     @safe @property length(size_t aValue)
     {
         version(D_NoBoundsChecks)
@@ -1038,6 +1053,7 @@ public:
     /**
      * Sets the array length according to the value following aMember rank.
      */
+    static if (!staticArray)
     nothrow @safe @property length(E aMember)
     {
         _array.length = _infs[aMember] + 1;
@@ -1075,7 +1091,7 @@ public:
     /**
      * Returns a reference to the the internal container.
      */
-    nothrow @safe @property ref const(T[]) array()
+    nothrow @safe @property ref const(arrayT) array()
     {
         return _array;
     }
