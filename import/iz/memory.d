@@ -238,7 +238,7 @@ if (is(T == class))
 void registerFactoryClasses(A...)()
 {
     foreach(T; A)
-        registerClass!T();
+        registerFactoryClass!T();
 }
 
 /**
