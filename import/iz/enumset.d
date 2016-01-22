@@ -269,7 +269,7 @@ private:
         nothrow @safe this(T)(T t)
         {
             set = SetType(t);
-            backIndex = cast(set.SetType) infs.max;
+            backIndex = cast(set.SetType) infs.count;
             toNextMember;
             toPrevMember;
         }
@@ -426,14 +426,17 @@ public:
         char* reader = representation.ptr;
         while(true)
         {
-            if ((*reader != ',') & (*reader != '[') & (*reader != ']')
-                & (*reader != ' ')) identifier ~= *reader;
+            if (*reader != ',' && *reader != '[' && *reader != ']' &&
+                *reader != ' ') identifier ~= *reader;
 
-            if ((*reader == ',') | (*reader == ']') )
+            if (*reader == ',' || *reader == ']')
             {
-                scope(failure){break;}
-                auto member = to!E(identifier);
-                include(member);
+                try
+                {
+                    auto member = to!E(identifier);
+                    include(member);
+                }
+                catch (Exception e) break;
                 identifier = identifier.init;
             }
 
@@ -784,15 +787,6 @@ public:
         return _container == _max;
     }
 
-    /// Returns the count of member included
-    nothrow @safe size_t memberCount() const
-    {
-        size_t result;
-        foreach(e; EnumMembers!E)
-            result += e in this;
-        return result;
-    }
-
     /// Returns the maximal value the set can have.
     nothrow @safe @nogc static const(S) max()
     {
@@ -806,7 +800,7 @@ public:
     }
 
     /// Returns the enum count
-    nothrow @safe @nogc static const(S) maxMemberCount()
+    nothrow @safe @nogc static const(S) memberCount()
     {
         return cast(S) rankInfo.count;
     }
@@ -959,7 +953,7 @@ public:
 
         static if (!CallParams.length)
         {
-            foreach(immutable i; 0 .. selectors.maxMemberCount)
+            foreach(immutable i; 0 .. selectors.memberCount)
             {
                 if (selectors[i])
                     result[i] = _procs[i]();
@@ -968,7 +962,7 @@ public:
         }
         else static if (!isArray!(CallParams[0]))
         {
-            foreach(immutable i; 0 .. selectors.maxMemberCount)
+            foreach(immutable i; 0 .. selectors.memberCount)
             {
                 if (selectors[i])
                     result[i] = _procs[i](prms);
@@ -977,7 +971,7 @@ public:
         }
         else
         {
-            foreach(immutable i; 0 .. selectors.maxMemberCount)
+            foreach(immutable i; 0 .. selectors.memberCount)
             {
             // Hard to believe it works ! A unittest HAS to show it can fail.
                 if (selectors[i])
@@ -1107,6 +1101,7 @@ version(unittest)
     enum a9     {a0,a1,a2,a3,a4,a5,a6,a7,a8}
     enum a16    {a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15}
     enum a17    {a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15,a16}
+    enum b0     {b0 = 8, b1 = 1, b2 = 17}
 
     /// Constraints
     static unittest
@@ -1133,6 +1128,10 @@ version(unittest)
         static assert(EnumSet!(a8, Set8)(a8.a0,a8.a1) == 0b00000011);
         enum set = EnumSet!(a8, Set8)(a8.a0,a8.a1);
         static assert(set == 0b011, set);
+        static assert(EnumRankInfo!a8[0] == a8.a0);
+        static assert(EnumRankInfo!a8[a8.a1] == 1);
+        static assert(EnumRankInfo!b0[1] == b0.b1);
+        static assert(EnumRankInfo!b0[b0.b2] == 2);
     }
 
     /// EnumSet
@@ -1155,6 +1154,7 @@ version(unittest)
         assert(set == 0b0001_0000);
         set = set + a8.a5;
         assert(set != 0b0001_0000);
+        assert(set.any);
         set = 0;
         assert(set == 0b0000_0000);
         set = set + [a8.a0, a8.a1, a8.a3];
@@ -1239,19 +1239,25 @@ version(unittest)
 
     unittest
     {
-        auto set = EnumSet!(a8, Set8)(a8.a3, a8.a5);
+        EnumSet!(a8, Set8) set = EnumSet!(a8, Set8)(a8.a3, a8.a5);
         assert(set == 0b0010_1000);
         auto rep = set.toString;
         set = 0;
         assert(set == 0);
         set = EnumSet!(a8, Set8)(rep);
         assert(set == 0b0010_1000);
+
         // test asBitString
         auto brep = set.asBitString;
         assert( brep == "0b00101000", brep );
         set = 0b1111_0000;
         brep = set.asBitString;
         assert( brep == "0b11110000", brep );
+
+        // err
+        assert(set != 0);
+        set.fromString("[56346");
+        assert(set == 0);
 
         //set = 0;
         //set = to!Set8(brep);
@@ -1304,6 +1310,18 @@ version(unittest)
         assert(set1.none);
         set1 = set.range;
         assert(set1 == set);
+
+        auto tes = EnumSet!(a17, Set32)(a17.a0, a17.a1, a17.a8 , a17.a16);
+        auto gnr = tes.range;
+        assert(gnr.back == a17.a16);
+        gnr.popBack;
+        assert(gnr.back == a17.a8);
+        auto sav = gnr.save;
+        gnr.popBack;
+        sav.popBack;
+        assert(gnr.back == sav.back);
+        sav.popBack;
+        assert(gnr.back != sav.back);
 
         writeln("enumSet passed the tests(Ranges)");
     }
@@ -1393,7 +1411,7 @@ version(unittest)
         int Bt1(int p){return 10 + p;}
         int Bt2(int p){return 20 + p;}
         int Bt3(int p){return 30 + p;}
-        auto BCaller = EnumProcs!(A, typeof(&Bt1))(&Bt1,&Bt2,&Bt3);
+        auto BCaller = EnumProcs!(A, typeof(&Bt1))([&Bt1,&Bt2,&Bt3]);
         assert( BCaller.procs[0]== &Bt1);
         assert( BCaller.procs[1]== &Bt2);
         assert( BCaller.procs[2]== &Bt3);
@@ -1467,6 +1485,7 @@ version(unittest)
         enum E {e0 = 1.8,e1,e2,e3 = 888.459,e4,e5,e6,e7}
         alias E_Fp_Indexed = EnumIndexedArray!(E,float);
         E_Fp_Indexed arr;
+        assert(arr.length == 0);
         arr.length = EnumRankInfo!E.count;
 
         foreach(i,memb; EnumMembers!E)

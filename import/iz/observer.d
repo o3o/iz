@@ -332,8 +332,8 @@ unittest
     // check the subject and observers count
     assert(inter._subjects.count == 2);
     assert(inter._observers.count == 8);
-    assert(isubj._observers.count == 3);
-    assert(usubj._observers.count == 3);
+    assert(isubj.observers.count == 3);
+    assert(usubj.observers.count == 3);
 
     inter.beginUpdate;
     inter.removeObserver(iobs1);
@@ -428,16 +428,26 @@ if (is(E == enum))
 
         /// see the Subject interface.
         bool acceptObserver(Object observer)
+        in
+        {
+            assert(observer);
+        }
+        body
         {
             return (cast(ObserverType) observer !is null);
         }
 
         /// see the Subject interface.
         void addObserver(Object observer)
+        in
         {
-            auto obs = cast(ObserverType) observer;
-            if (!obs)
+            assert(observer);
+        }
+        body
+        {
+            if (!acceptObserver(observer))
                 return;
+            auto obs = cast(ObserverType) observer;
             if (_observers.find(obs) != -1)
                 return;
             _observers.add(obs);
@@ -452,10 +462,13 @@ if (is(E == enum))
 
         /// see the Subject interface.
         void removeObserver(Object observer)
+        in
+        {
+            assert(observer);
+        }
+        body
         {
             auto obs = cast(ObserverType) observer;
-            if (!obs)
-                return;
             _observers.remove(obs);
         }
         ///
@@ -513,7 +526,18 @@ unittest
     assert(obs1.lastNotification == DocumentNotification.opening);
     assert(obs2.lastNotification == DocumentNotification.opening);
     assert(obs3.lastNotification == DocumentNotification.opening);
-    
+
+    inter.removeSubject(subj);
+    assert(inter._subjects.count == 0);
+    assert(inter._observers.count == 3);
+    assert(subj.observers.count == 3);
+
+    inter.removeObserver(obs2);
+    assert(inter._observers.count == 2);
+    assert(subj.observers.count == 3);
+    subj.removeObserver(obs2);
+    assert(subj.observers.count == 2);
+
     writeln( "EnumBasedObserver passed the tests");       
 }
 

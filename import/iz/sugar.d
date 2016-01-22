@@ -271,7 +271,7 @@ auto mask(MaskKind kind = MaskKind.Byte, T)(const T value, size_t index) nothrow
         0xFF00FFFFFFFFFFFF,
         0x00FFFFFFFFFFFFFF
     ];
-    
+
     static immutable nibbleMasker =
     [
         0xFFFFFFFFFFFFFFF0,
@@ -311,7 +311,7 @@ First version: less byte code but more latency do to memory access
 This version: no memory access but similar latency due to more byte code.
 auto mask(MaskKind kind = MaskKind.Byte, T)(const T value, size_t index) nothrow
 {
-    static immutable T _max = - 1; 
+    static immutable T _max = - 1;
     static if (kind == MaskKind.Byte)
         return value & (_max - (0xFF << index * 8));
     else static if (kind == MaskKind.Nibble)
@@ -364,7 +364,7 @@ unittest
     static assert( mask!(2, MaskKind.Nibble)(v1) == 0x87654021);
     static assert( mask!(3, MaskKind.Nibble)(v1) == 0x87650321);
     static assert( mask!(7, MaskKind.Nibble)(v1) == 0x07654321);
-    
+
     assert( mask!(MaskKind.Nibble)(v1,0) == 0x87654320);
     assert( mask!(MaskKind.Nibble)(v1,1) == 0x87654301);
     assert( mask!(MaskKind.Nibble)(v1,2) == 0x87654021);
@@ -385,13 +385,13 @@ unittest
 /**
  * Alternative to std.range primitives for arrays.
  *
- * The source is never consumed. 
+ * The source is never consumed.
  * The range always verifies isInputRange and isForwardRange. When the source
- * array element type if not a character type or if the template parameter 
+ * array element type if not a character type or if the template parameter
  * assumeDecoded is set to true then the range also verifies
  * isForwardRange.
  *
- * When the source is an array of character and if assumeDecoded is set to false 
+ * When the source is an array of character and if assumeDecoded is set to false
  * (the default) then the ArrayRange front type is always dchar because of the
  * UTF decoding. The parameter can be set to true if the source is known to
  * contains only SBCs.
@@ -406,12 +406,12 @@ struct ArrayRange(T, bool assumeDecoded = false, bool infinite = false)
         private T* _front, _back;
         private static if(infinite) T* _first;
         ///
-        this(ref T[] stuff) 
+        this(ref T[] stuff)
         {
-            _front = stuff.ptr; 
+            _front = stuff.ptr;
             _back = _front + stuff.length - 1;
             static if(infinite) _first = _front;
-        }      
+        }
         ///
         @property bool empty()
         {
@@ -419,12 +419,12 @@ struct ArrayRange(T, bool assumeDecoded = false, bool infinite = false)
                 return false;
             else
                 return _front > _back;
-        }     
+        }
         ///
         T front()
         {
             return *_front;
-        }   
+        }
         ///
         T back()
         {
@@ -432,7 +432,7 @@ struct ArrayRange(T, bool assumeDecoded = false, bool infinite = false)
         }
         ///
         void popFront()
-        { 
+        {
             ++_front;
             static if(infinite)
             {
@@ -451,14 +451,14 @@ struct ArrayRange(T, bool assumeDecoded = false, bool infinite = false)
             return _front[0 .. _back - _front + 1];
         }
         ///
-        typeof(this) save() 
+        typeof(this) save()
         {
             typeof(this) result;
             result._front = _front;
             result._back = _back;
-            return result; 
+            return result;
         }
-    } 
+    }
     else
     {
 
@@ -480,8 +480,8 @@ struct ArrayRange(T, bool assumeDecoded = false, bool infinite = false)
     public:
 
         ///
-        this(ref T[] stuff) 
-        { 
+        this(ref T[] stuff)
+        {
             _front = stuff.ptr;
             _len = stuff.length;
             _decode = true;
@@ -511,7 +511,7 @@ struct ArrayRange(T, bool assumeDecoded = false, bool infinite = false)
         T[] array()
         {
             return _front[_previous .. _len];
-        }   
+        }
         ///
         typeof(this) save()
         {
@@ -540,7 +540,7 @@ unittest
     rng.popFront;
     assert(rng.empty);
     assert(arr == "bla");
-    //    
+    //
     auto t1 = "é_é";
     auto r1 = ArrayRange!(immutable(char))(t1);
     auto r2 = r1.save;
@@ -679,4 +679,5 @@ unittest
     assert(a.test2 == "aa");
     assert(a.fun == "aa");
 }
+
 
