@@ -305,7 +305,9 @@ unittest
     auto text = "ab cd\0";
     auto cString = nullTerminated(text.ptr);
     assert(nextWord(cString) == "ab");
+    auto saved = nullTerminated(cString.save);
     assert(nextWord(cString) == "cd");
+    assert(nextWord(saved) == "cd");
     assert(cString.empty);
     auto wtext = "ab cd\0"w;
     auto cWideString = nullTerminated(wtext.ptr);

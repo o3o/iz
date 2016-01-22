@@ -538,7 +538,7 @@ void setNodeInfo(T)(SerNodeInfo* nodeInfo, PropDescriptor!T* descriptor)
         nodeInfo.type = text2type[getElemStringOf!T];
         T value = descriptor.get();
         nodeInfo.value.length = value.length * type2size[nodeInfo.type];
-        moveMem (nodeInfo.value.ptr, cast(void*) value.ptr, nodeInfo.value.length);
+        moveMem(nodeInfo.value.ptr, cast(void*) value.ptr, nodeInfo.value.length);
         //
         nodeInfo.isArray = true;
         nodeInfo.descriptor = cast(Ptr) descriptor;
@@ -1800,7 +1800,7 @@ version(unittest)
         assert(!ser.findNode("root.someChar"));
         assert(!ser.findNode(""));
         //----
-        
+
         // restore elsewhere than in the declarator ---+
         float outside;
         auto node = ser.findNode("root.aFloat");
@@ -1842,10 +1842,10 @@ version(unittest)
         auto usrr = construct!ReferencedUser;
         scope(exit) destruct(ref1, ref2, usrr);
         
-        assert( ReferenceMan.storeReference!Referenced1(&ref1, "referenced.ref1"));
-        assert( ReferenceMan.storeReference!Referenced1(&ref2, "referenced.ref2"));
-        assert( ReferenceMan.referenceID!Referenced1(&ref1) == "referenced.ref1");
-        assert( ReferenceMan.referenceID!Referenced1(&ref2) == "referenced.ref2");
+        assert(ReferenceMan.storeReference!Referenced1(&ref1, "referenced.ref1"));
+        assert(ReferenceMan.storeReference!Referenced1(&ref2, "referenced.ref2"));
+        assert(ReferenceMan.referenceID!Referenced1(&ref1) == "referenced.ref1");
+        assert(ReferenceMan.referenceID!Referenced1(&ref2) == "referenced.ref2");
 
         str.clear;
         usrr.fRef = &ref1;
@@ -2223,5 +2223,6 @@ version(unittest)
         assert(obj.target == obj.source);
     }
     //----
+
 }
 

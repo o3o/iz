@@ -566,6 +566,15 @@ unittest
         rng.popFront;
     }
     assert(arr == src);
+    auto bck = ArrayRange!ubyte(arr);
+    assert(bck.back == 5);
+    bck.popBack;
+    assert(bck.back == 4);
+    assert(bck.array == [1,2,3,4]);
+    auto sbk = bck.save;
+    bck.popBack;
+    sbk.popBack;
+    assert(bck.back == sbk.back);
 }
 
 

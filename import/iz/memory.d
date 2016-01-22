@@ -24,25 +24,16 @@ Ptr getMem(size_t size) nothrow @trusted @nogc
  * Like realloc() but for @safe context.
  */
 Ptr reallocMem(ref Ptr src, size_t newSize) nothrow @trusted @nogc
+in
 {
-    auto result = realloc(src, newSize);
-    assert(result, "Out of memory");
-    return result;
+    assert(newSize);
+    assert(src);
 }
-
-/**
- * Like memmove() but for @safe context.
- * dst and src can overlap.
- *
- * Params:
- *      dst = The data source.
- *      src = The data destination.
- *      count = The count of byte to move from src to dst.
- */
-void moveMem(ref Ptr dst, ref Ptr src, size_t count) nothrow @trusted @nogc
+body
 {
-    import std.c.string : memmove;
-    dst = memmove(dst, src, count);
+    src = realloc(src, newSize);
+    assert(src, "Out of memory");
+    return src;
 }
 
 /**
@@ -57,9 +48,45 @@ void moveMem(ref Ptr dst, ref Ptr src, size_t count) nothrow @trusted @nogc
  *      the pointer to the destination, (same as dst).
  */
 Ptr moveMem(Ptr dst, Ptr src, size_t count) nothrow @trusted @nogc
+in
+{
+    if (count)
+    {
+        assert(dst);
+        assert(src);
+    }
+}
+body
 {
     import std.c.string : memmove;
     return memmove(dst, src, count);
+}
+
+/**
+ * Like memmove() but for @safe context.
+ * dst and src can't overlap.
+ *
+ * Params:
+ *      dst = The data source.
+ *      src = The data destination.
+ *      count = The count of byte to meove from src to dst.
+ * Returns:
+ *      the pointer to the destination, (same as dst).
+ */
+Ptr copyMem(Ptr dst, Ptr src, size_t count) nothrow @trusted @nogc
+in
+{
+    if (count)
+    {
+        assert(dst);
+        assert(src);
+        assert(dst + count <= src || dst >= src + count);
+    }
+}
+body
+{
+    import std.c.string : memcpy;
+    return memcpy(dst, src, count);
 }
 
 /**
@@ -238,7 +265,7 @@ if (is(T == class))
 void registerFactoryClasses(A...)()
 {
     foreach(T; A)
-        registerClass!T();
+        registerFactoryClass!T();
 }
 
 /**
@@ -392,4 +419,18 @@ unittest
     writeln("factory passed the tests");
 }
 
+unittest
+{
+    void* src = getMem(32);
+    void* dst = getMem(32);
+    (cast (ubyte*)src)[0..32] = 8;
+    copyMem(dst, src, 32);
+    foreach(immutable i; 0 .. 32)
+        assert((cast (ubyte*)src)[i] == (cast (ubyte*)dst)[i]);
+    (cast (ubyte*)src)[0..32] = 7;
+    src = reallocMem(src, 32 + 16);
+    ubyte* ovl = (cast (ubyte*)src) + 16;
+    moveMem(cast(void*)ovl, cast(void*)src, 32);
+    assert((cast (ubyte*)ovl)[31] == 7);
+}
 
