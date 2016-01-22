@@ -228,6 +228,7 @@ mixin template ScopedReachability()
 
 /**
  * Detects whether type $(D T) is a multi dimensional array.
+ *
  * Params:
  *      T = type to be tested
  *
@@ -258,7 +259,14 @@ unittest
 }
 
 /**
- * Returns the dimension count of a $(D array).
+ * Indicates the dimension count of an built-in array.
+ *
+ * Params:
+ *      T = type to be tested
+ *
+ * Returns:
+ *      0 iftemplate $(D T) is an not a build-in array, otherwise a number
+ *      at leat equal to 1, according to the array dimenssion count.
  */
 template dimensionCount(T)
 {
@@ -283,12 +291,12 @@ unittest
     static assert(dimensionCount!(int[][][]) == 3);
 }
 
-
 /**
  * Indicates the array element type of an array.
  *
  * Contrary to $(D ElementType), dchar is not returned for narrow strings.
- * The template is aware of multi-dimensional arrays.
+ * The template strips the type lookup goes until the last dimenssion of a
+ * multi-dim array.
  *
  * Params:
  *      T = type to be tested.
@@ -319,8 +327,8 @@ unittest
  *      T = enum to be tested.
  *
  * Returns:
- *      true if T members are integral and if the delta between each member is one,
- *      false otherwise.
+ *      true if T members type is integral and if the delta between each member
+ *      is one, false otherwise.
  */
 template isOrderedEnum(T)
 if (is(T == enum))
