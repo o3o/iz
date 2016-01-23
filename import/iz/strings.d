@@ -126,9 +126,6 @@ static immutable CharRange decimalChars = CharRange('0', '9');
 /// a CharRange that verify characters for octal numbers.
 static immutable CharRange octalChars = CharRange('0', '7');
 
-
-//TODO-cbugfix: CharMap issues when instantiated on th stack (local var, e.g iztext format reader)
-// because Serializer class instanciated without adding as root in the GC ?
 /**
  * CharMap is an helper struct that allows to test
  * if a char is within a set of characters.
