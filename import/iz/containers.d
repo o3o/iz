@@ -1943,9 +1943,9 @@ public:
             if (oldprev) oldprev._nextSibling = oldnext;
             if (oldnext) oldnext._prevSibling = oldprev;
 
-            if (result.parent && result.firstChild is result)
+            if (result.parent && parent.firstChild is result)
             {
-                result._firstChild = result._nextSibling;
+                parent._firstChild = result._nextSibling;
             }
 
             result._prevSibling = null;
@@ -2141,8 +2141,12 @@ public:
     }
     body
     {
-        auto i = firstChild.findSibling(child);
-        if (i != -1) removeChild(i);
+        ptrdiff_t i = -1;
+        if (_firstChild)
+        {
+            i = firstChild.findSibling(child);
+            if (i != -1) removeChild(i);
+        }
         return i != -1;
     }
 
@@ -2155,6 +2159,11 @@ public:
      *      The child if index was valid, otherwise null.
      */
     TreeItemType removeChild(size_t index)
+    in
+    {
+        assert(index >= 0);
+    }
+    body
     {
         auto result = children[index];
         if (result)
@@ -2164,7 +2173,10 @@ public:
             else
             {
                 if (result.siblingCount == 1)
+                {
                     result._parent = null;
+                    _firstChild = null;
+                }
                 else
                     result._nextSibling.removeSibling(index);
             }
@@ -2433,5 +2445,28 @@ unittest
     root2.deleteChildren;
 
     writeln("TreeItem passed the tests");
+}
+
+
+version(unittest) class Item {mixin TreeItem;}
+
+unittest
+{
+    Item root = construct!Item;
+    Item c0 = root.addNewChildren!Item;
+    Item c1 = root.addNewChildren!Item;
+    Item c2 = root.addNewChildren!Item;
+
+    scope(exit) destruct(root, c0, c1, c2);
+
+    assert(root.childrenCount == 3);
+    root.removeChild(c0);
+    assert(root.childrenCount == 2);
+    root.removeChild(c1);
+    assert(root.childrenCount == 1);
+    root.removeChild(c2);
+    assert(root.childrenCount == 0);
+    root.removeChild(c2);
+    assert(root.childrenCount == 0);
 }
 

@@ -257,14 +257,14 @@ unittest
     col.deleteItem(0);
     assert(col._publishedDescriptors.count == 3); // 2 + count descr
     assert(col.items.count == 2);
-    assert(col.items[0]._c == 5u);
-    assert(col.items[1]._c == 8u);
+    assert(col[0]._c == 5u);
+    assert(col[1]._c == 8u);
     col.items[1]._c = 7u;
 
     auto todelete = col.items[0];
     col.deleteItem(todelete);
     assert(col.items.count == 1);
-    col.deleteItem(0);
+    col.count = 0;
     assert(col.items.count == 0);
 
     writeln("PublishedObjectArray(T) passed the tests");
