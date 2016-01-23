@@ -368,3 +368,40 @@ unittest
     static assert(!isOrderedEnum!D);
 }
 
+/**
+ * Indicates wether a class has a default constructor.
+ */
+template hasDefaultConstructor(C)
+if(is(C==class))
+{
+    bool check()
+    {
+        bool result;
+        static if (__traits(hasMember, C, "__ctor"))
+        foreach(overload; __traits(getOverloads, C, "__ctor"))
+        {
+            if ((Parameters!overload).length == 0)
+            {
+                result = true;
+                break;
+            }
+        }
+        return result;
+    }
+    enum hasDef = check;
+    alias hasDefaultConstructor = hasDef;
+}
+///
+unittest
+{
+    class A{}
+    class B{this(){}}
+    class C{this(int a){}}
+    class D{this(){} this(int a){}}
+
+    static assert(!hasDefaultConstructor!A);
+    static assert( hasDefaultConstructor!B);
+    static assert(!hasDefaultConstructor!C);
+    static assert( hasDefaultConstructor!D);
+}
+
