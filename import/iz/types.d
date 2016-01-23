@@ -5,7 +5,7 @@
 module iz.types;
 
 import
-    std.c.stdlib, std.traits, std.meta;
+    std.traits, std.meta;
 import
     iz.streams;
 

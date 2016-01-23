@@ -4,9 +4,13 @@
 module iz.memory;
 
 import
-    std.traits, std.c.stdlib, std.c.string;
+    std.traits;
 import
     iz.types;
+version(DigitalMars)
+    { import core.stdc.stdlib, core.stdc.string; }
+else
+    { import std.c.stdlib, std.c.string; }
 
 version(unittest) import std.stdio;
 
@@ -58,7 +62,6 @@ in
 }
 body
 {
-    import std.c.string : memmove;
     return memmove(dst, src, count);
 }
 
@@ -85,7 +88,6 @@ in
 }
 body
 {
-    import std.c.string : memcpy;
     return memcpy(dst, src, count);
 }
 
@@ -100,7 +102,8 @@ void freeMem(T)(auto ref T src) nothrow @trusted @nogc
 if (isPointer!T && isBasicType!(pointerTarget!T))
 {
     if (src) free(cast(void*)src);
-    src = null;
+    static if (ParameterStorageClassTuple!freeMem[0] ==
+        ParameterStorageClass.ref_) src = null;
 }
 
 /**
@@ -185,7 +188,8 @@ if (is(T == class) || (isPointer!T && is(PointerTarget!T == struct))
     GC.removeRange(&instance);
     destroy(instance);
     freeMem(cast(void*)instance);
-    instance = null;
+    static if (ParameterStorageClassTuple!destruct[0] ==
+        ParameterStorageClass.ref_) instance = null;
 }
 
 /**
@@ -204,7 +208,8 @@ if (is(I == interface))
 {
     if (Object obj = cast(Object) instance)
         obj.destruct;
-    instance = null;
+    static if (ParameterStorageClassTuple!destruct[0] ==
+        ParameterStorageClass.ref_) instance = null;
 }
 
 /**
