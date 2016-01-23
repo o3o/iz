@@ -1144,9 +1144,13 @@ class DynamicList(T): List!T
                 if (_prev) payload.setNext(_prev, _next);
                 if (_next) payload.setPrev(_next, _prev);
             }
-            if (_last != _first)
-                payload.freePld(_pld);
-            _count--;
+            payload.freePld(_pld);
+            if (_last == _first && _last == _pld)
+            {
+                _last = null;
+                _first = null;
+            }
+            --_count;
             return true;
         }
 
@@ -1176,11 +1180,13 @@ class DynamicList(T): List!T
                 payload.setNext(_prev, _next);
                 payload.setPrev(_next, _prev);
             }
-            //TODO-cbugfix: double free or corruption when trying to delete last remaining item
-            // also in remove, in both case only since unittest is refactored without version()
-            if (_last != _first)
-                payload.freePld(_pld);
-            _count--;
+            payload.freePld(_pld);
+            if (_last == _first && _last == _pld)
+            {
+                _last = null;
+                _first = null;
+            }
+            --_count;
             return result;
         }
 
@@ -2447,15 +2453,12 @@ unittest
     writeln("TreeItem passed the tests");
 }
 
-
-version(unittest) class Item {mixin TreeItem;}
-
 unittest
 {
-    Item root = construct!Item;
-    Item c0 = root.addNewChildren!Item;
-    Item c1 = root.addNewChildren!Item;
-    Item c2 = root.addNewChildren!Item;
+    ObjectTreeItem root = construct!ObjectTreeItem;
+    ObjectTreeItem c0 = root.addNewChildren!ObjectTreeItem;
+    ObjectTreeItem c1 = root.addNewChildren!ObjectTreeItem;
+    ObjectTreeItem c2 = root.addNewChildren!ObjectTreeItem;
 
     scope(exit) destruct(root, c0, c1, c2);
 
