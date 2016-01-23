@@ -5,7 +5,6 @@ Introduction
 ------------
 iz is a general purpose library for the D programming language. 
 It includes [streams, containers, serialization, property binder](http://bbasile.github.io/iz/) and more.
-It's based on a previous framework called [_**LLClasses**_](https://github.com/jsmdnq/LLClasses).
 
 Setup
 -----
@@ -17,7 +16,7 @@ Setup
 Info
 ----
 - [![CI Status](https://travis-ci.org/BBasile/iz.svg)](https://travis-ci.org/BBasile/iz)
-- v0.5.5: even if stable:
+- v0.5.6: even if stable:
     - the API could change, slightly.
     - the serialization formats may change without backward compatibility.
 - MIT licensed.

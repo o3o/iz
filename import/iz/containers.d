@@ -1465,7 +1465,7 @@ public:
 
     /**
      * Support for the array syntax.
-     * Should be avoided in for loops.
+     * Should be avoided in for() loops.
      */
     T opIndex(ptrdiff_t index)
     in
@@ -2025,16 +2025,32 @@ public:
 // children -------------------------------------------------------------------+
 
     /**
-     * Constructs, adds to the back then returns a new child of type IT.
+     * Constructs, adds to the back then returns a new child.
      * This method should be prefered over addChildren/insertChildren
      * if $(D deleteChildren()) is used.
+     *
+     * When TreeItem is mixed in a class a template parameter that specify
+     * the class type to return must be present, otherwise the function passes
+     * the optional run-time parameters to the struct or the class constructor.
      */
-    IT addNewChildren(IT,A...)(A a)
-    if (is(IT : TreeItemType))
+    static if (is(TreeItemType == class))
     {
-        auto result = construct!IT(a);
-        addChild(result);
-        return result;
+        IT addNewChild(IT,A...)(A a)
+        if (is(IT : TreeItemType))
+        {
+            auto result = construct!IT(a);
+            addChild(result);
+            return result;
+        }
+    }
+    else
+    {
+        TreeItemType addNewChild(A...)(A a)
+        {
+            TreeItemType result = construct!(typeof(this))(a);
+            addChild(result);
+            return result;
+        }
     }
 
     /**
@@ -2213,7 +2229,7 @@ public:
     /**
      * Removes and deletes the children.
      *
-     * This method should be used in pair with $(D addNewChildren()) and
+     * This method should be used in pair with $(D addNewChild()) and
      * $(D addNewSiblings()). If $(D add()) or $(D insert()) have been used to
      * build the tree then initial references will be dangling.
      */
@@ -2422,18 +2438,18 @@ unittest
     writeln( items1[12].level );
 */
 
-    root2.addNewChildren!ObjectTreeItem();
-        root2.children[0].addNewChildren!ObjectTreeItem();
-        root2.children[0].addNewChildren!ObjectTreeItem();
-        root2.children[0].addNewChildren!ObjectTreeItem();
-    root2.addNewChildren!ObjectTreeItem();
-        root2.children[1].addNewChildren!ObjectTreeItem();
-        root2.children[1].addNewChildren!ObjectTreeItem();
-        root2.children[1].addNewChildren!ObjectTreeItem();
-        root2.children[1].addNewChildren!ObjectTreeItem();
-            root2.children[1].children[3].addNewChildren!ObjectTreeItem();
-            root2.children[1].children[3].addNewChildren!ObjectTreeItem();
-            root2.children[1].children[3].addNewChildren!ObjectTreeItem();
+    root2.addNewChild!ObjectTreeItem();
+        root2.children[0].addNewChild!ObjectTreeItem();
+        root2.children[0].addNewChild!ObjectTreeItem();
+        root2.children[0].addNewChild!ObjectTreeItem();
+    root2.addNewChild!ObjectTreeItem();
+        root2.children[1].addNewChild!ObjectTreeItem();
+        root2.children[1].addNewChild!ObjectTreeItem();
+        root2.children[1].addNewChild!ObjectTreeItem();
+        root2.children[1].addNewChild!ObjectTreeItem();
+            root2.children[1].children[3].addNewChild!ObjectTreeItem();
+            root2.children[1].children[3].addNewChild!ObjectTreeItem();
+            root2.children[1].children[3].addNewChild!ObjectTreeItem();
 
     assert(root2.childrenCount == 2);
     assert(root2.children[0].childrenCount == 3);
@@ -2456,9 +2472,9 @@ unittest
 unittest
 {
     ObjectTreeItem root = construct!ObjectTreeItem;
-    ObjectTreeItem c0 = root.addNewChildren!ObjectTreeItem;
-    ObjectTreeItem c1 = root.addNewChildren!ObjectTreeItem;
-    ObjectTreeItem c2 = root.addNewChildren!ObjectTreeItem;
+    ObjectTreeItem c0 = root.addNewChild!ObjectTreeItem;
+    ObjectTreeItem c1 = root.addNewChild!ObjectTreeItem;
+    ObjectTreeItem c2 = root.addNewChild!ObjectTreeItem;
 
     scope(exit) destruct(root, c0, c1, c2);
 
@@ -2470,6 +2486,27 @@ unittest
     root.removeChild(c2);
     assert(root.childrenCount == 0);
     root.removeChild(c2);
+    assert(root.childrenCount == 0);
+}
+
+unittest
+{
+    alias ItemStruct = TreeItemStruct!"uint a;";
+
+    ItemStruct* root = construct!ItemStruct;
+
+    auto c0 = root.addNewChild;
+    ItemStruct* c1 = root.addNewChild;
+    ItemStruct* c2 = root.addNewChild;
+
+    scope(exit) destruct(root, c0, c1, c2);
+
+    assert(root.childrenCount == 3);
+    root.removeChild(0);
+    assert(root.childrenCount == 2);
+    root.removeChild(0);
+    assert(root.childrenCount == 1);
+    root.removeChild(0);
     assert(root.childrenCount == 0);
 }
 

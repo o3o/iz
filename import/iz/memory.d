@@ -295,6 +295,9 @@ unittest
 {
     import core.memory: GC;
 
+    interface I{}
+    class AI: I{}
+
     auto a = construct!Object;
     a.destruct;
     assert(!a);
@@ -344,6 +347,11 @@ unittest
     assert(!uni0);
     uni0.destruct;
     assert(!uni0);
+
+    auto ai = construct!AI;
+    auto i = cast(I) ai;
+    destruct(i);
+    assert(i is null);
 
     writeln("construct/destruct passed the tests");
 }
