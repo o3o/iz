@@ -946,10 +946,10 @@ class DynamicList(T): List!T
 
         void* getPayloadFromDt(T item) @trusted
         {
-            auto current = _first;
+            void* current = _first;
             while(current)
             {
-                auto _data = payload.getData(current);
+                T _data = payload.getData(current);
                 if (_data == item)
                     break;
                 current = payload.getNext(current);
@@ -973,20 +973,20 @@ class DynamicList(T): List!T
 
         T opIndex(ptrdiff_t i) @safe @nogc nothrow
         {
-            auto _pld = getPayloadFromIx(i);
+            void* _pld = getPayloadFromIx(i);
             return payload.getData(_pld);
         }
 
         void opIndexAssign(T item, size_t i) @safe @nogc nothrow
         {
-            auto _pld = getPayloadFromIx(i);
+            void* _pld = getPayloadFromIx(i);
             payload.setData(_pld, item);
         }
 
         int opApply(int delegate(T) dg) @trusted
         {
             int result = 0;
-            auto current = _first;
+            void* current = _first;
             while(current)
             {
                 result = dg(payload.getData(current));
@@ -999,7 +999,7 @@ class DynamicList(T): List!T
         int opApplyReverse(int delegate(T) dg) @trusted
         {
             int result = 0;
-            auto current = _last;
+            void* current = _last;
             while(current)
             {
                 result = dg(payload.getData(current));
@@ -1033,7 +1033,7 @@ class DynamicList(T): List!T
             while(current)
             {
                 result++;
-                auto _data = payload.getData(current);
+                T _data = payload.getData(current);
                 if (_data == item) return result++;
                 current = payload.getNext(current);
             }
@@ -1046,7 +1046,7 @@ class DynamicList(T): List!T
                 return insert(item);
             else
             {
-                auto _pld = payload.newPld(_last, null, item);
+                void* _pld = payload.newPld(_last, null, item);
                 payload.setNext(_last, _pld);
                 _last = _pld;
                 return _count++;
@@ -1062,7 +1062,7 @@ class DynamicList(T): List!T
 
         ptrdiff_t insert(T item) @trusted @nogc
         {
-            auto _pld = payload.newPld(null, _first, item);
+            void* _pld = payload.newPld(null, _first, item);
             if (_first) payload.setPrev(_first, _pld);
             else _last = _pld;
             _first = _pld;
@@ -1082,9 +1082,9 @@ class DynamicList(T): List!T
             }
             else
             {
-                auto old = getPayloadFromIx(position);
-                auto prev = payload.getPrev(old);
-                auto _pld = payload.newPld(prev, old, item);
+                void* old = getPayloadFromIx(position);
+                void* prev = payload.getPrev(old);
+                void* _pld = payload.newPld(prev, old, item);
                 payload.setPrev(old, _pld);
                 payload.setNext(prev, _pld);
                 _count++;
@@ -1094,13 +1094,13 @@ class DynamicList(T): List!T
 
         void swapItems(T item1, T item2) @trusted
         {
-            auto _pld1 = getPayloadFromDt(item1);
+            void* _pld1 = getPayloadFromDt(item1);
             if (_pld1 == null) return;
-            auto _pld2 = getPayloadFromDt(item2);
+            void* _pld2 = getPayloadFromDt(item2);
             if (_pld2 == null) return;
 
-            auto _data1 = payload.getData(_pld1);
-            auto _data2 = payload.getData(_pld2);
+            T _data1 = payload.getData(_pld1);
+            T _data2 = payload.getData(_pld2);
 
             payload.setData(_pld1, _data2);
             payload.setData(_pld2, _data1);
@@ -1108,13 +1108,13 @@ class DynamicList(T): List!T
 
         void swapIndexes(size_t index1, size_t index2) @trusted
         {
-            auto _pld1 = getPayloadFromIx(index1);
+            void* _pld1 = getPayloadFromIx(index1);
             if (_pld1 == null) return;
-            auto _pld2 = getPayloadFromIx(index2);
+            void* _pld2 = getPayloadFromIx(index2);
             if (_pld2 == null) return;
 
-            auto _data1 = payload.getData(_pld1);
-            auto _data2 = payload.getData(_pld2);
+            T _data1 = payload.getData(_pld1);
+            T _data2 = payload.getData(_pld2);
 
             payload.setData(_pld1, _data2);
             payload.setData(_pld2, _data1);
@@ -1122,11 +1122,11 @@ class DynamicList(T): List!T
 
         bool remove(T item) @trusted
         {
-            auto _pld = getPayloadFromDt(item);
+            void* _pld = getPayloadFromDt(item);
             if (!_pld) return false;
 
-            auto _prev = payload.getPrev(_pld);
-            auto _next = payload.getNext(_pld);
+            void* _prev = payload.getPrev(_pld);
+            void* _next = payload.getNext(_pld);
             if (_last == _pld && _prev)
             {
                 _last = _prev;
@@ -1157,12 +1157,12 @@ class DynamicList(T): List!T
         T extract(size_t index) @trusted
         {
             T result;
-            auto _pld = getPayloadFromIx(index);
+            void* _pld = getPayloadFromIx(index);
             if (!_pld) return result;
             result = payload.getData(_pld);
 
-            auto _prev = payload.getPrev(_pld);
-            auto _next = payload.getNext(_pld);
+            void* _prev = payload.getPrev(_pld);
+            void* _next = payload.getNext(_pld);
             if (_last == _pld && _prev)
             {
                 _last = _prev;
@@ -1192,10 +1192,10 @@ class DynamicList(T): List!T
 
         void clear() @trusted @nogc
         {
-            auto current = _first;
+            void* current = _first;
             while(current)
             {
-                auto _old = current;
+                void* _old = current;
                 current = payload.getNext(current);
                 payload.freePld(_old);
             }
@@ -1699,15 +1699,32 @@ public:
 // siblings -------------------------------------------------------------------+
 
     /**
-     * Allocates, adds to the back, and returns a new sibling of type IT.
-     * This method should be preferred over addSibling/insertSibling if deleteChildren() is used.
+     * Constructs, adds to the back then returns a new sibling.
+     * This method should be prefered over addChild and insertChild
+     * if $(D deleteChildren()) is used.
+     *
+     * When TreeItem is mixed in a class a template parameter that specifies
+     * the class type to return must be present, otherwise in both cases the
+     * function passes the optional run-time parameters to the constructor.
      */
-    IT addNewSibling(IT, A...)(A a)
-    if (is(IT : TreeItemType))
+    static if (is(TreeItemType == class))
     {
-        auto result = construct!IT(a);
-        addSibling(result);
-        return result;
+        IT addNewSibling(IT,A...)(A a)
+        if (is(IT : TreeItemType))
+        {
+            auto result = construct!IT(a);
+            addSibling(result);
+            return result;
+        }
+    }
+    else
+    {
+        TreeItemType addNewSibling(A...)(A a)
+        {
+            TreeItemType result = construct!(typeof(this))(a);
+            addSibling(result);
+            return result;
+        }
     }
 
     /**
@@ -1896,18 +1913,44 @@ public:
         auto item1oldnext = sibling1._nextSibling;
         auto item2oldprev = sibling2._prevSibling;
         auto item2oldnext = sibling2._nextSibling;
-        sibling1._prevSibling = item2oldprev;
-        sibling1._nextSibling = item2oldnext;
-        if (item1oldprev) item1oldprev._nextSibling = sibling2;
-        if (item1oldnext) item1oldnext._prevSibling = sibling2;
-        sibling2._prevSibling = item1oldprev;
-        sibling2._nextSibling = item1oldnext;
-        if (item2oldprev) item2oldprev._nextSibling = sibling1;
-        if (item2oldnext) item2oldnext._prevSibling = sibling1;
+        bool contiguous = item2oldprev == sibling1 || item1oldprev == sibling2;
 
-        if (sibling1.parent && sibling1.firstChild is sibling1)
+        if (!contiguous)
         {
-                sibling1._firstChild = sibling2;
+            sibling1._prevSibling = item2oldprev;
+            sibling1._nextSibling = item2oldnext;
+            sibling2._prevSibling = item1oldprev;
+            sibling2._nextSibling = item1oldnext;
+            if (item1oldprev) item1oldprev._nextSibling = sibling2;
+            if (item1oldnext) item1oldnext._prevSibling = sibling2;
+            if (item2oldprev) item2oldprev._nextSibling = sibling1;
+            if (item2oldnext) item2oldnext._prevSibling = sibling1;
+        }
+        else
+        {
+            if (item1oldnext is sibling2)
+            {
+                sibling1._prevSibling = sibling2;
+                sibling1._nextSibling = item2oldnext;
+                sibling2._nextSibling = sibling1;
+                sibling2._prevSibling = item1oldprev;
+            }
+            else
+            {
+                sibling2._prevSibling = sibling1;
+                sibling2._nextSibling = item1oldnext;
+                sibling1._nextSibling = sibling2;
+                sibling1._prevSibling = item2oldprev;
+            }
+        }
+
+        if (sibling1._parent && sibling1._parent.firstChild is sibling1)
+        {
+            sibling1._parent._firstChild = sibling2;
+        }
+        else if (sibling2._parent && sibling2._parent.firstChild is sibling2)
+        {
+            sibling2._parent._firstChild = sibling1;
         }
     }
 
@@ -1941,11 +1984,11 @@ public:
      */
     TreeItemType removeSibling(size_t index)
     {
-        auto result = siblings[index];
+        TreeItemType result = siblings[index];
         if (result)
         {
-            auto oldprev = result._prevSibling;
-            auto oldnext = result._nextSibling;
+            TreeItemType oldprev = result._prevSibling;
+            TreeItemType oldnext = result._nextSibling;
             if (oldprev) oldprev._nextSibling = oldnext;
             if (oldnext) oldnext._prevSibling = oldprev;
 
@@ -1989,7 +2032,7 @@ public:
     ptrdiff_t siblingIndex()
     {
         size_t result = size_t.max; // -1
-        auto current = self;
+        TreeItemType current = self;
         while(current)
         {
             current = current._prevSibling;
@@ -2026,12 +2069,12 @@ public:
 
     /**
      * Constructs, adds to the back then returns a new child.
-     * This method should be prefered over addChildren/insertChildren
+     * This method should be prefered over addChild and insertChild
      * if $(D deleteChildren()) is used.
      *
-     * When TreeItem is mixed in a class a template parameter that specify
-     * the class type to return must be present, otherwise the function passes
-     * the optional run-time parameters to the struct or the class constructor.
+     * When TreeItem is mixed in a class a template parameter that specifies
+     * the class type to return must be present, otherwise in both cases the
+     * function passes the optional run-time parameters to the constructor.
      */
     static if (is(TreeItemType == class))
     {
@@ -2187,7 +2230,7 @@ public:
     }
     body
     {
-        auto result = children[index];
+        TreeItemType result = children[index];
         if (result)
         {
             if (index > 0)
@@ -2227,7 +2270,7 @@ public:
     }
 
     /**
-     * Removes and deletes the children.
+     * Removes and deletes (destroy) the children.
      *
      * This method should be used in pair with $(D addNewChild()) and
      * $(D addNewSiblings()). If $(D add()) or $(D insert()) have been used to
@@ -2508,5 +2551,41 @@ unittest
     assert(root.childrenCount == 1);
     root.removeChild(0);
     assert(root.childrenCount == 0);
+
+    root.addChild(c0);
+    root.addChild(c1);
+    root.addChild(c2);
+    assert(root.childrenCount == 3);
+    root.removeChild(0);
+    assert(root.childrenCount == 2);
+    root.insertChild(c0);
+    assert(root.childrenCount == 3);
+    assert(root.children[0] == c0);
+    root.removeChild(1);
+    assert(c1.parent == null);
+    assert(root.childrenCount == 2);
+    root.insertChild(1, c1);
+    assert(root.childrenCount == 3);
+    root.removeChild(1);
+    assert(root.childrenCount == 2);
+    assert(c1.parent == null);
+    root.insertChild(1, c1);
+    assert(root.childrenCount == 3);
+    assert(root.children[1] == c1);
+
+    assert(root.children[0] == c0);
+    assert(root.children[1] == c1);
+    assert(root.children[2] == c2);
+
+    c2.exchangeSibling(c0,c1);
+    assert(root.firstChild == c1);
+    assert(root.children[0] == c1);
+    assert(root.children[1] == c0);
+    assert(root.children[2] == c2);
+    c2.exchangeSibling(c0,c1);
+    assert(root.firstChild == c0);
+    root.removeChild(c2);
+    c0.insertSibling(c2);
+    assert(root.firstChild == c2);
 }
 
