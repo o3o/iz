@@ -640,6 +640,11 @@ class StaticList(T): List!T
             return result;
         }
 
+        void opAssign(T[] items)
+        {
+            _items.opAssign(items);
+        }
+
         T last()
         {
             return _items[$-1];
@@ -1009,7 +1014,7 @@ class DynamicList(T): List!T
             return result;
         }
 
-        void opSliceAssign(T[] elems) @trusted @nogc
+        void opAssign(T[] elems) @trusted @nogc
         {
             clear;
             foreach(elem; elems)
@@ -1286,7 +1291,6 @@ class DynamicList(T): List!T
                 return this;
             }
 
-
             @property size_t length()
             {
                 size_t result;
@@ -1411,6 +1415,54 @@ unittest
         assert(itm);
         itm.destruct;
         assert(cList.count == 0);
+
+        cList.add(arrayOfC[0]);
+        cList[0] = arrayOfC[1];
+        assert(cList.find(arrayOfC[0]) == -1);
+        assert(cList.find(arrayOfC[1]) == 0);
+        cList.clear;
+
+        cList = arrayOfC[10..20];
+        assert(cList.count == 10);
+        assert(cList[0] == arrayOfC[10]);
+        assert(cList[9] == arrayOfC[19]);
+
+        cList.clear;
+        cList.insert(0, arrayOfC[24]);
+        assert(cList[0] == arrayOfC[24]);
+        cList.insert(123456, arrayOfC[25]);
+        assert(cList.count == 2);
+        assert(cList[1] == arrayOfC[25]);
+        cList.swapItems(arrayOfC[24],arrayOfC[25]);
+        assert(cList[0] == arrayOfC[25]);
+        assert(cList[1] == arrayOfC[24]);
+        cList.swapIndexes(0,1);
+        assert(cList[0] == arrayOfC[24]);
+        assert(cList[1] == arrayOfC[25]);
+        C elem = cList.extract(1);
+        assert(elem is arrayOfC[25]);
+        assert(cList.count == 1);
+
+        size_t i;
+        cList = arrayOfC[0..10];
+        foreach(C c; cList)
+        {
+            assert(c is arrayOfC[i]);
+            ++i;
+        }
+        foreach_reverse(C c; cList)
+        {
+            --i;
+            assert(c is arrayOfC[i]);
+        }
+        assert(cList.first == arrayOfC[0]);
+        assert(cList.last == arrayOfC[9]);
+
+        cList.clear;
+        cList.add(arrayOfC[0..10]);
+        assert(cList.count == 10);
+        assert(cList.first == arrayOfC[0]);
+        assert(cList.last == arrayOfC[9]);
 
         writeln(T.stringof ,"(T) passed the tests");
     }
@@ -2587,5 +2639,18 @@ unittest
     root.removeChild(c2);
     c0.insertSibling(c2);
     assert(root.firstChild == c2);
+
+    root.removeChildren;
+    root.addChild(c0);
+    root.addChild(c1);
+    root.addChild(c2);
+    auto r = root.children;
+    assert(r.front == c0);
+    r.popFront;
+    assert(r.front == c1);
+    r.popFront;
+    assert(r.front == c2);
+    r.popFront;
+    assert(r.empty);
 }
 

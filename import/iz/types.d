@@ -361,11 +361,13 @@ unittest
     static assert(isOrderedEnum!A);
     enum B: ubyte {a = 2,z,e,r}
     static assert(isOrderedEnum!B);
+    assert(isOrderedEnum!B); //!\ forces coverage /!\
 
     enum C: float {a,z,e,r}
     static assert(!isOrderedEnum!C);
     enum D: uint {a,z = 8,e,r}
     static assert(!isOrderedEnum!D);
+    assert(!isOrderedEnum!D); //!\ forces coverage /!\
 }
 
 /**
