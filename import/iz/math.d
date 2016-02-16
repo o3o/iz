@@ -170,10 +170,10 @@ else static assert(0, "To test !");
 ///
 unittest
 {
-    assert(round(0.2f) == 0.0f);
-    assert(round(0.8f) == 1.0f);
-    assert(round(-0.2f) == 0.0f);
-    assert(round(-0.8f) == -1.0f);
+    assert(round(0.2f) == 0);
+    assert(round(0.8f) == 1);
+    assert(round(-0.2f) == 0);
+    assert(round(-0.8f) == -1);
 }
 
 /**
@@ -190,16 +190,16 @@ unittest
 int floor(T)(T value)
 if (isFloatingPoint!T)
 {
-    const T offs = 0.5;
+    const T offs = -0.5;
     return round(value + offs);
 }
 ///
 unittest
 {
-    assert(floor(0.2f) == 1.0f);
-    assert(floor(0.8f) == 1.0f);
-    assert(floor(-0.2f) == -0.0f);
-    assert(floor(-0.8f) == -0.0f);
+    assert(floor(0.2f) == 0);
+    assert(floor(0.8f) == 0);
+    assert(floor(-0.2f) == -1);
+    assert(floor(-0.8f) == -1);
 }
 
 /**
@@ -216,16 +216,16 @@ unittest
 int ceil(T)(T value)
 if (isFloatingPoint!T)
 {
-    const T offs = -0.5;
+    const T offs = 0.5;
     return round(value + offs);
 }
 ///
 unittest
 {
-    assert(ceil(0.2f) == 0.0f);
-    assert(ceil(0.8f) == 0.0f);
-    assert(ceil(-0.2f) == -1.0f);
-    assert(ceil(-0.8f) == -1.0f);
+    assert(ceil(0.2f) == 1);
+    assert(ceil(0.8f) == 1);
+    assert(ceil(-0.2f) == 0);
+    assert(ceil(-0.8f) == 0);
 }
 
 /**
@@ -250,9 +250,9 @@ int trunc(T)(T value)
 ///
 unittest
 {
-    assert(trunc(0.2f) == 0.0f);
-    assert(trunc(0.8f) == 0.0f);
-    assert(trunc(-0.2f) == 0.0f);
-    assert(trunc(-0.8f) == 0.0f);
+    assert(trunc(0.2f) == 0);
+    assert(trunc(0.8f) == 0);
+    assert(trunc(-0.2f) == 0);
+    assert(trunc(-0.8f) == 0);
 }
 
