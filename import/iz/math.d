@@ -3,8 +3,6 @@ module iz.math;
 import
     std.traits;
 
-//TODO: iz.math rouding under X86
-
 /**
  * Saves the rounding mode used in iz.math (MXCSR).
  *
@@ -149,24 +147,52 @@ unittest
  * Returns:
  *      An integer equal to the nearest integral value.
  */
-version(X86_64)
-int round(T)(T value)
+extern(C) int round(T)(T value)
 {
-    static if (is(T==float)) asm
+    version(X86_64)
     {
-        naked;
-        cvtss2si EAX, XMM0;
-        ret;
+        static if (is(T==float)) asm
+        {
+            naked;
+            cvtss2si EAX, XMM0;
+            ret;
+        }
+        else static if (is(T==double)) asm
+        {
+            naked;
+            cvtsd2si EAX, XMM0;
+            ret;
+        }
+        else static assert(0, "unsupported FP type");
     }
-    else static if (is(T==double)) asm
+    else version(X86)
     {
-        naked;
-        cvtsd2si EAX, XMM0;
-        ret;
+        static if (is(T==float)) asm
+        {
+            naked;
+            push EBP;
+            mov EBP, ESP;
+            movlps XMM0, value;
+            cvtss2si EAX, XMM0;
+            mov ESP, EBP;
+            pop EBP;
+            ret;
+        }
+        else static if (is(T==double)) asm
+        {
+            naked;
+            push EBP;
+            mov EBP, ESP;
+            movlps XMM0, value;
+            cvtsd2si EAX, XMM0;
+            mov ESP, EBP;
+            pop EBP;
+            ret;
+        }
+        else static assert(0, "unsupported FP type");          
     }
-    else static assert(0, "unsupported FP type");
+    else static assert(0, "unsupported architecture");
 }
-else static assert(0, "To test !");
 ///
 unittest
 {
@@ -185,7 +211,7 @@ unittest
  *      value = Either a float or a double.
  *
  * Returns:
- *      The largest integral value that is not greater than value.
+ *      The largest integral value that is not greater than $(D_PARAM value).
  */
 int floor(T)(T value)
 if (isFloatingPoint!T)
@@ -211,7 +237,7 @@ unittest
  *      value = Either a float or a double.
  *
  * Returns:
- *      The smallest integral value that is not less than value.
+ *      The smallest integral value that is not less than $(D_PARAM value).
  */
 int ceil(T)(T value)
 if (isFloatingPoint!T)
@@ -231,16 +257,83 @@ unittest
 /**
  * Converts a floating point value to an integer.
  *
- * This function relies on the D behavior when casting a floating point value
- * to an integer. It may uses SSE2 or not but it can always be inlined.
+ * This function requires the SSE2 instruction set and it can't be inlined.
  *
  * Params:
  *      value = Either a float or a double.
  *
  * Returns:
- *      An integral value equal to the integral part of value.
+ *      An integral value equal to the integral part of $(D_PARAM value).
  */
-int trunc(T)(T value)
+extern(C) int trunc(T)(T value)
+{
+    version(X86_64)
+    {
+        static if (is(T==float)) asm
+        {
+            naked;
+            cvttss2si EAX, XMM0;
+            ret;
+        }
+        else static if (is(T==double)) asm
+        {
+            naked;
+            cvttsd2si EAX, XMM0;
+            ret;
+        }
+        else static assert(0, "unsupported FP type");
+    }
+    else version(X86)
+    {
+        static if (is(T==float)) asm
+        {
+            naked;
+            push EBP;
+            mov EBP, ESP;
+            movlps XMM0, value;
+            cvttss2si EAX, XMM0;
+            mov ESP, EBP;
+            pop EBP;
+            ret;
+        }
+        else static if (is(T==double)) asm
+        {
+            naked;
+            push EBP;
+            mov EBP, ESP;
+            movlps XMM0, value;
+            cvttsd2si EAX, XMM0;
+            mov ESP, EBP;
+            pop EBP;
+            ret;
+        }
+        else static assert(0, "unsupported FP type");          
+    }
+    else static assert(0, "unsupported architecture");
+}
+///
+unittest
+{
+    assert(trunc(0.2f) == 0);
+    assert(trunc(0.8f) == 0);
+    assert(trunc(-0.2f) == 0);
+    assert(trunc(-8.8f) == -8);
+}
+
+/**
+ * Converts a floating point value to an integer.
+ *
+ * This function relies on the D behavior when casting a floating point value
+ * to an integer. It uses SSE2 on X86_64 and the FPU on X86 but it can always be 
+ * inlined.
+ *
+ * Params:
+ *      value = Either a float or a double.
+ *
+ * Returns:
+ *      An integral value equal to the integral part of $(D_PARAM value).
+ */
+int dtrunc(T)(T value)
 {
     static if (is(T==float) || is(T==double))
         return cast(int) value;
@@ -250,9 +343,9 @@ int trunc(T)(T value)
 ///
 unittest
 {
-    assert(trunc(0.2f) == 0);
-    assert(trunc(0.8f) == 0);
-    assert(trunc(-0.2f) == 0);
-    assert(trunc(-0.8f) == 0);
+    assert(dtrunc(0.2f) == 0);
+    assert(dtrunc(0.8f) == 0);
+    assert(dtrunc(-0.2f) == 0);
+    assert(dtrunc(-8.8f) == -8);
 }
 
