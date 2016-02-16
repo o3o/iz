@@ -15,7 +15,7 @@ object _1: TCENativeProject
       name = 'debug'
       debugingOptions.debug = True
       debugingOptions.generateMapFile = True
-      messagesOptions.depreciationHandling = silent
+      messagesOptions.deprecationHandling = silent
       messagesOptions.warningsAsInfo = True
       outputOptions.binaryKind = staticlib
       outputOptions.boundsCheck = onAlways
@@ -48,7 +48,7 @@ object _1: TCENativeProject
       name = 'test64'
       debugingOptions.debug = True
       debugingOptions.generateMapFile = True
-      messagesOptions.depreciationHandling = silent
+      messagesOptions.deprecationHandling = silent
       messagesOptions.warnings = False
       outputOptions.targetKind = os64bit
       outputOptions.binaryKind = staticlib
@@ -59,7 +59,7 @@ object _1: TCENativeProject
       name = 'test32'
       debugingOptions.debug = True
       debugingOptions.generateMapFile = True
-      messagesOptions.depreciationHandling = silent
+      messagesOptions.deprecationHandling = silent
       messagesOptions.warnings = False
       outputOptions.targetKind = os32bit
       outputOptions.binaryKind = staticlib
@@ -71,6 +71,7 @@ object _1: TCENativeProject
     'import/iz/containers.d'
     'import/iz/enumset.d'
     'import/iz/logicver.d'
+    'import/iz/math.d'
     'import/iz/memory.d'
     'import/iz/observer.d'
     'import/iz/properties.d'

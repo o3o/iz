@@ -16,9 +16,21 @@ thumbs.db
 dub.selections.json
 __*
 
-# nix module unittests, ignore all in import/ except sources
-import/*
-!import/*.d
+# module unittested under nux,
+classes
+containers
+enumset
+logicver
+math
+memory
+observer
+properties
+referencable
+serializer
+streams
+strings
+sugar
+types
 
 # misc
 *.map
