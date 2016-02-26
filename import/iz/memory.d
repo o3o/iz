@@ -114,7 +114,7 @@ if (isPointer!T && isBasicType!(pointerTarget!T))
  *      a = Variadic parameters passed to the constructor.
  */
 CT construct(CT, A...)(A a) @trusted
-if (is(CT == class))
+if (is(CT == class) && !isAbstractClass!CT)
 {
     auto size = typeid(CT).init.length;
     auto memory = getMem(size);
