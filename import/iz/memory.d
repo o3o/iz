@@ -139,6 +139,8 @@ if (is(CT == class) && !isAbstractClass!CT)
  */
 Object construct(TypeInfo_Class tic) @trusted
 {
+    if (tic.m_flags & 64)
+        return null;
     auto size = tic.init.length;
     auto memory = getMem(size);
     memory[0 .. size] = tic.init[];
@@ -257,7 +259,7 @@ private __gshared TypeInfo_Class[string] registeredClasses;
  *      By default the T.stringof is used.
  */
 void registerFactoryClass(T)(string name = "")
-if (is(T == class))
+if (is(T == class) && !isAbstractClass!T)
 {
     if (!name.length)
         name = T.stringof;
@@ -352,6 +354,10 @@ unittest
     auto i = cast(I) ai;
     destruct(i);
     assert(i is null);
+
+    abstract class Abst {}
+    Object ab = construct(typeid(Abst));
+    assert(ab is null);
 
     writeln("construct/destruct passed the tests");
 }
