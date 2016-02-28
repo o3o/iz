@@ -4,7 +4,7 @@
 module iz.sugar;
 
 import
-    std.traits, std.typetuple;
+    std.traits, std.typetuple, std.functional, std.range.primitives;
 
 version(unittest) import std.stdio;
 
@@ -680,4 +680,131 @@ unittest
     assert(a.fun == "aa");
 }
 
+/**
+ * Pops an input range while a predicate is true.
+ * Consumes the input argument.
+ *
+ * Params:
+ *      pred = the predicate.
+ *      range = an input range, must be a lvalue.
+ */
+void popWhile(alias pred, Range)(ref Range range)
+if (isInputRange!Range && is(typeof(unaryFun!pred)))
+{
+    alias f = unaryFun!pred;
+    while (!range.empty)
+    {
+        if (!f(range.front))
+            break;
+        else
+            range.popFront;
+    }
+}
+///
+unittest
+{
+    string r0 = "aaaaabcd";
+    r0.popWhile!"a == 'a'";
+    assert(r0 == "bcd");
+
+    static bool lessTwo(T)(T t)
+    {
+        return t < 2;
+    }
+    int[] r1 = [0,1,2,0,1,2];
+    r1.popWhile!lessTwo;
+    assert(r1 == [2,0,1,2]);
+
+    static bool posLessFive(T)(T t)
+    {
+        return t < 5 && t > 0;
+    }
+    int[] r3 = [2,3,4,-1];
+    r3.popWhile!posLessFive;
+    assert(r3 == [-1]);
+    int[] r4 = [2,3,4,5];
+    r4.popWhile!posLessFive;
+    assert(r4 == [5]);
+}
+
+/**
+ * Convenience function that calls popUntil on the input
+ * argument and returns the consumed range to allow function pipelining.
+ * In addition this wrapper allows to pass a rvalue.
+ */
+auto dropWhile(alias pred, Range)(auto ref Range range)
+if (isInputRange!Range && is(typeof(unaryFun!pred)))
+{
+    popWhile!(pred, Range)(range);
+    return range;
+}
+///
+unittest
+{
+    assert("aaaaabcd".dropWhile!"a == 'a'" == "bcd");
+}
+
+/**
+ * Pops back an input range while a predicate is true.
+ * Consumes the input argument.
+ *
+ * Params:
+ *      pred = the predicate.
+ *      range = an input range, must be a lvalue.
+ */
+void popBackWhile(alias pred, Range)(ref Range range)
+if (isBidirectionalRange!Range && is(typeof(unaryFun!pred)))
+{
+    alias f = unaryFun!pred;
+    while (!range.empty)
+    {
+        if (!f(range.back))
+            break;
+        else
+            range.popBack;
+    }
+}
+///
+unittest
+{
+    string r0 = "bcdaaaa";
+    r0.popBackWhile!"a == 'a'";
+    assert(r0 == "bcd");
+
+    static bool lessTwo(T)(T t)
+    {
+        return t < 2;
+    }
+    int[] r1 = [0,1,2,2,1,0];
+    r1.popBackWhile!lessTwo;
+    assert(r1 == [0,1,2,2]);
+
+    static bool posLessFive(T)(T t)
+    {
+        return t < 5 && t > 0;
+    }
+    int[] r3 = [-1,2,3,4];
+    r3.popBackWhile!posLessFive;
+    assert(r3 == [-1]);
+    int[] r4 = [5,2,3,4];
+    r4.popBackWhile!posLessFive;
+    assert(r4 == [5]);
+}
+
+/**
+ * Convenience function that calls popBackWhile on the input argument
+ * and returns the consumed range to allow function pipelining.
+ * In addition this wrapper allows to pass a rvalue.
+ */
+auto dropBackWhile(alias pred, Range)(auto ref Range range)
+if (isBidirectionalRange!Range && is(typeof(unaryFun!pred)))
+{
+    popBackWhile!(pred, Range)(range);
+    return range;
+}
+///
+unittest
+{
+    assert("abcdefgh".dropBackWhile!"a > 'e'" == "abcde");
+}
 
