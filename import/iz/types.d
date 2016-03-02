@@ -188,22 +188,19 @@ if (is(T == class) || is(T == interface))
         return (cast(TypeInfo_Class)typeid(o)).name.demangle.split('.')[$-1];
     }
 }
-
-version(unittest)
+///
+unittest
 {
-    interface I {}
-    class A{}
-    class B: I{}
-    unittest
-    {
-        class C{}
-        assert(className(new A) == "A");
-        assert(className(new B) == "B");
-        assert(className(cast(Object)new A) == "A");
-        assert(className(cast(Object)new B) == "B");
-        assert(className(cast(I) new B) == "B");
-        assert(className!(false)(new C) == "C");
-    }
+    static interface I {}
+    static class A{}
+    static class B: I{}
+    static class C{}
+    assert(className(new A) == "A");
+    assert(className(new B) == "B");
+    assert(className(cast(Object)new A) == "A");
+    assert(className(cast(Object)new B) == "B");
+    assert(className(cast(I) new B) == "B");
+    assert(className!(false)(new C) == "C");
 }
 
 /**

@@ -689,7 +689,8 @@ unittest
  *      range = an input range, must be a lvalue.
  */
 void popWhile(alias pred, Range)(ref Range range)
-if (isInputRange!Range && is(typeof(unaryFun!pred)))
+if (isInputRange!Range && is(typeof(unaryFun!pred)) && isImplicitlyConvertible!
+    (typeof(unaryFun!pred((ElementType!Range).init)), bool))
 {
     alias f = unaryFun!pred;
     while (!range.empty)
@@ -728,12 +729,13 @@ unittest
 }
 
 /**
- * Convenience function that calls popUntil on the input
- * argument and returns the consumed range to allow function pipelining.
- * In addition this wrapper allows to pass a rvalue.
+ * Convenience function that calls popWhile() on the input argument 
+ * and returns the consumed range to allow function pipelining.
+ * In addition this wrapper accepts rvalues.
  */
 auto dropWhile(alias pred, Range)(auto ref Range range)
-if (isInputRange!Range && is(typeof(unaryFun!pred)))
+if (isInputRange!Range && is(typeof(unaryFun!pred)) && isImplicitlyConvertible!
+    (typeof(unaryFun!pred((ElementType!Range).init)), bool))
 {
     popWhile!(pred, Range)(range);
     return range;
@@ -753,7 +755,8 @@ unittest
  *      range = an input range, must be a lvalue.
  */
 void popBackWhile(alias pred, Range)(ref Range range)
-if (isBidirectionalRange!Range && is(typeof(unaryFun!pred)))
+if (isBidirectionalRange!Range && is(typeof(unaryFun!pred)) && isImplicitlyConvertible!
+    (typeof(unaryFun!pred((ElementType!Range).init)), bool))
 {
     alias f = unaryFun!pred;
     while (!range.empty)
@@ -792,12 +795,13 @@ unittest
 }
 
 /**
- * Convenience function that calls popBackWhile on the input argument
+ * Convenience function that calls popBackWhile() on the input argument
  * and returns the consumed range to allow function pipelining.
- * In addition this wrapper allows to pass a rvalue.
+ * In addition this wrapper accepts rvalues.
  */
 auto dropBackWhile(alias pred, Range)(auto ref Range range)
-if (isBidirectionalRange!Range && is(typeof(unaryFun!pred)))
+if (isBidirectionalRange!Range && is(typeof(unaryFun!pred)) && isImplicitlyConvertible!
+    (typeof(unaryFun!pred((ElementType!Range).init)), bool))
 {
     popBackWhile!(pred, Range)(range);
     return range;
