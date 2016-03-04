@@ -688,7 +688,7 @@ unittest
  *      pred = the predicate.
  *      range = an input range, must be a lvalue.
  */
-void popWhile(alias pred, Range)(ref Range range)
+void popWhile(alias pred, Range)(ref Range range) pure @safe
 if (isInputRange!Range && is(typeof(unaryFun!pred)) && isImplicitlyConvertible!
     (typeof(unaryFun!pred((ElementType!Range).init)), bool))
 {
@@ -702,7 +702,7 @@ if (isInputRange!Range && is(typeof(unaryFun!pred)) && isImplicitlyConvertible!
     }
 }
 ///
-unittest
+pure @safe unittest
 {
     string r0 = "aaaaabcd";
     r0.popWhile!"a == 'a'";
@@ -733,7 +733,7 @@ unittest
  * and returns the consumed range to allow function pipelining.
  * In addition this wrapper accepts rvalues.
  */
-auto dropWhile(alias pred, Range)(auto ref Range range)
+auto dropWhile(alias pred, Range)(auto ref Range range) pure @safe
 if (isInputRange!Range && is(typeof(unaryFun!pred)) && isImplicitlyConvertible!
     (typeof(unaryFun!pred((ElementType!Range).init)), bool))
 {
@@ -741,7 +741,7 @@ if (isInputRange!Range && is(typeof(unaryFun!pred)) && isImplicitlyConvertible!
     return range;
 }
 ///
-unittest
+pure @safe unittest
 {
     assert("aaaaabcd".dropWhile!"a == 'a'" == "bcd");
 }
@@ -754,7 +754,7 @@ unittest
  *      pred = the predicate.
  *      range = an input range, must be a lvalue.
  */
-void popBackWhile(alias pred, Range)(ref Range range)
+void popBackWhile(alias pred, Range)(ref Range range) pure @safe
 if (isBidirectionalRange!Range && is(typeof(unaryFun!pred)) && isImplicitlyConvertible!
     (typeof(unaryFun!pred((ElementType!Range).init)), bool))
 {
@@ -768,7 +768,7 @@ if (isBidirectionalRange!Range && is(typeof(unaryFun!pred)) && isImplicitlyConve
     }
 }
 ///
-unittest
+pure @safe unittest
 {
     string r0 = "bcdaaaa";
     r0.popBackWhile!"a == 'a'";
@@ -799,7 +799,7 @@ unittest
  * and returns the consumed range to allow function pipelining.
  * In addition this wrapper accepts rvalues.
  */
-auto dropBackWhile(alias pred, Range)(auto ref Range range)
+auto dropBackWhile(alias pred, Range)(auto ref Range range) pure @safe
 if (isBidirectionalRange!Range && is(typeof(unaryFun!pred)) && isImplicitlyConvertible!
     (typeof(unaryFun!pred((ElementType!Range).init)), bool))
 {
@@ -810,5 +810,79 @@ if (isBidirectionalRange!Range && is(typeof(unaryFun!pred)) && isImplicitlyConve
 unittest
 {
     assert("abcdefgh".dropBackWhile!"a > 'e'" == "abcde");
+}
+
+/**
+ * Returns a lazy input range that alterntively returns the state of one of two
+ * sub-ranges.
+ *
+ * Similar to std.range roundRobin() or chain() except that the resulting range
+ * is considered as empty when one of the sub range is consumed.
+ *
+ * Params:
+ *      flip = the first input range.
+ *      flop = the second input range.
+ */
+auto flipFlop(R1, R2)(auto ref R1 flip, auto ref R2 flop) pure @safe
+if (isInputRange!R1 && isInputRange!R2 && is(ElementType!R1 == ElementType!R2))
+{
+    struct FlipFlop
+    {
+        private:
+
+            R1 _flip;
+            R2 _flop;
+            bool _takeFlop;
+
+        public:
+
+            ///
+            this(R1 flip, R1 flop)
+            {
+                _flip = flip;
+                _flop = flop;
+            }
+
+            ///
+            bool empty()
+            {
+                return (_flip.empty && !_takeFlop) | (_takeFlop && _flop.empty);
+            }
+
+            ///
+            auto front()
+            {
+                final switch (_takeFlop)
+                {
+                    case false: return _flip.front;
+                    case true:  return _flop.front;
+                }
+            }
+
+            ///
+            void popFront()
+            {
+                _takeFlop = !_takeFlop;
+                final switch (_takeFlop)
+                {
+                    case false: return _flop.popFront;
+                    case true:  return _flip.popFront;
+                }
+
+            }
+    }
+    return FlipFlop(flip, flop);
+}
+///
+pure @safe unittest
+{
+    import std.array: array;
+    assert(flipFlop([0,2,4],[1,3,5]).array == [0,1,2,3,4,5]);
+    assert(flipFlop([0,2],[1,3,5]).array == [0,1,2,3]);
+    assert(flipFlop([0,2,4],[1,3]).array == [0,1,2,3,4]);
+    int[] re = [];
+    assert(flipFlop([0], re).array == [0]);
+    assert(flipFlop(re, re).array == []);
+    assert(flipFlop(re, [0]).array == []);
 }
 
