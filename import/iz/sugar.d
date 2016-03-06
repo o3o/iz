@@ -192,7 +192,8 @@ enum MaskKind {Byte, Nibble, Bit}
  * Returns:
  *      The input argument with the element masked.
  */
-auto mask(size_t index, MaskKind kind = MaskKind.Byte, T)(const T value) nothrow
+auto mask(size_t index, MaskKind kind = MaskKind.Byte, T)(const T value)
+nothrow @safe pure
 if (    (kind == MaskKind.Byte && index <= T.sizeof)
     ||  (kind == MaskKind.Nibble && index <= T.sizeof * 2)
     ||  (kind == MaskKind.Bit && index <= T.sizeof * 8))
@@ -213,7 +214,7 @@ if (    (kind == MaskKind.Byte && index <= T.sizeof)
     return value & _mask;
 }
 ///
-unittest
+nothrow @safe pure unittest
 {
     // MaskKind.Byte by default.
     static assert(mask!1(0x12345678) == 0x12340078);
@@ -222,26 +223,26 @@ unittest
 
 
 /// Compile-time $(D mask()) partially specialized for nibble-masking.
-auto maskNibble(size_t index, T)(const T value) nothrow
+auto maskNibble(size_t index, T)(const T value) nothrow @safe pure
 {
     // note: aliasing prevents template parameter type deduction,
     // e.g alias maskNibble(size_t index, T) = mask!(index, MaskKind.Nibble, T);
     return mask!(index, MaskKind.Nibble)(value);
 }
 ///
-unittest
+nothrow @safe pure unittest
 {
     static assert(maskNibble!1(0x12345678) == 0x12345608);
 }
 
 
 /// Compile-time $(D mask()) partially specialized for bit-masking.
-auto maskBit(size_t index, T)(const T value) nothrow
+auto maskBit(size_t index, T)(const T value) nothrow @safe pure
 {
     return mask!(index, MaskKind.Bit)(value);
 }
 ///
-unittest
+nothrow @safe pure unittest
 {
     static assert(maskBit!1(0b1111) == 0b1101);
 }
@@ -258,7 +259,8 @@ unittest
  * Returns:
  *      The input argument with the element masked.
  */
-auto mask(MaskKind kind = MaskKind.Byte, T)(const T value, size_t index) nothrow
+auto mask(MaskKind kind = MaskKind.Byte, T)(const T value, size_t index)
+nothrow @safe pure
 {
     static immutable byteMasker =
     [
@@ -299,7 +301,7 @@ auto mask(MaskKind kind = MaskKind.Byte, T)(const T value, size_t index) nothrow
         return value & (0xFFFFFFFFFFFFFFFF - (1UL << index));
 }
 ///
-unittest
+nothrow @safe pure unittest
 {
     // MaskKind.Byte by default.
     assert(mask(0x12345678,1) == 0x12340078);
@@ -323,29 +325,29 @@ auto mask(MaskKind kind = MaskKind.Byte, T)(const T value, size_t index) nothrow
 
 
 /// Run-time $(D mask()) partially specialized for nibble-masking.
-auto maskNibble(T)(const T value, size_t index) nothrow
+auto maskNibble(T)(const T value, size_t index) nothrow @safe pure
 {
     return mask!(MaskKind.Nibble)(value, index);
 }
 ///
-unittest
+nothrow @safe pure unittest
 {
     assert(maskNibble(0x12345678,1) == 0x12345608);
 }
 
 
 /// Run-time $(D mask()) partially specialized for bit-masking.
-auto maskBit(T)(const T value, size_t index) nothrow
+auto maskBit(T)(const T value, size_t index) nothrow @safe pure
 {
     return mask!(MaskKind.Bit)(value, index);
 }
 ///
-unittest
+nothrow @safe pure unittest
 {
     assert(maskBit(0b1111,1) == 0b1101);
 }
 
-unittest
+nothrow @safe pure unittest
 {
     enum v0 = 0x44332211;
     static assert( mask!0(v0) == 0x44332200);
@@ -434,7 +436,7 @@ struct ArrayRange(T, bool assumeDecoded = false, bool infinite = false)
         void popFront()
         {
             ++_front;
-            static if(infinite)
+            static if (infinite)
             {
                 if (_front > _back)
                     _front = _first;
@@ -807,7 +809,7 @@ if (isBidirectionalRange!Range && is(typeof(unaryFun!pred)) && isImplicitlyConve
     return range;
 }
 ///
-unittest
+pure @safe unittest
 {
     assert("abcdefgh".dropBackWhile!"a > 'e'" == "abcde");
 }
