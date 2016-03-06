@@ -2,33 +2,51 @@
  * Several simple math functions.
  *
  * They are rather dedicated to the X86_64 architecture but implemented for
- * X86 too.
+ * X86 too, even if parameters loading is less adequate and slower under this
+ * architecture.
  */
 module iz.math;
 
 import
     std.traits, std.complex;
 
-static this()
+/**
+ * When the conditional version identifer "ensure_sseRoundingMode" is
+ * set then the current rounding mode is reset to the default value.
+ */
+version(ensure_sseRoundingMode) static this()
 {
-    version(ensure_sse_roundingmode)
-        roundToNearest;
+    roundToNearest;
 }
 
 /**
- * Saves the rounding mode used in iz.math (MXCSR).
+ * Saves the rounding mode used in iz.math
+ * (always the 13th and 14th bit of SSE MXCSR).
  *
  * Returns:
  *      The current rounding mode, as a read-only integer value.
  */
 const(int) saveIzRoundingMode() @trusted pure nothrow
 {
-    int v;
-    asm pure nothrow
+    version(X86) asm pure nothrow
     {
-        stmxcsr v;
+        naked;
+        sub     ESP, 4;
+        stmxcsr dword ptr [ESP-4];
+        mov     EAX, dword ptr [ESP-4];
+        add     ESP, 4;
+        ret;
     }
-    return v;
+    else version(X86_64) asm pure nothrow
+    {
+        naked;
+        sub     RSP, 4;
+        stmxcsr dword ptr [RSP-4];
+        mov     EAX, dword ptr [RSP-4];
+        add     RSP, 4;
+        ret;
+    }
+    else static assert(0, "unsupported architecture");
 }
 
 /**
@@ -183,7 +201,7 @@ extern(C) int round(T)(T value) @trusted pure nothrow
             naked;
             push EBP;
             mov EBP, ESP;
-            movlps XMM0, value;
+            movss XMM0, value;
             cvtss2si EAX, XMM0;
             mov ESP, EBP;
             pop EBP;
@@ -194,7 +212,7 @@ extern(C) int round(T)(T value) @trusted pure nothrow
             naked;
             push EBP;
             mov EBP, ESP;
-            movlps XMM0, value;
+            movsd XMM0, value;
             cvtsd2si EAX, XMM0;
             mov ESP, EBP;
             pop EBP;
@@ -301,7 +319,7 @@ extern(C) int trunc(T)(T value) @trusted pure nothrow
             naked;
             push EBP;
             mov EBP, ESP;
-            movlps XMM0, value;
+            movss XMM0, value;
             cvttss2si EAX, XMM0;
             mov ESP, EBP;
             pop EBP;
@@ -312,7 +330,7 @@ extern(C) int trunc(T)(T value) @trusted pure nothrow
             naked;
             push EBP;
             mov EBP, ESP;
-            movlps XMM0, value;
+            movsd XMM0, value;
             cvttsd2si EAX, XMM0;
             mov ESP, EBP;
             pop EBP;
@@ -403,12 +421,16 @@ extern(C) T hypot(T)(T x, T y) pure @trusted nothrow
             naked;
             push    EBP;
             mov     EBP, ESP;
-            movlps  XMM0, x;
-            movlps  XMM1, y;
+            sub     ESP, 4;
+            movss   XMM0, x;
+            movss   XMM1, y;
             mulps   XMM0, XMM0;
             mulps   XMM1, XMM1;
             addps   XMM0, XMM1;
             sqrtps  XMM0, XMM0;
+            movss   dword ptr [ESP-4], XMM0;
+            fld     dword ptr [ESP-4];
+            add     ESP, 4;
             mov     ESP, EBP;
             pop     EBP;
             ret;
@@ -418,21 +440,26 @@ extern(C) T hypot(T)(T x, T y) pure @trusted nothrow
             naked;
             push    EBP;
             mov     EBP, ESP;
-            movlpd  XMM0, x;
-            movlpd  XMM1, y;
+            sub     ESP, 8;
+            movsd   XMM0, x;
+            movsd   XMM1, y;
             mulpd   XMM0, XMM0;
             mulpd   XMM1, XMM1;
             addpd   XMM0, XMM1;
             sqrtpd  XMM0, XMM0;
+            movsd   qword ptr [ESP-8], XMM0;
+            fld     qword ptr [ESP-8];
+            add     ESP, 8;
             mov     ESP, EBP;
             pop     EBP;
             ret;
         }
         else static assert(0, "unsupported FP type");
     }
+    else static assert(0, "unsupported architecture");
 }
 ///
-nothrow pure @trusted unittest
+pure @trusted nothrow unittest
 {
     assert(hypot(3.0,4.0) == 5.0);
     assert(hypot(3.0f,4.0f) == 5.0f);
