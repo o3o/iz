@@ -84,7 +84,7 @@ private:
 public:
 
     static if (!isOrdered)
-    nothrow @safe static this()
+    static this() nothrow @safe
     {
         if (__ctfe){}
         else foreach(member; EnumMembers!E)
@@ -96,7 +96,7 @@ public:
     }
 
     /// Returns the rank of the last member.
-    nothrow @safe @nogc static @property size_t max()
+    static size_t max() nothrow @safe @nogc
     {
         static if (isOrdered)
             return E.max - E.min;
@@ -105,7 +105,7 @@ public:
     }
 
     /// Returns the member count. It's always equal to max + 1.
-    nothrow @safe @nogc static @property size_t count()
+    static size_t count() nothrow @safe @nogc
     {
         static if (isOrdered)
             return 1 + E.max - E.min;
@@ -114,10 +114,10 @@ public:
     }
 
     /// Always returns 0.
-    nothrow @safe @nogc static @property enum min = 0;
+    static nothrow @safe @nogc  enum min = 0;
 
     /// Returns the rank of aMember.
-    nothrow @safe static size_t opIndex(E aMember)
+    static size_t opIndex(E aMember) nothrow @safe
     {
         static if (isOrdered)
         {
@@ -141,27 +141,28 @@ public:
     }
 
     /// Returns the member at aRank.
-    nothrow @safe static E opIndex(size_t aRank)
+    static if (isOrdered)
+    static E opIndex(size_t aRank) nothrow @safe @nogc
     {
-        static if (isOrdered)
+        return cast(E) (E.min + aRank);
+    }
+
+    static if (!isOrdered)
+    static E opIndex(size_t aRank) nothrow @safe
+    {
+        if (__ctfe)
         {
-            return cast(E) (E.min + aRank);
-        }
-        else
-        {
-            if (__ctfe)
+            size_t rank;
+            foreach(member; EnumMembers!E)
             {
-                size_t rank;
-                foreach(member; EnumMembers!E)
-                {
-                    if (rank == aRank)
-                        return member;
-                    ++rank;
-                }
-                assert(0);
+                if (rank == aRank)
+                    return member;
+                ++rank;
             }
-            else return _membLUT[aRank];
+            assert(0);
+
         }
+        else return _membLUT[aRank];
     }
 }
 
@@ -246,7 +247,7 @@ private:
         private EnumSet!(E,S) set;
         private alias infs = EnumRankInfo!E;
 
-        private void toNextMember()
+        private void toNextMember() @safe
         {
             while (!set[infs[cast(size_t)frontIndex]])
             {
@@ -256,7 +257,7 @@ private:
             }
         }
 
-        private void toPrevMember()
+        private void toPrevMember() @safe
         {
             while (!set[infs[cast(size_t)backIndex]])
             {
@@ -266,7 +267,7 @@ private:
             }
         }
 
-        nothrow @safe this(T)(T t)
+        this(T)(T t)
         {
             set = SetType(t);
             backIndex = cast(set.SetType) infs.count;
@@ -274,12 +275,12 @@ private:
             toPrevMember;
         }
 
-        nothrow @safe @property bool empty()
+        bool empty() nothrow @safe @property @nogc
         {
             return set.none;
         }
 
-        nothrow @safe @property E front()
+        E front() nothrow @safe @property @nogc
         in
         {
             assert(frontIndex >= 0);
@@ -290,7 +291,7 @@ private:
             return infs[cast(size_t) frontIndex];
         }
 
-        nothrow @safe void popFront()
+        void popFront() nothrow @safe
         in
         {
             assert(frontIndex >= 0);
@@ -302,7 +303,7 @@ private:
             toNextMember;
         }
 
-        nothrow @safe @property E back()
+        E back() nothrow @safe
         in
         {
             assert(backIndex >= 0 && backIndex <= infs.max);
@@ -312,7 +313,7 @@ private:
             return infs[cast(size_t) backIndex];
         }
 
-        nothrow @safe void popBack()
+        void popBack() nothrow @safe
         in
         {
             assert(backIndex >= 0 && backIndex <= infs.max);
@@ -323,7 +324,7 @@ private:
             toPrevMember;
         }
 
-        nothrow @safe auto save()
+        auto save() nothrow @safe
         {
             return Range(set._container);
         }
@@ -331,12 +332,10 @@ private:
 
 public:
 
-    
-
 // constructors ---------------------------------------------------------------+
 
     ///
-    nothrow @safe @nogc static this()
+    static this() nothrow @safe @nogc
     {
         foreach(i, member; EnumMembers!E)
             _max +=  _1 << i;
@@ -348,7 +347,7 @@ public:
      * stuff = either some E member(s), an E input range, an E array
      * or a string representation.
      */
-    nothrow @safe this(Stuff...)(Stuff stuff)
+    this(Stuff...)(Stuff stuff)
     {
         _container = 0;
         static if (stuff.length == 1)
@@ -371,7 +370,7 @@ public:
      * Returns the string representation of the set as a binary representation.
      * Note that the result is preffixed with "0b", as a binary litteral.
      */
-    nothrow @safe string asBitString() const
+    string asBitString() const nothrow @safe
     {
         static immutable char[2] bitsCh = ['0', '1'];
         string result = "";
@@ -386,7 +385,7 @@ public:
      * The format is the same as the one used in this() and fromString(),
      * similar to an array litteral.
      */
-    @safe string toString() const
+    string toString() const @safe
     {
         import std.conv: to;
         scope(failure){}
@@ -412,7 +411,7 @@ public:
      * form that's similar to an array litteral. Binary litterals are not handled 
      * by this function.
      */
-    @trusted void fromString(string str)
+    void fromString(string str) nothrow @trusted
     {
         import std.conv: to;
         if (str.length < 2) return;
@@ -455,26 +454,26 @@ public:
      * rhs = a setXX, an array of E members, an InputRange of E
      * or an EnumSet with the same type.
      */
-    nothrow @safe @nogc void opAssign(S rhs)
+    void opAssign(S rhs) nothrow @safe @nogc
     {
         _container = (rhs <= _max) ? rhs : _max;
     }
 
     /// ditto
-    nothrow @safe void opAssign(E[] rhs)
+    void opAssign(E[] rhs) nothrow @safe
     {
         _container = 0;
         foreach(elem; rhs) include(elem);
     }
 
     /// ditto
-    nothrow @safe @nogc void opAssign(EnumSetType rhs)
+    void opAssign(EnumSetType rhs) nothrow @safe @nogc
     {
         _container = rhs._container;
     }
 
     /// ditto
-    nothrow @safe void opAssign(R)(R rhs)
+    void opAssign(R)(R rhs) nothrow
     if (!(isArray!R) && isInputRange!R && is(ElementType!R == E))
     {
         _container = 0;
@@ -486,7 +485,7 @@ public:
      * Params:
      * index = either an unsigned integer or an E member.
      */
-    nothrow @safe bool opIndex(I)(I index) const
+    bool opIndex(I)(I index) const nothrow
     {
         static if (isSigned!I || is(I == SetType))
             return (_container == (_container | _1 << index));
@@ -501,7 +500,7 @@ public:
      * rhs = either an E member, an E array or another EnumSet (or its container) 
      * with the same type.
      */
-    nothrow @safe EnumSetType opBinary(string op)(E rhs)
+    EnumSetType opBinary(string op)(E rhs) nothrow @safe
     {
         static if (op == "+")
         {
@@ -519,7 +518,7 @@ public:
     }
 
     /// ditto
-    nothrow @safe EnumSetType opBinary(string op)(E[] rhs)
+    EnumSetType opBinary(string op)(E[] rhs) nothrow @safe
     {
         static if (op == "+")
         {
@@ -537,7 +536,7 @@ public:
     }
 
     /// ditto
-    nothrow @safe @nogc EnumSetType opBinary(string op)(EnumSetType rhs)
+    EnumSetType opBinary(string op)(EnumSetType rhs) nothrow @safe @nogc
     {
         static if (op == "+")
         {
@@ -562,7 +561,7 @@ public:
     }
     
     /// ditto
-    nothrow @safe @nogc EnumSetType opBinary(string op)(SetType rhs)
+    EnumSetType opBinary(string op)(SetType rhs) nothrow @safe @nogc
     {
         static if (op == "+")
         {
@@ -591,7 +590,7 @@ public:
      * Params:
      * rhs = either some E member(s), an E array or an EnumSet with the same type.
      */
-    nothrow @safe void opOpAssign(string op)(E[] rhs)
+    void opOpAssign(string op)(E[] rhs) nothrow @safe
     {
         static if (op == "+") include(rhs);
         else static if (op == "-") exclude(rhs);
@@ -599,7 +598,7 @@ public:
     }
 
     /// ditto
-    nothrow @safe void opOpAssign(string op, E...)(E rhs)
+    void opOpAssign(string op, E...)(E rhs) nothrow
     {
         static if (op == "+") include(rhs);
         else static if (op == "-") exclude(rhs);
@@ -607,7 +606,7 @@ public:
     }
 
     /// ditto
-    nothrow @safe @nogc void opOpAssign(string op)(EnumSetType rhs)
+    void opOpAssign(string op)(EnumSetType rhs) nothrow @safe @nogc
     {
         static if (op == "+") _container |= rhs._container;
         else static if (op == "-") _container &= _container ^ rhs._container;
@@ -624,7 +623,7 @@ public:
     }
 
     /// Support for comparison "=" and "!=" operators.
-    nothrow @safe bool opEquals(T)(T rhs) const
+    bool opEquals(T)(T rhs) const nothrow
     {
         static if (is(T == SetType))
             return (_container == rhs);
@@ -641,13 +640,13 @@ public:
     }
 
     /// Support for built-in AA.
-    nothrow @safe bool opEquals(ref const EnumSetType rhs) const
+    bool opEquals(ref const EnumSetType rhs) const nothrow @safe @nogc
     {
         return (rhs._container == _container);
     }
     
     /// see range()
-    nothrow @safe Range opSlice() const
+    Range opSlice() const nothrow @safe
     {
         return Range(_container);
     }
@@ -660,7 +659,7 @@ public:
      * rhs = either an E member or a set (or its container) with the same type,
      * in the last case, calling opIn_r is equivalent to test for greater or equal.
      */
-    nothrow @safe bool opIn_r(T)(T rhs) const
+    bool opIn_r(T)(T rhs) const nothrow @safe
     {
         static if (is(T == E))
             return isIncluded(rhs);
@@ -679,7 +678,7 @@ public:
      * Params:
      * rhs = either a set with the same type or a set container with the same size.
      */
-    nothrow @safe EnumSetType difference(R)(R rhs) const
+    EnumSetType difference(R)(R rhs) const nothrow @safe
     if (is(R == EnumSetType) || is(R == SetType))
     {
         SetType s;
@@ -695,7 +694,7 @@ public:
      * Params:
      * rhs = either a set with the same type or a set container with the same size.
      */
-    nothrow @safe EnumSetType intersection(R)(R rhs) const
+    EnumSetType intersection(R)(R rhs) const nothrow @safe
     if (is(R == EnumSetType) || is(R == SetType))
     {
         SetType s;
@@ -714,7 +713,7 @@ public:
      * Params:
      * someMembers = a list of E members or an array of E members
      */
-    nothrow @safe void include(E...)(E someMembers)
+    void include(E...)(E someMembers) nothrow @safe
     {
         static if (someMembers.length == 1)
             _container += _1 << _infs[someMembers];
@@ -723,7 +722,7 @@ public:
     }
 
     /// ditto
-    nothrow @safe void include(E[] someMembers)
+    void include(E[] someMembers) nothrow @safe
     {
         foreach(member; someMembers)
             _container += _1 << _infs[member];
@@ -735,7 +734,7 @@ public:
      * Params:
      * someMembers = a list of E members or an array of E members.
      */
-    nothrow @safe void exclude(E...)(E someMembers)
+    void exclude(E...)(E someMembers) nothrow @safe
     {
         static if (someMembers.length == 1)
             _container &= _container ^ (_1 << _infs[someMembers]);
@@ -744,7 +743,7 @@ public:
     }
 
     /// ditto
-    nothrow @safe void exclude(E[] someMembers)
+    void exclude(E[] someMembers) nothrow @safe
     {
         foreach(member; someMembers)
             _container &= _container ^ (_1 << _infs[member]);
@@ -756,7 +755,7 @@ public:
      * Params:
      * aMember = an  E member.
      */
-    nothrow @safe bool isIncluded(E aMember) const
+    bool isIncluded(E aMember) const nothrow @safe
     {
         return (_container == (_container | _1 << _infs[aMember]));
     }
@@ -764,49 +763,49 @@ public:
 // misc helpers ---------------------------------------------------------------+
 
     /// Returns a range allowing to iterate for each member included in the set.
-    @safe Range range() const
+    Range range() const nothrow @safe
     {
         return Range(_container);
     }
 
     /// Returns true if the set is empty.
-    nothrow @safe @nogc bool none() const
+    bool none() const nothrow @safe @nogc
     {
         return _container == 0;
     }
 
     /// Returns true if at least one member is included.
-    nothrow @safe @nogc bool any() const
+    bool any() const nothrow @safe @nogc
     {
         return _container != 0;
     }
 
     /// Returns true if all the members are included.
-    nothrow @safe @nogc bool all() const
+    bool all() const nothrow @safe @nogc
     {
         return _container == _max;
     }
 
     /// Returns the maximal value the set can have.
-    nothrow @safe @nogc static const(S) max()
+    static const(S) max() nothrow @safe @nogc
     {
         return _max;
     }
 
     /// Returns a lookup table that can be used to retrieve the rank of a member.
-    nothrow @safe @nogc static ref const(EnumRankInfo!E) rankInfo()
+    static ref const(EnumRankInfo!E) rankInfo() nothrow @safe @nogc
     {
         return _infs;
     }
 
     /// Returns the enum count
-    nothrow @safe @nogc static const(S) memberCount()
+    static const(S) memberCount() nothrow @safe @nogc
     {
         return cast(S) rankInfo.count;
     }
 
     /// Returns the enum count
-    nothrow @safe @nogc const(SetType) container()
+    ref const(SetType) container() nothrow @safe @nogc
     {
         return _container;
     }
@@ -838,7 +837,7 @@ if (enumFitsInSet!(E, BigestSet))
  * E = an enum
  * a = the parameters passed to the EnumSet constructor.
  */
-auto enumSet(E, A...)(A a) @property @safe
+auto enumSet(E, A...)(A a) @property
 if (enumFitsInSet!(E, BigestSet))
 {
     return EnumSet!(E, SmallestSet!E)(a);
@@ -876,7 +875,7 @@ public:
      * Params:
      * a = a list of T.
      */
-    nothrow this(A...)(A a)
+    this(A...)(A a) nothrow
     in
     {
         static assert(a.length == enumMemberCount!E);
@@ -894,7 +893,7 @@ public:
      * Params:
      * someItems = an array of T.
      */
-    nothrow this(T[] someItems)
+    this(T[] someItems) nothrow
     in
     {
         assert(someItems.length == enumMemberCount!E);
@@ -913,7 +912,7 @@ public:
     /**
      * opIndex allows a more explicit call syntax than opCall.myStuffs[E.member](params).
      */
-    nothrow const(T) opIndex(E aMember)
+    const(T) opIndex(E aMember) nothrow
     {
         return _procs[_infs[aMember]];
     }
@@ -1123,7 +1122,7 @@ version(unittest)
     }
 
     /// CTFE
-    unittest
+    @safe unittest
     {
         static assert(EnumSet!(a8, Set8)(a8.a0,a8.a1) == 0b00000011);
         enum set = EnumSet!(a8, Set8)(a8.a0,a8.a1);
@@ -1135,7 +1134,7 @@ version(unittest)
     }
 
     /// EnumSet
-    unittest
+    @safe unittest
     {
         alias bs8 = EnumSet!(a8, Set8);
         bs8 set = bs8(a8.a0,a8.a1,a8.a2,a8.a3,a8.a4,a8.a5,a8.a6,a8.a7);
@@ -1197,7 +1196,7 @@ version(unittest)
         writeln("EnumSet passed the tests(operators)");
     }
 
-    unittest
+    @safe unittest
     {
         EnumSet!(a17, Set32) set;
         set.include(a17.a8,a17.a9);
@@ -1222,7 +1221,7 @@ version(unittest)
         writeln("EnumSet passed the tests(inclusion)");
     }
 
-    unittest
+    @safe @nogc unittest
     {
         auto bs = EnumSet!(a17, Set32)(a17.a0, a17.a1, a17.a16);
         assert(bs[0]);
@@ -1233,11 +1232,9 @@ version(unittest)
         assert(bs[a17.a16]);
         assert(!bs[8]);
         assert(!bs[a17.a8]);
-
-        writeln("EnumSet passed the tests(array operators)");
     }
 
-    unittest
+    @safe unittest
     {
         EnumSet!(a8, Set8) set = EnumSet!(a8, Set8)(a8.a3, a8.a5);
         assert(set == 0b0010_1000);
@@ -1266,16 +1263,14 @@ version(unittest)
         writeln("EnumSet passes the tests(toString)");
     }
 
-    unittest
+    @safe @nogc unittest
     {
         auto set = EnumSet!(a17, Set32)(a17.a0);
         assert( set.rankInfo[a17.a16] == 16);
         assert( set.rankInfo[a17.a15] == 15);
-
-        writeln("EnumSet passed the tests(misc.)");
     }
 
-    unittest
+    @safe unittest
     {
         import std.range;
 
@@ -1326,7 +1321,7 @@ version(unittest)
         writeln("enumSet passed the tests(Ranges)");
     }
 
-    unittest
+    @safe @nogc unittest
     {
         enum E {e1, e2}
         alias ESet = EnumSet!(E, Set8);
@@ -1337,7 +1332,7 @@ version(unittest)
         assert(eSet1 == eSet2);
     }
 
-    unittest
+    @safe unittest
     {
         alias Set = EnumSet!(a8, Set8);
         Set set1 = Set([a8.a0, a8.a1]);
@@ -1355,7 +1350,7 @@ version(unittest)
         writeln("enumSet passed the tests(set operations)");
     }
 
-    unittest
+    @safe unittest
     {
         enum E {e1, e2}
         alias ESet = EnumSet!(E, Set8);
@@ -1387,7 +1382,7 @@ version(unittest)
     }
 
     /// enumSet
-    unittest
+    @safe unittest
     {
         assert( is(typeof(enumSet!a4) == EnumSet!(a4,Set8)) );
         assert( is(typeof(enumSet!a8) == EnumSet!(a8,Set8)) );

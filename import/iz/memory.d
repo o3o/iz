@@ -18,9 +18,17 @@ version(unittest) import std.stdio;
  * Like malloc() but for @safe context.
  */
 Ptr getMem(size_t size) nothrow @trusted @nogc
+in
+{
+    assert(size);
+}
+out(result)
+{
+    assert(result, "Out of memory");
+}
+body
 {
     auto result = malloc(size);
-    assert(result, "Out of memory");
     return result;
 }
 
@@ -98,7 +106,7 @@ body
  * Params:
  *      src = The pointer to free.
  */
-void freeMem(T)(auto ref T src) nothrow @trusted @nogc
+void freeMem(T)(auto ref T src) nothrow @trusted
 if (isPointer!T && isBasicType!(pointerTarget!T))
 {
     if (src) free(cast(void*)src);
@@ -181,16 +189,17 @@ if(is(ST==struct) || is(ST==union))
  *      T = A class type or a struct type, likely to be infered.
  *      instance = A $(D T) instance.
  */
-void destruct(T)(auto ref T instance)
+void destruct(T)(auto ref T instance) @trusted
 if (is(T == class) || (isPointer!T && is(PointerTarget!T == struct))
     || (isPointer!T && is(PointerTarget!T == union)))
 {
     if (!instance) return;
     import core.memory: GC;
     GC.removeRange(&instance);
-    destroy(instance);
+    static if (__traits(hasMember, T, "__dtor"))
+        instance.__dtor();
     freeMem(cast(void*)instance);
-    static if (ParameterStorageClassTuple!destruct[0] ==
+    static if ((ParameterStorageClassTuple!destruct)[0] ==
         ParameterStorageClass.ref_) instance = null;
 }
 
@@ -210,7 +219,7 @@ if (is(I == interface))
 {
     if (Object obj = cast(Object) instance)
         obj.destruct;
-    static if (ParameterStorageClassTuple!destruct[0] ==
+    static if ((ParameterStorageClassTuple!destruct)[0] ==
         ParameterStorageClass.ref_) instance = null;
 }
 
@@ -222,7 +231,7 @@ if (is(I == interface))
  *      T = The type of the pointer to return.
  *      preFill = Optional, boolean indicating if the result has to be initialized.
  */
-T* newPtr(T, bool preFill = false)() @trusted @nogc
+T* newPtr(T, bool preFill = false)()
 if (isBasicType!T)
 {
     static if(!preFill)
@@ -242,7 +251,7 @@ if (isBasicType!T)
  * Params:
  *      objs = Variadic list of Object instances.
  */
-static void destruct(Objs...)(auto ref Objs objs)
+void destruct(Objs...)(auto ref Objs objs)
 {
     foreach(ref obj; objs)
         obj.destruct;
@@ -288,9 +297,10 @@ void registerFactoryClasses(A...)()
 Object factory(string className)
 {
     TypeInfo_Class* tic = className in registeredClasses;
-    if (!tic) throw new Exception("factory exception, the class: '" ~
-        className ~ "' is not registered.");
-    return construct(*tic);
+    if (!tic)
+        throw construct!Exception("factory exception, unregistered class");
+    return
+        construct(*tic);
 }
 
 unittest
@@ -360,6 +370,19 @@ unittest
     assert(ab is null);
 
     writeln("construct/destruct passed the tests");
+}
+
+@nogc @safe unittest
+{
+    class Foo {@nogc this(int a){}}
+    Foo foo = construct!Foo(0);
+    destruct(foo);
+    assert(foo is null);
+
+    struct Bar {}
+    Bar* bar = construct!Bar;
+    destruct(bar);
+    assert(bar is null);
 }
 
 unittest
@@ -435,10 +458,13 @@ unittest
     C c = cast(C) factory("C");
     assert(c.array == [1,2,3]);
 
+    import std.exception: assertThrown;
+    assertThrown(factory("D"));
+
     writeln("factory passed the tests");
 }
 
-unittest
+@nogc unittest
 {
     void* src = getMem(32);
     void* dst = getMem(32);

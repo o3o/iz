@@ -149,7 +149,7 @@ const(int) roundToZero() @trusted pure nothrow
     return result;
 }
 ///
-@trusted pure nothrow unittest
+@safe pure nothrow unittest
 {
     auto sav = roundToNearest;
     assert(round(0.4) == 0);
@@ -223,7 +223,7 @@ extern(C) int round(T)(T value) @trusted pure nothrow
     else static assert(0, "unsupported architecture");
 }
 ///
-@trusted pure nothrow unittest
+@safe pure nothrow unittest
 {
     assert(round(0.2f) == 0);
     assert(round(0.8f) == 1);
@@ -249,7 +249,7 @@ if (isFloatingPoint!T)
     return round(value + offs);
 }
 ///
-@trusted pure nothrow unittest
+@safe pure nothrow unittest
 {
     assert(floor(0.2f) == 0);
     assert(floor(0.8f) == 0);
@@ -275,7 +275,7 @@ if (isFloatingPoint!T)
     return round(value + offs);
 }
 ///
-@trusted pure nothrow unittest
+@safe pure nothrow unittest
 {
     assert(ceil(0.2f) == 1);
     assert(ceil(0.8f) == 1);
@@ -341,7 +341,7 @@ extern(C) int trunc(T)(T value) @trusted pure nothrow
     else static assert(0, "unsupported architecture");
 }
 ///
-@trusted pure nothrow unittest
+@safe pure nothrow unittest
 {
     assert(trunc(0.2f) == 0);
     assert(trunc(0.8f) == 0);
@@ -370,7 +370,7 @@ int dtrunc(T)(T value) @trusted pure nothrow
         static assert(0, "unsupported FP type");
 }
 ///
-@trusted pure nothrow unittest
+@safe pure nothrow unittest
 {
     assert(dtrunc(0.2f) == 0);
     assert(dtrunc(0.8f) == 0);
@@ -459,7 +459,7 @@ extern(C) T hypot(T)(T x, T y) pure @trusted nothrow
     else static assert(0, "unsupported architecture");
 }
 ///
-pure @trusted nothrow unittest
+pure @safe nothrow unittest
 {
     assert(hypot(3.0,4.0) == 5.0);
     assert(hypot(3.0f,4.0f) == 5.0f);
@@ -477,7 +477,7 @@ if (is(T==cfloat) || is(T==cdouble) || is(T==Complex!float) || is(T==Complex!dou
     return hypot(t.re, t.im);
 }
 ///
-nothrow pure @trusted unittest
+nothrow pure @safe unittest
 {
     assert(magn(cdouble(3.0+4.0i)) == 5.0);
     assert(magn(cfloat(3.0f+4.0fi)) == 5.0f);
