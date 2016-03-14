@@ -655,22 +655,22 @@ template olderSuperCall(C, string method)
     }
 }
 ///
-unittest
+pure @safe unittest
 {
-    class A {string fun() {return "a";}}
-    class AA: A {override string fun() {return "a" ~ super.fun;}}
-    class AAA: AA {override string fun() {return "a" ~ super.fun;}}
+    class A {string fun() pure @safe {return "a";}}
+    class AA: A {override string fun() pure @safe {return "a" ~ super.fun;}}
+    class AAA: AA {override string fun() pure @safe {return "a" ~ super.fun;}}
     class AAAA: AAA
     {
-        string test1()
+        string test1() pure @safe
         {
             return olderSuperCall!(A, "fun")(this);
         }
-        string test2()
+        string test2() pure @safe
         {
             return olderSuperCall!(AA, "fun")(this);
         }
-        override string fun()
+        override string fun() pure @safe
         {
             // super.super.fun()
             return olderSuperCall!(AA, "fun")(this);
@@ -690,7 +690,7 @@ unittest
  *      pred = the predicate.
  *      range = an input range, must be a lvalue.
  */
-void popWhile(alias pred, Range)(ref Range range) pure @safe
+void popWhile(alias pred, Range)(ref Range range)
 if (isInputRange!Range && is(typeof(unaryFun!pred)) && isImplicitlyConvertible!
     (typeof(unaryFun!pred((ElementType!Range).init)), bool))
 {
@@ -735,7 +735,7 @@ pure @safe unittest
  * and returns the consumed range to allow function pipelining.
  * In addition this wrapper accepts rvalues.
  */
-auto dropWhile(alias pred, Range)(auto ref Range range) pure @safe
+auto dropWhile(alias pred, Range)(auto ref Range range)
 if (isInputRange!Range && is(typeof(unaryFun!pred)) && isImplicitlyConvertible!
     (typeof(unaryFun!pred((ElementType!Range).init)), bool))
 {
@@ -756,7 +756,7 @@ pure @safe unittest
  *      pred = the predicate.
  *      range = an input range, must be a lvalue.
  */
-void popBackWhile(alias pred, Range)(ref Range range) pure @safe
+void popBackWhile(alias pred, Range)(ref Range range)
 if (isBidirectionalRange!Range && is(typeof(unaryFun!pred)) && isImplicitlyConvertible!
     (typeof(unaryFun!pred((ElementType!Range).init)), bool))
 {
@@ -801,7 +801,7 @@ pure @safe unittest
  * and returns the consumed range to allow function pipelining.
  * In addition this wrapper accepts rvalues.
  */
-auto dropBackWhile(alias pred, Range)(auto ref Range range) pure @safe
+auto dropBackWhile(alias pred, Range)(auto ref Range range)
 if (isBidirectionalRange!Range && is(typeof(unaryFun!pred)) && isImplicitlyConvertible!
     (typeof(unaryFun!pred((ElementType!Range).init)), bool))
 {
@@ -825,55 +825,40 @@ pure @safe unittest
  *      flip = the first input range.
  *      flop = the second input range.
  */
-auto flipFlop(R1, R2)(auto ref R1 flip, auto ref R2 flop) pure @safe
+auto flipFlop(R1, R2)(auto ref R1 flip, auto ref R2 flop)
 if (isInputRange!R1 && isInputRange!R2 && is(ElementType!R1 == ElementType!R2))
 {
     struct FlipFlop
     {
-        private:
+        private bool _takeFlop;
 
-            R1 _flip;
-            R2 _flop;
-            bool _takeFlop;
-
-        public:
-
-            ///
-            this(R1 flip, R1 flop)
+        ///
+        bool empty()
+        {
+            return (flip.empty && !_takeFlop) | (_takeFlop && flop.empty);
+        }
+        ///
+        auto front()
+        {
+            final switch (_takeFlop)
             {
-                _flip = flip;
-                _flop = flop;
+                case false: return flip.front;
+                case true:  return flop.front;
             }
-
-            ///
-            bool empty()
+        }
+        ///
+        void popFront()
+        {
+            _takeFlop = !_takeFlop;
+            final switch (_takeFlop)
             {
-                return (_flip.empty && !_takeFlop) | (_takeFlop && _flop.empty);
+                case false: return flop.popFront;
+                case true:  return flip.popFront;
             }
-
-            ///
-            auto front()
-            {
-                final switch (_takeFlop)
-                {
-                    case false: return _flip.front;
-                    case true:  return _flop.front;
-                }
-            }
-
-            ///
-            void popFront()
-            {
-                _takeFlop = !_takeFlop;
-                final switch (_takeFlop)
-                {
-                    case false: return _flop.popFront;
-                    case true:  return _flip.popFront;
-                }
-
-            }
+        }
     }
-    return FlipFlop(flip, flop);
+    FlipFlop ff;
+    return ff;
 }
 ///
 pure @safe unittest
@@ -886,5 +871,99 @@ pure @safe unittest
     assert(flipFlop([0], re).array == [0]);
     assert(flipFlop(re, re).array == []);
     assert(flipFlop(re, [0]).array == []);
+}
+
+/**
+ * Returns a lazy input range that takes from the input while a predicate is
+ * verified and the input is not empty.
+ *
+ * Params:
+ *      pred = the predicate.
+ *      range = an input range, only consumed when passed by reference.
+ */
+auto takeWhile(alias pred, Range)(auto ref Range range)
+if (isInputRange!Range && is(typeof(unaryFun!pred)) && isImplicitlyConvertible!
+    (typeof(unaryFun!pred((ElementType!Range).init)), bool))
+{
+    alias f = unaryFun!pred;
+
+    struct Taker
+    {
+        ///
+        bool empty()
+        {
+            return range.empty || !f(range.front);
+        }
+        ///
+        void popFront()
+        {
+            range.popFront;
+        }
+        ///
+        auto front()
+        {
+            return range.front;
+        }
+    }
+    Taker result;
+    return result;
+}
+///
+pure @safe unittest
+{
+    import std.range: array;
+    import std.ascii: isDigit;
+    auto r = "012A";
+    assert(takeWhile!((a) => isDigit(a))(r).array == "012");
+    assert(r == "A");
+    assert(takeWhile!((a) => isDigit(a))(r).array == "");
+    assert(takeWhile!((a) => isDigit(a))("").array == "");
+}
+
+/**
+ * Returns a lazy input range that takes from the input tail while a
+ * predicate is verified and the input is not empty.
+ *
+ * Params:
+ *      pred = the predicate.
+ *      range = an bidirectional range, only consumed when passed by reference.
+ */
+auto takeBackWhile(alias pred, Range)(auto ref Range range)
+if (isBidirectionalRange!Range && is(typeof(unaryFun!pred)) && isImplicitlyConvertible!
+    (typeof(unaryFun!pred((ElementType!Range).init)), bool))
+{
+    alias f = unaryFun!pred;
+
+    struct Taker
+    {
+        ///
+        bool empty()
+        {
+            return range.empty || !f(range.back);
+        }
+        ///
+        void popFront()
+        {
+            range.popBack;
+        }
+        ///
+        auto front()
+        {
+            return range.back;
+        }
+    }
+    Taker result;
+    return result;
+}
+///
+pure @safe unittest
+{
+    import std.range: array;
+    import std.ascii: isDigit;
+    auto r = "A123";
+    assert(takeBackWhile!((a) => isDigit(a))(r).array == "321");
+    assert(r == "A");
+    assert(takeBackWhile!((a) => isDigit(a))(r).array == "");
+    assert(takeBackWhile!((a) => isDigit(a))("").array == "");
 }
 

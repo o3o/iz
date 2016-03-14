@@ -8,6 +8,9 @@ import
 import
     iz.sugar;
 
+//TODO-cstrings: lazy ranges, remove ctors and work directly on auto ref input
+//TODO-cstrings: next/skipWord, could return a lazy range, like sugar.takeWhile
+
 version(unittest) import std.stdio;
 
 // Character-related-structs --------------------------------------------------+
