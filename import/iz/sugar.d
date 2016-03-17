@@ -967,3 +967,87 @@ pure @safe unittest
     assert(takeBackWhile!((a) => isDigit(a))("").array == "");
 }
 
+/**
+ * Compares two integral values with additional static checkings.
+ *
+ * If the comparison mixes signed and unsigned operands then the function tries
+ * to widen the unsigned operand to perform a valid comparison, otherwise
+ * a DMD-style warning is emitted.
+ *
+ * Params:
+ *      op = The comparison operator, must be either >, < , <= or >=. Equality
+ *          is also alowed even if this is always a transparent operation.
+ *      lhs = The left operand, an integer.
+ *      rhs = The right operand, an integer.
+ *
+ *  Returns:
+ *      A bool, the comparison result.
+ */
+bool compare(string op, L, R, string fname = __FILE__, int line = __LINE__)
+    (auto ref L lhs, auto ref R rhs)
+if ((isIntegral!R &&  isIntegral!L) && op == "<" || op == ">" || op == "<=" ||
+    op == ">=" || op == "==" || op == "!=")
+{
+    alias LT = Unqual!L;
+    alias RT = Unqual!R;
+
+    // transparent
+    static if (is(LT == RT) || op == "==" || op == "!=")
+    {
+        mixin("return lhs" ~ op ~ "rhs;");
+    }
+    else
+    {
+        enum err = fname ~ "(" ~ line.stringof ~ "): ";
+        template Widened(T)
+        {
+            static if (is(T==ubyte))
+                alias Widened = short;
+            else static if (is(T==ushort))
+                alias Widened = int;
+            else static if (is(T==uint))
+                alias Widened = long;
+        }
+
+        // promote unsigned to bigger signed
+        static if (isSigned!LT && !isSigned!RT  && RT.sizeof < 8)
+        {
+            version(D_Warnings) pragma(msg, err ~ "warning, signed and unsigned comparison, "
+                ~ "the unsigned operand has been widened");
+            Widened!RT widenedRhs = rhs;
+            mixin("return lhs" ~ op ~ "widenedRhs;");
+        }
+        else static if (isSigned!RT && !isSigned!LT  && LT.sizeof < 8)
+        {
+            version(D_Warnings) pragma(msg, err ~ "warning, unsigned and signed comparison, "
+                ~ "the unsigned operand has been widened");
+            Widened!LT widenedLhs = lhs;
+            mixin("return widenedLhs" ~ op ~ "rhs;");
+        }
+        // not fixable by operand widening
+        else
+        {
+            pragma(msg, err ~ "warning, comparing a " ~ L.stringof ~ " with a "
+                ~ R.stringof ~ " may result into wrong results: ");
+            mixin("return lhs" ~ op ~ "rhs;");
+        }
+    }
+}
+///
+pure @safe nothrow unittest
+{
+    int a = -1; uint b;
+    assert(a > b); // wrong result
+    assert(compare!">"(a,b) == false); // fixed by operand widening
+    assert(b < a); // wrong result
+    assert(compare!"<"(b,a) == false); // fixed by operand widening
+
+    long aa = -1; ulong bb;
+    assert(aa > bb); // wrong result
+    assert(compare!">"(aa,bb) == true); // not statically fixable
+    assert(bb < aa); // wrong result
+    assert(compare!"<"(bb,aa) == true); // not statically fixable
+
+    assert(compare!"!="(bb,aa) == true); // test for equality is always transparent OP
+}
+
