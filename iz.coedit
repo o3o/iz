@@ -43,7 +43,7 @@ object _1: TCENativeProject
       outputOptions.boundsCheck = onAlways
       outputOptions.release = True
       pathsOptions.outputFilename = 'lib/iz'
-    end
+    end  
     item
       name = 'test64'
       debugingOptions.debug = True
