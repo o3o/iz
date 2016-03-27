@@ -1427,8 +1427,12 @@ unittest
         this()
         {
             static if (Nested) _sub = new Foo!false;
-            str = new MemoryStream;
+            str = construct!MemoryStream;
             collectPublications!Foo;
+        }
+        ~this()
+        {
+            destruct(str);
         }
         @SetGet uint _a;
         @SetGet ulong _b;

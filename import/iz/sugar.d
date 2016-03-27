@@ -976,7 +976,7 @@ pure @safe unittest
  *
  * Params:
  *      op = The comparison operator, must be either >, < , <= or >=. Equality
- *          is also alowed even if this is always a transparent operation.
+ *          is also allowed even if this is always a transparent operation.
  *      lhs = The left operand, an integer.
  *      rhs = The right operand, an integer.
  *
@@ -999,6 +999,8 @@ if ((isIntegral!R &&  isIntegral!L) && op == "<" || op == ">" || op == "<=" ||
     else
     {
         enum err = fname ~ "(" ~ line.stringof ~ "): ";
+        enum wer = "warning, signed and unsigned comparison, the unsigned operand has been widened";
+
         template Widened(T)
         {
             static if (is(T==ubyte))
@@ -1009,32 +1011,30 @@ if ((isIntegral!R &&  isIntegral!L) && op == "<" || op == ">" || op == "<=" ||
                 alias Widened = long;
         }
 
-        // promote unsigned to bigger signed
+        // widen unsigned to bigger signed
         static if (isSigned!LT && !isSigned!RT  && RT.sizeof < 8)
         {
-            version(D_Warnings) pragma(msg, err ~ "warning, signed and unsigned comparison, "
-                ~ "the unsigned operand has been widened");
+            version(D_Warnings) pragma(msg, err ~ wer);
             Widened!RT widenedRhs = rhs;
             mixin("return lhs" ~ op ~ "widenedRhs;");
         }
         else static if (isSigned!RT && !isSigned!LT  && LT.sizeof < 8)
         {
-            version(D_Warnings) pragma(msg, err ~ "warning, unsigned and signed comparison, "
-                ~ "the unsigned operand has been widened");
+            version(D_Warnings) pragma(msg, err ~ wer);
             Widened!LT widenedLhs = lhs;
             mixin("return widenedLhs" ~ op ~ "rhs;");
         }
-        // not fixable by operand widening
+        // not fixable by widening
         else
         {
             pragma(msg, err ~ "warning, comparing a " ~ L.stringof ~ " with a "
-                ~ R.stringof ~ " may result into wrong results: ");
+                ~ R.stringof ~ " may result into wrong results");
             mixin("return lhs" ~ op ~ "rhs;");
         }
     }
 }
 ///
-pure @safe nothrow unittest
+pure @safe @nogc nothrow unittest
 {
     int a = -1; uint b;
     assert(a > b); // wrong result
@@ -1049,5 +1049,8 @@ pure @safe nothrow unittest
     assert(compare!"<"(bb,aa) == true); // not statically fixable
 
     assert(compare!"!="(bb,aa) == true); // test for equality is always transparent OP
+
+    immutable long aaa = -1; const ulong bbb;
+    assert(compare!">"(aaa,bbb) == true);
 }
 
