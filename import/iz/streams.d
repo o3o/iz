@@ -1056,9 +1056,9 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
                 clear;
                 return;
             }
-            _memory = reallocMem(_memory, value);
+            _memory = reallocMem(_memory, cast(size_t)value);
             if (!_memory) throw new OutOfMemoryError();
-            else _size = value;
+            else _size = cast(size_t)value;
         }
 
         /// ditto
