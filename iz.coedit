@@ -13,7 +13,7 @@ object _1: TCENativeProject
     end  
     item
       name = 'debug'
-      debugingOptions.debug = True
+      debugingOptions.debugConditions = True
       debugingOptions.generateMapFile = True
       messagesOptions.deprecationHandling = silent
       messagesOptions.warningsAsInfo = True
@@ -43,10 +43,10 @@ object _1: TCENativeProject
       outputOptions.boundsCheck = onAlways
       outputOptions.release = True
       pathsOptions.outputFilename = 'lib/iz'
-    end
+    end  
     item
       name = 'test64'
-      debugingOptions.debug = True
+      debugingOptions.debugConditions = True
       debugingOptions.generateMapFile = True
       messagesOptions.deprecationHandling = silent
       messagesOptions.warnings = False
@@ -57,7 +57,7 @@ object _1: TCENativeProject
     end  
     item
       name = 'test32'
-      debugingOptions.debug = True
+      debugingOptions.debugConditions = True
       debugingOptions.generateMapFile = True
       messagesOptions.deprecationHandling = silent
       messagesOptions.warnings = False

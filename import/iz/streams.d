@@ -938,9 +938,6 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
         size_t _position;
         string _filename;
 
-        struct Ubytes{size_t length; void* ptr;}
-        Ubytes fBytes;
-
         void freeNonGc(ref Ptr ptr)
         {
             import core.memory : GC;
@@ -1046,28 +1043,28 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
         }
 
         /// ditto
-        @property void size(int value)
+        @property void size(long value)
         {
             if (_size == value) return;
+            version(X86)
+            {
+                if (value > int.max)
+                    throw new Exception("cannot allocate more than 2^31 bytes");
+            }
             if (value == 0)
             {
                 clear;
                 return;
             }
-            _memory = reallocMem(_memory, value);
+            _memory = reallocMem(_memory, cast(size_t)value);
             if (!_memory) throw new OutOfMemoryError();
-            else _size = value;
+            else _size = cast(size_t)value;
         }
 
         /// ditto
-        @property void size(long value)
+        @property void size(int value)
         {
-            static if (size_t.sizeof == 4)
-            {
-                if (value > int.max)
-                    throw new Exception("cannot allocate more than 2^31 bytes");
-            }
-            size(cast(int) value);
+            size(cast(long) value);
         }
 
 // -----------------------------------------------------------------------------
@@ -1137,9 +1134,7 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
          */
         const(ubyte[]) ubytes()
         {
-            fBytes.length = _size;
-            fBytes.ptr = _memory;
-            return *cast(ubyte[]*) &fBytes;
+            return cast(ubyte[]) _memory[0 .. _size];
         }
 
 // -----------------------------------------------------------------------------
@@ -1451,11 +1446,25 @@ unittest
     import std.conv;
     uint a;
     int[2] b = [1,2];
-    auto s1 = new MemoryStream(a);
-    assert(s1.size == a.sizeof);
-    auto s2 = new MemoryStream(b);
-    assert(s2.size == b.sizeof);
-    auto s3 = new MemoryStream(iota(0,2));
-    auto s4 = new MemoryStream(s3);
+    //TODO: reports regression here in DMD 2.071-b1
+    version(none)
+    {
+        auto s1 = new MemoryStream(a);
+        assert(s1.size == a.sizeof);
+        auto s2 = new MemoryStream(b);
+        assert(s2.size == b.sizeof);
+        auto s3 = new MemoryStream(iota(0,2));
+        auto s4 = new MemoryStream(s3);
+    }
+    else
+    {
+        auto s1 = construct!MemoryStream(a);
+        assert(s1.size == a.sizeof);
+        auto s2 = construct!MemoryStream(b);
+        assert(s2.size == b.sizeof);
+        auto s3 = construct!MemoryStream(iota(0,2));
+        auto s4 = construct!MemoryStream(s3);
+        destruct(s1, s2, s3, s4);
+    }
 }
 
