@@ -935,16 +935,9 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
         size_t _size;
         Ptr _memory;
 
+        bool _freeFlag = true;
         size_t _position;
         string _filename;
-
-        void freeNonGc(ref Ptr ptr)
-        {
-            import core.memory : GC;
-            if (!ptr) return;
-            if (GC.addrOf(ptr)) return;
-            freeMem(ptr);
-        }
     }
     public
     {
@@ -982,7 +975,8 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
 
         ~this()
         {
-            freeNonGc(_memory);
+            if (_freeFlag)
+                freeMem(_memory);
         }
 
 // read & write ---------------------------------------------------------------+
@@ -1106,7 +1100,7 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
          * Params:
          *      ptr = The new memory.
          *      newSize = The new size.
-         *      freeCurrent = If true, the default, the current memory is freed.
+         *      freeCurrent = If true the default, the current memory is freed.
          * Returns:
          *      The old memory, useful only if freeCurrent is set to false.
          */
@@ -1114,10 +1108,12 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
         {
             Ptr result = _memory;
             if (!ptr) return result;
-            if (freeCurrent) freeNonGc(_memory);
+            if (freeCurrent && _freeFlag) freeMem(_memory);
             _position = 0;
             _size = newSize;
             _memory = ptr;
+            import core.memory: GC;
+            _freeFlag = GC.addrOf(ptr) == null;
             return result;
         }
 
@@ -1276,7 +1272,7 @@ unittest
     Ptr mem = getMem(4096);
     auto str = construct!MemoryStream;
     scope(exit) destruct(str);
-    //
+    ////
     str.size = 128;
     str.position = 128;
     str.setMemory(mem, 4096);
@@ -1446,25 +1442,12 @@ unittest
     import std.conv;
     uint a;
     int[2] b = [1,2];
-    //TODO: reports regression here in DMD 2.071-b1
-    version(none)
-    {
-        auto s1 = new MemoryStream(a);
-        assert(s1.size == a.sizeof);
-        auto s2 = new MemoryStream(b);
-        assert(s2.size == b.sizeof);
-        auto s3 = new MemoryStream(iota(0,2));
-        auto s4 = new MemoryStream(s3);
-    }
-    else
-    {
-        auto s1 = construct!MemoryStream(a);
-        assert(s1.size == a.sizeof);
-        auto s2 = construct!MemoryStream(b);
-        assert(s2.size == b.sizeof);
-        auto s3 = construct!MemoryStream(iota(0,2));
-        auto s4 = construct!MemoryStream(s3);
-        destruct(s1, s2, s3, s4);
-    }
+    auto s1 = new MemoryStream(a);
+    assert(s1.size == a.sizeof);
+    auto s2 = new MemoryStream(b);
+    assert(s2.size == b.sizeof);
+    auto s3 = new MemoryStream(iota(0,2));
+    auto s4 = new MemoryStream(s3);
+
 }
 

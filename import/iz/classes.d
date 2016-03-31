@@ -1369,18 +1369,17 @@ protected:
     {
         version(Posix)
         {
+	        pollfd pfd = { _ppid.stdout.fileno, POLLIN };
+            if (poll(&pfd, 1, 0) && (pfd.revents & POLLIN) && _onOutputBuffer)
+                _onOutputBuffer(this);
+
             if (_ppid.stdout.eof)
             {
                 _checker.stop;
                 if(_onTerminate)
                     _onTerminate(this);
             }
-            else
-            {
-	            pollfd pfd = { _ppid.stdout.fileno, POLLIN };
-                if (poll(&pfd, 1, 0) && (pfd.revents & POLLIN) && _onOutputBuffer)
-                    _onOutputBuffer(this);
-            }
+
         }
         else static assert(0, "TODO !");
     }
