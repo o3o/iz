@@ -1530,7 +1530,7 @@ unittest
             // reference and their members would not be serialized.
             collectPublications!A;
         }
-        ~this(){destruct(sub1, sub2);}
+        ~this(){destructEach(sub1, sub2);}
     }
 
     MemoryStream stream = construct!MemoryStream;
@@ -1571,7 +1571,7 @@ void publisherToFile(Object pub, in char[] filename,
 {
     MemoryStream str = construct!MemoryStream;
     Serializer ser = construct!Serializer;
-    scope(exit) destruct(str, ser);
+    scope(exit) destructEach(str, ser);
     ser.onWantObject = woe;
     ser.onWantDescriptor = wde;
     //
@@ -1596,7 +1596,7 @@ void fileToPublisher(in char[] filename, Object pub,
 {
     MemoryStream str = construct!MemoryStream;
     Serializer ser = construct!Serializer;
-    scope(exit) destruct(str, ser);
+    scope(exit) destructEach(str, ser);
     ser.onWantObject = woe;
     ser.onWantDescriptor = wde;
     //
@@ -1739,7 +1739,7 @@ version(unittest)
                 assert(targetObjectOwnedBy(&aB2descr, this));
             }
             ~this() {
-                destruct(_aB1, _aB2);
+                destructEach(_aB1, _aB2);
             }
             override void reset() {
                 super.reset;
@@ -1776,7 +1776,7 @@ version(unittest)
         Serializer ser    = construct!Serializer;
         ClassB b = construct!ClassB;
         ClassA a = construct!ClassA;
-        scope(exit) destruct(str, ser, b, a);
+        scope(exit) destructEach(str, ser, b, a);
 
         // basic sequential store/restore ---+
         ser.publisherToStream(b,str,format);
@@ -1840,7 +1840,7 @@ version(unittest)
         auto ref1 = construct!(Referenced1);
         auto ref2 = construct!Referenced1;
         auto usrr = construct!ReferencedUser;
-        scope(exit) destruct(ref1, ref2, usrr);
+        scope(exit) destructEach(ref1, ref2, usrr);
         
         assert(ReferenceMan.storeReference!Referenced1(&ref1, "referenced.ref1"));
         assert(ReferenceMan.storeReference!Referenced1(&ref2, "referenced.ref2"));
@@ -2006,7 +2006,7 @@ version(unittest)
         Target target = construct!Target;
         Serializer ser = construct!Serializer;
         MemoryStream str = construct!MemoryStream;
-        scope(exit) destruct(source, ser, str, target);
+        scope(exit) destructEach(source, ser, str, target);
 
         ser.publisherToStream(source, str);
         str.position = 0;
@@ -2136,7 +2136,7 @@ version(unittest)
         MainPublisher c = construct!MainPublisher;
         Serializer ser = construct!Serializer;
         MemoryStream str = construct!MemoryStream;
-        scope(exit) destruct(c, ser, str);
+        scope(exit) destructEach(c, ser, str);
 
         void objectNotFound(IstNode node, ref Object serializable, out bool fromReference)
         {
@@ -2213,7 +2213,7 @@ version(unittest)
         MemoryStream str = construct!MemoryStream;
         Serializer ser = construct!Serializer;
         HasGenRef obj = construct!HasGenRef;
-        scope(exit) destruct(ser, str, obj);
+        scope(exit) destructEach(ser, str, obj);
 
         ser.publisherToStream(obj, str);
         str.position = 0;

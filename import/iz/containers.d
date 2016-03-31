@@ -2342,7 +2342,7 @@ public:
             static if (is(TreeItemType == interface))
                 destruct(cast(Object) current);
             else
-                current.destruct;
+                destruct(current);
         }
     }
 // -----------------------------------------------------------------------------
@@ -2571,7 +2571,7 @@ unittest
     ObjectTreeItem c1 = root.addNewChild!ObjectTreeItem;
     ObjectTreeItem c2 = root.addNewChild!ObjectTreeItem;
 
-    scope(exit) destruct(root, c0, c1, c2);
+    scope(exit) destructEach(root, c0, c1, c2);
 
     assert(root.childrenCount == 3);
     root.removeChild(c0);
@@ -2591,10 +2591,10 @@ unittest
     ItemStruct* root = construct!ItemStruct;
 
     auto c0 = root.addNewChild;
-    ItemStruct* c1 = root.addNewChild;
-    ItemStruct* c2 = root.addNewChild;
+    auto c1 = root.addNewChild;
+    auto c2 = root.addNewChild;
 
-    scope(exit) destruct(root, c0, c1, c2);
+    scope(exit) destructEach(root, c0, c1, c2);
 
     assert(root.childrenCount == 3);
     root.removeChild(0);

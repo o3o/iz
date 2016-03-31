@@ -251,10 +251,11 @@ if (isBasicType!T)
  * Params:
  *      objs = Variadic list of Object instances.
  */
-void destruct(Objs...)(auto ref Objs objs)
+void destructEach(Objs...)(auto ref Objs objs)
+if (Objs.length > 1)
 {
     foreach(ref obj; objs)
-        obj.destruct;
+        destruct(obj);
 }
 
 private __gshared TypeInfo_Class[string] registeredClasses;
@@ -319,11 +320,11 @@ unittest
 
     auto b = construct!Object;
     auto c = construct!Object;
-    destruct(a,b,c);
+    destructEach(a,b,c);
     assert(!a);
     assert(!b);
     assert(!c);
-    destruct(a,b,c);
+    destructEach(a,b,c);
     assert(!a);
     assert(!b);
     assert(!c);

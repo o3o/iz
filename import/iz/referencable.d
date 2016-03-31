@@ -269,7 +269,7 @@ public:
 
 unittest
 {
-    import iz.memory: construct, destruct;
+    import iz.memory: construct, destructEach;
     
     alias delegate1 = ubyte delegate(long param);
     alias delegate2 = short delegate(uint param);
@@ -290,7 +290,7 @@ unittest
     auto f1 = construct!Foo;
     auto f2 = construct!Foo;
     auto f3 = construct!Foo;
-    scope(exit) destruct(f1,f2,f3);
+    scope(exit) destructEach(f1,f2,f3);
 
     assert( !ReferenceMan.isReferenced(&f1) );
     assert( !ReferenceMan.isReferenced(&f2) );

@@ -311,10 +311,10 @@ unittest
 
     scope(exit)
     {
-        destruct(inter, isubj, usubj);
-        destruct(iobs1, iobs2, iobs3);
-        destruct(uobs1, uobs2, uobs3);
-        destruct(nots1, nots2);
+        destructEach(inter, isubj, usubj);
+        destructEach(iobs1, iobs2, iobs3);
+        destructEach(uobs1, uobs2, uobs3);
+        destructEach(nots1, nots2);
     }
 
     inter.beginUpdate;
@@ -510,7 +510,7 @@ unittest
     auto obs2 = construct!DocObserver;
     auto obs3 = construct!DocObserver;
     
-    scope(exit) destruct(inter, subj, obs1, obs2, obs3);
+    scope(exit) destructEach(inter, subj, obs1, obs2, obs3);
     
     inter.addSubject(subj);
     inter.addObservers(obs1, obs2, obs3);

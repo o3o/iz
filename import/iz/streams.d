@@ -1296,7 +1296,7 @@ unittest
     // Stream.opOpAssign!("~")
     auto str1 = construct!MemoryStream;
     auto str2 = construct!MemoryStream;
-    scope(exit) destruct(str1, str2);
+    scope(exit) destructEach(str1, str2);
     //
     auto dat1 = "1234";
     auto dat2 = "5678";

@@ -353,7 +353,7 @@ unittest
     assert(b.i.e == 333);
     assert(b.i.e == descrBi.getter()().e);
 
-    destruct(a,b);
+    destructEach(a,b);
     writeln("PropDescriptor(T) passed the tests");
 }
 

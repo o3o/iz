@@ -239,7 +239,7 @@ unittest
     auto col = construct!ItemCollection;
     auto str = construct!MemoryStream;
     auto ser = construct!Serializer;
-    scope(exit) destruct(col, ser, str);
+    scope(exit) destructEach(col, ser, str);
 
     Item itm = col.addItem();
     itm.setProps(0u,1u,2u);
@@ -603,7 +603,7 @@ unittest
 
     Serializer ser = construct!Serializer;
     MemoryStream str = construct!MemoryStream;
-    scope(exit) destruct(ser, str);
+    scope(exit) destructEach(ser, str);
 
     Publisher pub0 = construct!Publisher;
     uint[][] array = src.dup;
@@ -627,7 +627,7 @@ unittest
     ser.streamToPublisher(str, pub1);
     assert(array == src);
 
-    destruct(pub0, pub1);
+    destructEach(pub0, pub1);
 
     writeln("Published2dArray(T) passed the tests");
 }
@@ -933,7 +933,7 @@ public:
 }
 
 /**
- * A timer based on a Thread.
+ * A timer based on a thread.
  *
  * This timer ensures a minimal interval and not a stable periodicity.
  */
@@ -1342,11 +1342,11 @@ unittest
     assert(runProc.terminated);
     assert(runProc.exitStatus == 0);
     assert(runProc.output.readln == "hello world");
-    destruct(runProc, dmdProc);
+    destructEach(runProc, dmdProc);
 }
 
 /**
- * The AsyncProcess is a non blocking process that exposes two assignable
+ * AsyncProcess is a non blocking process that exposes two assignable
  * events allowing to be notified when the process output has changed
  * or when the process has terminated.
  *
@@ -1418,8 +1418,9 @@ public:
      * Convenience function that can be called in the two async events.
      *
      * Params:
-     *      t = an array
-     *      is appended.
+     *      t = an array to overwrite. Its size defines the max amount of data
+     *      to read.
+     *
      * Returns:
      *      A bool that indicates if something has been read.
      */
@@ -1457,8 +1458,6 @@ public:
 
     /**
      * Sets or gets the event called when the process has availalbe output.
-     *
-     * During the event all the available output must be read.
      */
     @Set void onOutputBuffer(void delegate(Object) value)
     {
@@ -1534,6 +1533,6 @@ version(Posix) unittest
     assert(runProc.exitStatus == 0);
     assert(catcher.ter);
 
-    destruct(runProc, dmdProc);
+    destructEach(runProc, dmdProc);
 }
 
