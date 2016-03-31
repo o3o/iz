@@ -4,10 +4,15 @@
 module iz.classes;
 
 import
-    std.traits, std.string, std.algorithm, std.array, std.range;
+    core.thread;
+version(Posix)
+    import core.sys.posix.poll;
+import
+    std.traits, std.string, std.algorithm, std.array, std.range, std.process,
+    std.datetime, std.stdio;
 import
     iz.types, iz.memory, iz.containers, iz.streams, iz.properties,
-    iz.serializer, iz.referencable, iz.observer;
+    iz.serializer, iz.referencable, iz.observer, iz.strings;
 
 version(unittest) import std.stdio;
 
@@ -863,5 +868,673 @@ unittest
     auto c = Component.create!Component(null);
     c.name = "a";
     assert(ReferenceMan.referenceID(cast(Component*)c) == "a");
+}
+
+package class BaseTimer: PropertyPublisher
+{
+    mixin PropertyPublisherImpl;
+
+protected:
+
+    __gshared void delegate(Object) _onTimer;
+    __gshared uint _interval = 1000;
+
+public:
+
+    ///
+    this()
+    {
+        collectPublications!BaseTimer;
+    }
+
+    /// Starts the timer.
+    abstract void start();
+
+    /// Stops the timer.
+    abstract void stop();
+
+    /**
+     * Sets or gets the interval, in milliseconds, between each onTimer event.
+     *
+     * Accurary may vary depending on the implementation.
+     */
+    @Set void interval(uint value)
+    {
+        _interval = (value > 10) ? value : 10;
+    }
+
+    /// ditto
+    @Get uint interval() {return _interval;}
+
+    /**
+     * Sets or gets the event called when at least interval milli seconds
+     * have ellapsed.
+     */
+    @Set void onTimer(void delegate(Object) value)
+    {
+        _onTimer = value;
+    }
+
+    /// ditto
+    @Get void delegate(Object) onTimer() {return _onTimer;}
+
+    /// ditto
+    /*@Set void onTimerSer(char[] value)
+    {
+        auto voidRef = ReferenceMan.reference!GenericDelegate(value);
+        _onTimer = *cast(typeof(_onTimer)*) voidRef;
+    }
+
+    /// ditto
+    @Get const(char)[] onTimerSer()
+    {
+        return ReferenceMan.referenceID(cast(GenericDelegate*)&_onTimer);
+    }*/
+}
+
+/**
+ * A timer based on a Thread.
+ *
+ * This timer ensures a minimal interval and not a stable periodicity.
+ */
+class ThreadTimer: BaseTimer
+{
+
+private:
+
+    import core.time;
+
+    __gshared bool _stop;
+    ulong _t1, _t2;
+    Thread _thread;
+
+    final void execute()
+    {
+        while (true)
+        {
+            if (!_t1) _t1 = TickDuration.currSystemTick.msecs;
+            _thread.sleep(dur!"msecs"(5));
+            _t2 = TickDuration.currSystemTick.msecs;
+            if (_t2 - _t1 > _interval)
+            {
+                _t1 = 0;
+                if (_onTimer) _onTimer(this);
+            }
+            if (_stop) break;
+        }
+    }
+
+public:
+
+    ~this()
+    {
+        stop();
+        if (_thread) destruct(_thread);
+    }
+
+    final override void start()
+    {
+        stop();
+        _t1 = 0;
+        _stop = false;
+        if (_thread) destruct(_thread);
+        _thread = construct!Thread(&execute);
+        _thread.start;
+    }
+
+    final override void stop()
+    {
+        if (_thread)
+        {
+            _stop = true;
+        }
+    }
+}
+
+/**
+ * Process encapsulates several useful methods of std.process
+ * to make a serializable, synchronous, process.
+ */
+class Process: PropertyPublisher
+{
+
+    mixin PropertyPublisherImpl;
+
+private:
+
+    Pid _pid;
+    ProcessPipes _ppid;
+    int _exitStatus;
+
+    char[] env(bool full = false)()
+    {
+        import std.path: pathSeparator;
+        import std.algorithm: each;
+        import std.string: format;
+        char[] result;
+        static const string fmt = "%s=%s%s";
+
+        static if (full)
+        {
+            auto aa = std.process.environment.toAA;
+            aa.byKey.each!(
+                (k) => result ~= format(fmt, k, aa[k], pathSeparator));
+        }
+
+        _environment.byKey.each!(
+            (k) => result ~= format(fmt, k, _environment[k], pathSeparator));
+
+        return result;
+    }
+
+protected:
+
+    char[][] _parameters;
+    string[string] _environment;
+    char[] _executable;
+    char[] _workingDirectory;
+    bool _usePipes;
+    bool _errorToOutput;
+    bool _newEnvironment;
+
+    // default, non blocking, execute
+    final void internalExec()
+    {
+        Redirect r;
+        with (Redirect) if (_usePipes)
+        {
+            if (!_errorToOutput) r = Redirect.all;
+            else r = stdin | stdout | stderrToStdout;
+        }
+        Config c;
+        if (_newEnvironment) c = Config.newEnv;
+        _ppid = pipeProcess([_executable] ~ _parameters,
+            r, _environment, c, _workingDirectory);
+    }
+
+public:
+
+    ///
+    this()
+    {
+        collectPublications!Process;
+    }
+
+    /**
+     * Executes the process and returns when it terminates.
+     */
+    void execute()
+    {
+        internalExec;
+        waitFor;
+    }
+
+    /**
+     * Executes then write and close the input stream.
+     *
+     * This is useful for processes that directly expects
+     * an input after being launched.
+     */
+    void executeAndWrite(T)(auto ref T t)
+    {
+        execute;
+        input.write(t);
+        input.close;
+    }
+
+    /**
+     * Executes then fills the input stream with a file and close the input.
+     */
+    void executeAndPipeFile(const(char[]) filename)
+    {
+        import std.file: read;
+        auto buff = read(filename);
+        executeAndWrite(buff);
+    }
+
+    /**
+     * Forces the process termination.
+     *
+     * Params:
+     *      status = the exit status.
+     */
+    void terminate(int status = 0)
+    {
+        kill(_ppid.pid, status);
+    }
+
+    /**
+     * Sets or gets if the process streams are redirected.
+     */
+    @Set void usePipes(bool value)
+    {
+        _usePipes = value;
+    }
+
+    /// ditto
+    @Get bool usePipes() {return _usePipes;}
+
+    /**
+     * Sets or gets if the error stream is redirected to the output stream.
+     * Only applied if usePipes is set to true.
+     */
+    @Set void errorToOutput(bool value)
+    {
+        _errorToOutput = value;
+    }
+
+    /// ditto
+    @Get bool errorToOutput() {return _usePipes;}
+
+    /**
+     * Sets or gets if the value passed in environment fully replaces
+     * the default environment.
+     */
+    @Set void newEnvironment(bool value)
+    {
+        _newEnvironment = value;
+    }
+
+    /// ditto
+    @Get bool newEnvironment() {return _newEnvironment;}
+
+    /**
+     * Sets or gets the process executable.
+     */
+    @Set void executable(const(char[]) value)
+    {
+        _executable = value.dup;
+    }
+
+    /// ditto
+    @Get const(char)[] executable()
+    {
+        return _executable;
+    }
+
+    /**
+     * Sets or gets the process working directory.
+     */
+    @Set void workingDirectory(const(char[]) value)
+    {
+        _workingDirectory = value.dup;
+    }
+
+    /// ditto
+    @Get const(char)[] workingDirectory()
+    {
+        return _workingDirectory;
+    }
+
+    /**
+     * The environment, as an associative array.
+     */
+    string[string] environmentAA()
+    {
+        return _environment;
+    }
+
+    /**
+     * Sets or gets the environment.
+     *
+     * The value returned is affected by the newEnvironment property.
+     *
+     * Params:
+     *      value, a string containing the environment varaible,
+     *      each name value group separated by ascii white characters and
+     *      each name separated from its value(s) by `=`.
+     */
+    @Set void environment(const(char[]) value)
+    {
+        import std.path: pathSeparator;
+        string v, k;
+        char[] item;
+        char[] valuecopy = value.dup;
+        auto items = valuecopy.bySeparated(pathSeparator);
+        while (true)
+        {
+            if (items.empty) break;
+            item = items.front;
+            auto kv = item.bySeparated('=');
+            if (kv.empty) continue;
+            k = kv.front.idup;
+            kv.popFront;
+            if (kv.empty) continue;
+            v = kv.front.idup;
+            items.popFront;
+            _environment[k] = v;
+        }
+    }
+
+    /// ditto
+    @Get char[] environment()
+    {
+        return env();
+    }
+
+    /**
+     * Returns the full environment.
+     *
+     * When newEnvironment is set to true, the same value as environement
+     * is returned.
+     */
+    string fullEnvironment()
+    {
+        if (_newEnvironment)
+            return env().idup;
+        else
+            return env!true().idup;
+    }
+
+    /**
+     * Sets or gets the parameters for this process.
+     *
+     * Params:
+     *      value, a string containing the parameters, separated by ascii white
+     *      characters.
+     */
+    @Set parameters(char[] value)
+    {
+        _parameters.length = 0;
+        foreach(p; value.byWord)
+            _parameters ~= p;
+    }
+
+    /// ditto
+    @Get char[] parameters()
+    {
+        import std.array: join;
+        return join(_parameters, ' ');
+    }
+
+    /**
+     * Waits for the process and only returns when it terminates.
+     */
+    final int waitFor()
+    {
+        _exitStatus = wait(_ppid.pid);
+        return _exitStatus;
+    }
+
+    /**
+     * Indicates wether the process is terminated.
+     */
+    final bool terminated()
+    {
+        return tryWait(_ppid.pid)[0];
+    }
+
+    /**
+     * Indicates the process exit status.
+     *
+     * Only reliable when terminated is true.
+     */
+    final int exitStatus()
+    {
+        _exitStatus = tryWait(_ppid.pid)[1];
+        return _exitStatus;
+    }
+
+    /**
+     * The process input stream.
+     *
+     * Returns:
+     *      std.stdio.stdin when usePipes is set to false, otherwise another
+     *      stream.
+     */
+    final File input()
+    {
+        return _ppid.stdin;
+    }
+
+    /**
+     * The process output stream.
+     *
+     * Returns:
+     *      std.stdio.stdout when usePipes is set to false, otherwise another
+     *      stream.
+     */
+    final File output()
+    {
+        return _ppid.stdout;
+    }
+
+    /**
+     * The process error stream.
+     *
+     * Returns:
+     *      std.stdio.stderr when usePipes is set to false, otherwise another
+     *      stream, the same as output if errorToOutput is set to true.
+     */
+    final File error()
+    {
+        return _ppid.stderr;
+    }
+}
+///
+unittest
+{
+    auto code =
+    q{
+        import std.stdio;
+        void main()
+        {
+            write("hello world");
+        }
+    };
+    import std.file: write, exists, tempDir, getcwd;
+    import std.path: dirSeparator;
+    string fname = getcwd ~ dirSeparator ~ "TempSource.d";
+    write(fname, code);
+    // compiles code with dmd
+    Process dmdProc = construct!Process;
+    dmdProc.executable = "dmd";
+    dmdProc.parameters = fname.dup;
+    dmdProc.execute;
+    assert(dmdProc.terminated);
+    assert(dmdProc.exitStatus == 0);
+    assert(fname[0..$-2].exists);
+    // run produced program
+    Process runProc = construct!Process;
+    runProc.executable = fname[0..$-2];
+    runProc.usePipes = true;
+    runProc.execute;
+    assert(runProc.terminated);
+    assert(runProc.exitStatus == 0);
+    assert(runProc.output.readln == "hello world");
+    destruct(runProc, dmdProc);
+}
+
+/**
+ * The AsyncProcess is a non blocking process that exposes two assignable
+ * events allowing to be notified when the process output has changed
+ * or when the process has terminated.
+ *
+ * This class relies on an internal ThreadTimer that could not work in all
+ * the contexts (for example in a X11 window).
+ */
+class AsyncProcess: Process
+{
+
+    mixin PropertyPublisherImpl;
+
+private:
+
+    ThreadTimer _checker;
+    void delegate(Object notifier) _onTerminate, _onOutputBuffer;
+
+protected:
+
+    void check(Object notifier)
+    {
+        version(Posix)
+        {
+            if (_ppid.stdout.eof)
+            {
+                _checker.stop;
+                if(_onTerminate)
+                    _onTerminate(this);
+            }
+            else
+            {
+	            pollfd pfd = { _ppid.stdout.fileno, POLLIN };
+                if (poll(&pfd, 1, 0) && (pfd.revents & POLLIN) && _onOutputBuffer)
+                    _onOutputBuffer(this);
+            }
+        }
+        else static assert(0, "TODO !");
+    }
+
+public:
+
+    ///
+    this()
+    {
+        collectPublications!AsyncProcess;
+        _checker = construct!ThreadTimer;
+        _checker.onTimer = &check;
+        _checker.interval = 20;
+    }
+
+    ~this()
+    {
+        destruct(_checker);
+    }
+
+    /**
+     * Executes and returns immediatly.
+     *
+     * The process termination can be detected with the terminated property
+     * or with the onTerminate event.
+     */
+    override void execute()
+    {
+        _checker.start;
+        internalExec;
+    }
+
+    /**
+     * Reads from the output buffer
+     *
+     * Convenience function that can be called in the two async events.
+     *
+     * Params:
+     *      t = an array
+     *      is appended.
+     * Returns:
+     *      A bool that indicates if something has been read.
+     */
+    bool readOutput(T)(ref T[] t)
+    {
+        import core.stdc.stdio: fread;
+        auto c = fread(t.ptr, T.sizeof, t.length, output.getFP);
+        t.length = c;
+        return c > 0;
+    }
+
+    /**
+     * Sets or gets the event called when the process terminates.
+     */
+    @Set void onTerminate(void delegate(Object) value)
+    {
+        _onTerminate = value;
+    }
+
+    /// ditto
+    @Get void delegate(Object) onTerminate() {return _onTerminate;}
+
+    /// ditto
+    /*@Set void onTerminateSer(char[] value)
+    {
+        auto voidRef = ReferenceMan.reference!GenericDelegate(value);
+        _onTerminate = *cast(typeof(_onTerminate)*) voidRef;
+    }
+
+    /// ditto
+    @Get const(char)[] onTerminateSer()
+    {
+        return ReferenceMan.referenceID(cast(GenericDelegate*) &_onTerminate);
+    }*/
+
+    /**
+     * Sets or gets the event called when the process has availalbe output.
+     *
+     * During the event all the available output must be read.
+     */
+    @Set void onOutputBuffer(void delegate(Object) value)
+    {
+        _onOutputBuffer = value;
+    }
+
+    /// ditto
+    @Get void delegate(Object) onOutputBuffer() {return _onOutputBuffer;}
+
+    /// ditto
+    /*@Set void onOutputBufferSer(char[] value)
+    {
+        auto voidRef = ReferenceMan.reference!GenericDelegate(value);
+        _onOutputBuffer = *cast(typeof(_onOutputBuffer)*) voidRef;
+    }
+
+    /// ditto
+    @Get const(char[]) onOutputBufferSer()
+    {
+        return ReferenceMan.referenceID(cast(GenericDelegate*) &_onOutputBuffer);
+    }*/
+}
+///
+version(Posix) unittest
+{
+    auto code =
+    q{
+        import std.stdio;
+        void main()
+        {
+            write("hello world");
+        }
+    };
+    import std.file: write, exists, getcwd;
+    import std.path: dirSeparator;
+    string fname = getcwd ~ dirSeparator ~ "TempSource.d";
+    write(fname, code);
+    // compiles code with dmd
+    Process dmdProc = construct!Process;
+    dmdProc.executable = "dmd";
+    dmdProc.parameters = fname.dup;
+    dmdProc.execute;
+    assert(dmdProc.terminated);
+    assert(dmdProc.exitStatus == 0);
+    assert(fname[0..$-2].exists);
+    //
+    struct Catcher
+    {
+        bool ter;
+        void bufferAvailable(Object notifier)
+        {
+            assert(notifier);
+            AsyncProcess ap = cast(AsyncProcess) notifier;
+            assert(ap.output.readln == "hello world");
+        }
+        void terminate(Object notifier)
+        {
+            ter = true;
+        }
+    }
+    Catcher catcher;
+    // run produced program
+    AsyncProcess runProc = construct!AsyncProcess;
+    runProc.executable = fname[0..$-2];
+    runProc.usePipes = true;
+    runProc.onOutputBuffer = &catcher.bufferAvailable;
+    runProc.onTerminate = &catcher.terminate;
+    assert(runProc.onOutputBuffer);
+    assert(runProc.onTerminate);
+    runProc.execute;
+    while (!catcher.ter) {}
+    assert(runProc.terminated);
+    assert(runProc.exitStatus == 0);
+    assert(catcher.ter);
+
+    destruct(runProc, dmdProc);
 }
 
