@@ -1426,10 +1426,14 @@ public:
      */
     bool readOutput(T)(ref T[] t)
     {
-        import core.stdc.stdio: fread;
-        auto c = fread(t.ptr, T.sizeof, t.length, output.getFP);
-        t.length = c;
-        return c > 0;
+        version(Posix)
+        {
+            import core.sys.posix.unistd: read;
+            auto c = read(output.fileno, t.ptr, t.length * T.sizeof);
+            t.length = c / T.sizeof;
+            return c != 0;
+        }
+        else static assert(0, "TODO !");
     }
 
     /**
