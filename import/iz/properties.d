@@ -767,7 +767,7 @@ mixin template PropertyPublisherImpl()
                 auto dg = &overload;
                 version(assert) if (descriptor.getter) assert (
                     runtimeTypeInfo!Type == descriptor.rtti,
-                    "setter and getter type mismatch");
+                    "setter and getter type mismatch for " ~ descriptor.name);
                 descriptor.define(dg, descriptor.getter, member);
                 //
                 version(none) writeln(attribute.stringof, " > ", member);
@@ -1427,12 +1427,12 @@ unittest
         this()
         {
             static if (Nested) _sub = new Foo!false;
-            str = construct!MemoryStream;
+            str = new MemoryStream;
             collectPublications!Foo;
         }
         ~this()
         {
-            destruct(str);
+            //destruct(str);
         }
         @SetGet uint _a;
         @SetGet ulong _b;
