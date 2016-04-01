@@ -878,6 +878,7 @@ protected:
 
     __gshared void delegate(Object) _onTimer;
     __gshared uint _interval = 1000;
+    __gshared bool _active;
 
 public:
 
@@ -892,6 +893,18 @@ public:
 
     /// Stops the timer.
     abstract void stop();
+
+    /// Starts or stops the timer or indicates its status.
+    @Set void active(bool value)
+    {
+        if (value == _active)
+            return;
+        _active = value;
+        _active ? start : stop;
+    }
+
+    /// ditto
+    @Get bool active(){return _active;}
 
     /**
      * Sets or gets the interval, in milliseconds, between each onTimer event.
@@ -917,19 +930,6 @@ public:
 
     /// ditto
     @Get void delegate(Object) onTimer() {return _onTimer;}
-
-    /// ditto
-    /*@Set void onTimerSer(char[] value)
-    {
-        auto voidRef = ReferenceMan.reference!GenericDelegate(value);
-        _onTimer = *cast(typeof(_onTimer)*) voidRef;
-    }
-
-    /// ditto
-    @Get const(char)[] onTimerSer()
-    {
-        return ReferenceMan.referenceID(cast(GenericDelegate*)&_onTimer);
-    }*/
 }
 
 /**
@@ -960,7 +960,10 @@ private:
                 _t1 = 0;
                 if (_onTimer) _onTimer(this);
             }
-            if (_stop) break;
+            if (_stop)
+            {
+                break;
+            }
         }
     }
 
@@ -969,7 +972,6 @@ public:
     ~this()
     {
         stop();
-        if (_thread) destruct(_thread);
     }
 
     final override void start()
@@ -987,6 +989,8 @@ public:
         if (_thread)
         {
             _stop = true;
+            if (_thread)
+                destruct(_thread);
         }
     }
 }
@@ -1037,7 +1041,7 @@ protected:
     bool _errorToOutput;
     bool _newEnvironment;
 
-    // default, non blocking, execute
+    /// default, non blocking, execute
     final void internalExec()
     {
         Redirect r;
@@ -1369,17 +1373,18 @@ protected:
     {
         version(Posix)
         {
-	        pollfd pfd = { _ppid.stdout.fileno, POLLIN };
-            if (poll(&pfd, 1, 0) && (pfd.revents & POLLIN) && _onOutputBuffer)
-                _onOutputBuffer(this);
-
-            if (_ppid.stdout.eof)
+            if (terminated || _ppid.stdout.eof)
             {
                 _checker.stop;
-                if(_onTerminate)
+                if (_onTerminate)
                     _onTerminate(this);
             }
-
+            else
+            {
+                pollfd pfd = { _ppid.stdout.fileno, POLLIN };
+                if (_onOutputBuffer && poll(&pfd, 1, 0) && (pfd.revents & POLLIN))
+                    _onOutputBuffer(this);
+            }
         }
         else static assert(0, "TODO !");
     }
@@ -1447,19 +1452,6 @@ public:
     /// ditto
     @Get void delegate(Object) onTerminate() {return _onTerminate;}
 
-    /// ditto
-    /*@Set void onTerminateSer(char[] value)
-    {
-        auto voidRef = ReferenceMan.reference!GenericDelegate(value);
-        _onTerminate = *cast(typeof(_onTerminate)*) voidRef;
-    }
-
-    /// ditto
-    @Get const(char)[] onTerminateSer()
-    {
-        return ReferenceMan.referenceID(cast(GenericDelegate*) &_onTerminate);
-    }*/
-
     /**
      * Sets or gets the event called when the process has availalbe output.
      */
@@ -1470,19 +1462,6 @@ public:
 
     /// ditto
     @Get void delegate(Object) onOutputBuffer() {return _onOutputBuffer;}
-
-    /// ditto
-    /*@Set void onOutputBufferSer(char[] value)
-    {
-        auto voidRef = ReferenceMan.reference!GenericDelegate(value);
-        _onOutputBuffer = *cast(typeof(_onOutputBuffer)*) voidRef;
-    }
-
-    /// ditto
-    @Get const(char[]) onOutputBufferSer()
-    {
-        return ReferenceMan.referenceID(cast(GenericDelegate*) &_onOutputBuffer);
-    }*/
 }
 ///
 version(Posix) unittest
