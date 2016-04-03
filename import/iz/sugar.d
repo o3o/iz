@@ -968,6 +968,74 @@ pure @safe unittest
 }
 
 /**
+ * Indicates how many elements of a range are mutated.
+ *
+ * Params:
+ *      range = An input range. The elements must be mutable and initializable.
+ *      Narrow srings are not considered as validate input parameter.
+ *
+ * Returns:
+ *      A number equal to the count of elements that are different from their
+ *      initializer.
+ */
+size_t mutatedCount(Range)(Range range)
+if (isInputRange!Range && is(typeof((ElementType!Range).init))
+    && isMutable!(ElementType!Range) && !isNarrowString!Range)
+{
+    size_t result = 0;
+    const(ElementType!Range) noone = (ElementType!Range).init;
+    while (!range.empty)
+    {
+        result += ubyte(range.front != noone);
+        range.popFront;
+    }
+    return result;
+}
+///
+unittest
+{
+    int[] i = [0,0,1];
+    assert(i.mutatedCount == 1);
+    assert(i[0..$-1].mutatedCount == 0);
+
+    string[] s = ["","a"];
+    assert(s.mutatedCount == 1);
+
+    dchar[] dc = [dchar.init, 'g'];
+    assert(dc.mutatedCount == 1);
+
+    class Foo {}
+    Foo[] f = new Foo[](8);
+    assert(f.mutatedCount == 0);
+    f[0] = new Foo;
+    f[1] = new Foo;
+    assert(f.mutatedCount == 2);
+
+    // w/char.init leads to decoding invalid UTF8 sequence
+    static assert(!is(typeof(mutatedCount!(char[]))));
+    static assert(!is(typeof(mutatedCount!(wchar[]))));
+
+    static assert(is(typeof(mutatedCount!(dchar[]))));
+}
+
+/**
+ * Allows to pass always a parameter as value even if it would be accepted
+ * as reference.
+ */
+auto rValue(T)(auto ref T t)
+{
+    return t;
+}
+///
+unittest
+{
+    void foo(T)(ref T t){}
+    uint a;
+    static assert(is(typeof(foo(a))));
+    static assert(!is(typeof(foo(a.rValue))));
+}
+
+/**
  * Compares two integral values with additional static checkings.
  *
  * If the comparison mixes signed and unsigned operands then the function tries
