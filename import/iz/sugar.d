@@ -15,12 +15,12 @@ version(unittest) import std.stdio;
  *      T = the argument type, likely to be infered.
  *      t = a reference to a T.
  */
-void reset(T)(ref T t) @safe @nogc nothrow
+void reset(T)(ref T t)
 {
     t = T.init;
 }
 ///
-unittest
+@safe @nogc nothrow unittest
 {
     uint a = 159;
     string b = "bla";
@@ -162,12 +162,12 @@ unittest
  * Returns:
  *      the same as $(D cast(OT) it), except that it never fails to compile.
  */
-auto bruteCast(OT, IT)(auto ref IT it) @nogc nothrow pure
+auto bruteCast(OT, IT)(auto ref IT it)
 {
     return *cast(OT*) &it;
 }
 ///
-unittest
+nothrow pure unittest
 {
     uint[] array = [0u,1u,2u];
     size_t len;
@@ -1120,5 +1120,23 @@ pure @safe @nogc nothrow unittest
 
     immutable long aaa = -1; const ulong bbb;
     assert(compare!">"(aaa,bbb) == true);
+}
+
+/**
+ * Throws a static exception, suitable for @nogc functions.
+ */
+@nogc @safe
+void throwStaticEx(T, string file = __FILE__, size_t line = __LINE__)()
+{
+    static const e = new T(file, line);
+    throw e;
+}
+
+/// ditto
+@nogc @safe
+void throwStaticEx(string file = __FILE__, size_t line = __LINE__, string message)()
+{
+    static const e = new Exception(message, file, line);
+    throw e;
 }
 
