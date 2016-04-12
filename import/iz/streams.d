@@ -7,9 +7,9 @@ module iz.streams;
 import
     core.exception;
 import
-    std.string, std.range, std.traits;
+    std.string, std.range, std.traits, std.exception;
 import
-    iz.types, iz.memory;
+    iz.types, iz.memory, iz.sugar;
 
 version(unittest) import std.stdio;
 
@@ -63,13 +63,13 @@ version (Windows)
     immutable uint acAll  = acRead | acWrite;
 
     /// returns true if aHandle is valid.
-    bool isHandleValid(StreamHandle aHandle)
+    bool isHandleValid(StreamHandle aHandle) pure @nogc @safe
     {
         return (aHandle != INVALID_HANDLE_VALUE);
     }
 
     /// translates a cmXX to a platform specific option.
-    int cmToSystem(int aCreationMode)
+    int cmToSystem(int aCreationMode) pure @nogc @safe
     {
         switch(aCreationMode)
         {
@@ -112,13 +112,13 @@ version (Posix)
     immutable uint pdAll = 0;
 
     /// returns true if aHandle is valid.
-    bool isHandleValid(StreamHandle aHandle)
+    bool isHandleValid(StreamHandle aHandle) pure @nogc @safe
     {
         return (aHandle > -1);
     }
 
     /// translates a cmXX to a platform specific option.
-    int cmToSystem(int aCreationMode)
+    int cmToSystem(int aCreationMode)  pure @nogc @safe
     {
         switch(aCreationMode)
         {
@@ -196,7 +196,7 @@ interface Stream
      * Returns:
      *      The count of bytes that's been read.
      */
-    size_t read(Ptr buffer, size_t count);
+    @nogc size_t read(Ptr buffer, size_t count);
 
     /**
      * Reads a typed variable.
@@ -227,7 +227,7 @@ interface Stream
      * Returns:
      *      the count of bytes that's been written.
      */
-    size_t write(Ptr buffer, size_t count);
+    @nogc size_t write(Ptr buffer, size_t count);
 
     /**
      * Writes a typed value.
@@ -258,32 +258,32 @@ interface Stream
      * Returns:
      *      the new position.
      */
-    long seek(long offset, SeekMode mode);
+    @nogc long seek(long offset, SeekMode mode);
     /// ditto
-    int seek(int offset, SeekMode mode);
+    @nogc int seek(int offset, SeekMode mode);
 
     /**
      * Sets or gets the stream size.
      */
-    @property long size();
+    @nogc @property long size();
     /// ditto
-    @property void size(long value);
+    @nogc @property void size(long value);
     /// ditto
-    @property void size(int value);
+    @nogc @property void size(int value);
 
     /**
      * Sets or gets the stream position.
      */
-    @property long position();
+    @nogc @property long position();
     /// ditto
-    @property void position(long value);
+    @nogc @property void position(long value);
     /// ditto
-    @property void position(int value);
+    @nogc @property void position(int value);
 
     /**
      * Resets the stream size to 0.
      */
-    void clear();
+    @nogc void clear();
 
     /// Support for the concatenation operator.
     final void opOpAssign(string op)(Stream rhs)
@@ -299,13 +299,13 @@ interface Stream
             size_t read;
             size_t buff_sz = 4096;
             auto buff = getMem(buff_sz);
-            scope(exit)
+            scope (exit)
             {
                 rhs.position = stored;
                 freeMem(buff);
             }
 
-            while(true)
+            while (true)
             {
                 read = rhs.read(buff, buff_sz);
                 if (read == 0) return;
@@ -351,14 +351,14 @@ if (is(ST : Stream))
     public:
 
         /// initializes a StreamRange with a Stream instance.
-        this(ST stream)
+        this(ST stream) @nogc
         {
             _str = stream;
             _bpos = stream.size - T.sizeof;
         }
 
         /// InputRange primitive.
-        @property T front()
+        @property T front() @nogc
         {
             T result;
             _str.position = _fpos;
@@ -368,7 +368,7 @@ if (is(ST : Stream))
         }
 
         /// Bidirectional primitive.
-        @property T back()
+        @property T back() @nogc
         {
             T result;
             _str.position = _bpos;
@@ -378,26 +378,26 @@ if (is(ST : Stream))
         }
 
         /// InputRange primitive.
-        @safe void popFront()
+        @safe void popFront() @nogc
         {
             _fpos += T.sizeof;
         }
 
         /// Bidirectional primitive.
-        @safe void popBack()
+        @safe void popBack() @nogc
         {
             _bpos -= T.sizeof;
         }
 
         /// InputRange & BidirectionalRange primitive.
-        @property bool empty()
+        @property bool empty() @nogc
         {
             return (_fpos == _str.size) || (_fpos + T.sizeof > _str.size)
                     || (_bpos == 0) || (_bpos - T.sizeof < 0);
         }
 
         /// ForwardRange primitive.
-        typeof(this) save()
+        typeof(this) save() @nogc
         {
             typeof(this) result = typeof(this)(_str);
             result._fpos = _fpos;
@@ -481,12 +481,12 @@ unittest
  *      source = The Stream instance whose content will be copied.
  *      target = The Stream instance whose content will be replaced.
  */
-void copyStream(Stream source, Stream target)
+void copyStream(Stream source, Stream target) @nogc
 {
     auto immutable oldpos = source.position;
     auto buffsz = 4096;
     auto buff = getMem(buffsz);
-    if (!buff) throw new OutOfMemoryError();
+    if (!buff) throwStaticEx!OutOfMemoryError;
 
     scope(exit)
     {
@@ -549,7 +549,7 @@ if (isInputRange!R)
     }
 }
 
-unittest
+@nogc unittest
 {
     auto rng = iota(0u,100u);
     auto rng1 = rng.save;
@@ -631,7 +631,7 @@ unittest
  *
  * This class is not directly usable.
  */
-class SystemStream: Stream, StreamPersist
+abstract class SystemStream: Stream, StreamPersist
 {
     private
     {
@@ -640,7 +640,7 @@ class SystemStream: Stream, StreamPersist
     public
     {
         /// see the Stream interface.
-        size_t read(Ptr buffer, size_t count)
+        size_t read(Ptr buffer, size_t count) @nogc
         {
             if (!_handle.isHandleValid) return 0;
             version(Windows)
@@ -658,7 +658,7 @@ class SystemStream: Stream, StreamPersist
         }
 
         /// see the Stream interface.
-        size_t write(Ptr buffer, size_t count)
+        size_t write(Ptr buffer, size_t count) @nogc
         {
             if (!_handle.isHandleValid) return 0;
             version(Windows)
@@ -676,7 +676,7 @@ class SystemStream: Stream, StreamPersist
         }
 
         /// see the Stream interface.
-        long seek(long offset, SeekMode mode)
+        long seek(long offset, SeekMode mode) @nogc
         {
             if (!_handle.isHandleValid) return 0;
             version(Windows)
@@ -693,13 +693,13 @@ class SystemStream: Stream, StreamPersist
         }
 
         /// ditto
-        int seek(int offset, SeekMode mode)
+        int seek(int offset, SeekMode mode) @nogc
         {
             return cast(int) seek(cast(long)offset, mode);
         }
 
         /// see the Stream interface.
-        @property long size()
+        @property long size() @nogc
         {
             if (!_handle.isHandleValid) return 0;
 
@@ -710,7 +710,7 @@ class SystemStream: Stream, StreamPersist
         }
 
         /// ditto
-        @property void size(long value)
+        @property void size(long value) @nogc
         {
             if (!_handle.isHandleValid) return;
             if (size == value) return;
@@ -729,7 +729,7 @@ class SystemStream: Stream, StreamPersist
         }
 
         /// ditto
-        @property void size(int value)
+        @property void size(int value) @nogc
         {
             if (!_handle.isHandleValid) return;
             version(Windows)
@@ -744,7 +744,7 @@ class SystemStream: Stream, StreamPersist
         }
 
         /// see the Stream interface.
-        @property long position()
+        @property long position() @nogc
         {
             return seek(0, SeekMode.cur);
         }
@@ -758,7 +758,7 @@ class SystemStream: Stream, StreamPersist
         }
 
         /// ditto
-        @property void position(int value)
+        @property void position(int value) @nogc
         {
             seek(value, SeekMode.beg);
         }
@@ -766,23 +766,24 @@ class SystemStream: Stream, StreamPersist
         /**
          * Exposes the handle for additional system stream operations.
          */
-        @property const(StreamHandle) handle(){return _handle;}
+        @property const(StreamHandle) handle() @nogc
+        {return _handle;}
 
         /// see the Stream interface.
-        void clear()
+        void clear() @nogc
         {
             size(0);
             position(0);
         }
 
         /// see the Stream interface.
-        void saveToStream(Stream stream)
+        void saveToStream(Stream stream) @nogc
         {
             copyStream(this, stream);
         }
 
         /// see the Stream interface.
-        void loadFromStream(Stream stream)
+        void loadFromStream(Stream stream) @nogc
         {
             copyStream(stream, this);
         }
@@ -896,7 +897,7 @@ class FileStream: SystemStream
          * Closes the file and flushes any pending changes to the disk.
          * After the call, handle is not valid anymore.
          */
-        void closeFile()
+        void closeFile() @nogc
         {
             version(Windows)
             {
@@ -914,7 +915,7 @@ class FileStream: SystemStream
         /**
          * Exposes the filename.
          */
-        @property string filename(){return _filename;}
+        @property string filename() @nogc {return _filename;}
     }
 }
 
@@ -942,10 +943,10 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
     public
     {
         ///
-        this()
+        this() @nogc
         {
             _memory = getMem(16);
-            if (!_memory) throw new OutOfMemoryError();
+            if (!_memory) throwStaticEx!OutOfMemoryError;
         }
 
         /**
@@ -957,7 +958,7 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
         this(A)(A a)
         {
             _memory = getMem(16);
-            if (!_memory) throw new OutOfMemoryError();
+            if (!_memory) throwStaticEx!OutOfMemoryError;
 
             import std.traits: isArray;
             static if (isArray!A)
@@ -973,7 +974,7 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
             position = 0;
         }
 
-        ~this()
+        ~this() @nogc
         {
             if (_freeFlag)
                 freeMem(_memory);
@@ -982,7 +983,7 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
 // read & write ---------------------------------------------------------------+
 
         /// see the Stream interface.
-        size_t read(Ptr buffer, size_t count)
+        size_t read(Ptr buffer, size_t count) @nogc
         {
             if (count + _position > _size) count = _size - _position;
             moveMem(buffer, _memory + _position, count);
@@ -991,7 +992,7 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
         }
 
         /// see the Stream interface.
-        size_t write(Ptr buffer, size_t count)
+        size_t write(Ptr buffer, size_t count) @nogc
         {
             if (_position + count > _size) size(_position + count);
             moveMem(_memory + _position, buffer, count);
@@ -1003,7 +1004,7 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
 // seek -----------------------------------------------------------------------+
 
         /// see the Stream interface.
-        long seek(long offset, SeekMode mode)
+        long seek(long offset, SeekMode mode) @nogc
         {
             with(SeekMode) final switch(mode)
             {
@@ -1021,7 +1022,7 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
         }
 
         /// ditto
-        int seek(int offset, SeekMode mode)
+        int seek(int offset, SeekMode mode) @nogc
         {
             long longOffs = offset;
             return cast(int) seek(longOffs, mode);
@@ -1031,19 +1032,19 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
 // size -----------------------------------------------------------------------+
 
         /// see the Stream interface.
-        @property long size()
+        @property long size() @nogc
         {
             return _size;
         }
 
         /// ditto
-        @property void size(long value)
+        @property void size(long value) @nogc
         {
             if (_size == value) return;
             version(X86)
             {
                 if (value > int.max)
-                    throw new Exception("cannot allocate more than 2^31 bytes");
+                    throwStaticEx("cannot allocate more than 2^31 bytes");
             }
             if (value == 0)
             {
@@ -1051,12 +1052,12 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
                 return;
             }
             _memory = reallocMem(_memory, cast(size_t)value);
-            if (!_memory) throw new OutOfMemoryError();
+            if (!_memory) throwStaticEx!OutOfMemoryError;
             else _size = cast(size_t)value;
         }
 
         /// ditto
-        @property void size(int value)
+        @property void size(int value) @nogc
         {
             size(cast(long) value);
         }
@@ -1065,19 +1066,19 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
 // position -------------------------------------------------------------------+
 
         /// see the Stream interface.
-        @property long position()
+        @property long position() @nogc
         {
             return _position;
         }
 
         /// ditto
-        @property void position(long value)
+        @property void position(long value) @nogc
         {
             seek(value, SeekMode.beg);
         }
 
         /// ditto
-        @property void position(int value)
+        @property void position(int value) @nogc
         {
             seek(value, SeekMode.beg);
         }
@@ -1086,10 +1087,10 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
 // misc -----------------------------------------------------------------------+
 
         /// see the Stream interface.
-        void clear()
+        void clear() @nogc
         {
             _memory = reallocMem(_memory, 16);
-            if (!_memory) throw new OutOfMemoryError();
+            if (!_memory) throwStaticEx!OutOfMemoryError;
             _size = 0;
             _position = 0;
         }
@@ -1120,7 +1121,7 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
         /**
          * Read-only access to the memory chunk.
          */
-        @property final const(Ptr) memory()
+        @property final const(Ptr) memory() @nogc
         {
             return _memory;
         }
@@ -1128,7 +1129,7 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
         /**
          * Returns the stream content as a read-only ubyte array.
          */
-        const(ubyte[]) ubytes()
+        const(ubyte[]) ubytes() @nogc
         {
             return cast(ubyte[]) _memory[0 .. _size];
         }
@@ -1258,7 +1259,7 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
         }
 
         /// see the FilePersist8 interface.
-        @property string filename()
+        @property string filename() @nogc
         {
             return _filename;
         }
@@ -1448,6 +1449,5 @@ unittest
     assert(s2.size == b.sizeof);
     auto s3 = new MemoryStream(iota(0,2));
     auto s4 = new MemoryStream(s3);
-
 }
 

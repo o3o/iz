@@ -106,7 +106,7 @@ body
  * Params:
  *      src = The pointer to free.
  */
-void freeMem(T)(auto ref T src) nothrow @trusted
+void freeMem(T)(auto ref T src) nothrow @trusted @nogc
 if (isPointer!T && isBasicType!(pointerTarget!T))
 {
     if (src) free(cast(void*)src);
