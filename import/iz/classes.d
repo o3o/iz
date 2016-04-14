@@ -870,7 +870,7 @@ unittest
     assert(ReferenceMan.referenceID(cast(Component*)c) == "a");
 }
 
-package class BaseTimer: PropertyPublisher
+package abstract class BaseTimer: PropertyPublisher
 {
     mixin PropertyPublisherImpl;
 
@@ -907,9 +907,9 @@ public:
     @Get bool active(){return _active;}
 
     /**
-     * Sets or gets the interval, in milliseconds, between each onTimer event.
+     * Sets or gets the interval, in milliseconds, between each `onTimer` event.
      *
-     * Accurary may vary depending on the implementation.
+     * Accuracy is relative to the implementation.
      */
     @Set void interval(uint value)
     {
@@ -920,7 +920,7 @@ public:
     @Get uint interval() {return _interval;}
 
     /**
-     * Sets or gets the event called when at least interval milli seconds
+     * Sets or gets the event called when at least `interval` milliseconds
      * have ellapsed.
      */
     @Set void onTimer(void delegate(Object) value)
@@ -935,7 +935,7 @@ public:
 /**
  * A timer based on a thread.
  *
- * This timer ensures a minimal interval and not a stable periodicity.
+ * This timer ensures a minimal interval but not a periodicity.
  */
 class ThreadTimer: BaseTimer
 {
@@ -943,8 +943,9 @@ class ThreadTimer: BaseTimer
 private:
 
     import core.time;
+    import core.atomic: atomicLoad, atomicStore;
 
-    __gshared bool _stop;
+    shared bool _stop;
     ulong _t1, _t2;
     Thread _thread;
 
@@ -960,7 +961,7 @@ private:
                 _t1 = 0;
                 if (_onTimer) _onTimer(this);
             }
-            if (_stop)
+            if (_stop.atomicLoad)
             {
                 break;
             }
@@ -978,7 +979,7 @@ public:
     {
         stop();
         _t1 = 0;
-        _stop = false;
+        _stop.atomicStore(false);
         if (_thread) destruct(_thread);
         _thread = construct!Thread(&execute);
         _thread.start;
@@ -988,7 +989,7 @@ public:
     {
         if (_thread)
         {
-            _stop = true;
+            _stop.atomicStore(true);
             if (_thread)
                 destruct(_thread);
         }
@@ -1074,7 +1075,7 @@ public:
     }
 
     /**
-     * Executes then write and close the input stream.
+     * Executes then writes and finally closes the input stream.
      *
      * This is useful for processes that directly expects
      * an input after being launched.
@@ -1087,7 +1088,8 @@ public:
     }
 
     /**
-     * Executes then fills the input stream with a file and close the input.
+     * Executes, fills the input stream with a file and finally
+     * closes the input.
      */
     void executeAndPipeFile(const(char[]) filename)
     {
@@ -1355,7 +1357,7 @@ unittest
  * or when the process has terminated.
  *
  * This class relies on an internal ThreadTimer that could not work in all
- * the contexts (for example in a X11 window).
+ * the contexts (for example in a X window).
  */
 class AsyncProcess: Process
 {
@@ -1469,9 +1471,13 @@ version(Posix) unittest
     auto code =
     q{
         import std.stdio;
+        import core.thread;
         void main()
         {
             write("hello world");
+            stdout.flush;
+            Thread.sleep(dur!"msecs"(15));
+            Thread.sleep(dur!"msecs"(15));
         }
     };
     import std.file: write, exists, getcwd;
@@ -1490,11 +1496,11 @@ version(Posix) unittest
     struct Catcher
     {
         bool ter;
+        bool flg;
         void bufferAvailable(Object notifier)
         {
-            assert(notifier);
-            AsyncProcess ap = cast(AsyncProcess) notifier;
-            assert(ap.output.readln == "hello world");
+            flg = true;
+            assert((cast(AsyncProcess) notifier).output.readln == "hello world");
         }
         void terminate(Object notifier)
         {
@@ -1515,6 +1521,7 @@ version(Posix) unittest
     assert(runProc.terminated);
     assert(runProc.exitStatus == 0);
     assert(catcher.ter);
+    assert(catcher.flg);
 
     destructEach(runProc, dmdProc);
 }
