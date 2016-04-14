@@ -27,7 +27,7 @@ version (Windows)
     private immutable READ_WRITE =  GENERIC_READ | GENERIC_WRITE;
     private immutable FILE_SHARE_ALL = FILE_SHARE_READ | FILE_SHARE_WRITE;
 
-    extern(Windows) export BOOL SetEndOfFile(in HANDLE hFile);
+    extern(Windows) @nogc export BOOL SetEndOfFile(in HANDLE hFile);
 
     extern(Windows) export HANDLE CreateNamedPipeA(
        LPCTSTR lpName,
@@ -1044,7 +1044,7 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
             version(X86)
             {
                 if (value > int.max)
-                    throwStaticEx("cannot allocate more than 2^31 bytes");
+                    throwStaticEx!("cannot allocate more than 2^31 bytes");
             }
             if (value == 0)
             {

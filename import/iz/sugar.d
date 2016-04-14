@@ -1134,7 +1134,7 @@ void throwStaticEx(T, string file = __FILE__, size_t line = __LINE__)()
 
 /// ditto
 @nogc @safe
-void throwStaticEx(string file = __FILE__, size_t line = __LINE__, string message)()
+void throwStaticEx(string message, string file = __FILE__, size_t line = __LINE__)()
 {
     static const e = new Exception(message, file, line);
     throw e;
