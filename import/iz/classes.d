@@ -1328,6 +1328,7 @@ unittest
             write("hello world");
         }
     };
+    version(Windows) enum ext = ".exe"; else enum ext = "";
     import std.file: write, exists, tempDir, getcwd;
     import std.path: dirSeparator;
     string fname = getcwd ~ dirSeparator ~ "TempSource.d";
@@ -1339,10 +1340,10 @@ unittest
     dmdProc.execute;
     assert(dmdProc.terminated);
     assert(dmdProc.exitStatus == 0);
-    assert(fname[0..$-2].exists);
+    assert((fname[0..$-2] ~ ext).exists);
     // run produced program
     Process runProc = construct!Process;
-    runProc.executable = fname[0..$-2];
+    runProc.executable = fname[0..$-2] ~ ext;
     runProc.usePipes = true;
     runProc.execute;
     assert(runProc.terminated);
@@ -1388,7 +1389,13 @@ protected:
                     _onOutputBuffer(this);
             }
         }
-        else static assert(0, "TODO !");
+        else 
+        {
+            //static assert(0, "TODO !");
+            import core.sys.windows.winbase;
+            if (_onOutputBuffer && WaitForSingleObject(_ppid.stdout.windowsHandle, 0))
+                _onOutputBuffer(this);           
+        }   
     }
 
 public:
