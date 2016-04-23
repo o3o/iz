@@ -998,7 +998,7 @@ public:
 
 /**
  * Process encapsulates several useful methods of std.process
- * to make a serializable, synchronous, process.
+ * to make a serializable, synchronous process.
  */
 class Process: PropertyPublisher
 {
@@ -1239,7 +1239,7 @@ public:
      *      value, a string containing the parameters, separated by ascii white
      *      characters.
      */
-    @Set parameters(char[] value)
+    @Set parameters(string value)
     {
         _parameters.length = 0;
         foreach(p; value.byWord)
@@ -1247,10 +1247,10 @@ public:
     }
 
     /// ditto
-    @Get char[] parameters()
+    @Get string parameters()
     {
         import std.array: join;
-        return join(_parameters, ' ');
+        return join(_parameters, ' ').idup;
     }
 
     /**
@@ -1320,6 +1320,22 @@ public:
 ///
 unittest
 {
+    Process prc = construct!Process;
+    scope(exit) prc.destruct;
+
+    prc.executable = "echo";
+    prc.parameters = "123";
+    prc.usePipes = true;
+    prc.execute;
+    assert(prc.output.readln == "123\n");
+}
+
+unittest
+{
+
+    import std.file: write, exists, tempDir, getcwd, remove;
+    import std.path: dirSeparator;
+
     auto code =
     q{
         import std.stdio;
@@ -1328,27 +1344,41 @@ unittest
             write("hello world");
         }
     };
-    version(Windows) enum ext = ".exe"; else enum ext = "";
-    import std.file: write, exists, tempDir, getcwd;
-    import std.path: dirSeparator;
-    string fname = getcwd ~ dirSeparator ~ "TempSource.d";
-    write(fname, code);
+
+    version(Windows) enum exeExt = ".exe"; else enum exeExt = "";
+    version(Windows) enum objExt = ".obj"; else enum objExt = ".o";
+
+    string fname = getcwd ~ dirSeparator ~ "TempSource";
+    string srcName = fname ~ ".d";
+    string exeName = fname ~ exeExt;
+    string objName = fname ~ objExt;
+    scope(exit)
+    {
+        remove(srcName);
+        remove(exeName);
+        remove(objName);
+    }
+
+    write(srcName, code);
+
     // compiles code with dmd
     Process dmdProc = construct!Process;
     dmdProc.executable = "dmd";
-    dmdProc.parameters = fname.dup;
+    dmdProc.parameters = srcName;
     dmdProc.execute;
     assert(dmdProc.terminated);
     assert(dmdProc.exitStatus == 0);
-    assert((fname[0..$-2] ~ ext).exists);
+    assert(exeName.exists);
+
     // run produced program
     Process runProc = construct!Process;
-    runProc.executable = fname[0..$-2] ~ ext;
+    runProc.executable = exeName;
     runProc.usePipes = true;
     runProc.execute;
     assert(runProc.terminated);
     assert(runProc.exitStatus == 0);
     assert(runProc.output.readln == "hello world");
+
     destructEach(runProc, dmdProc);
 }
 
@@ -1391,7 +1421,6 @@ protected:
         }
         else 
         {
-            //static assert(0, "TODO !");
             import core.sys.windows.winbase;
             if (_onOutputBuffer && WaitForSingleObject(_ppid.stdout.windowsHandle, 0))
                 _onOutputBuffer(this);           
@@ -1447,7 +1476,17 @@ public:
             t.length = c / T.sizeof;
             return c != 0;
         }
-        else static assert(0, "TODO !");
+        else
+        {
+            import core.sys.windows.winbase: ReadFile;
+            import core.sys.windows.winnt: LARGE_INTEGER;
+            uint c;
+            LARGE_INTEGER li;
+            li.QuadPart = t.length;
+            ReadFile(output.windowsHandle , t.ptr, Li.LowPart, &c, null);
+            t.length = c / T.sizeof;
+            return c != 0;
+        }
     }
 
     /**
@@ -1473,8 +1512,12 @@ public:
     @Get void delegate(Object) onOutputBuffer() {return _onOutputBuffer;}
 }
 ///
-version(Posix) unittest
+unittest
 {
+
+    import std.file: write, exists, tempDir, getcwd, remove;
+    import std.path: dirSeparator;
+
     auto code =
     q{
         import std.stdio;
@@ -1487,19 +1530,33 @@ version(Posix) unittest
             Thread.sleep(dur!"msecs"(15));
         }
     };
-    import std.file: write, exists, getcwd;
-    import std.path: dirSeparator;
-    string fname = getcwd ~ dirSeparator ~ "TempSource.d";
-    write(fname, code);
+
+    version(Windows) enum exeExt = ".exe"; else enum exeExt = "";
+    version(Windows) enum objExt = ".obj"; else enum objExt = ".o";
+
+    string fname = getcwd ~ dirSeparator ~ "TempSource";
+    string srcName = fname ~ ".d";
+    string exeName = fname ~ exeExt;
+    string objName = fname ~ objExt;
+    scope(exit)
+    {
+        remove(srcName);
+        remove(exeName);
+        remove(objName);
+    }
+
+    write(srcName, code);
+
     // compiles code with dmd
     Process dmdProc = construct!Process;
     dmdProc.executable = "dmd";
-    dmdProc.parameters = fname.dup;
+    dmdProc.parameters = srcName;
     dmdProc.execute;
     assert(dmdProc.terminated);
     assert(dmdProc.exitStatus == 0);
-    assert(fname[0..$-2].exists);
-    //
+    assert(exeName.exists);
+
+    // aggregate to catch the events
     struct Catcher
     {
         bool ter;
@@ -1515,9 +1572,10 @@ version(Posix) unittest
         }
     }
     Catcher catcher;
+
     // run produced program
     AsyncProcess runProc = construct!AsyncProcess;
-    runProc.executable = fname[0..$-2];
+    runProc.executable = exeName;
     runProc.usePipes = true;
     runProc.onOutputBuffer = &catcher.bufferAvailable;
     runProc.onTerminate = &catcher.terminate;
