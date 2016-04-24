@@ -57,9 +57,9 @@ template selectTestWithUda(alias T)
  * Returns:
  *      A boolean indicating if the tests are all passed.
  */
-bool runTestBattery(T)(T t)
+bool runTestBattery(T, bool stopOnFailure = true)(T t)
 {
-    import std.stdio: writeln;
+    import std.stdio: writeln, stderr;
     import core.exception: AssertError;
 
     bool result = true;
@@ -77,7 +77,10 @@ bool runTestBattery(T)(T t)
                 result = false;
                 writeln("test ", i, ": failed");
                 writeln(err.file, "(", err.line, "):", err.msg);
-                continue;
+                static if (stopOnFailure)
+                    break;
+                else 
+                    continue;
             }
             writeln("test ", i, ": passed");
         }
@@ -93,7 +96,7 @@ bool runTestBattery(T)(T t)
  * Params:
  *      Modules = A string that represents the list of the modules to test.
  */
-string libraryTestCode(string Modules)()
+string libraryTestCode(string Modules, bool stopOnFailure = true)()
 {
     return
     "
@@ -101,7 +104,7 @@ string libraryTestCode(string Modules)()
         {
             import core.runtime;
             core.runtime.Runtime.moduleUnitTester = &testModules!("
-                ~ Modules ~ ");
+                ~ stopOnFailure.stringof ~ "," ~ Modules ~ ");
         }
 
         void main() {}
@@ -109,7 +112,7 @@ string libraryTestCode(string Modules)()
 }
 
 /// libraryTestCode() routine
-bool testModules(Modules...)()
+bool testModules(bool stopOnFailure, Modules...)()
 {
     import std.stdio: writeln;
 
@@ -118,7 +121,11 @@ bool testModules(Modules...)()
     {
         auto tests = collectTest!(m)();
         if (!tests.runTestBattery)
+        {
             result = false;
+            static if (stopOnFailure)
+                break;            
+        }            
     }
     if (result)
         writeln("All the tests passed");

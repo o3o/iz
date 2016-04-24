@@ -1310,7 +1310,7 @@ public:
     }
 }
 ///
-unittest
+version(Posix) unittest
 {
     Process prc = construct!Process;
     scope(exit) prc.destruct;
@@ -1504,7 +1504,7 @@ public:
     @Get void delegate(Object) onOutputBuffer() {return _onOutputBuffer;}
 }
 ///
-unittest
+version(Posix) unittest
 {
 
     import std.file: write, exists, tempDir, getcwd, remove;
