@@ -1,4 +1,4 @@
 language: d
 sudo: false
 script:
-  - cd scripts && sh ./compile.and.test.sh
+  - cd scripts && sh ./test.sh

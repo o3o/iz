@@ -13,8 +13,6 @@ public
     import iz.types, iz.properties, iz.referencable, iz.streams;
 }
 
-version(unittest) import std.stdio;
-
 // Serializable types validator & misc. ---------------------------------------+
 
 /**
@@ -1663,8 +1661,6 @@ version(unittest)
         testType(cast(ulong)8);     testType(cast(ulong[])[8,8]);
         testType(cast(float).8f);   testType(cast(float[])[.8f,.8f]);
         testType(cast(double).8);   testType(cast(double[])[.8,.8]);
-        
-        writeln("Serializer passed the text-value conversions test");
     }
 
     unittest 
@@ -1979,8 +1975,6 @@ version(unittest)
         ser.streamToPublisher(str, bar, format);
         assert( bar._set == SetofA(A.a1,A.a2), to!string(bar.set));
         // ----
-
-        writeln("Serializer passed the ", format, " format test");
     }
 
     // test fields renamed between two versions ---+

@@ -6,8 +6,6 @@ module iz.observer;
 import
     iz.types, iz.memory, iz.containers;
 
-version(unittest) import std.stdio;
-
 /**
  * Subject (one to many) interface.
  */
@@ -368,8 +366,6 @@ unittest
     assert(uobs2._max == 256);
     assert(uobs3._min == 2);
     assert(uobs3._max == 256);
-
-    writeln( "ObserverInterconnector passed the tests");
 }
 
 
@@ -537,7 +533,5 @@ unittest
     assert(subj.observers.count == 3);
     subj.removeObserver(obs2);
     assert(subj.observers.count == 2);
-
-    writeln( "EnumBasedObserver passed the tests");       
 }
 

@@ -11,8 +11,6 @@ import
 import
     iz.types, iz.memory, iz.sugar;
 
-version(unittest) import std.stdio;
-
 /// FileStream creation mode 'There': opens only if exists.
 immutable int cmThere    = 0;
 /// FileStream creation mode 'NotThere': creates only if not exists.
@@ -466,9 +464,6 @@ unittest
     tail = 0;
     str.read(&tail,1);
     assert(tail == 98);
-
-
-    writeln("StreamRange passed the tests (InputRange)");
 }
 
 
@@ -1330,6 +1325,7 @@ unittest
 unittest
 {
     import std.digest.md: md5Of;
+    import std.file: remove;
 
     void test(T, A...)(A a)
     {
@@ -1400,7 +1396,7 @@ unittest
             str.clear;
             str.loadFromFile("memstream.txt");
             assert(str.size == strcpy.size);
-            std.stdio.remove("memstream.txt");
+            remove("memstream.txt");
         }
 
         str.position = 0;
@@ -1427,11 +1423,9 @@ unittest
         {
             str.closeFile;
             strcpy.closeFile;
-            std.stdio.remove("filestream1.txt");
-            std.stdio.remove("filestream2.txt");
+            remove("filestream1.txt");
+            remove("filestream2.txt");
         }
-
-        writeln( T.stringof ~ " passed the tests");
     }
     test!MemoryStream;
     test!FileStream("filestream1.txt");

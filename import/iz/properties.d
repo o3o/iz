@@ -354,7 +354,6 @@ unittest
     assert(b.i.e == descrBi.getter()().e);
 
     destructEach(a,b);
-    writeln("PropDescriptor(T) passed the tests");
 }
 
 unittest
@@ -869,8 +868,6 @@ unittest
     Foo foo = construct!Foo;
     foo.use;
     foo.destruct;
-
-    writeln("PropertyPublisher passed the tests (basic)");
 }
 
 unittest
@@ -1772,8 +1769,6 @@ unittest
     m0.destruct;
     m1.destruct;
     m2.destruct;
-
-    writeln("PropertyBinder(T) passed the tests");
 }
 
 unittest
@@ -1808,7 +1803,5 @@ unittest
     a1.destruct;
     a2.destruct;
     strSync.destruct;
-
-    writeln("PropertyBinder(T) passed the newBinding() test");
 }
 

@@ -26,12 +26,15 @@ object _1: TCENativeProject
       messagesOptions.warningsAsInfo = True
       messagesOptions.showColumnsNumber = True
       outputOptions.boundsCheck = onAlways
-      outputOptions.addMain = True
       outputOptions.unittest = True
       outputOptions.versionIdentifiers.Strings = (
         'coeditmessages'
       )
       pathsOptions.outputFilename = 'temp/iztests'
+      pathsOptions.extraSources.Strings = (
+        'scripts/tester.d'
+        'import/iz/testing.d'
+      )
       otherOptions.coverage = True
       runOptions.options = [poUsePipes, poStderrToOutPut]
       runOptions.showWindow = swoHIDE

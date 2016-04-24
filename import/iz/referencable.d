@@ -12,7 +12,6 @@ package string typeString(T)()
 version(unittest)
 {
     class TestModuleScope{}
-    import std.stdio;
 }
 
 unittest
@@ -334,7 +333,5 @@ unittest
     
     ReferenceMan.storeReference( &f1, "a.f1" );
     assert( ReferenceMan.isTypeStored!Foo );
-
-    writeln("ReferenceMan passed the tests");
 }
 

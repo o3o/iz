@@ -1092,8 +1092,6 @@ public:
 
 version(unittest)
 {
-    import std.stdio: writeln;
-
     enum a0;
     enum a4     {a0,a1,a2,a3}
     enum a8     {a0,a1,a2,a3,a4,a5,a6,a7}
@@ -1192,8 +1190,6 @@ version(unittest)
         assert(set3 == 0b0000_0011);
         assert(set1 == 0b0000_0001);
         assert(set2 == 0b0000_0010);
-
-        writeln("EnumSet passed the tests(operators)");
     }
 
     @safe unittest
@@ -1217,8 +1213,6 @@ version(unittest)
         assert(!(set2 in set));
         set2 -= [a17.a5];
         assert(set2 in set);
-
-        writeln("EnumSet passed the tests(inclusion)");
     }
 
     @safe @nogc unittest
@@ -1259,8 +1253,6 @@ version(unittest)
         //set = 0;
         //set = to!Set8(brep);
         //assert(set == 0b1111_0000);
-
-        writeln("EnumSet passes the tests(toString)");
     }
 
     @safe @nogc unittest
@@ -1317,8 +1309,6 @@ version(unittest)
         assert(gnr.back == sav.back);
         sav.popBack;
         assert(gnr.back != sav.back);
-
-        writeln("enumSet passed the tests(Ranges)");
     }
 
     @safe @nogc unittest
@@ -1345,9 +1335,7 @@ version(unittest)
         
         set1 = Set([a8.a0, a8.a1]);
         assert((set1 & cast(Set8)0b1110) == Set(a8.a1));  
-        assert((set1 ^ cast(Set8)0b1010) == Set([a8.a0,a8.a3]));      
-
-        writeln("enumSet passed the tests(set operations)");
+        assert((set1 ^ cast(Set8)0b1010) == Set([a8.a0,a8.a3]));
     }
 
     @safe unittest
@@ -1377,8 +1365,6 @@ version(unittest)
         assert( setDescription[eSet5] == "empty");
         eSet5 -= E.e2; eSet5 -= E.e1;
         assert( setDescription[eSet5] == "empty");
-
-        writeln("enumSet passed the tests(AA)");
     }
 
     /// enumSet
@@ -1389,8 +1375,6 @@ version(unittest)
         assert( is(typeof(enumSet!a9) == EnumSet!(a9,Set16))) ;
         assert( is(typeof(enumSet!a16) == EnumSet!(a16,Set16)) );
         assert( is(typeof(enumSet!a17) == EnumSet!(a17,Set32)) );
-
-        writeln("enumSet passed the tests");
     }
 
     /// EnumProcs
@@ -1450,8 +1434,6 @@ version(unittest)
         assert(arr3[0] == 7);
         assert(arr3[1] == 8);
         assert(arr3[2] == 9);
-
-        writeln("EnumProcs passed the tests");
     }
 
     /// EnumRankInfo
@@ -1470,8 +1452,6 @@ version(unittest)
         assert(infs.count == 3);
         assert(infs[2] == 'A');
         assert(infs[E.e3] == 2);
-
-        writeln("EnumRankInfo passed the tests");
     }
 
     /// EnumIndexedArray
@@ -1491,9 +1471,6 @@ version(unittest)
 
         auto slice = arr[E.e2..E.e4];
         assert(slice == [1.2f,1.3f]);
-
-
-        writeln("EnumIndexedArray passed the tests");
     }
 }
 

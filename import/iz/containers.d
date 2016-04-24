@@ -10,8 +10,6 @@ import
 import
     iz.memory, iz.types, iz.streams;
 
-version(unittest) import std.stdio;
-
 version(X86_64)
     version(linux) version = Nux64;
 
@@ -451,8 +449,6 @@ unittest
     a.length = 10_000_000;
     a[$-1] = a.length-1;
     assert(a[$-1] == a.length-1);
-
-    writeln("Array(T) passed the tests");
 }
 
 /**
@@ -1463,8 +1459,6 @@ unittest
         assert(cList.count == 10);
         assert(cList.first == arrayOfC[0]);
         assert(cList.last == arrayOfC[9]);
-
-        writeln(T.stringof ,"(T) passed the tests");
     }
 
     test!(StaticList);
@@ -2560,8 +2554,6 @@ unittest
     //str.saveToFile("treenodes.txt");
     str.destruct;
     root2.deleteChildren;
-
-    writeln("TreeItem passed the tests");
 }
 
 unittest

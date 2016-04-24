@@ -16,7 +16,5 @@ Setup
 Info
 ----
 - [![CI Status](https://travis-ci.org/BBasile/iz.svg)](https://travis-ci.org/BBasile/iz)
-- v0.5.8: even if stable:
-    - the API could change, slightly.
-    - the serialization formats may change without backward compatibility.
+- warning, the API can change.
 - MIT licensed.

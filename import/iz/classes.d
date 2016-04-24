@@ -14,8 +14,6 @@ import
     iz.types, iz.memory, iz.containers, iz.streams, iz.properties,
     iz.serializer, iz.referencable, iz.observer, iz.strings;
 
-version(unittest) import std.stdio;
-
 /**
  * The PublishedObjectArray class template allows to serialize an array of
  * PropertyPublisher.
@@ -271,8 +269,6 @@ unittest
     assert(col.items.count == 1);
     col.count = 0;
     assert(col.items.count == 0);
-
-    writeln("PublishedObjectArray(T) passed the tests");
 }
 
 
@@ -444,8 +440,6 @@ unittest
     a = a.init;
     ser.streamToPublisher(str, aac2);
     assert(a == [0.1f: 1u, 0.2f : 2u]);
-
-    writeln("PublishedAA(T) passed the tests");
 }
 
 
@@ -628,8 +622,6 @@ unittest
     assert(array == src);
 
     destructEach(pub0, pub1);
-
-    writeln("Published2dArray(T) passed the tests");
 }
 
 

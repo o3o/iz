@@ -12,8 +12,6 @@ version(DigitalMars)
 else
     { import std.c.stdlib, std.c.string; }
 
-version(unittest) import std.stdio;
-
 /**
  * Like malloc() but for @safe context.
  */
@@ -369,8 +367,6 @@ unittest
     abstract class Abst {}
     Object ab = construct(typeid(Abst));
     assert(ab is null);
-
-    writeln("construct/destruct passed the tests");
 }
 
 @nogc @safe unittest
@@ -422,8 +418,6 @@ unittest
     assert(GC.addrOf(ptr) == null);
     ptr.freeMem;
     assert(!ptr);
-
-    writeln("newPtr passed the tests");
 }
 
 unittest
@@ -439,8 +433,6 @@ unittest
     assert(b.text == "B");
     C c = cast(C) construct(tics[2]);
     assert(c.array == [1,2,3]);
-
-    writeln("construct from TI passed the tests");
 }
 
 unittest
@@ -461,8 +453,6 @@ unittest
 
     import std.exception: assertThrown;
     assertThrown(factory("D"));
-
-    writeln("factory passed the tests");
 }
 
 @nogc unittest
