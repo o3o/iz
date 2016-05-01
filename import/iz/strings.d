@@ -8,8 +8,8 @@ import
 import
     iz.sugar;
 
-//TODO-cstrings: lazy ranges, remove ctors and work directly on auto ref input
 //TODO-cstrings: next/skipWord, could return a lazy range, like sugar.takeWhile
+//TODO-cstrings: affix, look-ahaed systel to skip appending of the suffix on the last element
 
 version(unittest) import std.stdio;
 
@@ -77,7 +77,7 @@ struct CharRange
      * Params:
      *      c = A character or any value convertible to a dchar.
      */
-    bool opIn_r(C)(C c) pure nothrow @safe @nogc const 
+    bool opIn_r(C)(C c) const pure nothrow @safe @nogc
     {
         static if (isSomeChar!C || isImplicitlyConvertible!(C, dchar))
         {
@@ -138,7 +138,7 @@ struct CharMap
     private bool[] _map;
     private dchar _min, _max;
     
-    private void setMinMax(dchar value) nothrow @safe
+    private void setMinMax(dchar value) pure nothrow @safe
     {
         if (value <= _min) _min = value;
         else if (value >= _max) _max = value;
@@ -157,7 +157,7 @@ struct CharMap
      * CharMap cm = CharMap['0'..'9'];
      * ---
      */
-    static CharRange opSlice(int index)(dchar lo, dchar hi) pure nothrow @nogc 
+    static CharRange opSlice(int index)(dchar lo, dchar hi) pure nothrow @safe @nogc
     {
         return CharRange(lo, hi);
     }
@@ -175,7 +175,7 @@ struct CharMap
      * CharMap cm = CharMap['0'..'9', '.', 'f', 'd', 38, 39];
      * ---
      */
-    static CharMap opIndex(A...)(A a) nothrow @safe
+    static CharMap opIndex(A...)(A a) pure nothrow @safe
     {   
         CharMap result;
         
@@ -216,7 +216,7 @@ struct CharMap
      * Params:
      *      c = A character or any value convertible to a dchar.
      */
-    bool opIn_r(C)(C c) pure nothrow @nogc const @safe 
+    bool opIn_r(C)(C c) pure nothrow const @nogc @safe
     {
         static if (isSomeChar!C || isImplicitlyConvertible!(C, dchar))
         {
@@ -227,7 +227,7 @@ struct CharMap
     }
 }
 ///
-@safe unittest
+pure @safe unittest
 {
     CharMap cm = CharMap['a'..'f', '0'..'9' , 'A'..'F', '_', 9];
     assert('a' in cm);
@@ -258,41 +258,61 @@ immutable CharMap hexChars = CharMap['a'..'f', 'A'..'F', '0'..'9'];
 immutable CharMap whiteChars = CharMap['\t'..'\r', ' '];
 
 /**
- * Returns a input range to process directly a C-style null terminated string 
- * without converting it to a D string. The front is not decoded.
+ * Returns an input range that processes directly a null terminated C string,
+ * without fully converting it to a phobos string.
+ *
  * Params:
- *      c = a pointer to a character.
+ *      decode = When set to true the front is decoded otherwise (the default)
+ *          each code point is supposed to contain 1 unit.
+ *      c = A pointer to a character.
  * Returns:
- *      A InputRange whose elements type matches c target type.
+ *      When decoding is enabled, nullTerminated always returns a range of dchar
+ *      otherwise the front type is the same as target type of the pointer passed
+ *      as parameter.
  */
-auto nullTerminated(C)(C c)
+auto nullTerminated(bool decode = false, C)(const C c)
 if (isPointer!C && isSomeChar!(PointerTarget!(C)))
 {
+    // trusting:
+    // - read only = no corruption
+    // - at the end we always know what happens:
+    //      - null pointer encountered if valid string ptr passed.
+    //      - otherwise segfault, when the range goes over the process memory.
     struct NullTerminated(C)
     {
         private C _front;
-        ///
-        this(C c)
+        static if (decode) private size_t _cnt;
+
+        private this(C c) @trusted
         {
             _front = c;
         }
         ///
-        @property bool empty()
+        bool empty() @trusted
         {
             return *_front == 0;
         }
         ///
-        auto front()
+        auto front() @trusted
         {
-            return *_front;
+            import std.utf: decodeFront;
+            static if (decode)
+            {
+                auto frt = _front[0..4];
+                return decodeFront(frt, _cnt);
+            }
+            else return *_front;
         }
         ///
-        void popFront()
+        void popFront() @trusted
         {
-            ++_front;
+            static if (decode)
+                _front += _cnt;
+            else
+                ++_front;
         }
         ///
-        C save()
+        C save() @trusted
         {
             return _front;
         }
@@ -300,7 +320,7 @@ if (isPointer!C && isSomeChar!(PointerTarget!(C)))
     return NullTerminated!C(c);
 }
 ///
-unittest
+pure @safe unittest
 {
     auto text = "ab cd\0";
     auto cString = nullTerminated(text.ptr);
@@ -314,6 +334,32 @@ unittest
     assert(nextWord(cWideString) == "ab"w);
     assert(nextWord(cWideString) == "cd"w);
     assert(cWideString.empty);
+}
+
+pure @safe unittest
+{
+    auto text = "été\0";
+    auto cString = nullTerminated!true(text.ptr);
+    assert(cString.front == 'é');
+    cString.popFront;
+    assert(cString.front == 't');
+    cString.popFront;
+    assert(cString.front == 'é');
+    cString.popFront;
+    assert(cString.empty);
+}
+
+pure @safe unittest
+{
+    auto text = "été\0"w;
+    auto cString = nullTerminated!true(text.ptr);
+    assert(cString.front == 'é');
+    cString.popFront;
+    assert(cString.front == 't');
+    cString.popFront;
+    assert(cString.front == 'é');
+    cString.popFront;
+    assert(cString.empty);
 }
 
 
@@ -331,23 +377,23 @@ private template CharType(T)
  * be a callable of type $(D bool(dchar)) or $(D bool function(dchar)) or be a
  * single dchar.
  */
-bool isCharTester(T)()
+template isCharTester(T)
 {
     static if (isInputRange!T && isSomeChar!(ElementType!T))
-        return true;
+        enum isCharTester = true;
     else static if (is(Unqual!T == CharRange))
-        return true;
+        enum isCharTester = true;
     else static if (is(Unqual!T == CharMap))
-        return true;
+        enum isCharTester = true;
     else static if (isAssociativeArray!T && isSomeChar!(KeyType!T))
-        return true; 
+        enum isCharTester = true;
     else static if (isSomeFunction!T && is(ReturnType!T == bool) &&
         Parameters!T.length == 1 && is(Parameters!T[0] == dchar))
-        return true;
+        enum isCharTester = true;
     else static if (isSomeChar!T)
-        return true;
+        enum isCharTester = true;
     else
-        return false;
+        enum isCharTester = false;
 }
 
 
@@ -482,7 +528,7 @@ if (isInputRange!Range && isSomeChar!(ElementType!Range) && isCharTester!T)
     return result;
 }
 ///
-unittest
+@safe pure unittest
 {
     auto cs1 = "azertyuiopqsdfghjklmwxcvbn";
     auto cs2 = " \r\n\t";
@@ -531,7 +577,7 @@ auto nextWordUntil(Range, T)(ref Range range, T charTester)
     return nextWord!(Range, T, true)(range, charTester);
 }
 ///
-unittest
+@safe pure unittest
 {
     auto src = "azertyuiop
     sdfghjk".dup;
@@ -631,7 +677,7 @@ if (isInputRange!Range && isSomeChar!(ElementType!Range) && isCharTester!T)
     else static assert(0, "unsupported charTester argument type in skipWord(): " ~ T.stringof);
 }
 ///
-unittest
+@safe pure unittest
 {
     auto src1 = "\t\t\r\ndd";
     auto skp1 = CharRange("\r\n\t");
@@ -656,7 +702,7 @@ void skipWordUntil(Range, T)(ref Range range, T charTester)
     skipWord!(Range, T, true)(range, charTester);
 }
 ///
-unittest
+@safe pure unittest
 {
     auto src = "dd\r";
     auto skp = CharRange("\r\n\t");
@@ -693,7 +739,7 @@ if (isInputRange!Range && isSomeChar!(ElementType!Range) && isIntegral!T)
     return result;
 }
 ///
-unittest
+@safe pure unittest
 {
     auto text0 = "012"; 
     assert(text0.nextSlice(2) == "01");
@@ -743,7 +789,7 @@ if (isInputRange!Range && isSomeChar!(ElementType!Range)
     } 
 }
 ///
-unittest
+pure unittest
 {
     auto text0 = "{0}".dup;
     assert(text0.canRead('{'));
@@ -760,24 +806,17 @@ unittest
  * Returns an input range consisting of the input argument sliced by group of 
  * length len.
  */
-auto bySlice(Range)(ref Range range, size_t len)
+auto bySlice(Range)(auto ref Range range, size_t len)
 if (isInputRange!Range && isSomeChar!(ElementType!Range))
 {
     struct BySlice
     {
-        private Range* _range;
         private bool _emptyLine;
         private CharType!Range[] _front;
         ///
-        this(ref Range range)
-        {
-            _range = &range;
-            popFront;
-        }
-        ///
         void popFront()
         {
-            _front = nextSlice(*_range, len);
+            _front = nextSlice(range, len);
         }
         ///
         auto front()
@@ -785,15 +824,18 @@ if (isInputRange!Range && isSomeChar!(ElementType!Range))
             return _front;
         }
         ///
-        @property bool empty()
+        bool empty()
         {
             return _front.length == 0;
         }
     }
-    return BySlice(range);
+    BySlice bs;
+    if (!range.empty)
+        bs.popFront;
+    return bs;
 }
 ///
-unittest
+@safe pure unittest
 {
     auto text = "AABBCCDD";
     assert(text.bySlice(2).array == ["AA","BB","CC","DD"]);
@@ -814,7 +856,7 @@ if (isInputRange!Range && isSomeChar!(ElementType!Range))
     return result;
 }
 ///
-unittest
+pure unittest
 {
     auto text0 = "";
     assert(readEol(text0) == "");
@@ -837,7 +879,7 @@ if (isInputRange!Range && isSomeChar!(ElementType!Range))
     else if (range.canRead('\n')) range.nextSlice(1);        
 }
 ///
-unittest
+pure unittest
 {
     auto text0 = "";
     skipEol(text0);
@@ -865,7 +907,7 @@ auto nextLine(bool keepTerminator = false, Range)(ref Range range)
     return result;
 }
 ///
-unittest
+pure unittest
 {
     auto text = "123456\r\n12345\n1234\r\n123\r\n12\r\n1";
     assert(nextLine!false(text) == "123456");
@@ -882,24 +924,17 @@ unittest
 /**
  * Returns an input range consisting of each line in the input argument
  */
-auto byLine(Range)(ref Range range)
+auto byLine(Range)(auto ref Range range)
 if (isInputRange!Range && isSomeChar!(ElementType!Range))
 { 
     struct ByLine
     {
-        private Range* _range;
         private bool _emptyLine;
         private CharType!Range[] _front, _strippedfront;
         ///
-        this(ref Range range)
-        {
-            _range = &range;
-            popFront;
-        }
-        ///
         void popFront()
         {
-            _front = nextLine!true(*_range);
+            _front = nextLine!true(range);
             import std.string: stripRight;
             _strippedfront = stripRight(_front);
         }
@@ -909,15 +944,18 @@ if (isInputRange!Range && isSomeChar!(ElementType!Range))
             return _strippedfront;
         }
         ///
-        @property bool empty()
+        bool empty()
         {
             return _front.length == 0;
         }
     }
-    return ByLine(range);
+    ByLine bl;
+    if (!range.empty)
+        bl.popFront;
+    return bl;
 }
 ///
-unittest
+pure unittest
 {
     auto text = "aw\r\nyess";
     auto range = text.byLine;
@@ -939,7 +977,7 @@ size_t lineCount(Range)(Range range)
     return range.byLine.array.length;
 }
 ///
-unittest
+pure unittest
 {
     auto text1= "";
     assert(text1.lineCount == 0);
@@ -954,13 +992,13 @@ unittest
  * Returns the next word within range. 
  * Words are spliited using the White characters, which are never included.
  */
-auto nextWord(Range)(ref Range range)
+auto nextWord(Range)(ref Range range) pure @safe
 {
     skipWord(range, whiteChars);
     return nextWordUntil(range, whiteChars);
 }
 ///
-unittest
+@safe pure unittest
 {
     auto text = " lorem ipsum 123456";
     assert(text.nextWord == "lorem");
@@ -972,23 +1010,16 @@ unittest
 /**
  * Returns an input range consisting of each non-blank word in the input argument.
  */
-auto byWord(Range)(ref Range range)
+auto byWord(Range)(auto ref Range range)
 if (isInputRange!Range && isSomeChar!(ElementType!Range))
 { 
     struct ByWord
     {
-        private Range* _range;
         private CharType!Range[] _front;
-        ///
-        this(ref Range range)
-        {
-            _range = &range;
-            popFront;
-        }
         ///
         void popFront()
         {
-            _front = nextWord(*_range);
+            _front = nextWord(range);
         }
         ///
         auto front()
@@ -996,15 +1027,18 @@ if (isInputRange!Range && isSomeChar!(ElementType!Range))
             return _front;
         }
         ///
-        @property bool empty()
+        bool empty()
         {
             return _front.length == 0;
         }
     }
-    return ByWord(range);
+    ByWord bw;
+    if (!range.empty)
+        bw.popFront;
+    return bw;
 }
 ///
-unittest
+@safe pure unittest
 {
     auto text = "aw yess, this is so cool";
     auto range = text.byWord;
@@ -1028,7 +1062,7 @@ size_t wordCount(Range)(Range range)
     return range.byWord.array.length;
 }
 ///
-unittest
+@safe pure unittest
 {
     auto text = "1 2 3 4 5 6 7 8 9 \n 10";
     assert(text.wordCount == 10);
@@ -1040,7 +1074,7 @@ unittest
  * Returns the next separated word.
  * Separators are always removed, white characters optionally.
  */
-auto nextSeparated(Range, Separators, bool strip = true)(ref Range range, Separators sep)
+auto nextSeparated(Range, Separators, bool strip = true)(auto ref Range range, Separators sep)
 {
     auto result = nextWordUntil(range, sep);
     if (!range.empty) range.popFront;
@@ -1052,7 +1086,7 @@ auto nextSeparated(Range, Separators, bool strip = true)(ref Range range, Separa
     return result;
 }
 ///
-unittest
+@safe pure unittest
 {
     auto seps = CharMap[',', '\n'];
     auto text = "name, âge \n Douglas, 27 \n Sophia 26";
@@ -1066,23 +1100,16 @@ unittest
 /**
  * Returns an input range consisting of each separated word in the input argument
  */
-auto bySeparated(Range, Separators, bool strip = true)(ref Range range, Separators sep)
+auto bySeparated(Range, Separators, bool strip = true)(auto ref Range range, Separators sep)
 if (isInputRange!Range && isSomeChar!(ElementType!Range))
 {
     struct BySep
     {
-        private Range* _range;
         private CharType!Range[] _front;
-        ///
-        this(ref Range range)
-        {
-            _range = &range;
-            popFront;
-        }
         ///
         void popFront()
         {
-            _front = nextSeparated!(Range, Separators, strip)(*_range, sep);
+            _front = nextSeparated!(Range, Separators, strip)(range, sep);
         }
         ///
         auto front()
@@ -1090,15 +1117,18 @@ if (isInputRange!Range && isSomeChar!(ElementType!Range))
             return _front;
         }
         ///
-        @property bool empty()
+        bool empty()
         {
             return _front.length == 0;
         }
     }
-    return BySep(range);
+    BySep bs;
+    if (!range.empty)
+        bs.popFront;
+    return bs;
 }
 ///
-unittest
+@safe pure unittest
 {
     auto text = "name = Douglas \n age =27 \n";
     auto range = text.bySeparated(CharMap['=', '\n']);
@@ -1110,18 +1140,118 @@ unittest
     range.popFront;
     assert(range.front == "27");
     range.popFront;
+    assert(range.empty);
 }
 
 
 /**
- * Tries to read immediatly a decimal number in range.
+ * Affixes each element of a range with a prefix and a suffix.
+ *
+ * Params:
+ *      firstPre = If true, the first element is always decorated with the prefix.
+ *      lastSuff = If true, the last element is always decorated with the suffix.
+ *      range = A range that yields a range of character, e.g byWord().
+ *      prefix = The string to which is appended each range element.
+ *      suffix = The string appended to each range element.
  */
-auto readDecNumber(Range)(ref Range range)
+auto affix(bool firstPre = false, bool lastSuff = false, Range)(auto ref Range range, string prefix, string suffix)
+if (isInputRange!Range && isInputRange!(ElementType!Range) &&
+    isSomeChar!(ElementType!(ElementType!Range)))
+{
+    struct Decorator
+    {
+        private bool _first, _last;
+        private ElementType!Range _elem;
+        private void cache()
+        {
+            _first = true;
+            _elem = range.front;
+        }
+        auto front()
+        {
+            if (_first)
+            {
+                _first = false;
+                static if (firstPre)
+                {
+                    if (prefix.length && suffix.length)
+                        return prefix ~ _elem ~ suffix;
+                    else if (prefix.length)
+                        return prefix ~ _elem;
+                    else
+                        return _elem ~ suffix;
+                }
+                else return _elem ~ suffix;
+            }
+            else if (!_last)
+            {
+                if (prefix.length && suffix.length)
+                    return prefix ~ _elem ~ suffix;
+                else if (prefix.length)
+                    return prefix ~ _elem;
+                else
+                    return _elem ~ suffix;
+            }
+            else
+            {
+                static if (lastSuff)
+                {
+                    if (prefix.length && suffix.length)
+                        return prefix ~ _elem ~ suffix;
+                    else if (prefix.length)
+                        return prefix ~ _elem;
+                    else
+                        return _elem ~ suffix;
+                }
+                else return prefix ~ _elem;
+            }
+        }
+
+        void popFront()
+        {
+            range.popFront;
+            _elem = range.front;
+            _last = range.empty;
+        }
+
+        bool empty()
+        {
+            return range.empty;
+        }
+    }
+    Decorator dec;
+    dec.cache;
+    return dec;
+}
+///
+@safe pure unittest
+{
+    string src = "0 1 2";
+    auto dec1 = src.byWord.affix!(true, true)("[", "]");
+    assert(dec1.front == "[0]");
+    dec1.popFront;
+    assert(dec1.front == "[1]");
+    dec1.popFront;
+    assert(dec1.front == "[2]");
+}
+
+@safe pure unittest
+{
+    string src = "0";
+    auto dec1 = src.byWord.affix("", ",");
+    //assert(dec1.front == "0");
+}
+
+
+/**
+ * Immediatly reads a decimal number.
+ */
+auto readDecNumber(Range)(auto ref Range range)
 {
     return range.nextWord(decimalChars);
 }
 ///
-unittest
+@safe pure unittest
 {
     auto text = "0123456 789";
     assert(text.readDecNumber == "0123456");
@@ -1135,14 +1265,14 @@ unittest
 
 
 /**
- * Tries to read immediatly an hexadecimal number in range.
+ * Immediatly reads an hexadecimal number.
  */
-auto readHexNumber(Range)(ref Range range)
+auto readHexNumber(Range)(auto ref Range range)
 {
     return range.nextWord(hexChars);
 }
 ///
-unittest
+@safe pure unittest
 {
     auto text1 = "1a2B3C o";
     assert(text1.readHexNumber == "1a2B3C");
@@ -1156,12 +1286,12 @@ unittest
 /**
  * Strips leading white characters.
  */
-void stripLeftWhites(Range)(ref Range range)
+void stripLeftWhites(Range)(auto ref Range range)
 {
     range.skipWord(whiteChars);
 }
 ///
-unittest
+pure unittest
 {
     auto text = "  \n\r\v bla".dup;
     auto rng = ArrayRange!char(text);
@@ -1171,7 +1301,7 @@ unittest
 
 
 /**
- * Escapes some characters in the input text.
+ * Escapes characters in the input text.
  *
  * Params:
  *      range = The character range to process. The source is not consumed.
@@ -1187,8 +1317,8 @@ in
 {
     foreach(pair; pairs)
     {
-        assert(pair[0] != '\\', "the slash (\\) should not be set as pair");
-        assert(pair[1] != '\\', "the slash (\\) should not be set as pair");
+        assert(pair[0] != '\\', "the backslash should not be set as pair");
+        assert(pair[1] != '\\', "the backslash should not be set as pair");
     }
 }
 body
@@ -1219,7 +1349,7 @@ body
     return result;
 }
 ///
-unittest
+@safe pure unittest
 {
     assert(`1"`.escape([['"','"']]) == `1\"`);
     assert(`1"1"11"1`.escape([['"','"']]) == `1\"1\"11\"1`);
@@ -1230,7 +1360,7 @@ unittest
 
 
 /**
- * Un-escapes some characters in the input text.
+ * Un-escapes characters in the input text.
  *
  * Params:
  *      range = The character range to process. The source is not consumed.
@@ -1239,7 +1369,8 @@ unittest
  *      included in the array.
  * Returns:
  *      An array of character whose type matches the range element type.
- *      Even if invalid, a terminal slash is appended to the result.
+ *      Even if invalid, any unterminated sequence located at the end of the
+ *      range is appended to the result.
  */
 auto unEscape(Range)(Range range, const char[2][] pairs)
 if (isInputRange!Range && isSomeChar!(ElementType!Range))
@@ -1247,8 +1378,8 @@ in
 {
     foreach(pair; pairs)
     {
-        assert(pair[0] != '\\', "the slash (\\) should not be set as pair");
-        assert(pair[1] != '\\', "the slash (\\) should not be set as pair");
+        assert(pair[0] != '\\', "the backslash should not be set as pair");
+        assert(pair[1] != '\\', "the backslash should not be set as pair");
     }
 }
 body
@@ -1291,7 +1422,7 @@ body
     return result;
 }
 ///
-unittest
+@safe pure unittest
 {
     assert( `1\"`.unEscape([['"','"']]) == `1"`);
     assert(`1\"1\"11\"1`.unEscape([['"','"']]) == `1"1"11"1`);
@@ -1299,6 +1430,78 @@ unittest
     assert(`\\\\`.unEscape([]) == `\\`);
     assert(`\\`.unEscape([]) == `\`);
     assert(`\`.unEscape([]) == `\`);
+}
+
+/**
+ *
+ */
+auto multiLine(bool addNewLine = true, Range)(auto ref Range range,
+    size_t minLength = 100, size_t knee = 10)
+if (isInputRange!Range && isInputRange!(ElementType!Range) &&
+    isSomeChar!(ElementType!(ElementType!Range)))
+{
+    struct MultiLine
+    {
+        private CharType!(ElementType!Range)[] _line;
+        ///
+        void popFront()
+        {
+            _line = [];
+            while (!range.empty && _line.length < minLength)
+            {
+                auto next = range.front;
+
+                static if (hasLength!(ElementType!Range))
+                {
+                    if (_line.length + next.length > minLength - knee)
+                        break;
+                    else
+                    {
+                        _line ~= next;
+                        range.popFront;
+                    }
+                }
+                else
+                {
+                    _line ~= next;
+                    range.popFront;
+                }
+            }
+        }
+        ///
+        auto front()
+        {
+            static if (addNewLine)
+            {
+                import std.ascii: newline;
+                if (range.empty)
+                    return _line ~ newline;
+                else
+                    return _line;
+            }
+            else return _line;
+        }
+
+        bool empty()
+        {
+            return range.empty && !_line.length;
+        }
+    }
+    MultiLine ml;
+    if (!range.empty)
+        ml.popFront;
+    return ml;
+}
+///
+@safe pure unittest
+{
+    string src = "0,     1,      2,   3";
+    auto ml1 = src.byWord.affix!(true,true)("", " ").multiLine!false(4);
+    assert(ml1.front == "0, 1, ");
+    ml1.popFront;
+    assert(ml1.front == "2, 3 ");
+    ml1.popFront;
+    assert(ml1.empty);
 }
 
 //------------------------------------------------------------------------------
