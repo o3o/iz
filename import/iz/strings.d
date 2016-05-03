@@ -277,11 +277,13 @@ if (isPointer!C && isSomeChar!(PointerTarget!(C)))
     // - read only = no corruption
     // - at the end we always know what happens:
     //      - null pointer encountered if valid string ptr passed.
+    //      - null pointer encountered after a while and if invalid ptr passed, but still not corruption.
     //      - otherwise segfault, when the range goes over the process memory.
     struct NullTerminated(C)
     {
         private C _front;
-        static if (decode) private size_t _cnt;
+        enum ddec = !is(C == dchar*) && decode;
+        static if (ddec) private size_t _cnt;
 
         private this(C c) @trusted
         {
@@ -296,9 +298,9 @@ if (isPointer!C && isSomeChar!(PointerTarget!(C)))
         auto front() @trusted
         {
             import std.utf: decodeFront;
-            static if (decode)
+            static if (ddec)
             {
-                auto frt = _front[0..4];
+                auto frt = _front[0 .. 4 / (PointerTarget!C).sizeof];
                 return decodeFront(frt, _cnt);
             }
             else return *_front;
@@ -306,7 +308,7 @@ if (isPointer!C && isSomeChar!(PointerTarget!(C)))
         ///
         void popFront() @trusted
         {
-            static if (decode)
+            static if (ddec)
                 _front += _cnt;
             else
                 ++_front;
@@ -360,6 +362,31 @@ pure @safe unittest
     assert(cString.front == 'é');
     cString.popFront;
     assert(cString.empty);
+}
+
+pure @safe unittest
+{
+    auto text = "été\0"d;
+    {
+        auto cString = nullTerminated!true(text.ptr);
+        assert(cString.front == 'é');
+        cString.popFront;
+        assert(cString.front == 't');
+        cString.popFront;
+        assert(cString.front == 'é');
+        cString.popFront;
+        assert(cString.empty);
+    }
+    {
+        auto cString = nullTerminated!false(text.ptr);
+        assert(cString.front == 'é');
+        cString.popFront;
+        assert(cString.front == 't');
+        cString.popFront;
+        assert(cString.front == 'é');
+        cString.popFront;
+        assert(cString.empty);
+    }
 }
 
 
