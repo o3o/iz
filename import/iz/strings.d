@@ -1707,7 +1707,6 @@ public:
             visit!(fun, false, true)(path, r);
             return r;
         }
-
     }
 
     /**
@@ -1717,7 +1716,7 @@ public:
     if (isInputRange!E && is(ElementType!E == T))
     {
         clear;
-        foreach (ref entry; entries)
+        foreach (entry; entries)
         {
             if (!entry.length)
                 continue;
@@ -1791,8 +1790,8 @@ public:
      *
      * Params:
      *      node = The node that's visited.
-     *      path = The path that led to node. It also represents the value.
-     *      a = the variadic parameters, i.e the callback "user parameter".
+     *      path = The path that leads to node. It also represents the value.
+     *      a = the variadic parameters, i.e the callback "user parameters".
      */
     void Fun(A...)(const(Node)* node, ref ubyte[] path, A a){}
 
@@ -1800,7 +1799,7 @@ public:
      * Visits all the suffix array nodes with a function.
      *
      * Params:
-     *      fun = A function of type `void(A...)(const(Node)* node, ref ubyte[] path, auto ref A a)`
+     *      fun = see the Fun prototype.
      *      descending = Indicates if the visit starts from the end.
      *      childrenFirst = Indicates if the children are visited before their parent node.
      *      a = the variadic parameters passed to fun.
