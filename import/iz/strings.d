@@ -282,8 +282,8 @@ if (isPointer!C && isSomeChar!(PointerTarget!(C)))
     struct NullTerminated(C)
     {
         private C _front;
-        enum ddec = !is(C == dchar*) && decode;
-        static if (ddec) private size_t _cnt;
+        enum dec = !is(C == dchar*) && decode;
+        static if (dec) private size_t _cnt;
 
         private this(C c) @trusted
         {
@@ -298,7 +298,7 @@ if (isPointer!C && isSomeChar!(PointerTarget!(C)))
         auto front() @trusted
         {
             import std.utf: decodeFront;
-            static if (ddec)
+            static if (dec)
             {
                 auto frt = _front[0 .. 4 / (PointerTarget!C).sizeof];
                 return decodeFront(frt, _cnt);
@@ -308,7 +308,7 @@ if (isPointer!C && isSomeChar!(PointerTarget!(C)))
         ///
         void popFront() @trusted
         {
-            static if (ddec)
+            static if (dec)
                 _front += _cnt;
             else
                 ++_front;
@@ -1531,5 +1531,378 @@ if (isInputRange!Range && isInputRange!(ElementType!Range) &&
     assert(ml1.empty);
 }
 
+//------------------------------------------------------------------------------
+// Misc string-related stuff --------------------------------------------------+
+
+/**
+ * The suffix array is a data structure that can be used to test quickly
+ * the presence of a value in a list. It's also adapted to get completion
+ * propositions for a prefix.
+ *
+ * Despite of its properties, a suffix array usually wastes a lot of memory since
+ * each entry is decomposed byte by byte. A more efficient alternative is a
+ * perfect hash-map, however it's not always possible to generate one at
+ * run-time with a predictible complexity.
+ *
+ * This implementation only works with arrays of character made of single byte
+ * units (char[], string, const(char)[], etc).
+ */
+struct SuffixArray(T)
+if ((isArray!T && T.init[0].sizeof == 1) || is(Unqual!(ElementEncodingType!T) == char))
+{
+
+private:
+
+    import iz.memory: construct, destruct;
+
+    static if (isSomeString!T)
+        alias TT = ElementEncodingType!T;
+    else
+        alias TT = typeof(T.init[0]);
+
+    Node _root;
+
+public:
+
+    /// A node in the suffix array.
+    struct Node
+    {
+
+    private:
+
+        bool _terminates;
+        ubyte _index;
+        Node*[256] _nodes;
+
+        /// To be private (emplace)
+        public this(ubyte index) nothrow @safe @nogc
+        {
+            _index = index;
+        }
+
+    public:
+
+        /**
+         * Adds a suffix to the prefix represented by this node.
+         */
+        void addSuffix(const T suffix) @nogc
+        {
+            //TODO-csuffixarray: value returned by find() doesnt allow addSuffix without casting const away.
+            if (!suffix.length)
+                _terminates = true;
+            else
+            {
+                ubyte newIndex = suffix[0];
+                if (!_nodes[newIndex])
+                    _nodes[newIndex] = construct!Node(newIndex);
+                _nodes[newIndex].addSuffix(suffix[1..$]);
+            }
+        }
+
+        /**
+         * Returns true if this node represents a full entry.
+         */
+        bool terminates() const pure nothrow @safe @nogc
+        {
+            return _terminates;
+        }
+
+        /**
+         * Finds a full suffix from this node.
+         */
+        const(Node)* find(const T suffix) const pure nothrow @safe @nogc
+        {
+            if (suffix.length == 0)
+            {
+                if (_terminates)
+                    return &this;
+                else
+                    return null;
+
+            }
+            else if (_nodes[suffix[0]] == null)
+                return null;
+            else
+                return _nodes[suffix[0]].find(suffix[1..$]);
+        }
+
+        /**
+         * Forwards find().
+         */
+        const(Node)* opBinaryRight(string op = "in")(const T value) const pure nothrow @safe @nogc
+        if (op == "in")
+        {
+            return find(value);
+        }
+
+        /**
+         * Finds a prefix from this node.
+         */
+        const(Node)* findPrefix(const T value) const pure nothrow @safe @nogc
+        {
+            if (!value.length)
+                return null;
+
+            const(Node)* result = &this;
+            foreach(i; 0 .. value.length)
+            {
+                result = result._nodes[value[i]];
+                if (!result)
+                    break;
+            }
+            return result;
+        }
+
+        //TODO-csuffixarray: conditionalVisit() that allows to break
+
+        /// see SuffixArray.visitAll.
+        void visit(alias fun, bool descending = false, bool childrenFirst = true, A...)
+            (ref ubyte[] path, auto ref A a) const nothrow @safe
+        {
+            path ~= _index;
+            scope (exit) path.length -= 1;
+
+            static if (childrenFirst)
+                fun(&this, path, a);
+
+            static if (descending)
+            {
+                foreach_reverse (ubyte i; 0..256)
+                    if (_nodes[i])
+                        _nodes[i].visit!(fun, descending, childrenFirst)(path, a);
+            }
+            else
+            {
+                foreach (ubyte i; 0..256)
+                    if (_nodes[i])
+                        _nodes[i].visit!(fun, descending, childrenFirst)(path, a);
+            }
+
+            static if (!childrenFirst)
+                fun(&this, path, a);
+        }
+
+        /**
+         * Returns the full entries existing from this node.
+         */
+        T[] entries() const nothrow @safe
+        {
+            T[] r;
+            ubyte[] path;
+
+            nothrow @safe
+            static void fun(const(Node)* node, ref ubyte[] path, ref T[] results)
+            {
+
+                if (node._terminates)
+                {
+                    import std.array: Appender;
+                    Appender!T app;
+                    app.reserve(path.length);
+                    foreach (i; 1 .. path.length)
+                        app ~= TT(path[i]);
+                    results ~= app.data;
+                }
+            }
+            visit!(fun, false, true)(path, r);
+            return r;
+        }
+
+    }
+
+    /**
+     * Constructs the suffix array from a range of elements.
+     */
+    this(E)(auto ref E entries)
+    if (isInputRange!E && is(ElementType!E == T))
+    {
+        clear;
+        foreach (ref entry; entries)
+        {
+            if (!entry.length)
+                continue;
+            _root.addSuffix(entry[0..$]);
+        }
+    }
+
+    /**
+     * Clears the suffix array.
+     */
+    void clear() @nogc
+    {
+        void clearNode(ref Node* node) @nogc
+        {
+            if (!node)
+                return;
+            foreach (ubyte i; 0..256)
+                clearNode(node._nodes[i]);
+            destruct(node);
+            node = null;
+        }
+        foreach (ubyte i; 0..256)
+            clearNode(_root._nodes[i]);
+    }
+
+    /**
+     * Determines wether a full value is in the suffix array.
+     *
+     * Params:
+     *      value = The value to search for.
+     * Returns:
+     *      Null if value is not within the array otherwise a pointer to
+     *      the suffix array node that terminates the path to value.
+     */
+    const(Node)* find(const T value) const pure nothrow @safe @nogc
+    {
+        if (!value.length)
+            return null;
+        else
+            return _root.find(value[0..$]);
+    }
+
+    /**
+     * Forwards find().
+     */
+    const(Node)* opBinaryRight(string op = "in")(const T value) const pure nothrow @safe @nogc
+    if (op == "in")
+    {
+        return find(value);
+    }
+
+    /**
+     * Determines wether a suffix array entry starts with value.
+     *
+     * Params:
+     *      value = The prefix to search for.
+     * Returns:
+     *      Null if value is not within the array otherwise a pointer to
+     *      the suffix array node that gives the entries starting with value.
+     */
+    const(Node)* findPrefix(const T value) const pure nothrow @safe @nogc
+    {
+        if (!value.length)
+            return null;
+        else
+            return _root.findPrefix(value[0..$]);
+    }
+
+    /**
+     * Prototype for the function passed in visitAll and Node.visit.
+     *
+     * Params:
+     *      node = The node that's visited.
+     *      path = The path that led to node. It also represents the value.
+     *      a = the variadic parameters, i.e the callback "user parameter".
+     */
+    void Fun(A...)(const(Node)* node, ref ubyte[] path, A a){}
+
+    /**
+     * Visits all the suffix array nodes with a function.
+     *
+     * Params:
+     *      fun = A function of type `void(A...)(const(Node)* node, ref ubyte[] path, auto ref A a)`
+     *      descending = Indicates if the visit starts from the end.
+     *      childrenFirst = Indicates if the children are visited before their parent node.
+     *      a = the variadic parameters passed to fun.
+     */
+    void visitAll(alias fun, bool descending = false,
+        bool childrenFirst = true, A...)(auto ref A a) const nothrow @safe
+    {
+        ubyte[] path;
+        _root.visit!(fun, descending, childrenFirst)(path, a);
+    }
+
+    /**
+     * Sorts the suffix array entries.
+     *
+     * While sorting can be easly done with suffix trees this is much slower
+     * than the a classic quick sort.
+     *
+     * Params:
+     *      descending = Defines if the sorting direction.
+     * Returns:
+     *      An array of entries.
+     */
+    T[] sort(bool descending = false)
+    {
+        nothrow @safe
+        static void fun(const(Node)* node, ref ubyte[] path, ref T[] results)
+        {
+            if (node.terminates)
+            {
+                import std.array: Appender;
+                Appender!T app;
+                app.reserve(path.length - 1);
+                foreach (i; 1..path.length)
+                    app ~= TT(path[i]);
+                results ~= app.data;
+            }
+        }
+
+        T[] result;
+        if (descending)
+            visitAll!(fun, true, true)(result);
+        else
+            visitAll!(fun, false, true)(result);
+        return result;
+    }
+}
+///
+unittest
+{
+    string[] source = ["Cairo", "Calcutta", "Calgary", "Cali", "Campinas",
+        "Cape Town", "Caracas", "Casablanca", "Changchun", "Changde"];
+
+    auto cities = SuffixArray!string(source);
+
+    // test for presence
+    assert("Cairo" in cities);
+    assert("Calcutta" in cities);
+    assert("Calgary" in cities);
+    assert("Chicago" !in cities);
+    assert("" !in cities);
+
+    // get completion list
+    auto pre = cities.findPrefix("Cal");
+    assert(pre);
+    assert(!pre.terminates);
+    assert(pre.entries == ["Calcutta"[3..$], "Calgary"[3..$], "Cali"[3..$]]);
+
+    // sorting
+    auto desc = cities.sort(true);
+    import std.algorithm.sorting;
+    assert(desc == sort!"a > b"(source).array);
+    auto asc = cities.sort(false);
+    assert(asc == sort!"a < b"(source).array);
+
+    // adds from a prefix
+    auto ch = cast(cities.Node*) cities.findPrefix("Ch");
+    assert(ch);
+    ch.addSuffix("icago");
+    assert("Chicago" in cities);
+
+    // clearing is global
+    cities.clear;
+    assert("Cairo" !in cities);
+    assert("Calcutta" !in cities);
+}
+
+unittest
+{
+    ubyte[][] source =
+    [
+        [0x11,0x22,0x33],
+        [0x11,0x33],
+        [0x1,0x2,0x3]
+    ];
+    SuffixArray!(ubyte[]) sar = SuffixArray!(ubyte[])(source);
+
+    assert(sar.find(source[0]));
+    assert(sar.find(source[1]));
+    assert(sar.find(source[2]));
+
+    ubyte[] notin = [0x11,0x22,0x34];
+    assert(!sar.find(notin));
+}
 //------------------------------------------------------------------------------
 
