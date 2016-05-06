@@ -1720,7 +1720,7 @@ public:
         {
             if (!entry.length)
                 continue;
-            _root.addSuffix(entry[0..$]);
+            _root.addSuffix(entry);
         }
     }
 
@@ -1756,7 +1756,7 @@ public:
         if (!value.length)
             return null;
         else
-            return _root.find(value[0..$]);
+            return _root.find(value);
     }
 
     /**
@@ -1782,7 +1782,7 @@ public:
         if (!value.length)
             return null;
         else
-            return _root.findPrefix(value[0..$]);
+            return _root.findPrefix(value);
     }
 
     /**
