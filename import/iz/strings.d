@@ -1724,6 +1724,11 @@ public:
         }
     }
 
+    ~this()
+    {
+        clear;
+    }
+
     /**
      * Clears the suffix array.
      */
