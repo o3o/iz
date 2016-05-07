@@ -77,7 +77,8 @@ struct CharRange
      * Params:
      *      c = A character or any value convertible to a dchar.
      */
-    bool opIn_r(C)(C c) const pure nothrow @safe @nogc
+    bool opBinaryRight(string op = "in", C)(C c) const pure nothrow @safe @nogc
+    if (op == "in")
     {
         static if (isSomeChar!C || isImplicitlyConvertible!(C, dchar))
         {
@@ -216,7 +217,8 @@ struct CharMap
      * Params:
      *      c = A character or any value convertible to a dchar.
      */
-    bool opIn_r(C)(C c) pure nothrow const @nogc @safe
+    bool opBinaryRight(string op = "in", C)(C c) const pure nothrow @safe @nogc
+    if (op == "in")
     {
         static if (isSomeChar!C || isImplicitlyConvertible!(C, dchar))
         {
@@ -1606,10 +1608,12 @@ public:
             return _terminates;
         }
 
+
         /**
          * Finds a full suffix from this node.
          */
-        const(Node)* find(const T suffix) const pure nothrow @safe @nogc
+        const(Node)* opBinaryRight(string op = "in")(const T suffix) const pure nothrow @safe @nogc
+        if (op == "in")
         {
             if (suffix.length == 0)
             {
@@ -1625,14 +1629,8 @@ public:
                 return _nodes[suffix[0]].find(suffix[1..$]);
         }
 
-        /**
-         * Forwards find().
-         */
-        const(Node)* opBinaryRight(string op = "in")(const T value) const pure nothrow @safe @nogc
-        if (op == "in")
-        {
-            return find(value);
-        }
+        /// Aliases to the `in` operator.
+        alias find = opBinaryRight!"in";
 
         /**
          * Finds a prefix from this node.
@@ -1657,6 +1655,7 @@ public:
         /// see SuffixArray.visitAll.
         void visit(alias fun, bool descending = false, bool childrenFirst = true, A...)
             (ref ubyte[] path, auto ref A a) const nothrow @safe
+        if (isValidVisitor!fun)
         {
             path ~= _index;
             scope (exit) path.length -= 1;
@@ -1690,7 +1689,7 @@ public:
             ubyte[] path;
 
             nothrow @safe
-            static void fun(const(Node)* node, ref ubyte[] path, ref T[] results)
+            static void fun(const(Node)* node, ref const ubyte[] path, ref T[] results)
             {
 
                 if (node._terminates)
@@ -1753,9 +1752,10 @@ public:
      *      value = The value to search for.
      * Returns:
      *      Null if value is not within the array otherwise a pointer to
-     *      the suffix array node that terminates the path to value.
+     *      the array node that terminates the path to value.
      */
-    const(Node)* find(const T value) const pure nothrow @safe @nogc
+    const(Node)* opBinaryRight(string op = "in")(const T value) const pure nothrow @safe @nogc
+    if (op == "in")
     {
         if (!value.length)
             return null;
@@ -1763,14 +1763,8 @@ public:
             return _root.find(value);
     }
 
-    /**
-     * Forwards find().
-     */
-    const(Node)* opBinaryRight(string op = "in")(const T value) const pure nothrow @safe @nogc
-    if (op == "in")
-    {
-        return find(value);
-    }
+    /// ditto
+    alias find = opBinaryRight!"in";
 
     /**
      * Determines wether an entry starts with value.
@@ -1794,22 +1788,39 @@ public:
      *
      * Params:
      *      node = The node that's visited.
-     *      path = The path that leads to node. It also represents the value.
+     *      path = The path that leads to the node. It also represents the value.
      *      a = The variadic parameters, i.e the callback "user parameters".
      */
-    void Fun(A...)(const(Node)* node, ref ubyte[] path, A a){}
+    void Fun(A...)(const(Node)* node, ref const ubyte[] path, A a){}
+
+    /// Indicates wether a function is suitable for visitAll() or Node.visit()
+    template isValidVisitor(alias fun)
+    {
+        static if (!is(fun))
+            alias F = typeof(fun);
+        else
+            alias F = fun;
+
+        enum isValidVisitor =
+            (isCallable!F) &&
+            (Parameters!F).length >= 2 &&
+            is(Parameters!F[0] == const(Node)*) &&
+            is(Parameters!F[1] == const ubyte[]) &&
+            ParameterStorageClassTuple!F[1] == ParameterStorageClass.ref_;
+    }
 
     /**
      * Visits all the nodes with a function.
      *
      * Params:
-     *      fun = see the Fun prototype.
+     *      fun = See the Fun prototype.
      *      descending = Indicates if the visit starts from the end.
      *      childrenFirst = Indicates if the children are visited before their parent.
      *      a = The variadic parameters passed to fun.
      */
     void visitAll(alias fun, bool descending = false,
         bool childrenFirst = true, A...)(auto ref A a) const nothrow @safe
+    if (isValidVisitor!fun)
     {
         ubyte[] path;
         _root.visit!(fun, descending, childrenFirst)(path, a);
@@ -1819,17 +1830,17 @@ public:
      * Sorts the entries.
      *
      * While sorting can be easly done with suffix trees this is much slower
-     * than the a classic quick sort.
+     * than a classic quick sort.
      *
      * Params:
-     *      descending = Defines if the sorting direction.
+     *      descending = Defines the sorting direction.
      * Returns:
      *      An array of entries.
      */
     T[] sort(bool descending = false) nothrow @safe
     {
         nothrow @safe
-        static void fun(const(Node)* node, ref ubyte[] path, ref T[] results)
+        static void fun(const(Node)* node, ref const  ubyte[] path, ref T[] results)
         {
             if (node.terminates)
             {
@@ -1857,7 +1868,7 @@ public:
     {
         size_t result;
         nothrow @safe
-        static void fun(const(Node)* node, ref ubyte[] path, ref size_t result)
+        static void fun(const(Node)* node, const ref ubyte[] path, ref size_t result)
         {
             result += Node.sizeof;
         }
@@ -1906,9 +1917,9 @@ unittest
 
     // memory usage
     size_t count;
-    foreach(s; source) foreach(i; 2..s.length)
+    foreach(s; source) foreach(i; 0..s.length)
         ++count;
-    // real usage is actually close to count * 256 * size_t.sizeof
+    // actual usage is actually more close to count * 256 * size_t.sizeof
     assert(cities.memoryUsage >= count);
 }
 
