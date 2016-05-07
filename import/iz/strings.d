@@ -1539,13 +1539,12 @@ if (isInputRange!Range && isInputRange!(ElementType!Range) &&
  * the presence of a value in a list. It's also adapted to get completion
  * propositions for a prefix.
  *
- * Despite of its properties, a suffix array usually wastes a lot of memory since
- * each entry is decomposed byte by byte. A more efficient alternative is a
- * perfect hash-map, however it's not always possible to generate one at
- * run-time with a predictible complexity.
+ * Despite of its properties, a suffix array always wastes a lot of memory
+ * because each byte in an entry is represented by an array of 256 pointers.
  *
  * This implementation only works with arrays of character made of single byte
- * units (char[], string, const(char)[], etc).
+ * units (char[], string, const(char)[], etc) and is compatible with multi byte
+ * characters.
  */
 struct SuffixArray(T)
 if ((isArray!T && T.init[0].sizeof == 1) || is(Unqual!(ElementEncodingType!T) == char))
@@ -1585,7 +1584,7 @@ public:
         /**
          * Adds a suffix to the prefix represented by this node.
          */
-        void addSuffix(const T suffix) @nogc
+        void addSuffix(const T suffix) nothrow @safe @nogc
         {
             //TODO-csuffixarray: value returned by find() doesnt allow addSuffix without casting const away.
             if (!suffix.length)
@@ -1710,9 +1709,9 @@ public:
     }
 
     /**
-     * Constructs the suffix array from a range of elements.
+     * Constructs the array from a range of elements.
      */
-    this(E)(auto ref E entries)
+    this(E)(auto ref E entries) nothrow  @nogc
     if (isInputRange!E && is(ElementType!E == T))
     {
         clear;
@@ -1732,9 +1731,9 @@ public:
     /**
      * Clears the suffix array.
      */
-    void clear() @nogc
+    void clear() @trusted @nogc
     {
-        void clearNode(ref Node* node) @nogc
+        void clearNode(ref Node* node) @trusted @nogc
         {
             if (!node)
                 return;
@@ -1748,7 +1747,7 @@ public:
     }
 
     /**
-     * Determines wether a full value is in the suffix array.
+     * Determines wether a full value is in the array.
      *
      * Params:
      *      value = The value to search for.
@@ -1774,7 +1773,7 @@ public:
     }
 
     /**
-     * Determines wether a suffix array entry starts with value.
+     * Determines wether an entry starts with value.
      *
      * Params:
      *      value = The prefix to search for.
@@ -1796,18 +1795,18 @@ public:
      * Params:
      *      node = The node that's visited.
      *      path = The path that leads to node. It also represents the value.
-     *      a = the variadic parameters, i.e the callback "user parameters".
+     *      a = The variadic parameters, i.e the callback "user parameters".
      */
     void Fun(A...)(const(Node)* node, ref ubyte[] path, A a){}
 
     /**
-     * Visits all the suffix array nodes with a function.
+     * Visits all the nodes with a function.
      *
      * Params:
      *      fun = see the Fun prototype.
      *      descending = Indicates if the visit starts from the end.
-     *      childrenFirst = Indicates if the children are visited before their parent node.
-     *      a = the variadic parameters passed to fun.
+     *      childrenFirst = Indicates if the children are visited before their parent.
+     *      a = The variadic parameters passed to fun.
      */
     void visitAll(alias fun, bool descending = false,
         bool childrenFirst = true, A...)(auto ref A a) const nothrow @safe
@@ -1817,7 +1816,7 @@ public:
     }
 
     /**
-     * Sorts the suffix array entries.
+     * Sorts the entries.
      *
      * While sorting can be easly done with suffix trees this is much slower
      * than the a classic quick sort.
@@ -1827,7 +1826,7 @@ public:
      * Returns:
      *      An array of entries.
      */
-    T[] sort(bool descending = false)
+    T[] sort(bool descending = false) nothrow @safe
     {
         nothrow @safe
         static void fun(const(Node)* node, ref ubyte[] path, ref T[] results)
@@ -1848,6 +1847,21 @@ public:
             visitAll!(fun, true, true)(result);
         else
             visitAll!(fun, false, true)(result);
+        return result;
+    }
+
+    /**
+     * Indicates the memory usage.
+     */
+    size_t memoryUsage() const nothrow @safe
+    {
+        size_t result;
+        nothrow @safe
+        static void fun(const(Node)* node, ref ubyte[] path, ref size_t result)
+        {
+            result += Node.sizeof;
+        }
+        visitAll!fun(result);
         return result;
     }
 }
@@ -1889,6 +1903,13 @@ unittest
     cities.clear;
     assert("Cairo" !in cities);
     assert("Calcutta" !in cities);
+
+    // memory usage
+    size_t count;
+    foreach(s; source) foreach(i; 2..s.length)
+        ++count;
+    // real usage is actually close to count * 256 * size_t.sizeof
+    assert(cities.memoryUsage >= count);
 }
 
 unittest
@@ -1907,6 +1928,11 @@ unittest
 
     ubyte[] notin = [0x11,0x22,0x34];
     assert(!sar.find(notin));
+    assert(sar.findPrefix([0x76]) is null);
+    assert(sar.findPrefix([]) is null);
+    assert(sar.findPrefix([0x11]).findPrefix([0x22]).findPrefix([]) is null);
+    assert(sar.findPrefix([0x11]).find([0x22,0x99]) is null);
+    assert(sar.findPrefix([0x11]).find([]) is null);
 }
 //------------------------------------------------------------------------------
 
