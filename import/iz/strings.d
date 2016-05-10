@@ -1549,7 +1549,7 @@ if (isInputRange!Range && isInputRange!(ElementType!Range) &&
  * characters.
  */
 struct SuffixArray(T)
-if ((isArray!T && T.init[0].sizeof == 1) || is(Unqual!(ElementEncodingType!T) == char))
+if ((ElementEncodingType!T).sizeof == 1)
 {
 
 private:
@@ -1565,18 +1565,21 @@ private:
 
 public:
 
-    /// A node in the suffix array.
+    /// A node in the array.
     struct Node
     {
 
     private:
 
         bool _terminates;
-        ubyte _index;
+        immutable ubyte _index;
         Node*[256] _nodes;
 
+        // TODO-csuffixarray: memory usage can be reduced if _nodes is itself an array (benchmark)
+        // but: true safety lost + 1 more indirection level + more allocations
+
         /// To be private (emplace)
-        public this(ubyte index) nothrow @safe @nogc
+        public this(const ubyte index) pure nothrow @safe @nogc
         {
             _index = index;
         }
@@ -1607,7 +1610,6 @@ public:
         {
             return _terminates;
         }
-
 
         /**
          * Finds a full suffix from this node.
@@ -1641,7 +1643,7 @@ public:
                 return null;
 
             const(Node)* result = &this;
-            foreach(i; 0 .. value.length)
+            foreach (i; 0 .. value.length)
             {
                 result = result._nodes[value[i]];
                 if (!result)
@@ -1685,33 +1687,25 @@ public:
          */
         T[] entries() const nothrow @safe
         {
-            T[] r;
-            ubyte[] path;
-
-            nothrow @safe
+            nothrow @trusted
             static void fun(const(Node)* node, ref const ubyte[] path, ref T[] results)
             {
-
                 if (node._terminates)
-                {
-                    import std.array: Appender;
-                    Appender!T app;
-                    app.reserve(path.length);
-                    foreach (i; 1 .. path.length)
-                        app ~= TT(path[i]);
-                    results ~= app.data;
-                }
+                    results ~= (cast(T) path)[1..$];
             }
-            visit!(fun, false, true)(path, r);
-            return r;
+
+            T[] results;
+            ubyte[] path;
+            visit!(fun, false, true)(path, results);
+            return results;
         }
     }
 
     /**
      * Constructs the array from a range of elements.
      */
-    this(E)(auto ref E entries) nothrow  @nogc
-    if (isInputRange!E && is(ElementType!E == T))
+    this(E)(auto ref E entries) nothrow  @safe @nogc
+    if (isInputRange!E && isImplicitlyConvertible!(ElementType!E,T))
     {
         clear;
         foreach (entry; entries)
@@ -1728,9 +1722,9 @@ public:
     }
 
     /**
-     * Clears the suffix array.
+     * Empties the array.
      */
-    void clear() @trusted @nogc
+    void clear() @safe @nogc
     {
         void clearNode(ref Node* node) @trusted @nogc
         {
@@ -1751,8 +1745,8 @@ public:
      * Params:
      *      value = The value to search for.
      * Returns:
-     *      Null if value is not within the array otherwise a pointer to
-     *      the array node that terminates the path to value.
+     *      Null if value is not in the array otherwise a pointer to
+     *      the node that terminates the path to value.
      */
     const(Node)* opBinaryRight(string op = "in")(const T value) const pure nothrow @safe @nogc
     if (op == "in")
@@ -1772,8 +1766,8 @@ public:
      * Params:
      *      value = The prefix to search for.
      * Returns:
-     *      Null if value is not within the array otherwise a pointer to
-     *      the suffix array node that gives the entries starting with value.
+     *      Null if value is not in the array otherwise a pointer to
+     *      the node that gives the entries starting with value.
      */
     const(Node)* findPrefix(const T value) const pure nothrow @safe @nogc
     {
@@ -1791,7 +1785,7 @@ public:
      *      path = The path that leads to the node. It also represents the value.
      *      a = The variadic parameters, i.e the callback "user parameters".
      */
-    void Fun(A...)(const(Node)* node, ref const ubyte[] path, A a){}
+    alias Fun(A...) = void function(const(Node)* node, ref const ubyte[] path, A a);
 
     /// Indicates wether a function is suitable for visitAll() or Node.visit()
     template isValidVisitor(alias fun)
@@ -1839,39 +1833,33 @@ public:
      */
     T[] sort(bool descending = false) nothrow @safe
     {
-        nothrow @safe
-        static void fun(const(Node)* node, ref const  ubyte[] path, ref T[] results)
+        nothrow @trusted
+        static void fun(const(Node)* node, ref const ubyte[] path, ref T[] results)
         {
             if (node.terminates)
-            {
-                import std.array: Appender;
-                Appender!T app;
-                app.reserve(path.length - 1);
-                foreach (i; 1..path.length)
-                    app ~= TT(path[i]);
-                results ~= app.data;
-            }
+                results ~= (cast(T) path)[1..$];
         }
 
-        T[] result;
+        T[] results;
         if (descending)
-            visitAll!(fun, true, true)(result);
+            visitAll!(fun, true, true)(results);
         else
-            visitAll!(fun, false, true)(result);
-        return result;
+            visitAll!(fun, false, true)(results);
+        return results;
     }
 
     /**
-     * Indicates the memory usage.
+     * Indicates the amount of memory used by the array.
      */
     size_t memoryUsage() const nothrow @safe
     {
-        size_t result;
         nothrow @safe
         static void fun(const(Node)* node, const ref ubyte[] path, ref size_t result)
         {
             result += Node.sizeof;
         }
+
+        size_t result;
         visitAll!fun(result);
         return result;
     }
