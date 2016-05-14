@@ -584,7 +584,8 @@ if (isInputRange!Range && isSomeChar!(ElementType!Range) && isCharTester!T)
     auto w22 = nextWord(src2, cs3);
     assert(w22 == "er");
     nextWord(src2, cs4);
-    import std.ascii: isAlpha;
+    import std.ascii: isAlpha, isDigit;
+    assert(nextWord(src2, &isDigit) == "");
     auto w33 = nextWord(src2, &isAlpha);
     assert(w33 == "ty");
 }
@@ -1539,13 +1540,16 @@ if (isInputRange!Range && isInputRange!(ElementType!Range) &&
 /**
  * The suffix array is a data structure that can be used to test quickly
  * the presence of a value in a list. It's also adapted to get completion
- * propositions for a prefix.
+ * proposals for a prefix.
  *
- * Despite of its properties, a suffix array always wastes a lot of memory
- * because each byte in an entry is represented by an array of 256 pointers.
+ * The performance gain over a canFind() is excellent (98%). The gain over the
+ * built-in associative array is slight (3%) and the gain over EMSI hash map is
+ * good (40%). Despite of its speed, it always wastes a lot of memory because
+ * each byte in an entry is represented by an array of 256 pointers.
+ * For example count 800 MB for /usr/share/dict/words (300K words) on X86_64.
  *
  * This implementation only works with arrays of character made of single byte
- * units (char[], string, const(char)[], etc) and is compatible with multi byte
+ * units (char[], string, const(char)[], etc) but is compatible with multi byte
  * characters.
  */
 struct SuffixArray(T)
@@ -1561,6 +1565,8 @@ private:
     else
         alias TT = typeof(T.init[0]);
 
+    alias Nodes = Node*[256];
+
     Node _root;
 
 public:
@@ -1573,10 +1579,7 @@ public:
 
         bool _terminates;
         immutable ubyte _index;
-        Node*[256] _nodes;
-
-        // TODO-csuffixarray: memory usage can be reduced if _nodes is itself an array (benchmark)
-        // but: true safety lost + 1 more indirection level + more allocations
+        Nodes _nodes;
 
         /// To be private (emplace)
         public this(const ubyte index) pure nothrow @safe @nogc
@@ -1684,6 +1687,8 @@ public:
 
         /**
          * Returns the full entries existing from this node.
+         * In the results, an empty value means that this node terminates
+         * a word.
          */
         T[] entries() const nothrow @safe
         {
@@ -1823,8 +1828,10 @@ public:
     /**
      * Sorts the entries.
      *
-     * While sorting can be easly done with suffix trees this is much slower
-     * than a classic quick sort.
+     * While sorting can be easily done with suffix trees this is much slower
+     * than a classic quick sort. Also note that sorting is not unicode aware
+     * which means that unless the entries are made of ASCII chars, the results
+     * will be different from std.algorithm sort().
      *
      * Params:
      *      descending = Defines the sorting direction.
@@ -1898,17 +1905,17 @@ unittest
     ch.addSuffix("icago");
     assert("Chicago" in cities);
 
-    // clearing is global
-    cities.clear;
-    assert("Cairo" !in cities);
-    assert("Calcutta" !in cities);
-
     // memory usage
     size_t count;
     foreach(s; source) foreach(i; 0..s.length)
         ++count;
     // actual usage is actually more close to count * 256 * size_t.sizeof
     assert(cities.memoryUsage >= count);
+
+    // clearing is global
+    cities.clear;
+    assert("Cairo" !in cities);
+    assert("Calcutta" !in cities);
 }
 
 unittest
@@ -1933,5 +1940,317 @@ unittest
     assert(sar.findPrefix([0x11]).find([0x22,0x99]) is null);
     assert(sar.findPrefix([0x11]).find([]) is null);
 }
+
+//TODO-csuffixarray: choose the right version
+struct SuffixArrayTemp(T)
+if ((ElementEncodingType!T).sizeof == 1)
+{
+
+private:
+
+    import iz.memory: construct, destruct, getMem, freeMem;
+
+    static if (isSomeString!T)
+        alias TT = ElementEncodingType!T;
+    else
+        alias TT = typeof(T.init[0]);
+
+    alias Nodes = Node*[256];
+
+    Node _root;
+
+
+public:
+
+    struct Node
+    {
+
+    private:
+
+        bool _terminates;
+        immutable ubyte _index;
+        Nodes* _nodes = null;
+
+
+        public this(const ubyte index) pure nothrow @safe @nogc
+        {
+            _index = index;
+        }
+
+    public:
+
+        ~this() @nogc
+        {
+            if (_nodes)
+                freeMem(cast(void*)_nodes);
+            _nodes = null;
+        }
+
+
+        void addSuffix(const T suffix) nothrow @trusted @nogc
+        {
+            //TODO-csuffixarray: value returned by find() doesnt allow addSuffix without casting const away.
+            if (!suffix.length)
+                _terminates = true;
+            else
+            {
+                ubyte newIndex = suffix[0];
+                if (!_nodes)
+                {
+                    _nodes = cast(Nodes*) getMem(256 * size_t.sizeof);
+                    (*_nodes)[] = null;
+                }
+                if (!(*_nodes)[newIndex])
+                    (*_nodes)[newIndex] = construct!Node(newIndex);
+                (*_nodes)[newIndex].addSuffix(suffix[1..$]);
+            }
+        }
+
+
+        bool terminates() const pure nothrow @safe @nogc
+        {
+            return _terminates;
+        }
+
+
+        const(Node)* opBinaryRight(string op = "in")(const T suffix) const pure nothrow @trusted @nogc
+        if (op == "in")
+        {
+            if (suffix.length == 0)
+            {
+                if (_terminates)
+                    return &this;
+                else
+                    return null;
+
+            }
+            else if (!_nodes || (*_nodes)[suffix[0]] == null)
+                return null;
+            else
+                return (*_nodes)[suffix[0]].find(suffix[1..$]);
+        }
+
+        alias find = opBinaryRight!"in";
+
+        const(Node)* findPrefix(const T value) const pure nothrow @trusted @nogc
+        {
+            if (!value.length)
+                return null;
+
+            const(Node)* result = &this;
+            if (result._nodes) foreach (i; 0 .. value.length)
+            {
+                result = (*result._nodes)[value[i]];
+                if (!result)
+                    break;
+            }
+            return result;
+        }
+
+        void visit(alias fun, bool descending = false, bool childrenFirst = true, A...)
+            (ref ubyte[] path, auto ref A a) const nothrow @trusted
+        if (isValidVisitor!fun)
+        {
+            path ~= _index;
+            scope (exit) path.length -= 1;
+
+            static if (!childrenFirst)
+                fun(&this, path, a);
+
+            static if (descending)
+            {
+                if (_nodes) foreach_reverse (ubyte i; 0..256)
+                    if ((*_nodes)[i])
+                        (*_nodes)[i].visit!(fun, descending, childrenFirst)(path, a);
+            }
+            else
+            {
+                if (_nodes) foreach (ubyte i; 0..256)
+                    if ((*_nodes)[i])
+                        (*_nodes)[i].visit!(fun, descending, childrenFirst)(path, a);
+            }
+
+            static if (childrenFirst)
+                fun(&this, path, a);
+        }
+
+        T[] entries() const nothrow @safe
+        {
+            nothrow @trusted
+            static void fun(const(Node)* node, ref const ubyte[] path, ref T[] results)
+            {
+                if (node._terminates)
+                    results ~= (cast(T) path)[1..$];
+            }
+
+            T[] results;
+            ubyte[] path;
+            visit!(fun, false, true)(path, results);
+            return results;
+        }
+    }
+
+    this(E)(auto ref E entries) nothrow @safe @nogc
+    if (isInputRange!E && isImplicitlyConvertible!(ElementType!E,T))
+    {
+        clear;
+        foreach (entry; entries)
+        {
+            if (!entry.length)
+                continue;
+            _root.addSuffix(entry);
+        }
+    }
+
+    ~this()
+    {
+        clear;
+    }
+
+    void clear() @safe @nogc
+    {
+        void clearNode(ref Node* node) @trusted @nogc
+        {
+            if (!node)
+                return;
+            if (node._nodes) foreach (ubyte i; 0..256)
+                clearNode((*node._nodes)[i]);
+            destruct(node);
+            node = null;
+        }
+        if (_root._nodes)
+        {
+            foreach (ubyte i; 0..256)
+                clearNode((*_root._nodes)[i]);
+            freeMem(cast(void*) _root._nodes);
+            _root._nodes = null;
+        }
+    }
+
+    const(Node)* opBinaryRight(string op = "in")(const T value) const pure nothrow @safe @nogc
+    if (op == "in")
+    {
+        if (!value.length)
+            return null;
+        else
+            return _root.find(value);
+    }
+
+    alias find = opBinaryRight!"in";
+
+    const(Node)* findPrefix(const T value) const pure nothrow @safe @nogc
+    {
+        if (!value.length)
+            return null;
+        else
+            return _root.findPrefix(value);
+    }
+
+
+    alias Fun(A...) = void function(const(Node)* node, ref const ubyte[] path, A a);
+
+    template isValidVisitor(alias fun)
+    {
+        static if (!is(fun))
+            alias F = typeof(fun);
+        else
+            alias F = fun;
+
+        enum isValidVisitor =
+            (isCallable!F) &&
+            (Parameters!F).length >= 2 &&
+            is(Parameters!F[0] == const(Node)*) &&
+            is(Parameters!F[1] == const ubyte[]) &&
+            ParameterStorageClassTuple!F[1] == ParameterStorageClass.ref_;
+    }
+
+
+    void visitAll(alias fun, bool descending = false,
+        bool childrenFirst = true, A...)(auto ref A a) const nothrow @safe
+    if (isValidVisitor!fun)
+    {
+        ubyte[] path;
+        _root.visit!(fun, descending, childrenFirst)(path, a);
+    }
+
+
+    T[] sort(bool descending = false) nothrow @safe
+    {
+        nothrow @trusted
+        static void fun(const(Node)* node, ref const ubyte[] path, ref T[] results)
+        {
+            if (node.terminates)
+                results ~= (cast(T) path)[1..$];
+        }
+
+        T[] results;
+        if (descending)
+            visitAll!(fun, true, true)(results);
+        else
+            visitAll!(fun, false, true)(results);
+        return results;
+    }
+
+    size_t memoryUsage() const nothrow @safe
+    {
+        nothrow @safe
+        static void fun(const(Node)* node, const ref ubyte[] path, ref size_t result)
+        {
+            result += Node.sizeof;
+        }
+
+        size_t result;
+        visitAll!fun(result);
+        return result;
+    }
+}
+
+unittest
+{
+    string[] source = ["Cairo", "Calcutta", "Calgary", "Cali", "Campinas",
+        "Cape Town", "Caracas", "Casablanca", "Changchun", "Changde"];
+
+    auto cities = SuffixArrayTemp!string(source);
+
+    // test for presence
+    assert("Cairo" in cities);
+    assert("Calcutta" in cities);
+    assert("Calgary" in cities);
+    assert("Chicago" !in cities);
+    assert("" !in cities);
+
+    // get completion list
+    auto pre = cities.findPrefix("Cal");
+    assert(pre);
+    assert(!pre.terminates);
+    assert(pre.entries == ["Calcutta"[3..$], "Calgary"[3..$], "Cali"[3..$]]);
+
+    // sorting
+    auto desc = cities.sort(true);
+    import std.algorithm.sorting;
+    assert(desc == sort!"a > b"(source).array);
+    auto asc = cities.sort(false);
+    assert(asc == sort!"a < b"(source).array);
+
+    // adds from a prefix
+    auto ch = cast(cities.Node*) cities.findPrefix("Ch");
+    assert(ch);
+    ch.addSuffix("icago");
+    assert("Chicago" in cities);
+
+    // memory usage
+    size_t count;
+    foreach(s; source) foreach(i; 0..s.length)
+        ++count;
+    // actual usage is actually more close to count * 256 * size_t.sizeof
+    assert(cities.memoryUsage >= count);
+
+    // clearing is global
+    cities.clear;
+    assert("Cairo" !in cities);
+    assert("Calcutta" !in cities);
+}
+
+
 //------------------------------------------------------------------------------
 
