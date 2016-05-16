@@ -219,7 +219,7 @@ mixin template ScopedReachability()
     bool isMemberReachable(T, string member)()
     if (is(T==class) || is(T==struct))
     {
-        return __traits(compiles, __traits(getMember, T, member));
+        return is(typeof(__traits(getMember, T, member)));
     }
 }
 
