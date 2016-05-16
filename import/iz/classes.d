@@ -1175,12 +1175,12 @@ public:
     /**
      * Sets or gets the environment.
      *
-     * The value returned is affected by the newEnvironment property.
+     * The value returned is changes according to `newEnvironment` property.
      *
      * Params:
-     *      value, a string containing the environment varaible,
-     *      each name value group separated by ascii white characters and
-     *      each name separated from its value(s) by `=`.
+     *      value = a string containing the environment variables,
+     *      each group separated by the system's pathSeparator and in a group,
+     *      the name separated of its value(s) by the equal symbol.
      */
     @Set void environment(const(char[]) value)
     {
@@ -1228,7 +1228,7 @@ public:
      * Sets or gets the parameters for this process.
      *
      * Params:
-     *      value, a string containing the parameters, separated by ascii white
+     *      value = a string containing the parameters, separated by ascii white
      *      characters.
      */
     @Set parameters(string value)
@@ -1453,7 +1453,7 @@ public:
      * Convenience function that can be called in the two async events.
      *
      * Params:
-     *      t = an array to overwrite. Its size defines the max amount of data
+     *      t = An array to overwrite. Its size defines the max amount of data
      *      to read.
      *
      * Returns:
