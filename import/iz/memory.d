@@ -168,12 +168,18 @@ Object construct(TypeInfo_Class tic) @trusted
 ST* construct(ST, A...)(A a) @trusted
 if(is(ST==struct) || is(ST==union))
 {
-    import std.conv : emplace;
     auto size = ST.sizeof;
-    auto memory = getMem(size)[0 .. size];
+    auto memory = getMem(size);
+    __gshared static ST init = ST.init;
+    void* atInit = &init;
+    memory[0..size] = atInit[0..size];
+    static if (__traits(hasMember, ST, "__ctor") & A.length)
+        (cast(ST*) (memory)).__ctor(a);
+    else static if (A.length)
+        static assert (0, "cannot construct without a user defined ctor");
     import core.memory: GC;
-    GC.addRange(memory.ptr, size, typeid(ST));
-    return emplace!(ST, A)(memory, a);
+    GC.addRange(memory, size, typeid(ST));
+    return cast(ST*) memory;
 }
 
 /**
@@ -334,7 +340,17 @@ unittest
     foo.destruct;
     bar.destroy;
 
-    struct Foo{size_t a,b,c;}
+    struct Foo
+    {
+        this(size_t a,size_t b,size_t c)
+        {
+            this.a = a;
+            this.b = b;
+            this.c = c;
+        }
+        size_t a,b,c;
+    }
+
     Foo * foos = construct!Foo(1,2,3);
     Foo * bars = new Foo(4,5,6);
     assert(foos.a == 1);
