@@ -1559,6 +1559,7 @@ if ((ElementEncodingType!T).sizeof == 1)
 private:
 
     import iz.memory: construct, destruct;
+    import std.experimental.allocator: make, dispose;
 
     static if (isSomeString!T)
         alias TT = ElementEncodingType!T;
@@ -1617,7 +1618,7 @@ public:
         /**
          * Finds a full suffix from this node.
          */
-        const(Node)* opBinaryRight(string op = "in")(const T suffix) const pure nothrow @safe @nogc
+        const(Node)* opBinaryRight(string op)(const T suffix) const pure nothrow @safe @nogc
         if (op == "in")
         {
             if (suffix.length == 0)
@@ -1631,7 +1632,7 @@ public:
             else if (_nodes[suffix[0]] == null)
                 return null;
             else
-                return _nodes[suffix[0]].find(suffix[1..$]);
+                return suffix[1..$] in *(_nodes[suffix[0]]);
         }
 
         /// Aliases to the `in` operator.
@@ -1665,7 +1666,7 @@ public:
             path ~= _index;
             scope (exit) path.length -= 1;
 
-            static if (childrenFirst)
+            static if (!childrenFirst)
                 fun(&this, path, a);
 
             static if (descending)
@@ -1681,14 +1682,13 @@ public:
                         _nodes[i].visit!(fun, descending, childrenFirst)(path, a);
             }
 
-            static if (!childrenFirst)
+            static if (childrenFirst)
                 fun(&this, path, a);
         }
 
         /**
-         * Returns the full entries existing from this node.
-         * In the results, an empty value means that this node terminates
-         * a word.
+         * Returns the terminated entries that begin from this node.
+         * In the results, an empty value means that this node terminates a word.
          */
         T[] entries() const nothrow @safe
         {
@@ -1706,14 +1706,26 @@ public:
         }
     }
 
+    @disable this();
+    @disable this(this);
+
     /**
      * Constructs the array from a range of elements.
      */
-    this(E)(auto ref E entries) nothrow  @safe @nogc
+    this(E)(E entries) nothrow  @safe @nogc
     if (isInputRange!E && isImplicitlyConvertible!(ElementType!E,T))
     {
         clear;
-        foreach (entry; entries)
+        static if (isArray!E)
+        {
+            foreach (ref entry; entries)
+            {
+                if (!entry.length)
+                    continue;
+                _root.addSuffix(entry);
+            }
+        }
+        else foreach (entry; entries)
         {
             if (!entry.length)
                 continue;
@@ -1753,13 +1765,13 @@ public:
      *      Null if value is not in the array otherwise a pointer to
      *      the node that terminates the path to value.
      */
-    const(Node)* opBinaryRight(string op = "in")(const T value) const pure nothrow @safe @nogc
+    const(Node)* opBinaryRight(string op)(const T value) const pure nothrow @safe @nogc
     if (op == "in")
     {
         if (!value.length)
             return null;
         else
-            return _root.find(value);
+            return value in _root;
     }
 
     /// ditto
@@ -1803,8 +1815,8 @@ public:
         enum isValidVisitor =
             (isCallable!F) &&
             (Parameters!F).length >= 2 &&
-            is(Parameters!F[0] == const(Node)*) &&
-            is(Parameters!F[1] == const ubyte[]) &&
+            is(Parameters!F[0] == Parameters!(Fun!())[0]) &&
+            is(Parameters!F[1] == Parameters!(Fun!())[1]) &&
             ParameterStorageClassTuple!F[1] == ParameterStorageClass.ref_;
     }
 
@@ -1909,7 +1921,7 @@ unittest
     size_t count;
     foreach(s; source) foreach(i; 0..s.length)
         ++count;
-    // actual usage is actually more close to count * 256 * size_t.sizeof
+    // actual usage is more close to count * 256 * size_t.sizeof
     assert(cities.memoryUsage >= count);
 
     // clearing is global
@@ -1971,7 +1983,6 @@ public:
         immutable ubyte _index;
         Nodes* _nodes = null;
 
-
         public this(const ubyte index) pure nothrow @safe @nogc
         {
             _index = index;
@@ -2024,7 +2035,9 @@ public:
                     return null;
 
             }
-            else if (!_nodes || (*_nodes)[suffix[0]] == null)
+            else if (!_nodes)
+                return null;
+            else if ((*_nodes)[suffix[0]] == null)
                 return null;
             else
                 return (*_nodes)[suffix[0]].find(suffix[1..$]);
@@ -2090,7 +2103,7 @@ public:
         }
     }
 
-    this(E)(auto ref E entries) nothrow @safe @nogc
+    this(E)(E entries) nothrow @safe @nogc
     if (isInputRange!E && isImplicitlyConvertible!(ElementType!E,T))
     {
         clear;
@@ -2145,7 +2158,6 @@ public:
         else
             return _root.findPrefix(value);
     }
-
 
     alias Fun(A...) = void function(const(Node)* node, ref const ubyte[] path, A a);
 
