@@ -13,6 +13,7 @@ dmd tester.d^
  "../import/iz/containers.d"^
  "../import/iz/properties.d"^
  "../import/iz/referencable.d"^
+ "../import/iz/rtti.d"^
  "../import/iz/strings.d"^
  "../import/iz/serializer.d"^
  "../import/iz/sugar.d"^

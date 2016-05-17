@@ -4,8 +4,8 @@ import
     iz.testing;
 import
     iz.classes, iz.containers, iz.enumset, iz.logicver, iz.math, iz.memory,
-    iz.observer, iz.properties, iz.referencable, iz.serializer, iz.streams,
-    iz.strings, iz.sugar, iz.types;
+    iz.observer, iz.properties, iz.referencable, iz.rtti, iz.serializer, 
+    iz.streams, iz.strings, iz.sugar, iz.types;
 
 mixin(libraryTestCode!(
 
@@ -18,6 +18,7 @@ mixin(libraryTestCode!(
     iz.observer,
     iz.properties,
     iz.referencable,
+    iz.rtti,
     iz.serializer,
     iz.streams,
     iz.strings,
