@@ -368,27 +368,35 @@ unittest
 }
 
 /**
- * Indicates wether a class has a default constructor.
+ * Returns a pointer to a class default constructor.
  */
-template hasDefaultConstructor(C)
+template defaultConstructor(C)
 if(is(C==class))
 {
-    bool check()
+    C function() get()
     {
-        bool result;
+        C function() result;
         static if (__traits(hasMember, C, "__ctor"))
         foreach(overload; __traits(getOverloads, C, "__ctor"))
         {
-            if ((Parameters!overload).length == 0)
+            static if (is(typeof(overload) == typeof(*result)))
             {
-                result = true;
+                result = &overload;
                 break;
             }
         }
         return result;
     }
-    enum hasDef = check;
-    alias hasDefaultConstructor = hasDef;
+    enum defaultConstructor = get;
+}
+
+/**
+ * Indicates wether a class has a default constructor.
+ */
+template hasDefaultConstructor(C)
+if(is(C==class))
+{
+    enum hasDefaultConstructor = defaultConstructor!C !is null;
 }
 ///
 unittest
