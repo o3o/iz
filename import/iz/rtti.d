@@ -17,7 +17,7 @@ enum RtType: ubyte
     _invalid,
     _bool, _byte, _ubyte, _short, _ushort, _int, _uint, _long, _ulong,
     _float, _double, _real,
-    _char, _wchar, _dchar, _string, _wstring, _dstring,
+    _char, _wchar, _dchar, /*_string, _wstring, _dstring,*/
     _object, _struct, _enum,
     _callable,
 }
@@ -28,7 +28,7 @@ private static immutable RtTypeArr =
     RtType._bool, RtType._byte, RtType._ubyte, RtType._short, RtType._ushort,
     RtType._int, RtType._uint, RtType._long, RtType._ulong,
     RtType._float, RtType._double, RtType._real,
-    RtType._char, RtType._wchar, RtType._dchar, RtType._string, RtType._wstring, RtType._dstring,
+    RtType._char, RtType._wchar, RtType._dchar, /*RtType._string, RtType._wstring, RtType._dstring,*/
     RtType._object, RtType._struct, RtType._enum,
     RtType._callable,
 ];
@@ -41,7 +41,7 @@ private alias GenericRtTypes = AliasSeq!(
     void,
     bool, byte, ubyte, short, ushort, int, uint, long, ulong,
     float, double, real,
-    char, wchar, dchar, string, wstring, dstring,
+    char, wchar, dchar, /*string, wstring, dstring*/
     Object, GenericStruct, GenericEnum,
     GenericCallable
 );
@@ -50,7 +50,7 @@ private alias BasicRtTypes = AliasSeq!(
     void,
     bool, byte, ubyte, short, ushort, int, uint, long, ulong,
     float, double, real,
-    char, wchar, dchar, string, wstring, dstring
+    char, wchar, dchar/*, string, wstring, dstring*/
 );
 
 static this()
@@ -63,21 +63,13 @@ static this()
     }
 }
 
-/**
- * Runtime information for the basic types.
- */
-struct ArrayInfo
-{
-    /// Indicates if the variable is an array.
-    ubyte dimensionCount;
-}
 
 /**
  * Runtime information for the callable types.
  */
-struct CallableInfo
+struct CallablePtrInfo
 {
-    /// If hasContext then it's a delegate, otherwise a function / static function.
+    /// If hasContext then it's a delegate, otherwise a function or static function.
     bool hasContext;
     /// Indicates the return type.
     const Rtti* returnType;
@@ -114,12 +106,12 @@ struct EnumInfo
 }
 
 /**
- * Runtime information for a struct that's published as a sub-publisher.
+ * Runtime information for a struct that has the traits of a PropertyPublisher.
  *
  * Publishing structs have the ability to be used as any class
  * that implements the PropertyPublisher interface.
  */
-struct StructInfo
+struct StructPubInfo
 {
     /// Indicates the struct type identifier.
     string identifier;
@@ -146,11 +138,10 @@ struct StructInfo
 
 private union Infos
 {
-    ArrayInfo arrayInfo;
-    CallableInfo callableInfo;
+    CallablePtrInfo callablePtrInfo;
     ClassInfo classInfo;
     EnumInfo enumInfo;
-    StructInfo structInfo;
+    StructPubInfo structPubInfo;
 }
 
 /**
@@ -159,40 +150,50 @@ private union Infos
 struct Rtti
 {
     /// Constructs a Rtti with a type and the info for this type.
-    this(T)(RtType type, auto ref T t)
+    this(T)(RtType type, ubyte dim, auto ref T t)
     {
         this.type = type;
-        static if (is(T == ArrayInfo))
-            infos.arrayInfo = t;
-        else static if (is(T == CallableInfo))
-            infos.callableInfo = t;
+        this.dimension = dim;
+        static if (is(T == CallablePtrInfo))
+            infos.callablePtrInfo = t;
         else static if (is(T == ClassInfo))
             infos.classInfo = t;
         else static if (is(T == EnumInfo))
             infos.enumInfo = t;
-        else static if (is(T == StructInfo))
-            infos.structInfo = t;
+        else static if (is(T == StructPubInfo))
+            infos.structPubInfo = t;
         else static assert(0, "second argument of Rtti ctor must be a Info");
+    }
+
+    /// Constructs a Rtti with a (basic) type.
+    this(RtType rtType, ubyte dim)
+    in
+    {
+        import std.conv: to;
+        assert(rtType >= RtType._invalid &&rtType <= RtType._dchar,
+            "this ctor must only be used with basic types");
+    }
+    body
+    {
+        this.type = rtType;
+        this.dimension = dim;
     }
 
     /// The runtime type
     RtType type;
+
+    /// Type is an array
+    ubyte dimension;
 
     /**
      * The information for this type.
      */
     Infos infos;
 
-    /// Returns the information valid when type is a BasicRtType.
-    const(ArrayInfo)* arrayInfo() const
-    {
-        return &infos.arrayInfo;
-    }
-
     /// Returns the information valid when type is equal to RtT._callable.
-    const(CallableInfo)* callableInfo() const
+    const(CallablePtrInfo)* callablePtrInfo() const
     {
-        return &infos.callableInfo;
+        return &infos.callablePtrInfo;
     }
 
     /// Returns the information valid when type is equal to RtT._object.
@@ -208,9 +209,9 @@ struct Rtti
     }
 
     /// Returns the information valid when type is equal to RtT._struct.
-    const(StructInfo)* structInfo() const
+    const(StructPubInfo)* structInfo() const
     {
-        return &infos.structInfo;
+        return &infos.structPubInfo;
     }
 }
 
@@ -222,28 +223,26 @@ const(Rtti)* getRtti(A = void, B...)(auto ref B b)
 if (B.length < 2)
 {
     static if (!B.length)
-        alias T = A;
+        alias TT = A;
     else
-        alias T = B[0];
+        alias TT = B[0];
 
-    if (Rtti* result = T.stringof in _name2meta)
+    if (Rtti* result = TT.stringof in _name2meta)
         return result;
 
-    enum err = "unsupported type \"" ~ T.stringof ~ ": ";
+    enum err = "unsupported type \"" ~ TT.stringof ~ ": ";
+
+    enum dim = dimensionCount!TT;
+    static assert(dim <= ubyte.max);
+    static if (dim > 0)
+        alias T = Unqual!(ArrayElementType!TT);
+    else
+        alias T = TT;
 
     static if (staticIndexOf!(Unqual!T, BasicRtTypes) != -1)
     {
         RtType i = RtTypeArr[staticIndexOf!(Unqual!T, BasicRtTypes)];
-        Rtti result = Rtti(i, ArrayInfo(0));
-    }
-    else static if (isArray!T)
-    {
-        enum RtType i = RtTypeArr[staticIndexOf!(Unqual!(ArrayElementType!T), BasicRtTypes)];
-        static if (i > RtType._invalid)
-        {
-             Rtti result = Rtti(i, ArrayInfo(dimensionCount!T));
-        }
-        else static assert(0, err ~ "only basic types are supported in array");
+        Rtti result = Rtti(i, dim);
     }
     else static if (is(T == enum))
     {
@@ -256,7 +255,7 @@ if (B.length < 2)
                 members ~= e;
                 values  ~= __traits(getMember, T, e);
             }
-            Rtti result = Rtti(RtType._enum, EnumInfo(T.stringof, members, values));
+            Rtti result = Rtti(RtType._enum, dim, EnumInfo(T.stringof, members, values));
         }
         else static assert(0, err ~ "only enum whose type is convertible to int are supported");
     }
@@ -268,13 +267,14 @@ if (B.length < 2)
         const(Rtti*)[] pr;
         foreach(Prm; P) pr ~= getRtti!Prm;
 
-        Rtti result = Rtti(RtType._callable, CallableInfo(is(T == delegate), cast(Rtti*)getRtti!R, pr));
+        Rtti result = Rtti(RtType._callable, dim, CallablePtrInfo(is(T == delegate),
+            cast(Rtti*)getRtti!R, pr));
     }
     else static if (is(T == class))
     {
         enum ctor = cast(Object function()) defaultConstructor!T;
         auto init = typeid(T).initializer[];
-        Rtti result = Rtti(RtType._object, ClassInfo(T.stringof, ctor, init));
+        Rtti result = Rtti(RtType._object, dim, ClassInfo(T.stringof, ctor, init));
     }
     else static if (is(T == struct))
     {
@@ -293,17 +293,17 @@ if (B.length < 2)
                 typeof(__traits(getMember, PropertyPublisher, "publicationCount"))))
             static assert(0, "no valid publicationCount member");
 
-        Rtti result = Rtti(RtType._struct, StructInfo(T.stringof));
+        Rtti result = Rtti(RtType._struct, dim, StructPubInfo(T.stringof));
 
-        const(StructInfo)* mi = result.structInfo;
+        const(StructPubInfo)* mi = result.structInfo;
         mi.publicationFromName.funcptr = &__traits(getMember, T, "publicationFromName");
         mi.publicationFromIndex.funcptr = &__traits(getMember, T, "publicationFromIndex");
         mi.publicationCount.funcptr = &__traits(getMember, T, "publicationCount");
     }
     else static assert(0, err ~ "not handled at all");
 
-    _name2meta[T.stringof] = result;
-    return T.stringof in _name2meta;
+    _name2meta[TT.stringof] = result;
+    return TT.stringof in _name2meta;
 }
 ///
 unittest
@@ -322,6 +322,19 @@ unittest
     assert(rtti1.enumInfo.values == [2, 3, 4]);
 }
 
+unittest
+{
+    enum Option {o1 = 2, o2, o3}
+    Option[][] opts = [[Option.o1, Option.o2],[Option.o1, Option.o2]];
+    assert(getRtti(opts[0]) is getRtti(opts[1]));
+}
+
+unittest
+{
+    void bar();
+    // only func ptr are interesting to serialize
+    static assert(!is(typeof(getRtti(bar))));
+}
 
 unittest
 {
@@ -340,7 +353,7 @@ unittest
     {
         const(Rtti)* inf = getRtti!T;
         assert(inf.type == RtTypeArr[staticIndexOf!(Unqual!(ArrayElementType!T), BasicRtTypes)]);
-        assert(inf.arrayInfo.dimensionCount == dimensionCount!T);
+        assert(inf.dimension == dimensionCount!T);
     }
     foreach(T; BasicRtTypes[1..$])
     {
@@ -360,18 +373,18 @@ unittest
     Foo foo;
     const(Rtti)* dgi = getRtti(foo.a);
     assert(dgi.type == RtType._callable);
-    assert(dgi.callableInfo.hasContext);
-    assert(dgi.callableInfo.returnType.type == RtType._uint);
-    assert(dgi.callableInfo.parameters.length == 1);
-    assert(dgi.callableInfo.parameters[0].type == RtType._uint);
+    assert(dgi.callablePtrInfo.hasContext);
+    assert(dgi.callablePtrInfo.returnType.type == RtType._uint);
+    assert(dgi.callablePtrInfo.parameters.length == 1);
+    assert(dgi.callablePtrInfo.parameters[0].type == RtType._uint);
 
     const(Rtti)* fgi = getRtti(foo.b);
     assert(fgi.type == RtType._callable);
-    assert(!fgi.callableInfo.hasContext);
-    assert(fgi.callableInfo.returnType.type == RtType._string);
-    assert(fgi.callableInfo.parameters.length == 2);
-    assert(fgi.callableInfo.parameters[0].type == RtType._ulong);
-    assert(fgi.callableInfo.parameters[1].type == RtType._char);
+    assert(!fgi.callablePtrInfo.hasContext);
+    assert(fgi.callablePtrInfo.returnType.type == RtType._char); // _string
+    assert(fgi.callablePtrInfo.parameters.length == 2);
+    assert(fgi.callablePtrInfo.parameters[0].type == RtType._ulong);
+    assert(fgi.callablePtrInfo.parameters[1].type == RtType._char);
 }
 
 unittest
