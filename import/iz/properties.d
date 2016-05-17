@@ -6,7 +6,7 @@ module iz.properties;
 import
     std.traits;
 import
-    iz.memory, iz.types, iz.containers;
+    iz.memory, iz.types, iz.containers, iz.rtti;
 
 version(unittest) import std.stdio;
 
@@ -449,12 +449,6 @@ interface PropertyPublisher
      */
     GenericDescriptor* publicationFromIndex(size_t index);
     /**
-     * Returns the RTTI for the descriptor at index.
-     * Index must be within the [0 .. publicationCount] range.
-     * This allows to cast the results of publicationFromName() or publicationFromIndex().
-     */
-    const(RuntimeTypeInfo) publicationType(size_t index);
-    /**
      * Pointer to the object that has created the descriptor leading to this
      * PropertyPublisher instance.
      */
@@ -609,10 +603,6 @@ mixin template PropertyPublisherImpl()
 
     import iz.types: RuntimeTypeInfo;
 
-    /// see PropertyPublisher
-    static if (!__traits(hasMember, ToT, "publicationType") || Base)
-    protected const(RuntimeTypeInfo) publicationType(size_t index)
-    {return (cast(GenericDescriptor*) _publishedDescriptors[index]).rtti;}
 
 // templates: no problem with overrides, instantiated according to class This or That
 

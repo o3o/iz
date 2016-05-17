@@ -1088,7 +1088,7 @@ private:
         foreach(immutable i; 0 .. publisher.publicationCount)
         {
             auto descr = cast(GenericDescriptor*) publisher.publicationFromIndex(i);
-            const RuntimeTypeInfo rtti = publisher.publicationType(i);
+            const RuntimeTypeInfo rtti = descr.rtti;
             //
             void addValueProp(T)()
             {
