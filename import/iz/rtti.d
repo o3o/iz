@@ -1,13 +1,37 @@
+/**
+ * The iz Runtime type informations.
+ *
+ *
+ */
 module iz.rtti;
 
 import
     std.format, std.traits, std.meta;
 import
-    iz.types, iz.properties;
+    iz.types, iz.properties, iz.enumset;
 
 private __gshared string[ushort] _index2name;
 private __gshared ushort[string] _name2index;
 private __gshared Rtti[string] _name2meta;
+
+/**
+ * Enumerates the attributes the parameter storage classes and
+ * the type constructor supported by the Rtti.
+ */
+enum Attribute
+{
+    _const,
+    _immutable,
+    _in,
+    _inout,
+    _out,
+    _ref,
+    _shared,
+    _static
+}
+
+/// Set of Attribute.
+alias Attributes = EnumSet!(Attribute, Set8);
 
 /**
  * Enumerates the types supported by the Rtti
@@ -108,7 +132,7 @@ unittest
 }
 
 /**
- * Runtime information for the callable types.
+ * Runtime information for the points to functions.
  */
 struct FunPtrInfo
 {
@@ -160,7 +184,7 @@ struct EnumInfo
  * Runtime information for a struct that can be saved and reloaded from an array
  * of bytes.
  */
-struct StructBinaryInfo
+struct BinTraits
 {
     /// Returns a delegate to the struct's restoreFromBytes() method.
     void delegate(ubyte[]) loadFromBytes;
@@ -181,7 +205,7 @@ struct StructBinaryInfo
 /**
  * Runtime information for a struct that can be saved and reloaded from a string
  */
-struct StructTextInfo
+struct TextTraits
 {
     /// Returns a delegate to the struct's restoreFromText() method.
     void delegate(const(char)[]) loadFromText;
@@ -205,7 +229,7 @@ struct StructTextInfo
  * Publishing structs have the ability to be used as any class
  * that implements the PropertyPublisher interface.
  */
-struct StructPubInfo
+struct PubTraits
 {
     /// Returns a delegate to the struct's publicationFromName() method.
     GenericDescriptor* delegate(string) publicationFromName;
@@ -227,11 +251,11 @@ struct StructPubInfo
     }
 }
 
-private union StructSpecialInfos
+private union StructTraits
 {
-    StructBinaryInfo binaryInfo;
-    StructTextInfo textInfo;
-    StructPubInfo publisherInfo;
+    BinTraits binTraits;
+    TextTraits textTraits;
+    PubTraits pubTraits;
 }
 
 /**
@@ -251,11 +275,11 @@ struct StructInfo
     {
         this.identifier = identifier;
         structType = type;
-        static if (is(T == StructPubInfo))
+        static if (is(T == PubTraits))
             structInfo.publisherInfo = t;
-        else static if (is(T == StructTextInfo))
+        else static if (is(T == TextTraits))
             structInfo.textInfo = t;
-        else static if (is(T == StructBinaryInfo))
+        else static if (is(T == BinTraits))
             structInfo.binaryInfo = t;
         else static assert(0, "third argument of Rtti ctor must be an Info");
     }
@@ -267,24 +291,24 @@ struct StructInfo
     StructType structType;
 
     /// The information for the structure.
-    StructSpecialInfos structSpecialInfo;
+    StructTraits structSpecialInfo;
 
     /// Returns the struct information when structType is equal to StructType._binary
-    const(StructBinaryInfo)* binaryStructInfo() const
+    const(BinTraits)* binTraits() const
     {
-        return &structSpecialInfo.binaryInfo;
+        return &structSpecialInfo.binTraits;
     }
 
     /// Returns the struct information when structType is equal to StructType._text
-    const(StructTextInfo)* textStructInfo() const
+    const(TextTraits)* textTraits() const
     {
-        return &structSpecialInfo.textInfo;
+        return &structSpecialInfo.textTraits;
     }
 
     /// Returns the struct information when structType is equal to StructType._publisher
-    const(StructPubInfo)* pubStructInfo() const
+    const(PubTraits)* pubTraits() const
     {
-        return &structSpecialInfo.publisherInfo;
+        return &structSpecialInfo.pubTraits;
     }
 }
 
@@ -302,10 +326,11 @@ private union Infos
 struct Rtti
 {
     /// Constructs a Rtti with a type and the info for this type.
-    this(T)(RtType type, ubyte dim, auto ref T t)
+    this(T)(RtType type, ubyte dim, Attributes attribs, auto ref T t)
     {
         this.type = type;
         this.dimension = dim;
+        this.attributes = attribs;
         static if (is(T == FunPtrInfo))
             infos.funptrInfo = t;
         else static if (is(T == ClassInfo))
@@ -314,11 +339,11 @@ struct Rtti
             infos.enumInfo = t;
         else static if (is(T == StructInfo))
             infos.structInfo = t;
-        else static assert(0, "third argument of Rtti ctor must be an Info");
+        else static assert(0, "last argument of Rtti ctor must be an Info");
     }
 
     /// Constructs a Rtti with a (basic) type.
-    this(RtType rtType, ubyte dim)
+    this(RtType rtType, ubyte dim, Attributes attribs)
     in
     {
         import std.conv: to;
@@ -329,6 +354,7 @@ struct Rtti
     {
         this.type = rtType;
         this.dimension = dim;
+        this.attributes = attribs;
     }
 
     /// The runtime type
@@ -336,6 +362,9 @@ struct Rtti
 
     /// Type is an array
     ubyte dimension;
+
+    /// Attributes for this type
+    Attributes attributes;
 
     /**
      * The information for this type.
@@ -391,10 +420,16 @@ if (B.length < 2)
     else
         alias T = TT;
 
+    Attributes attribs;
+    static if (is(T==const)) attribs += Attribute._const;
+    static if (is(T==immutable)) attribs += Attribute._immutable;
+    static if (is(T==inout)) attribs += Attribute._inout;
+    static if (is(T==shared)) attribs += Attribute._shared;
+
     static if (staticIndexOf!(Unqual!T, BasicRtTypes) != -1)
     {
         RtType i = RtTypeArr[staticIndexOf!(Unqual!T, BasicRtTypes)];
-        const Rtti result = Rtti(i, dim);
+        const Rtti result = Rtti(i, dim, attribs);
     }
     else static if (is(T == enum))
     {
@@ -408,7 +443,7 @@ if (B.length < 2)
                 values  ~= __traits(getMember, T, e);
                 static assert(!is(e == enum), err ~ "nested enums are not supported");
             }
-            const Rtti result = Rtti(RtType._enum, dim, EnumInfo(T.stringof, members, values, getRtti!(OriginalType!T)));
+            const Rtti result = Rtti(RtType._enum, dim, attribs, EnumInfo(T.stringof, members, values, getRtti!(OriginalType!T)));
         }
         else static assert(0, err ~ "only enum whose type is convertible to int are supported");
     }
@@ -420,14 +455,14 @@ if (B.length < 2)
         const(Rtti*)[] pr;
         foreach(Prm; P) pr ~= getRtti!Prm;
 
-        const Rtti result = Rtti(RtType._funptr, dim, FunPtrInfo(is(T == delegate),
+        const Rtti result = Rtti(RtType._funptr, dim, attribs, FunPtrInfo(is(T == delegate),
             cast(Rtti*)getRtti!R, pr));
     }
     else static if (is(T == class))
     {
         enum ctor = cast(Object function()) defaultConstructor!T;
         auto init = typeid(T).initializer[];
-        const Rtti result = Rtti(RtType._object, dim, ClassInfo(T.stringof, ctor, init));
+        const Rtti result = Rtti(RtType._object, dim, attribs, ClassInfo(T.stringof, ctor, init));
     }
     else static if (is(T == struct) && __traits(hasMember, T, "publicationFromName"))
     {
@@ -446,12 +481,12 @@ if (B.length < 2)
                 typeof(__traits(getMember, PropertyPublisher, "publicationCount"))))
             static assert(0, "no valid publicationCount member");
 
-        const Rtti result = Rtti(RtType._struct, dim, StructInfo(T.stringof, StructType._publisher));
+        const Rtti result = Rtti(RtType._struct, dim, attribs, StructInfo(T.stringof, StructType._publisher));
 
         const(StructInfo)* si = result.structInfo;
-        si.pubStructInfo.publicationFromName.funcptr = &__traits(getMember, T, "publicationFromName");
-        si.pubStructInfo.publicationFromIndex.funcptr = &__traits(getMember, T, "publicationFromIndex");
-        si.pubStructInfo.publicationCount.funcptr = &__traits(getMember, T, "publicationCount");
+        si.pubTraits.publicationFromName.funcptr = &__traits(getMember, T, "publicationFromName");
+        si.pubTraits.publicationFromIndex.funcptr = &__traits(getMember, T, "publicationFromIndex");
+        si.pubTraits.publicationCount.funcptr = &__traits(getMember, T, "publicationCount");
     }
     else static if (is(T == struct) && __traits(hasMember, T, "saveToBytes"))
     {
@@ -463,10 +498,10 @@ if (B.length < 2)
             !is(typeof(&__traits(getMember, T, "loadFromBytes")) == void function(ubyte[])))
             static assert(0, "no valid loadFromBytes member");
 
-        const Rtti result = Rtti(RtType._struct, dim, StructInfo(T.stringof, StructType._binary));
+        const Rtti result = Rtti(RtType._struct, dim, attribs, StructInfo(T.stringof, StructType._binary));
         const(StructInfo)* si = result.structInfo;
-        si.binaryStructInfo.saveToBytes.funcptr = &__traits(getMember, T, "saveToBytes");
-        si.binaryStructInfo.loadFromBytes.funcptr = &__traits(getMember, T, "loadFromBytes");
+        si.binTraits.saveToBytes.funcptr = &__traits(getMember, T, "saveToBytes");
+        si.binTraits.loadFromBytes.funcptr = &__traits(getMember, T, "loadFromBytes");
 
     }
     else static if (is(T == struct) && __traits(hasMember, T, "saveToText"))
@@ -479,15 +514,15 @@ if (B.length < 2)
             !is(typeof(&__traits(getMember, T, "loadFromText")) == void function(const(char)[])))
             static assert(0, "no valid loadFromText member");
 
-        const Rtti result = Rtti(RtType._struct, dim, StructInfo(T.stringof, StructType._text));
+        const Rtti result = Rtti(RtType._struct, dim, attribs, StructInfo(T.stringof, StructType._text));
         const(StructInfo)* si = result.structInfo;
-        si.textStructInfo.saveToText.funcptr = &__traits(getMember, T, "saveToText");
-        si.textStructInfo.loadFromText.funcptr = &__traits(getMember, T, "loadFromText");
+        si.textTraits.saveToText.funcptr = &__traits(getMember, T, "saveToText");
+        si.textTraits.loadFromText.funcptr = &__traits(getMember, T, "loadFromText");
 
     }
     else static if (is(T == struct))
     {
-        const Rtti result = Rtti(RtType._struct, dim, StructInfo(T.stringof, StructType._none));
+        const Rtti result = Rtti(RtType._struct, dim, attribs, StructInfo(T.stringof, StructType._none));
     }
 
     else static assert(0, err ~ "not handled at all");
@@ -593,14 +628,14 @@ unittest
     assert(rtti.type == RtType._struct);
     assert(rtti.structInfo.structType == StructType._publisher);
     assert(rtti.structInfo.identifier == "Bar");
-    rtti.structInfo.pubStructInfo.setContext(cast(void*) &bar);
-    assert(rtti.structInfo.pubStructInfo.publicationCount == &bar.publicationCount);
-    assert(rtti.structInfo.pubStructInfo.publicationFromIndex == &bar.publicationFromIndex);
-    assert(rtti.structInfo.pubStructInfo.publicationFromName == &bar.publicationFromName);
+    rtti.structInfo.pubTraits.setContext(cast(void*) &bar);
+    assert(rtti.structInfo.pubTraits.publicationCount == &bar.publicationCount);
+    assert(rtti.structInfo.pubTraits.publicationFromIndex == &bar.publicationFromIndex);
+    assert(rtti.structInfo.pubTraits.publicationFromName == &bar.publicationFromName);
     // coverage
-    assert(rtti.structInfo.pubStructInfo.publicationCount() == bar.publicationCount);
-    assert(rtti.structInfo.pubStructInfo.publicationFromIndex(0) == bar.publicationFromIndex(0));
-    assert(rtti.structInfo.pubStructInfo.publicationFromName("") == bar.publicationFromName(""));
+    assert(rtti.structInfo.pubTraits.publicationCount() == bar.publicationCount);
+    assert(rtti.structInfo.pubTraits.publicationFromIndex(0) == bar.publicationFromIndex(0));
+    assert(rtti.structInfo.pubTraits.publicationFromName("") == bar.publicationFromName(""));
 }
 
 unittest
@@ -630,12 +665,12 @@ unittest
     assert(rtti.type == RtType._struct);
     assert(rtti.structInfo.structType == StructType._text);
     assert(rtti.structInfo.identifier == "Hop");
-    rtti.structInfo.textStructInfo.setContext(cast(void*) &hop);
-    assert(rtti.structInfo.textStructInfo.saveToText == &hop.saveToText);
-    assert(rtti.structInfo.textStructInfo.loadFromText == &hop.loadFromText);
+    rtti.structInfo.textTraits.setContext(cast(void*) &hop);
+    assert(rtti.structInfo.textTraits.saveToText == &hop.saveToText);
+    assert(rtti.structInfo.textTraits.loadFromText == &hop.loadFromText);
     // coverage
-    assert(rtti.structInfo.textStructInfo.saveToText() == "hop");
-    rtti.structInfo.textStructInfo.loadFromText("hop");
+    assert(rtti.structInfo.textTraits.saveToText() == "hop");
+    rtti.structInfo.textTraits.loadFromText("hop");
 }
 
 unittest
@@ -650,11 +685,24 @@ unittest
     assert(rtti.type == RtType._struct);
     assert(rtti.structInfo.structType == StructType._binary);
     assert(rtti.structInfo.identifier == "Boo");
-    rtti.structInfo.binaryStructInfo.setContext(cast(void*) &boo);
-    assert(rtti.structInfo.binaryStructInfo.saveToBytes == &boo.saveToBytes);
-    assert(rtti.structInfo.binaryStructInfo.loadFromBytes == &boo.loadFromBytes);
+    rtti.structInfo.binTraits.setContext(cast(void*) &boo);
+    assert(rtti.structInfo.binTraits.saveToBytes == &boo.saveToBytes);
+    assert(rtti.structInfo.binTraits.loadFromBytes == &boo.loadFromBytes);
     // coverage
-    assert(rtti.structInfo.binaryStructInfo.saveToBytes() == [0x0]);
-    rtti.structInfo.binaryStructInfo.loadFromBytes([0x0]);
+    assert(rtti.structInfo.binTraits.saveToBytes() == [0x0]);
+    rtti.structInfo.binTraits.loadFromBytes([0x0]);
+}
+
+unittest
+{
+    shared(int) si;
+    assert(Attribute._shared in si.getRtti.attributes);
+    const(int) ci;
+    assert(Attribute._const in ci.getRtti.attributes);
+    immutable(int) ii;
+    assert(Attribute._immutable in ii.getRtti.attributes);
+    immutable(shared int) sii;
+    assert(Attribute._immutable in sii.getRtti.attributes);
+    //assert(Attribute._shared in sii.getRtti.attributes);
 }
 
