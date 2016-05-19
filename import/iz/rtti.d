@@ -15,23 +15,18 @@ private __gshared ushort[string] _name2index;
 private __gshared Rtti[string] _name2meta;
 
 /**
- * Enumerates the attributes the parameter storage classes and
- * the type constructor supported by the Rtti.
+ * Enumerates the type constructors
  */
-enum Attribute
+enum TypeCtor
 {
     _const,
     _immutable,
-    _in,
     _inout,
-    _out,
-    _ref,
-    _shared,
-    _static
+    _shared
 }
 
 /// Set of Attribute.
-alias Attributes = EnumSet!(Attribute, Set8);
+alias TypeCtors = EnumSet!(TypeCtor, Set8);
 
 /**
  * Enumerates the types supported by the Rtti
@@ -326,11 +321,11 @@ private union Infos
 struct Rtti
 {
     /// Constructs a Rtti with a type and the info for this type.
-    this(T)(RtType type, ubyte dim, Attributes attribs, auto ref T t)
+    this(T)(RtType type, ubyte dim, TypeCtors typeCtors, auto ref T t)
     {
         this.type = type;
         this.dimension = dim;
-        this.attributes = attribs;
+        this.typeCtors = typeCtors;
         static if (is(T == FunPtrInfo))
             infos.funptrInfo = t;
         else static if (is(T == ClassInfo))
@@ -343,7 +338,7 @@ struct Rtti
     }
 
     /// Constructs a Rtti with a (basic) type.
-    this(RtType rtType, ubyte dim, Attributes attribs)
+    this(RtType rtType, ubyte dim, TypeCtors typeCtors)
     in
     {
         import std.conv: to;
@@ -354,7 +349,7 @@ struct Rtti
     {
         this.type = rtType;
         this.dimension = dim;
-        this.attributes = attribs;
+        this.typeCtors = typeCtors;
     }
 
     /// The runtime type
@@ -364,7 +359,7 @@ struct Rtti
     ubyte dimension;
 
     /// Attributes for this type
-    Attributes attributes;
+    TypeCtors typeCtors;
 
     /**
      * The information for this type.
@@ -420,16 +415,16 @@ if (B.length < 2)
     else
         alias T = TT;
 
-    Attributes attribs;
-    static if (is(T==const)) attribs += Attribute._const;
-    static if (is(T==immutable)) attribs += Attribute._immutable;
-    static if (is(T==inout)) attribs += Attribute._inout;
-    static if (is(T==shared)) attribs += Attribute._shared;
+    TypeCtors typeCtors;
+    static if (is(T==const)) typeCtors += TypeCtor._const;
+    static if (is(T==immutable)) typeCtors += TypeCtor._immutable;
+    static if (is(T==inout)) typeCtors += TypeCtor._inout;
+    static if (is(T==shared)) typeCtors += TypeCtor._shared;
 
     static if (staticIndexOf!(Unqual!T, BasicRtTypes) != -1)
     {
         RtType i = RtTypeArr[staticIndexOf!(Unqual!T, BasicRtTypes)];
-        const Rtti result = Rtti(i, dim, attribs);
+        const Rtti result = Rtti(i, dim, typeCtors);
     }
     else static if (is(T == enum))
     {
@@ -443,7 +438,7 @@ if (B.length < 2)
                 values  ~= __traits(getMember, T, e);
                 static assert(!is(e == enum), err ~ "nested enums are not supported");
             }
-            const Rtti result = Rtti(RtType._enum, dim, attribs, EnumInfo(T.stringof, members, values, getRtti!(OriginalType!T)));
+            const Rtti result = Rtti(RtType._enum, dim, typeCtors, EnumInfo(T.stringof, members, values, getRtti!(OriginalType!T)));
         }
         else static assert(0, err ~ "only enum whose type is convertible to int are supported");
     }
@@ -453,16 +448,16 @@ if (B.length < 2)
         alias P = Parameters!T;
 
         const(Rtti*)[] pr;
-        foreach(Prm; P) pr ~= getRtti!Prm;
-
-        const Rtti result = Rtti(RtType._funptr, dim, attribs, FunPtrInfo(is(T == delegate),
+        foreach(Prm; P)
+            pr ~= getRtti!Prm;
+        const Rtti result = Rtti(RtType._funptr, dim, typeCtors, FunPtrInfo(is(T == delegate),
             cast(Rtti*)getRtti!R, pr));
     }
     else static if (is(T == class))
     {
         enum ctor = cast(Object function()) defaultConstructor!T;
         auto init = typeid(T).initializer[];
-        const Rtti result = Rtti(RtType._object, dim, attribs, ClassInfo(T.stringof, ctor, init));
+        const Rtti result = Rtti(RtType._object, dim, typeCtors, ClassInfo(T.stringof, ctor, init));
     }
     else static if (is(T == struct) && __traits(hasMember, T, "publicationFromName"))
     {
@@ -481,7 +476,7 @@ if (B.length < 2)
                 typeof(__traits(getMember, PropertyPublisher, "publicationCount"))))
             static assert(0, "no valid publicationCount member");
 
-        const Rtti result = Rtti(RtType._struct, dim, attribs, StructInfo(T.stringof, StructType._publisher));
+        const Rtti result = Rtti(RtType._struct, dim, typeCtors, StructInfo(T.stringof, StructType._publisher));
 
         const(StructInfo)* si = result.structInfo;
         si.pubTraits.publicationFromName.funcptr = &__traits(getMember, T, "publicationFromName");
@@ -498,7 +493,7 @@ if (B.length < 2)
             !is(typeof(&__traits(getMember, T, "loadFromBytes")) == void function(ubyte[])))
             static assert(0, "no valid loadFromBytes member");
 
-        const Rtti result = Rtti(RtType._struct, dim, attribs, StructInfo(T.stringof, StructType._binary));
+        const Rtti result = Rtti(RtType._struct, dim, typeCtors, StructInfo(T.stringof, StructType._binary));
         const(StructInfo)* si = result.structInfo;
         si.binTraits.saveToBytes.funcptr = &__traits(getMember, T, "saveToBytes");
         si.binTraits.loadFromBytes.funcptr = &__traits(getMember, T, "loadFromBytes");
@@ -514,7 +509,7 @@ if (B.length < 2)
             !is(typeof(&__traits(getMember, T, "loadFromText")) == void function(const(char)[])))
             static assert(0, "no valid loadFromText member");
 
-        const Rtti result = Rtti(RtType._struct, dim, attribs, StructInfo(T.stringof, StructType._text));
+        const Rtti result = Rtti(RtType._struct, dim, typeCtors, StructInfo(T.stringof, StructType._text));
         const(StructInfo)* si = result.structInfo;
         si.textTraits.saveToText.funcptr = &__traits(getMember, T, "saveToText");
         si.textTraits.loadFromText.funcptr = &__traits(getMember, T, "loadFromText");
@@ -522,7 +517,7 @@ if (B.length < 2)
     }
     else static if (is(T == struct))
     {
-        const Rtti result = Rtti(RtType._struct, dim, attribs, StructInfo(T.stringof, StructType._none));
+        const Rtti result = Rtti(RtType._struct, dim, typeCtors, StructInfo(T.stringof, StructType._none));
     }
 
     else static assert(0, err ~ "not handled at all");
@@ -696,13 +691,26 @@ unittest
 unittest
 {
     shared(int) si;
-    assert(Attribute._shared in si.getRtti.attributes);
+    assert(TypeCtor._shared in si.getRtti.typeCtors);
     const(int) ci;
-    assert(Attribute._const in ci.getRtti.attributes);
+    assert(TypeCtor._const in ci.getRtti.typeCtors);
     immutable(int) ii;
-    assert(Attribute._immutable in ii.getRtti.attributes);
-    immutable(shared int) sii;
-    assert(Attribute._immutable in sii.getRtti.attributes);
-    //assert(Attribute._shared in sii.getRtti.attributes);
+    assert(TypeCtor._immutable in ii.getRtti.typeCtors);
+    const(shared(int)) sii;
+    assert(TypeCtor._const in sii.getRtti.typeCtors);
+    assert(TypeCtor._shared in sii.getRtti.typeCtors);
+}
+
+unittest
+{
+    struct Gap
+    {
+        static void foo(ref const(int)){}
+        static void bar(out shared(int)){}
+    }
+    auto fti0 = getRtti(&Gap.foo);
+    assert(TypeCtor._const in fti0.funptrInfo.parameters[0].typeCtors);
+    auto fti1 = getRtti(&Gap.bar);
+    assert(TypeCtor._shared in fti1.funptrInfo.parameters[0].typeCtors);
 }
 
