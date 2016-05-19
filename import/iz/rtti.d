@@ -12,7 +12,7 @@ import
 
 private __gshared string[ushort] _index2name;
 private __gshared ushort[string] _name2index;
-private __gshared Rtti[string] _name2meta;
+private __gshared Rtti[string] _name2rtti;
 
 /**
  * Enumerates the type constructors
@@ -25,7 +25,7 @@ enum TypeCtor
     _shared
 }
 
-/// Set of Attribute.
+/// Set of TypeCtor.
 alias TypeCtors = EnumSet!(TypeCtor, Set8);
 
 /**
@@ -126,16 +126,26 @@ unittest
     assert(lo.getRtti.type.size == 8);
 }
 
+private mixin template setContext()
+{
+    void setContext(void* context) const
+    {
+        foreach(member; __traits(allMembers, typeof(this)))
+            static if (is(typeof(__traits(getMember, typeof(this), member)) == delegate))
+                __traits(getMember, typeof(this), member).ptr = context;
+    }
+}
+
 /**
  * Runtime information for the points to functions.
  */
 struct FunPtrInfo
 {
-    /// If hasContext then it's a delegate, otherwise a pointer to function.
+    /// If hasContext then it's a delegate, otherwise a pointer to a function.
     bool hasContext;
     /// Indicates the return type.
     const Rtti* returnType;
-    /// Contains the list of the parameters.
+    /// Contains the Rtti of each parameters.
     const Rtti*[] parameters;
     /// Indicates the size
     ubyte size() const
@@ -187,14 +197,8 @@ struct BinTraits
     /// Returns a delegate to the struct's saveToBytes() method.
     ubyte[] delegate() saveToBytes;
 
-    /**
-     * Sets the context of the two delegates.
-     */
-    void setContext(void* instance) const
-    {
-        loadFromBytes.ptr = instance;
-        saveToBytes.ptr = instance;
-    }
+    /// Sets the delegates context.
+    mixin setContext;
 }
 
 /**
@@ -208,14 +212,8 @@ struct TextTraits
     /// Returns a delegate to the struct's saveToText() method.
     const(char)[] delegate() saveToText;
 
-    /**
-     * Sets the context of the two delegates.
-     */
-    void setContext(void* instance) const
-    {
-        loadFromText.ptr = instance;
-        saveToText.ptr = instance;
-    }
+    /// Sets the delegates context.
+    mixin setContext;
 }
 
 /**
@@ -235,15 +233,8 @@ struct PubTraits
     /// Returns a delegate to the struct's publicationCount() method.
     size_t delegate() publicationCount;
 
-    /**
-     * Sets the context of the three delegates.
-     */
-    void setContext(void* instance) const
-    {
-        publicationFromName.ptr = instance;
-        publicationFromIndex.ptr = instance;
-        publicationCount.ptr = instance;
-    }
+    /// Sets the delegates context.
+    mixin setContext;
 }
 
 private union StructTraits
@@ -392,6 +383,15 @@ struct Rtti
 }
 
 /**
+ * Returns the Rtti for the type that has its .stringof property
+ * equal to `typeString`.
+ */
+const(Rtti)* getRtti(const(char)[] typeString)
+{
+    return typeString in _name2rtti;
+}
+
+/**
  * Registers and returns the Rtti for the type (or the variable)
  * passed as argument.
  */
@@ -403,7 +403,7 @@ if (B.length < 2)
     else
         alias TT = B[0];
 
-    if (Rtti* result = TT.stringof in _name2meta)
+    if (Rtti* result = TT.stringof in _name2rtti)
         return result;
 
     enum err = "unsupported type \"" ~ TT.stringof ~ ": ";
@@ -438,7 +438,8 @@ if (B.length < 2)
                 values  ~= __traits(getMember, T, e);
                 static assert(!is(e == enum), err ~ "nested enums are not supported");
             }
-            const Rtti result = Rtti(RtType._enum, dim, typeCtors, EnumInfo(T.stringof, members, values, getRtti!(OriginalType!T)));
+            const Rtti result = Rtti(RtType._enum, dim, typeCtors,
+                EnumInfo(T.stringof, members, values, getRtti!(OriginalType!T)));
         }
         else static assert(0, err ~ "only enum whose type is convertible to int are supported");
     }
@@ -497,7 +498,6 @@ if (B.length < 2)
         const(StructInfo)* si = result.structInfo;
         si.binTraits.saveToBytes.funcptr = &__traits(getMember, T, "saveToBytes");
         si.binTraits.loadFromBytes.funcptr = &__traits(getMember, T, "loadFromBytes");
-
     }
     else static if (is(T == struct) && __traits(hasMember, T, "saveToText"))
     {
@@ -513,17 +513,20 @@ if (B.length < 2)
         const(StructInfo)* si = result.structInfo;
         si.textTraits.saveToText.funcptr = &__traits(getMember, T, "saveToText");
         si.textTraits.loadFromText.funcptr = &__traits(getMember, T, "loadFromText");
-
     }
     else static if (is(T == struct))
     {
         const Rtti result = Rtti(RtType._struct, dim, typeCtors, StructInfo(T.stringof, StructType._none));
     }
+    else
+    {
+        typeCtors = 0;
+        version(none) static assert(0, err ~ "not handled at all");
+        else const Rtti result = Rtti(RtType._invalid, 0, typeCtors);
+    }
 
-    else static assert(0, err ~ "not handled at all");
-
-    _name2meta[TT.stringof] = result;
-    return TT.stringof in _name2meta;
+    _name2rtti[TT.stringof] = result;
+    return TT.stringof in _name2rtti;
 }
 ///
 unittest
@@ -532,15 +535,17 @@ unittest
     enum Option: ubyte {o1 = 2, o2, o3}
     Option option1, option2;
     // first call will register
-    auto rtti1 = getRtti(option1);
-    auto rtti2 = getRtti(option2);
+    const(Rtti)* rtti1 = getRtti(option1);
+    const(Rtti)* rtti2 = getRtti(option2);
     // variables of same type point to the same info.
     assert(rtti1 is rtti2);
-    // useful info when the static type is not known.
-    assert(rtti1.enumInfo.identifier == "Option");
-    assert(rtti1.enumInfo.members == ["o1", "o2", "o3"]);
-    assert(rtti1.enumInfo.values == [2, 3, 4]);
-    assert(rtti1.enumInfo.valueType is getRtti!ubyte);
+    // get the Rtti without the static type.
+    const(Rtti)* rtti3 = getRtti("Option");
+    assert(rtti3 is rtti1);
+    assert(rtti3.enumInfo.identifier == "Option");
+    assert(rtti3.enumInfo.members == ["o1", "o2", "o3"]);
+    assert(rtti3.enumInfo.values == [2, 3, 4]);
+    assert(rtti3.enumInfo.valueType is getRtti!ubyte);
 }
 
 unittest
@@ -554,7 +559,7 @@ unittest
 {
     void bar();
     // only func ptr are interesting to serialize
-    static assert(!is(typeof(getRtti(bar))));
+    //static assert(!is(typeof(getRtti(bar))));
 }
 
 unittest
@@ -706,11 +711,19 @@ unittest
     struct Gap
     {
         static void foo(ref const(int)){}
+        static void baz(ref const(int)){}
         static void bar(out shared(int)){}
     }
     auto fti0 = getRtti(&Gap.foo);
     assert(TypeCtor._const in fti0.funptrInfo.parameters[0].typeCtors);
     auto fti1 = getRtti(&Gap.bar);
     assert(TypeCtor._shared in fti1.funptrInfo.parameters[0].typeCtors);
+    auto fti2 = getRtti(&Gap.baz);
+    assert(fti0 is fti2);
+}
+
+unittest
+{
+    assert(getRtti!(const(int)) !is getRtti!(int));
 }
 
