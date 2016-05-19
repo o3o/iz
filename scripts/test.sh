@@ -19,7 +19,7 @@ dmd tester.d\
  "../import/iz/serializer.d"\
  "../import/iz/sugar.d"\
  "../import/iz/math.d"\
- -unittest -debug -w -wi -of"iz-tester" -I"../import"
+ -unittest -debug -w -wi -cov -of"iz-tester" -I"../import"
 echo ---------------------------------------
 ./iz-tester
 echo ---------------------------------------
