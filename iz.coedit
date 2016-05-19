@@ -79,13 +79,13 @@ object _1: TCENativeProject
     'import/iz/observer.d'
     'import/iz/properties.d'
     'import/iz/referencable.d'
+    'import/iz/rtti.d'
     'import/iz/serializer.d'
     'import/iz/streams.d'
     'import/iz/strings.d'
     'import/iz/sugar.d'
     'import/iz/types.d'
     'import/iz/package.d'
-    'import/iz/rtti.d'
   )
   ConfigurationIndex = 0
 end

@@ -19,7 +19,18 @@ enum RtType: ubyte
     _float, _double, _real,
     _char, _wchar, _dchar, /*_string, _wstring, _dstring,*/
     _object, _struct, _enum,
-    _callable,
+    _funptr,
+}
+
+/**
+ * Enumerates the special struct type recognized by the Rtti
+ */
+enum StructType: ubyte
+{
+    _none,      /// no special traits.
+    _publisher, /// the struct has the traits of a PropertyPublisher.
+    _binary,    /// the struct can write and read itself to/from ubyte[].
+    _text,      /// the struct can write and read itself to/from char[].
 }
 
 private static immutable RtTypeArr =
@@ -30,12 +41,12 @@ private static immutable RtTypeArr =
     RtType._float, RtType._double, RtType._real,
     RtType._char, RtType._wchar, RtType._dchar, /*RtType._string, RtType._wstring, RtType._dstring,*/
     RtType._object, RtType._struct, RtType._enum,
-    RtType._callable,
+    RtType._funptr,
 ];
 
 private struct GenericStruct{}
 private struct GenericEnum{}
-private struct GenericCallable{}
+private struct GenericFunPtr{}
 
 private alias GenericRtTypes = AliasSeq!(
     void,
@@ -43,7 +54,7 @@ private alias GenericRtTypes = AliasSeq!(
     float, double, real,
     char, wchar, dchar, /*string, wstring, dstring*/
     Object, GenericStruct, GenericEnum,
-    GenericCallable
+    GenericFunPtr
 );
 
 private alias BasicRtTypes = AliasSeq!(
@@ -57,24 +68,62 @@ static this()
 {
     foreach(i, T; BasicRtTypes)
     {
-        auto rtti = getRtti!T;
+        const rtti = getRtti!T;
         _index2name[i] = T.stringof;
         _name2index[T.stringof] = i;
     }
 }
 
+/**
+ * Indicates the size of a variable according to its RtType
+ *
+ * Returns:
+ *      `0` is returned if the size is unknown otherwise the equivalent
+ *      of the .sizeof property.
+ */
+ubyte size(RtType type)
+{
+    with(RtType) switch (type)
+    {
+        case _bool: case _byte: case _ubyte: case _char: return 1;
+        case _short: case _ushort: case _wchar: return 2;
+        case _int: case _uint: case _dchar: case _float: return 4;
+        case _long: case _ulong: case _double: return 8;
+        default: return 0;
+    }
+}
+///
+unittest
+{
+    struct St {} St st;
+    assert(st.getRtti.type.size == 0);
+    bool bo;
+    assert(bo.getRtti.type.size == 1);
+    ushort us;
+    assert(us.getRtti.type.size == 2);
+    uint ui;
+    assert(ui.getRtti.type.size == 4);
+    long lo;
+    assert(lo.getRtti.type.size == 8);
+}
 
 /**
  * Runtime information for the callable types.
  */
-struct CallablePtrInfo
+struct FunPtrInfo
 {
-    /// If hasContext then it's a delegate, otherwise a function or static function.
+    /// If hasContext then it's a delegate, otherwise a pointer to function.
     bool hasContext;
     /// Indicates the return type.
     const Rtti* returnType;
     /// Contains the list of the parameters.
     const Rtti*[] parameters;
+    /// Indicates the size
+    ubyte size() const
+    {
+        if (hasContext) return size_t.sizeof * 2;
+        else return size_t.sizeof;
+    }
 }
 
 /**
@@ -103,6 +152,51 @@ struct EnumInfo
     string[] members;
     /// Contains the value of each member.
     int[] values;
+    /// Indicates the type of the values.
+    const(Rtti)* valueType;
+}
+
+/**
+ * Runtime information for a struct that can be saved and reloaded from an array
+ * of bytes.
+ */
+struct StructBinaryInfo
+{
+    /// Returns a delegate to the struct's restoreFromBytes() method.
+    void delegate(ubyte[]) loadFromBytes;
+
+    /// Returns a delegate to the struct's saveToBytes() method.
+    ubyte[] delegate() saveToBytes;
+
+    /**
+     * Sets the context of the two delegates.
+     */
+    void setContext(void* instance) const
+    {
+        loadFromBytes.ptr = instance;
+        saveToBytes.ptr = instance;
+    }
+}
+
+/**
+ * Runtime information for a struct that can be saved and reloaded from a string
+ */
+struct StructTextInfo
+{
+    /// Returns a delegate to the struct's restoreFromText() method.
+    void delegate(const(char)[]) loadFromText;
+
+    /// Returns a delegate to the struct's saveToText() method.
+    const(char)[] delegate() saveToText;
+
+    /**
+     * Sets the context of the two delegates.
+     */
+    void setContext(void* instance) const
+    {
+        loadFromText.ptr = instance;
+        saveToText.ptr = instance;
+    }
 }
 
 /**
@@ -113,16 +207,13 @@ struct EnumInfo
  */
 struct StructPubInfo
 {
-    /// Indicates the struct type identifier.
-    string identifier;
+    /// Returns a delegate to the struct's publicationFromName() method.
+    GenericDescriptor* delegate(string) publicationFromName;
 
-    /// Returns a delegate the struct publicationFromName() method.
-    GenericDescriptor* delegate(string name) publicationFromName;
+    /// Returns a delegate to the struct's publicationFromIndex() method.
+    GenericDescriptor* delegate(size_t) publicationFromIndex;
 
-    /// Returns a delegate the struct publicationFromIndex() method.
-    GenericDescriptor* delegate(size_t name) publicationFromIndex;
-
-    /// Returns a delegate the struct publicationCount() method.
+    /// Returns a delegate to the struct's publicationCount() method.
     size_t delegate() publicationCount;
 
     /**
@@ -136,12 +227,73 @@ struct StructPubInfo
     }
 }
 
+private union StructSpecialInfos
+{
+    StructBinaryInfo binaryInfo;
+    StructTextInfo textInfo;
+    StructPubInfo publisherInfo;
+}
+
+/**
+ * Runtime information for the struct.
+ */
+struct StructInfo
+{
+    /// Constructs the info for a "noname" struct
+    this(string identifier, StructType type)
+    {
+        this.identifier = identifier;
+        structType = type;
+    }
+
+    /// Constructs the info for a specual struct.
+    this(T)(string identifier, StructType type, T t)
+    {
+        this.identifier = identifier;
+        structType = type;
+        static if (is(T == StructPubInfo))
+            structInfo.publisherInfo = t;
+        else static if (is(T == StructTextInfo))
+            structInfo.textInfo = t;
+        else static if (is(T == StructBinaryInfo))
+            structInfo.binaryInfo = t;
+        else static assert(0, "third argument of Rtti ctor must be an Info");
+    }
+
+    /// Indicates the struct type identifier.
+    string identifier;
+
+    /// Indicates the special struct type.
+    StructType structType;
+
+    /// The information for the structure.
+    StructSpecialInfos structSpecialInfo;
+
+    /// Returns the struct information when structType is equal to StructType._binary
+    const(StructBinaryInfo)* binaryStructInfo() const
+    {
+        return &structSpecialInfo.binaryInfo;
+    }
+
+    /// Returns the struct information when structType is equal to StructType._text
+    const(StructTextInfo)* textStructInfo() const
+    {
+        return &structSpecialInfo.textInfo;
+    }
+
+    /// Returns the struct information when structType is equal to StructType._publisher
+    const(StructPubInfo)* pubStructInfo() const
+    {
+        return &structSpecialInfo.publisherInfo;
+    }
+}
+
 private union Infos
 {
-    CallablePtrInfo callablePtrInfo;
+    FunPtrInfo funptrInfo;
     ClassInfo classInfo;
     EnumInfo enumInfo;
-    StructPubInfo structPubInfo;
+    StructInfo structInfo;
 }
 
 /**
@@ -154,15 +306,15 @@ struct Rtti
     {
         this.type = type;
         this.dimension = dim;
-        static if (is(T == CallablePtrInfo))
-            infos.callablePtrInfo = t;
+        static if (is(T == FunPtrInfo))
+            infos.funptrInfo = t;
         else static if (is(T == ClassInfo))
             infos.classInfo = t;
         else static if (is(T == EnumInfo))
             infos.enumInfo = t;
-        else static if (is(T == StructPubInfo))
-            infos.structPubInfo = t;
-        else static assert(0, "second argument of Rtti ctor must be a Info");
+        else static if (is(T == StructInfo))
+            infos.structInfo = t;
+        else static assert(0, "third argument of Rtti ctor must be an Info");
     }
 
     /// Constructs a Rtti with a (basic) type.
@@ -191,9 +343,9 @@ struct Rtti
     Infos infos;
 
     /// Returns the information valid when type is equal to RtT._callable.
-    const(CallablePtrInfo)* callablePtrInfo() const
+    const(FunPtrInfo)* funptrInfo() const
     {
-        return &infos.callablePtrInfo;
+        return &infos.funptrInfo;
     }
 
     /// Returns the information valid when type is equal to RtT._object.
@@ -209,9 +361,9 @@ struct Rtti
     }
 
     /// Returns the information valid when type is equal to RtT._struct.
-    const(StructPubInfo)* structInfo() const
+    const(StructInfo)* structInfo() const
     {
-        return &infos.structPubInfo;
+        return &infos.structInfo;
     }
 }
 
@@ -242,7 +394,7 @@ if (B.length < 2)
     static if (staticIndexOf!(Unqual!T, BasicRtTypes) != -1)
     {
         RtType i = RtTypeArr[staticIndexOf!(Unqual!T, BasicRtTypes)];
-        Rtti result = Rtti(i, dim);
+        const Rtti result = Rtti(i, dim);
     }
     else static if (is(T == enum))
     {
@@ -254,8 +406,9 @@ if (B.length < 2)
             {
                 members ~= e;
                 values  ~= __traits(getMember, T, e);
+                static assert(!is(e == enum), err ~ "nested enums are not supported");
             }
-            Rtti result = Rtti(RtType._enum, dim, EnumInfo(T.stringof, members, values));
+            const Rtti result = Rtti(RtType._enum, dim, EnumInfo(T.stringof, members, values, getRtti!(OriginalType!T)));
         }
         else static assert(0, err ~ "only enum whose type is convertible to int are supported");
     }
@@ -267,16 +420,16 @@ if (B.length < 2)
         const(Rtti*)[] pr;
         foreach(Prm; P) pr ~= getRtti!Prm;
 
-        Rtti result = Rtti(RtType._callable, dim, CallablePtrInfo(is(T == delegate),
+        const Rtti result = Rtti(RtType._funptr, dim, FunPtrInfo(is(T == delegate),
             cast(Rtti*)getRtti!R, pr));
     }
     else static if (is(T == class))
     {
         enum ctor = cast(Object function()) defaultConstructor!T;
         auto init = typeid(T).initializer[];
-        Rtti result = Rtti(RtType._object, dim, ClassInfo(T.stringof, ctor, init));
+        const Rtti result = Rtti(RtType._object, dim, ClassInfo(T.stringof, ctor, init));
     }
-    else static if (is(T == struct))
+    else static if (is(T == struct) && __traits(hasMember, T, "publicationFromName"))
     {
         static if (!__traits(hasMember, T, "publicationFromName") ||
             !is(typeof(__traits(getMember, T, "publicationFromName")) ==
@@ -293,13 +446,50 @@ if (B.length < 2)
                 typeof(__traits(getMember, PropertyPublisher, "publicationCount"))))
             static assert(0, "no valid publicationCount member");
 
-        Rtti result = Rtti(RtType._struct, dim, StructPubInfo(T.stringof));
+        const Rtti result = Rtti(RtType._struct, dim, StructInfo(T.stringof, StructType._publisher));
 
-        const(StructPubInfo)* mi = result.structInfo;
-        mi.publicationFromName.funcptr = &__traits(getMember, T, "publicationFromName");
-        mi.publicationFromIndex.funcptr = &__traits(getMember, T, "publicationFromIndex");
-        mi.publicationCount.funcptr = &__traits(getMember, T, "publicationCount");
+        const(StructInfo)* si = result.structInfo;
+        si.pubStructInfo.publicationFromName.funcptr = &__traits(getMember, T, "publicationFromName");
+        si.pubStructInfo.publicationFromIndex.funcptr = &__traits(getMember, T, "publicationFromIndex");
+        si.pubStructInfo.publicationCount.funcptr = &__traits(getMember, T, "publicationCount");
     }
+    else static if (is(T == struct) && __traits(hasMember, T, "saveToBytes"))
+    {
+        static if (!__traits(hasMember, T, "saveToBytes") ||
+            !is(typeof(&__traits(getMember, T, "saveToBytes")) == ubyte[] function()))
+            static assert(0, "no valid saveToBytes member");
+
+        static if (!__traits(hasMember, T, "loadFromBytes") ||
+            !is(typeof(&__traits(getMember, T, "loadFromBytes")) == void function(ubyte[])))
+            static assert(0, "no valid loadFromBytes member");
+
+        const Rtti result = Rtti(RtType._struct, dim, StructInfo(T.stringof, StructType._binary));
+        const(StructInfo)* si = result.structInfo;
+        si.binaryStructInfo.saveToBytes.funcptr = &__traits(getMember, T, "saveToBytes");
+        si.binaryStructInfo.loadFromBytes.funcptr = &__traits(getMember, T, "loadFromBytes");
+
+    }
+    else static if (is(T == struct) && __traits(hasMember, T, "saveToText"))
+    {
+        static if (!__traits(hasMember, T, "saveToText") ||
+            !is(typeof(&__traits(getMember, T, "saveToText")) == const(char)[] function()))
+            static assert(0, "no valid saveToText member");
+
+        static if (!__traits(hasMember, T, "loadFromText") ||
+            !is(typeof(&__traits(getMember, T, "loadFromText")) == void function(const(char)[])))
+            static assert(0, "no valid loadFromText member");
+
+        const Rtti result = Rtti(RtType._struct, dim, StructInfo(T.stringof, StructType._text));
+        const(StructInfo)* si = result.structInfo;
+        si.textStructInfo.saveToText.funcptr = &__traits(getMember, T, "saveToText");
+        si.textStructInfo.loadFromText.funcptr = &__traits(getMember, T, "loadFromText");
+
+    }
+    else static if (is(T == struct))
+    {
+        const Rtti result = Rtti(RtType._struct, dim, StructInfo(T.stringof, StructType._none));
+    }
+
     else static assert(0, err ~ "not handled at all");
 
     _name2meta[TT.stringof] = result;
@@ -309,7 +499,7 @@ if (B.length < 2)
 unittest
 {
     import std.stdio;
-    enum Option {o1 = 2, o2, o3}
+    enum Option: ubyte {o1 = 2, o2, o3}
     Option option1, option2;
     // first call will register
     auto rtti1 = getRtti(option1);
@@ -320,6 +510,7 @@ unittest
     assert(rtti1.enumInfo.identifier == "Option");
     assert(rtti1.enumInfo.members == ["o1", "o2", "o3"]);
     assert(rtti1.enumInfo.values == [2, 3, 4]);
+    assert(rtti1.enumInfo.valueType is getRtti!ubyte);
 }
 
 unittest
@@ -372,19 +563,21 @@ unittest
     }
     Foo foo;
     const(Rtti)* dgi = getRtti(foo.a);
-    assert(dgi.type == RtType._callable);
-    assert(dgi.callablePtrInfo.hasContext);
-    assert(dgi.callablePtrInfo.returnType.type == RtType._uint);
-    assert(dgi.callablePtrInfo.parameters.length == 1);
-    assert(dgi.callablePtrInfo.parameters[0].type == RtType._uint);
+    assert(dgi.type == RtType._funptr);
+    assert(dgi.funptrInfo.hasContext);
+    assert(dgi.funptrInfo.returnType.type == RtType._uint);
+    assert(dgi.funptrInfo.parameters.length == 1);
+    assert(dgi.funptrInfo.parameters[0].type == RtType._uint);
+    assert(dgi.funptrInfo.size == size_t.sizeof * 2);
 
     const(Rtti)* fgi = getRtti(foo.b);
-    assert(fgi.type == RtType._callable);
-    assert(!fgi.callablePtrInfo.hasContext);
-    assert(fgi.callablePtrInfo.returnType.type == RtType._char); // _string
-    assert(fgi.callablePtrInfo.parameters.length == 2);
-    assert(fgi.callablePtrInfo.parameters[0].type == RtType._ulong);
-    assert(fgi.callablePtrInfo.parameters[1].type == RtType._char);
+    assert(fgi.type == RtType._funptr);
+    assert(!fgi.funptrInfo.hasContext);
+    assert(fgi.funptrInfo.returnType.type == RtType._char); // _string
+    assert(fgi.funptrInfo.parameters.length == 2);
+    assert(fgi.funptrInfo.parameters[0].type == RtType._ulong);
+    assert(fgi.funptrInfo.parameters[1].type == RtType._char);
+    assert(fgi.funptrInfo.size == size_t.sizeof);
 }
 
 unittest
@@ -398,16 +591,16 @@ unittest
     Bar bar;
     const(Rtti)* rtti = getRtti(bar);
     assert(rtti.type == RtType._struct);
+    assert(rtti.structInfo.structType == StructType._publisher);
     assert(rtti.structInfo.identifier == "Bar");
-    rtti.structInfo.setContext(cast(void*) &bar);
-    assert(rtti.structInfo.publicationCount == &bar.publicationCount);
-    assert(rtti.structInfo.publicationFromIndex == &bar.publicationFromIndex);
-    assert(rtti.structInfo.publicationFromName == &bar.publicationFromName);
+    rtti.structInfo.pubStructInfo.setContext(cast(void*) &bar);
+    assert(rtti.structInfo.pubStructInfo.publicationCount == &bar.publicationCount);
+    assert(rtti.structInfo.pubStructInfo.publicationFromIndex == &bar.publicationFromIndex);
+    assert(rtti.structInfo.pubStructInfo.publicationFromName == &bar.publicationFromName);
     // coverage
-    assert(rtti.structInfo.publicationCount() == bar.publicationCount);
-    assert(rtti.structInfo.publicationFromIndex(0) == bar.publicationFromIndex(0));
-    assert(rtti.structInfo.publicationFromName("") == bar.publicationFromName(""));
-
+    assert(rtti.structInfo.pubStructInfo.publicationCount() == bar.publicationCount);
+    assert(rtti.structInfo.pubStructInfo.publicationFromIndex(0) == bar.publicationFromIndex(0));
+    assert(rtti.structInfo.pubStructInfo.publicationFromName("") == bar.publicationFromName(""));
 }
 
 unittest
@@ -423,5 +616,45 @@ unittest
     assert(rtti.classInfo.identifier == "Gaz");
     assert(rtti.classInfo.constructor == &Gaz.__ctor);
     assert(rtti.classInfo.initialLayout == typeid(Gaz).init);
+}
+
+unittest
+{
+    struct Hop
+    {
+        const(char)[] saveToText(){return "hop";}
+        void loadFromText(const(char)[] value){}
+    }
+    Hop hop;
+    const(Rtti)* rtti = getRtti(hop);
+    assert(rtti.type == RtType._struct);
+    assert(rtti.structInfo.structType == StructType._text);
+    assert(rtti.structInfo.identifier == "Hop");
+    rtti.structInfo.textStructInfo.setContext(cast(void*) &hop);
+    assert(rtti.structInfo.textStructInfo.saveToText == &hop.saveToText);
+    assert(rtti.structInfo.textStructInfo.loadFromText == &hop.loadFromText);
+    // coverage
+    assert(rtti.structInfo.textStructInfo.saveToText() == "hop");
+    rtti.structInfo.textStructInfo.loadFromText("hop");
+}
+
+unittest
+{
+    struct Boo
+    {
+        ubyte[] saveToBytes(){return [0x0];}
+        void loadFromBytes(ubyte[] value){}
+    }
+    Boo boo;
+    const(Rtti)* rtti = getRtti(boo);
+    assert(rtti.type == RtType._struct);
+    assert(rtti.structInfo.structType == StructType._binary);
+    assert(rtti.structInfo.identifier == "Boo");
+    rtti.structInfo.binaryStructInfo.setContext(cast(void*) &boo);
+    assert(rtti.structInfo.binaryStructInfo.saveToBytes == &boo.saveToBytes);
+    assert(rtti.structInfo.binaryStructInfo.loadFromBytes == &boo.loadFromBytes);
+    // coverage
+    assert(rtti.structInfo.binaryStructInfo.saveToBytes() == [0x0]);
+    rtti.structInfo.binaryStructInfo.loadFromBytes([0x0]);
 }
 
