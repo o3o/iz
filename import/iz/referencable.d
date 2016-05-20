@@ -31,7 +31,6 @@ private alias itemsById = void*[char[]];
  */
 private alias refStore = itemsById[string];
 
-
 /**
  * The Referencable manager associates variables of a particular type to
  * an unique identifier.
@@ -269,8 +268,19 @@ public:
         if (!isTypeStored!RT) return "";
         foreach (k; fStore[RT.stringof].keys)
         {
-            if (fStore[RT.stringof][k] == aReference)
-                return k;
+            static if (!is(RT == delegate))
+            {
+                if (fStore[RT.stringof][k] == aReference)
+                    return k;
+            }
+            else
+            {
+                struct Dg {void* a,b;}
+                auto stored = *cast(Dg*) fStore[RT.stringof][k];
+                auto passed = *cast(Dg*) aReference;
+                if (stored.a == passed.a && stored.b == passed.b)
+                    return k;
+            }
         }
         return "";
     }
@@ -304,8 +314,10 @@ public:
     {
         if (anID == "") return null;
         if (!isTypeStored!RT) return null;
-        if (fStore[RT.stringof].get(anID, null) == null) return null;
-        return cast(RT*) fStore[RT.stringof].get(anID, null);
+        if (void** result = anID in fStore[RT.stringof])
+            return *cast(RT**) result;
+        else
+            return null;
     }
 
     static RT reference(RT)(in char[] anID)
@@ -313,8 +325,10 @@ public:
     {
         if (anID == "") return null;
         if (!isTypeStored!RT) return null;
-        void* result = fStore[RT.stringof].get(anID, null);
-        return (result == null) ? null : cast(RT) result;
+        if (void* result = anID in fStore[RT.stringof])
+            return *cast(RT*) result;
+        else
+            return null;
     }
 
     /**
@@ -382,7 +396,7 @@ unittest
     assert( ReferenceMan.referenceID(f1) == "a.f1");
     assert( ReferenceMan.referenceID(f2) == "a.f2");
     assert( ReferenceMan.referenceID(f3) == "a.f3");
-    //
+
     assert( ReferenceMan.isReferenced(f1) );
     assert( ReferenceMan.isReferenced(f2) );
     assert( ReferenceMan.isReferenced(f3) );
@@ -415,19 +429,20 @@ unittest
 {
     struct Foo
     {
-        this(bool)
-        {
-            adg = &a;
-        }
+        this(bool){adg = &a;}
         void a(){}
         void delegate() adg;
     }
     Foo foo = Foo(false);
     Foo bar = Foo(false);
+    auto dg1 = foo.adg;
     ReferenceMan.storeReference(&foo.adg, "foo.adg");
     assert(ReferenceMan.isReferenced(&foo.adg));
     assert(ReferenceMan.referenceID(&foo.adg) == "foo.adg");
+    assert(ReferenceMan.reference!(typeof(dg1))("foo.adg") );
+    assert(*ReferenceMan.reference!(typeof(dg1))("foo.adg") == foo.adg);
     assert(!ReferenceMan.isReferenced(&bar.adg));
     assert(ReferenceMan.referenceID(&bar.adg) == "");
+    assert( ReferenceMan.referenceID(&dg1) == "foo.adg");
 }
 

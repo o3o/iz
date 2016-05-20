@@ -434,12 +434,11 @@ void nodeInfo2Declarator(const SerNodeInfo* nodeInfo)
             break;
         case _funptr:
             char[] refId = cast(char[]) nodeInfo.value[];
-            void* refvoid = ReferenceMan.reference!(void)(refId);
             void setFromRef(T)()
             {
-                auto stuff = *cast(T*) refvoid;
+                T funordg = *ReferenceMan.reference!(T)(refId);
                 auto descr = cast(PropDescriptor!T*) nodeInfo.descriptor;
-                descr.set(stuff);
+                descr.set(funordg);
             }
             if (nodeInfo.rtti.funptrInfo.hasContext)
                 setFromRef!GenericDelegate;
@@ -518,7 +517,7 @@ void setNodeInfo(T)(SerNodeInfo* nodeInfo, PropDescriptor!T* descriptor)
         //nodeInfo.value = cast(ubyte[]) descriptor.referenceID;
         auto dg = descriptor.get;
         auto id = ReferenceMan.referenceID(&dg);
-        //assert(id.length, to!string(id != ""));
+        assert(id.length, to!string(id != ""));
         nodeInfo.value = cast(ubyte[]) id;
     }
 }
@@ -685,10 +684,8 @@ private void readText(Stream stream, IstNode istNode)
     identifier = nextWord(propText, isLevelIndicator);
     istNode.info.level = cast(uint) identifier.length;
     // type
-    import std.stdio;
     identifier = nextWord(propText);
     identifier = replace(identifier, "-", " ");
-    //writeln(identifier);
     istNode.info.rtti = getRtti(identifier);
     assert(istNode.info.rtti, identifier);
     // name
@@ -810,8 +807,6 @@ private void readBin(Stream stream, IstNode istNode)
         data[4] == RtType._funptr || data[4] == RtType._object)
     {
         offs = *cast(uint*) (data.ptr + 5);
-        //import std.stdio;
-        //writeln(offs);
         tstr = cast(string) data[9 .. 9 + offs].idup;
         offs += 4;
     }
@@ -1793,8 +1788,6 @@ version(unittest)
         str.clear;
         usrr.fRef = ref1;
         ser.publisherToStream(usrr, str, format);
-
-        writeln(cast(string)str.ubytes);
         //
         usrr.fRef = ref2;
         assert(usrr.fRef == ref2);
@@ -2003,7 +1996,7 @@ version(unittest)
         @SetGet byte _b = 21;
         @SetGet byte _c = 31;
         @SetGet dchar[] _t = "line1\"inside dq\"\nline2\nline3"d.dup;
-        //@SetGet void delegate(uint) _delegate;
+        @SetGet void delegate(uint) _delegate;
         MemoryStream _stream;
 
         @SetGet RefPublisher _refPublisher; //initially null, so it's a ref.
@@ -2022,31 +2015,30 @@ version(unittest)
             _stream.writeUbyte(0XFA);
             _stream.writeUbyte(0XF0);
 
-            import std.stdio;
-            //writeln(getRtti(_delegate).funptrInfo.identifier);
-
             // collect publications before ref are assigned
             collectPublications!MainPublisher;
 
             _delegateSource = &delegatetarget;
-            //_delegate = _delegateSource;
+            _delegate = _delegateSource;
             _refPublisher = _refPublisherSource; // e.g assingation during runtime
 
             assert(_refPublisher.declarator !is this);
             assert(_refPublisher.declarator is null);
 
-            //auto dDescr = publication!GenericDelegate("delegate", false);
-            //assert(dDescr);
+            auto dDescr = publication!GenericDelegate("delegate", false);
+            assert(dDescr);
 
             auto strDesc = publicationFromName("stream");
             assert(strDesc);
 
             ReferenceMan.storeReference(_refPublisherSource,
                 "root.refPublisher");
-            ReferenceMan.storeReference(&_delegateSource,
-                "mainpub.at.delegatetarget");
-            //dDescr.referenceID = "mainpub.at.delegatetarget";
+            ReferenceMan.storeReference!GenericDelegate(
+                cast(GenericDelegate*) &_delegateSource,
+                "root.delegate");
 
+            assert(*ReferenceMan.reference!GenericDelegate("root.delegate") ==
+                cast(GenericDelegate)_delegateSource);
         }
         ~this()
         {
@@ -2062,7 +2054,7 @@ version(unittest)
             _subPublisher.destruct;
             _subPublisher = null; // wont be found anymore during deser.
             _anotherSubPubliser._someChars = "".dup;
-            //_delegate = null;
+            _delegate = null;
             _refPublisher = null;
             _stream.size = 0;
         }
@@ -2099,11 +2091,11 @@ version(unittest)
         ser.onWantObject = &objectNotFound;
         ser.publisherToStream(c, str/*, SerializationFormat.izbin*/);
         str.saveToFile(r"test.txt");
-
+        //
         c.reset;
         str.position = 0;
         ser.streamToPublisher(str, c/*, SerializationFormat.izbin*/);
-
+        //
         assert(c._a == 12);
         assert(c._b == 21);
         assert(c._c == 31);
@@ -2111,9 +2103,12 @@ version(unittest)
         assert(c._t == "line1\"inside dq\"\nline2\nline3");
         assert(c._refPublisher == c._refPublisherSource);
         assert(c._anotherSubPubliser._someChars == "awhyes");
-        //assert(c._delegate);
-        //c._delegate(123);
-        //assert(c.dgTest == "awyesss");
+        assert(c._delegate);
+        assert(c._delegate.funcptr == c._delegateSource.funcptr);
+        assert(c._delegate.ptr == c._delegateSource.ptr);
+
+        c._delegate(123);
+        assert(c.dgTest == "awyesss");
 
         assert(c._stream.readUbyte == 0xFE);
         assert(c._stream.readUbyte == 0xFD);

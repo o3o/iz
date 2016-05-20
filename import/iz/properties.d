@@ -55,8 +55,6 @@ struct PropDescriptor(T)
         Object _declarator;
         const(Rtti)* _rtti;
 
-        string _referenceID;
-
         T* _setPtr;
         T* _getPtr;
 
@@ -311,17 +309,6 @@ struct PropDescriptor(T)
          */
         @property const(Rtti*) rtti(){return _rtti;}
 
-        version(none)
-        {
-            /**
-             * Defines the reference that matches the property value.
-             * This is only used as a helper when the property value is
-             * a fat pointer (e.g a delegate) and to serialiaze.
-             */
-            @property string referenceID(){return _referenceID;}
-            /// ditto
-            @property referenceID(string value){_referenceID = value;}
-        }
 // ----        
 
     }
