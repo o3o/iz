@@ -605,9 +605,6 @@ mixin template PropertyPublisherImpl()
     protected GenericDescriptor* publicationFromIndex(size_t index)
     {return cast(GenericDescriptor*) _publishedDescriptors[index];}
 
-    import iz.types: RuntimeTypeInfo;
-
-
 // templates: no problem with overrides, instantiated according to class This or That
 
     /**
@@ -710,7 +707,7 @@ mixin template PropertyPublisherImpl()
      */
     protected void collectPublicationsFromPairs(T)()
     {
-        import iz.types: ScopedReachability, runtimeTypeInfo;
+        import iz.types: ScopedReachability;
         import iz.rtti: Rtti, getRtti;
         import std.traits: isCallable, Parameters, ReturnType;
         import std.meta: AliasSeq, staticIndexOf;
