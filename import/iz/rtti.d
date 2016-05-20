@@ -8,11 +8,12 @@ module iz.rtti;
 import
     std.format, std.traits, std.meta;
 import
-    iz.types, iz.properties, iz.enumset;
+    iz.types, iz.properties, iz.enumset, iz.streams;
 
 private __gshared string[ushort] _index2name;
 private __gshared ushort[string] _name2index;
 private __gshared Rtti[string] _name2rtti;
+private __gshared string[const(Rtti)*] _rtti2name;
 
 /**
  * Enumerates the type constructors
@@ -37,8 +38,10 @@ enum RtType: ubyte
     _bool, _byte, _ubyte, _short, _ushort, _int, _uint, _long, _ulong,
     _float, _double, _real,
     _char, _wchar, _dchar, /*_string, _wstring, _dstring,*/
-    _object, _struct, _enum,
+    _object, _struct,
+    _enum,
     _funptr,
+    _stream
 }
 
 /**
@@ -59,8 +62,10 @@ private static immutable RtTypeArr =
     RtType._int, RtType._uint, RtType._long, RtType._ulong,
     RtType._float, RtType._double, RtType._real,
     RtType._char, RtType._wchar, RtType._dchar, /*RtType._string, RtType._wstring, RtType._dstring,*/
-    RtType._object, RtType._struct, RtType._enum,
+    RtType._object, RtType._struct,
+    RtType._enum,
     RtType._funptr,
+    RtType._stream
 ];
 
 private struct GenericStruct{}
@@ -73,25 +78,16 @@ private alias GenericRtTypes = AliasSeq!(
     float, double, real,
     char, wchar, dchar, /*string, wstring, dstring*/
     Object, GenericStruct, GenericEnum,
-    GenericFunPtr
+    GenericFunPtr,
+    Stream
 );
 
-private alias BasicRtTypes = AliasSeq!(
+alias BasicRtTypes = AliasSeq!(
     void,
     bool, byte, ubyte, short, ushort, int, uint, long, ulong,
     float, double, real,
     char, wchar, dchar/*, string, wstring, dstring*/
 );
-
-static this()
-{
-    foreach(i, T; BasicRtTypes)
-    {
-        const rtti = getRtti!T;
-        _index2name[i] = T.stringof;
-        _name2index[T.stringof] = i;
-    }
-}
 
 /**
  * Indicates the size of a variable according to its RtType
@@ -102,13 +98,14 @@ static this()
  */
 ubyte size(RtType type)
 {
-    with(RtType) switch (type)
+    with(RtType) final switch (type)
     {
         case _bool: case _byte: case _ubyte: case _char: return 1;
         case _short: case _ushort: case _wchar: return 2;
-        case _int: case _uint: case _dchar: case _float: return 4;
+        case _int: case _uint: case _dchar: case _float: case _enum: return 4;
         case _long: case _ulong: case _double: return 8;
-        default: return 0;
+        case _real: return real.sizeof;
+        case _invalid: case _object: case _struct: case _funptr: case _stream: return 0;
     }
 }
 ///
@@ -126,6 +123,45 @@ unittest
     assert(lo.getRtti.type.size == 8);
 }
 
+string typeString(T)(T t)
+{
+    static if (is(T == RtType))
+    {
+        with(RtType) final switch (t)
+        {
+            case _invalid:  return "invalid";
+            case _bool:     return "bool";
+            case _byte:     return "byte";
+            case _ubyte:    return "ubyte";
+            case _short:    return "short";
+            case _ushort:   return "ushort";
+            case _int:      return "int";
+            case _uint:     return "uint";
+            case _long:     return "long";
+            case _ulong:    return "ulong";
+            case _float:    return "float";
+            case _double:   return "double";
+            case _real:     return "real";
+            case _char:     return "char";
+            case _wchar:    return "wchar";
+            case _dchar:    return "dchar";
+            case _object:   return "Object";
+            case _struct:   return "struct";
+            case _enum:     return "enum";
+            case _funptr:   return "funptr";
+            case _stream:   return "Stream";
+        }
+    }
+    else static if (is(T == const(Rtti)*))
+    {
+        if (auto s = t in _rtti2name)
+            return *s;
+        else
+            return "";
+    }
+    else static assert(0);
+}
+
 private mixin template setContext()
 {
     void setContext(void* context) const
@@ -141,6 +177,8 @@ private mixin template setContext()
  */
 struct FunPtrInfo
 {
+    /// Indicates the function type identifier.
+    string identifier;
     /// If hasContext then it's a delegate, otherwise a pointer to a function.
     bool hasContext;
     /// Indicates the return type.
@@ -298,12 +336,22 @@ struct StructInfo
     }
 }
 
+/**
+ * Runtime information for anything that's registered in the "refman"
+ */
+struct ReferencedInfo
+{
+    /// the type of the reference
+    string identifier;
+}
+
 private union Infos
 {
     FunPtrInfo funptrInfo;
     ClassInfo classInfo;
     EnumInfo enumInfo;
     StructInfo structInfo;
+    ReferencedInfo referencedInfo;
 }
 
 /**
@@ -451,14 +499,18 @@ if (B.length < 2)
         const(Rtti*)[] pr;
         foreach(Prm; P)
             pr ~= getRtti!Prm;
-        const Rtti result = Rtti(RtType._funptr, dim, typeCtors, FunPtrInfo(is(T == delegate),
-            cast(Rtti*)getRtti!R, pr));
+        const Rtti result = Rtti(RtType._funptr, dim, typeCtors, FunPtrInfo(T.stringof,
+            is(T == delegate), cast(Rtti*)getRtti!R, pr));
     }
-    else static if (is(T == class))
+    else static if (is(T == class) || is(T==Stream))
     {
-        enum ctor = cast(Object function()) defaultConstructor!T;
+        static if(!is(T==Stream))
+            enum ctor = cast(Object function()) defaultConstructor!T;
+        else
+            enum ctor = cast(Object function()) null;
         auto init = typeid(T).initializer[];
-        const Rtti result = Rtti(RtType._object, dim, typeCtors, ClassInfo(T.stringof, ctor, init));
+        const RtType tp = is(T:Stream) ? RtType._stream : RtType._object;
+        const Rtti result = Rtti(tp, dim, typeCtors, ClassInfo(T.stringof, ctor, init));
     }
     else static if (is(T == struct) && __traits(hasMember, T, "publicationFromName"))
     {
@@ -526,7 +578,9 @@ if (B.length < 2)
     }
 
     _name2rtti[TT.stringof] = result;
-    return TT.stringof in _name2rtti;
+    auto res = TT.stringof in _name2rtti;
+    _rtti2name[res] = TT.stringof;
+    return res;
 }
 ///
 unittest
@@ -620,8 +674,8 @@ unittest
     static struct Bar
     {
         size_t publicationCount(){return 0;}
-        GenericDescriptor* publicationFromName(string name){return null;}
-        GenericDescriptor* publicationFromIndex(size_t index){return null;}
+        GenericDescriptor* publicationFromName(string){return null;}
+        GenericDescriptor* publicationFromIndex(size_t){return null;}
     }
     Bar bar;
     const(Rtti)* rtti = getRtti(bar);
@@ -725,5 +779,11 @@ unittest
 unittest
 {
     assert(getRtti!(const(int)) !is getRtti!(int));
+}
+
+unittest
+{
+    MemoryStream str;
+    assert(getRtti(str).type == RtType._stream);
 }
 
