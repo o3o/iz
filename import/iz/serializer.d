@@ -84,7 +84,7 @@ public:
      */
     void storeReference(RT)(ref RT reference)
     {
-        _tp = (iz.referencable.typeString!RT).dup;
+        _tp = RT.stringof.dup;
         _id = ReferenceMan.referenceID!RT(reference).dup;
     }
 
@@ -1205,14 +1205,15 @@ public:
 
                             if (fromRef || !o)
                             {
-                                //TODO-cserializer: find ref from rtti.classInfo.identifier
-                                Object po = ReferenceMan.reference!(Object)(childNode.identifiersChain);
+                                void* po = ReferenceMan.reference(
+                                    childNode.info.rtti.classInfo.identifier,
+                                    childNode.identifiersChain
+                                );
                                 if (po)
                                 {
-                                    t2.set(po);
+                                    t2.set(cast(Object) po);
                                     done = true;
                                 }
-                                else writeln("not set");
                             }
                             else
                             {
@@ -2040,8 +2041,7 @@ version(unittest)
             auto strDesc = publicationFromName("stream");
             assert(strDesc);
 
-            //TODO-cserializer: if ref found from rtti.classInfo.identifier no need to cast to Object
-            ReferenceMan.storeReference!Object(cast(Object) _refPublisherSource,
+            ReferenceMan.storeReference(_refPublisherSource,
                 "root.refPublisher");
             ReferenceMan.storeReference(&_delegateSource,
                 "mainpub.at.delegatetarget");
