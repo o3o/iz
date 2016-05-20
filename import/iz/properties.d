@@ -735,7 +735,7 @@ mixin template PropertyPublisherImpl()
                 version(assert) if (descriptor.setter) assert (
                     // note: rtti unqalifies the type
                     ti is descriptor.rtti,
-                    "setter and getter types mismatch");
+                    "setter and getter type mismatch for " ~ descriptor.name);
                 descriptor.define(descriptor.setter, dg, member);
                 //
                 static if (is(T : Object)) descriptor.declarator = cast(Object)this;
@@ -1462,13 +1462,13 @@ unittest
     assert(target._sub._b == source._sub._b);
     assert(target._sub._c == source._sub._c);
     target.str.position = 0;
-    //assert(target.str.readInt == 1);
-    //assert(target.str.readInt == 2);
-    //assert(target.str.readInt == 3);
+    assert(target.str.readInt == 1);
+    assert(target.str.readInt == 2);
+    assert(target.str.readInt == 3);
     target._sub.str.position = 0;
-    //assert(target._sub.str.readInt == 1);
-    //assert(target._sub.str.readInt == 2);
-    //assert(target._sub.str.readInt == 3);
+    assert(target._sub.str.readInt == 1);
+    assert(target._sub.str.readInt == 2);
+    assert(target._sub.str.readInt == 3);
 }
 
 /**

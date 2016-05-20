@@ -4,7 +4,7 @@
 module iz.serializer;
 
 import
-    std.range, std.typetuple, std.conv, std.traits;
+    std.range, std.typetuple, std.conv, std.traits, std.stdio;
 import
     iz.memory, iz.containers, iz.strings, iz.rtti;
 
@@ -115,21 +115,6 @@ public:
     }
 }
 
-/**
- * Enumerates the types automatically handled by a Serializer.
- */
-enum SerializableType
-{
-    // must match iz.types.RuntimeType
-    _invalid= 0,
-    _bool   = 0x01, _byte, _ubyte, _short, _ushort, _int, _uint, _long, _ulong,
-    _float  = 0x10, _double,
-    _char   = 0x20, _wchar, _dchar, _string, _wstring,
-    _object = 0x30,
-    _stream = 0x38,
-    _delegate = 0x50, _function
-}
-
 private struct InvalidSerType{}
 
 // must match iz.types.RuntimeType
@@ -142,25 +127,6 @@ private alias SerializableTypes = AliasSeq!(
     Stream,
     GenericDelegate, GenericFunction,
 );
-
-private static immutable string[SerializableType] type2text;
-private static immutable SerializableType[string] text2type;
-private static immutable size_t[SerializableType] type2size;
-
-static this()
-{
-    foreach(i, t; EnumMembers!SerializableType)
-    {
-        type2text[t] = SerializableTypes[i].stringof;
-        text2type[SerializableTypes[i].stringof] = t;
-        type2size[t] = SerializableTypes[i].sizeof;
-    }
-    // the txt format doesnt support a type representation with spaces.
-    type2text[SerializableType._delegate] = "GenericDelegate";
-    text2type["GenericDelegate"] = SerializableType._delegate;
-    type2text[SerializableType._function] = "GenericFunction";
-    text2type["GenericFunction"] = SerializableType._function;
-}
 
 package bool isSerObjectType(T)()
 {
@@ -178,6 +144,7 @@ package bool isSerSimpleType(T)()
 {
     static if (isArray!T && !isNarrowString!T) return false;
     else static if (is(T : GenericDelegate)) return false;
+    else static if (is(T : GenericEnum)) return false;
     else static if (isSerObjectType!T) return false;
     else static if (staticIndexOf!(T, SerializableTypes) == -1) return false;
     else static if (is(T : Stream)) return false;
@@ -400,7 +367,7 @@ char[] value2text(const SerNodeInfo* nodeInfo)
         case _char:     return v2t!char;
         case _wchar:    return v2t!wchar;
         case _dchar:    return v2t!dchar;
-        case _enum:     return v2t!int;
+        case _enum:     return v2t_2!char;
         case _object:   return cast(char[])(nodeInfo.value);
         case _stream:   return to!(char[])(nodeInfo.value[]);
         case _struct:   assert(0, "todo");
@@ -413,14 +380,14 @@ ubyte[] text2value(char[] text, const SerNodeInfo* nodeInfo)
 {
     ubyte[] t2v_1(T)()
     {
-        auto res = new ubyte[](nodeInfo.rtti.type.size);
+        auto res = new ubyte[](T.sizeof);
         *cast(T*) res.ptr = to!T(text);
         return res;
     }
     ubyte[] t2v_2(T)()
     {
         auto v = to!(T[])(text);
-        auto res = new ubyte[](v.length * nodeInfo.rtti.type.size);
+        auto res = new ubyte[](v.length * T.sizeof);
         moveMem(res.ptr, v.ptr, res.length);
         return res;
     }
@@ -446,7 +413,7 @@ ubyte[] text2value(char[] text, const SerNodeInfo* nodeInfo)
         case _char:     return t2v!char;
         case _wchar:    return t2v_2!wchar;
         case _dchar:    return t2v!dchar;
-        case _enum:     return t2v!int;
+        case _enum:     return cast(ubyte[]) text;
         case _object:   return cast(ubyte[]) text;
         case _stream:   return t2v_2!ubyte;
         case _struct:   assert(0, "todo");
@@ -490,7 +457,13 @@ void nodeInfo2Declarator(const SerNodeInfo* nodeInfo)
         case _char:     toDecl!char; break;
         case _wchar:    toDecl!wchar; break;
         case _dchar:    toDecl!dchar; break;
-        case _enum:     toDecl!int; break;
+        case _enum:
+            import std.algorithm.searching;
+            int i = cast(int) countUntil(nodeInfo.rtti.enumInfo.members, cast(string) nodeInfo.value);
+            assert(i > -1);
+            auto descr = cast(PropDescriptor!int *) nodeInfo.descriptor;
+            descr.set(nodeInfo.rtti.enumInfo.values[i]);
+            break;
         case _object:   break;
         case _struct:   break;
         case _stream:
@@ -542,6 +515,20 @@ void setNodeInfo(T)(SerNodeInfo* nodeInfo, PropDescriptor!T* descriptor)
         nodeInfo.value.length = value.length * nodeInfo.rtti.type.size;
         moveMem(nodeInfo.value.ptr, cast(void*) value.ptr, nodeInfo.value.length);
         return;
+    }
+
+    // enums
+    else static if (is(T == GenericEnum))
+    {
+        int v = cast(int) descriptor.get();
+        writeln(v);
+        import std.algorithm.searching;
+        int i = cast(int) countUntil(nodeInfo.rtti.enumInfo.values, v);
+        assert(i > -1);
+        string value = nodeInfo.rtti.enumInfo.members[i];
+        writeln(value, " ", i);
+        nodeInfo.value.length = value.length;
+        moveMem(nodeInfo.value.ptr, cast(void*) value.ptr, nodeInfo.value.length);
     }
 
     // Serializable or Object
@@ -684,7 +671,7 @@ private void writeText(IstNode istNode, Stream stream)
     stream.write(name_value.ptr, name_value.length);
     // value
     char[] value = value2text(istNode.info);
-    with (SerializableType) if (istNode.info.rtti.type >= _char &&
+    with (RtType) if (istNode.info.rtti.type >= _char &&
         istNode.info.rtti.type <= _dchar && istNode.info.rtti.dimension > 0)
     {
         value = escape(value, [['\n','n'],['"','"']]);
@@ -736,7 +723,7 @@ private void readText(Stream stream, IstNode istNode)
     import std.stdio;
     identifier = nextWord(propText);
     identifier = replace(identifier, "-", " ");
-    writeln(identifier);
+    //writeln(identifier);
     istNode.info.rtti = getRtti(identifier);
     assert(istNode.info.rtti, identifier);
     // name
@@ -1104,7 +1091,7 @@ private:
                 case _char:   addValueProp!char; break;
                 case _wchar:  addValueProp!wchar; break;
                 case _dchar:  addValueProp!dchar; break;
-                case _enum:   addValueProp!int; break;
+                case _enum:   addValueProp!GenericEnum; break;
                 //case _string: addValueProp!string; break;
                 //case _wstring:addValueProp!wstring; break;
                 case _object:
@@ -1497,7 +1484,7 @@ public:
 
 }
 ///
-version (none) unittest
+unittest
 {
     // defines two serializable classes
     class B: PropertyPublisher
@@ -1597,6 +1584,8 @@ void fileToPublisher(in char[] filename, Object pub,
 
 version(unittest)
 {
+    import std.stdio;
+
     unittest
     {
         char[] text;
@@ -1655,11 +1644,11 @@ version(unittest)
 
     unittest
     {
-        //foreach(fmt;EnumMembers!SerializationFormat)
-          //  testByFormat!fmt();
-        testByFormat!(SerializationFormat.iztxt)();
-        testByFormat!(SerializationFormat.izbin)();
-        testByFormat!(SerializationFormat.json)();
+        foreach(fmt;EnumMembers!SerializationFormat)
+            testByFormat!fmt();
+        //testByFormat!(SerializationFormat.iztxt)();
+        //testByFormat!(SerializationFormat.izbin)();
+        //testByFormat!(SerializationFormat.json)();
     }
     
     class Referenced1 {}
@@ -2015,7 +2004,7 @@ version(unittest)
 
     // test the RuntimeTypeInfo-based serialization ----+
 
-    enum E:short {e0 = -1, e1 = 1}
+    enum E:int {e0 = -1, e1 = 1}
     class SubPublisher: PropertyPublisher
     {
         // fully serialized (initializer is MainPub)
@@ -2046,7 +2035,7 @@ version(unittest)
         @SetGet ubyte _a = 12;
         @SetGet byte _b = 21;
         @SetGet byte _c = 31;
-        @SetGet dchar[] _t;// = "line1\"inside dq\"\nline2\nline3"d.dup;
+        @SetGet dchar[] _t = "line1\"inside dq\"\nline2\nline3"d.dup;
         @SetGet void delegate(uint) _delegate;
         MemoryStream _stream;
 
@@ -2067,7 +2056,7 @@ version(unittest)
             _stream.writeUbyte(0XF0);
 
             import std.stdio;
-            writeln(getRtti(_delegate).funptrInfo.identifier);
+            //writeln(getRtti(_delegate).funptrInfo.identifier);
 
             // collect publications before ref are assigned
             collectPublications!MainPublisher;
@@ -2118,8 +2107,7 @@ version(unittest)
             str.position = 0;
             _stream.loadFromStream(str);
             _stream.position = 0;
-            import std.stdio;
-            writeln(_stream.ubytes);
+            assert(str.size > 0);
         }
     }
 
@@ -2152,18 +2140,19 @@ version(unittest)
         assert(c._b == 21);
         assert(c._c == 31);
         assert(c._e == E.e0);
-        //assert(c._t == "line1\"inside dq\"\nline2\nline3");
+        assert(c._t == "line1\"inside dq\"\nline2\nline3");
         assert(c._refPublisher is c._refPublisherSource);
         assert(c._anotherSubPubliser._someChars == "awhyes");
         assert(c._delegate);
         c._delegate(123);
         assert(c.dgTest == "awyesss");
-        //assert(c._stream.readUbyte == 0xFE);
-        //assert(c._stream.readUbyte == 0xFD);
-        //assert(c._stream.readUbyte == 0xFC);
-        //assert(c._stream.readUbyte == 0xFB);
-        //assert(c._stream.readUbyte == 0xFA);
-        //assert(c._stream.readUbyte == 0xF0);
+
+        assert(c._stream.readUbyte == 0xFE);
+        assert(c._stream.readUbyte == 0xFD);
+        assert(c._stream.readUbyte == 0xFC);
+        assert(c._stream.readUbyte == 0xFB);
+        assert(c._stream.readUbyte == 0xFA);
+        assert(c._stream.readUbyte == 0xF0);
     }
     //----
 

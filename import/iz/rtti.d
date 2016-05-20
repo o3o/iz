@@ -68,9 +68,9 @@ private static immutable RtTypeArr =
     RtType._stream
 ];
 
-private struct GenericStruct{}
-private struct GenericEnum{}
-private struct GenericFunPtr{}
+package struct GenericStruct{}
+package struct GenericEnum{int value; alias value this;}
+package struct GenericFunPtr{}
 
 private alias GenericRtTypes = AliasSeq!(
     void,
@@ -100,12 +100,18 @@ ubyte size(RtType type)
 {
     with(RtType) final switch (type)
     {
-        case _bool: case _byte: case _ubyte: case _char: return 1;
-        case _short: case _ushort: case _wchar: return 2;
-        case _int: case _uint: case _dchar: case _float: case _enum: return 4;
-        case _long: case _ulong: case _double: return 8;
-        case _real: return real.sizeof;
-        case _invalid: case _object: case _struct: case _funptr: case _stream: return 0;
+        case _invalid, _object, _struct, _funptr, _stream, _enum:
+            return 0;
+        case _bool, _byte, _ubyte, _char:
+            return 1;
+        case _short, _ushort, _wchar:
+            return 2;
+        case _int, _uint, _dchar, _float:
+            return 4;
+        case _long, _ulong, _double:
+            return 8;
+        case _real:
+            return real.sizeof;
     }
 }
 ///
@@ -509,7 +515,7 @@ if (B.length < 2)
         else
             enum ctor = cast(Object function()) null;
         auto init = typeid(T).initializer[];
-        const RtType tp = is(T:Stream) ? RtType._stream : RtType._object;
+        const RtType tp = (is(T:Stream) | is(T==Stream)) ? RtType._stream : RtType._object;
         const Rtti result = Rtti(tp, dim, typeCtors, ClassInfo(T.stringof, ctor, init));
     }
     else static if (is(T == struct) && __traits(hasMember, T, "publicationFromName"))
