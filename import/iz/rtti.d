@@ -61,7 +61,7 @@ private static immutable RtTypeArr =
     RtType._bool, RtType._byte, RtType._ubyte, RtType._short, RtType._ushort,
     RtType._int, RtType._uint, RtType._long, RtType._ulong,
     RtType._float, RtType._double, RtType._real,
-    RtType._char, RtType._wchar, RtType._dchar, /*RtType._string, RtType._wstring, RtType._dstring,*/
+    RtType._char, RtType._wchar, RtType._dchar,
     RtType._object, RtType._struct,
     RtType._enum,
     RtType._funptr,
@@ -72,22 +72,31 @@ package struct GenericStruct{}
 package struct GenericEnum{int value; alias value this;}
 package struct GenericFunPtr{}
 
-private alias GenericRtTypes = AliasSeq!(
+package alias GenericRtTypes = AliasSeq!(
     void,
     bool, byte, ubyte, short, ushort, int, uint, long, ulong,
     float, double, real,
-    char, wchar, dchar, /*string, wstring, dstring*/
+    char, wchar, dchar,
     Object, GenericStruct, GenericEnum,
     GenericFunPtr,
     Stream
 );
 
-alias BasicRtTypes = AliasSeq!(
+package alias BasicRtTypes = AliasSeq!(
     void,
     bool, byte, ubyte, short, ushort, int, uint, long, ulong,
     float, double, real,
-    char, wchar, dchar/*, string, wstring, dstring*/
+    char, wchar, dchar
 );
+
+/**
+ * Indicates if `T` is a basic runtime type (fixed length, not array, no type identifier)
+ */
+template isBasicRtType(T)
+{
+    enum i = staticIndexOf!(T, GenericRtTypes);
+    enum isBasicRtType = i > 0 && i <= staticIndexOf!(dchar, GenericRtTypes);
+}
 
 /**
  * Indicates the size of a variable according to its RtType

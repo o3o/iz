@@ -82,7 +82,7 @@ public:
      *
      * Usually called before the serialization.
      */
-    void storeReference(RT)(RT* reference)
+    void storeReference(RT)(ref RT reference)
     {
         _tp = (iz.referencable.typeString!RT).dup;
         _id = ReferenceMan.referenceID!RT(reference).dup;
@@ -94,7 +94,7 @@ public:
      * Usually called after the deserialization of after the
      * the reference owner is notified by onRestored().
      */
-    RT* restoreReference(RT)()
+    auto restoreReference(RT)()
     {
         return ReferenceMan.reference!RT(_id);
     }
@@ -115,19 +115,6 @@ public:
     }
 }
 
-private struct InvalidSerType{}
-
-// must match iz.types.RuntimeType
-private alias SerializableTypes = AliasSeq!(
-    InvalidSerType, 
-    bool, byte, ubyte, short, ushort, int, uint, long, ulong,
-    float, double,
-    char, wchar, dchar, string, wstring,
-    Object,
-    Stream,
-    GenericDelegate, GenericFunction,
-);
-
 package bool isSerObjectType(T)()
 {
     static if (is(T : Stream)) return false;
@@ -140,17 +127,6 @@ package bool isSerObjectType(RtType type)
     with(RtType) return type == _object;
 }
 
-package bool isSerSimpleType(T)()
-{
-    static if (isArray!T && !isNarrowString!T) return false;
-    else static if (is(T : GenericDelegate)) return false;
-    else static if (is(T : GenericEnum)) return false;
-    else static if (isSerObjectType!T) return false;
-    else static if (staticIndexOf!(T, SerializableTypes) == -1) return false;
-    else static if (is(T : Stream)) return false;
-    else return true;
-}
-
 package bool isSerArrayType(T)()
 {
     static if (!isArray!T) return false;
@@ -160,22 +136,25 @@ package bool isSerArrayType(T)()
         alias TT = typeof(T.init[0]);
         static if (isSomeFunction!TT) return false;
         else static if (isNarrowString!TT) return true;
-        else static if (isSerObjectType!TT) return true;
-        else static if (staticIndexOf!(TT, SerializableTypes) == -1) return false;
+        else static if (!isBasicRtType!TT) return false;
         else return true;
     }
     else return true;
 }
 
-/// Returns true if the template parameter is a serializable type.
+/**
+ * Only a sub set of the type representable as a Rtti are serializable.
+ * This template only evaluates to true if it's the case.
+ */
 bool isSerializable(T)()
 {
-    static if (isSerSimpleType!T) return true;
+    static if (isBasicRtType!T) return true;
     else static if (isSerArrayType!T) return true;
     else static if (is(T : Stream)) return true;
     else static if (isSerObjectType!T) return true;
     else static if (is(T==delegate)) return true;
-    else static if (is(T==function)) return true;
+    else static if (is(PointerTarget!T==function)) return true;
+    else static if (is(T==GenericEnum)) return true;
     else return false;
 }
 
@@ -192,27 +171,6 @@ unittest
     static assert( !isSerializable!VS );
     static assert( isSerializable!MemoryStream);
     static assert( isSerializable!GenericDelegate);
-}
-
-private string getElemStringOf(T)()
-if (isArray!T)
-{
-    return (ArrayElementType!T).stringof;
-}
-
-unittest
-{
-    static assert( getElemStringOf!(int[]) == int.stringof );
-    static assert( getElemStringOf!(int[1]) == int.stringof );
-    static assert( getElemStringOf!(int[0]) != "azertyui" );
-}
-
-private string getSerializableTypeString(T)()
-{
-    static if (isArray!T) return getElemStringOf!T;
-    else static if (isSerSimpleType!T) return T.stringof;
-    else static if (is(T:Object)) return Object.stringof;
-    assert(0, "failed to get the string for a serializable type");
 }
 // -----------------------------------------------------------------------------
 
@@ -501,7 +459,7 @@ void setNodeInfo(T)(SerNodeInfo* nodeInfo, PropDescriptor!T* descriptor)
     nodeInfo.name = descriptor.name.dup;
 
     // simple, fixed-length (or convertible to), types
-    static if (isSerSimpleType!T)
+    static if (isBasicRtType!T)
     {
         nodeInfo.value.length = nodeInfo.rtti.type.size;
         *cast(T*) nodeInfo.value.ptr = descriptor.get();
@@ -521,14 +479,10 @@ void setNodeInfo(T)(SerNodeInfo* nodeInfo, PropDescriptor!T* descriptor)
     else static if (is(T == GenericEnum))
     {
         int v = cast(int) descriptor.get();
-        writeln(v);
-        import std.algorithm.searching;
+        import std.algorithm.searching: countUntil;
         int i = cast(int) countUntil(nodeInfo.rtti.enumInfo.values, v);
         assert(i > -1);
-        string value = nodeInfo.rtti.enumInfo.members[i];
-        writeln(value, " ", i);
-        nodeInfo.value.length = value.length;
-        moveMem(nodeInfo.value.ptr, cast(void*) value.ptr, nodeInfo.value.length);
+        nodeInfo.value = cast(ubyte[]) nodeInfo.rtti.enumInfo.members[i];
     }
 
     // Serializable or Object
@@ -546,15 +500,26 @@ void setNodeInfo(T)(SerNodeInfo* nodeInfo, PropDescriptor!T* descriptor)
     {
         Stream value = descriptor.get();
         value.position = 0;
-        nodeInfo.value.length = cast(uint) value.size;
-        value.read(nodeInfo.value.ptr, cast(uint) value.size);
+        static if (is(T == MemoryStream))
+        {
+            nodeInfo.value = (cast(MemoryStream)value).ubytes;
+        }
+        else
+        {
+            nodeInfo.value.length = cast(uint) value.size;
+            value.read(nodeInfo.value.ptr, cast(uint) value.size);
+        }
         return;   
     }
 
     // delegate & function
     else static if (is(T == GenericDelegate) || is(T == GenericFunction))
     {
-        nodeInfo.value = cast(ubyte[]) descriptor.referenceID;
+        //nodeInfo.value = cast(ubyte[]) descriptor.referenceID;
+        auto dg = descriptor.get;
+        auto id = ReferenceMan.referenceID(&dg);
+        //assert(id.length, to!string(id != ""));
+        nodeInfo.value = cast(ubyte[]) id;
     }
 }
 //----
@@ -920,7 +885,7 @@ alias WantDescriptorEvent = void delegate(IstNode node, ref Ptr descriptor, out 
 alias WantObjectEvent = void delegate(IstNode node, ref Object obj, out bool fromRefererence);
 
 
-//TODO-cfeature: Serializer error handling (using isDamaged + format readers errors).
+//TODO-cserializer: error handling (using isDamaged + format readers errors).
 
 /**
  * The Serializer class is specialized to store and restore the members of
@@ -991,7 +956,7 @@ private:
     bool _mustRead;
 
     void addIstNodeForDescriptor(T)(PropDescriptor!T * descriptor)
-    //if (isSerializable!T && !isSerObjectType!T)
+    if (isSerializable!T && !isSerObjectType!T)
     in
     {
         assert(descriptor);
@@ -1029,12 +994,10 @@ private:
     bool descriptorMatchesNode(T)(PropDescriptor!T* descr, IstNode node)
     if (isSerializable!T)
     {   
-        if (!descr) return false;
-        if (!node.info.name.length) return false;
-        if (descr.name != node.info.name) return false;
-        static if (isArray!T) if (!node.info.rtti.dimension) return false;
-        //if (getSerializableTypeString!T != type2text[node.info.type]) return false;
-        return true;
+        if (!descr || !node.info.name.length || descr.name != node.info.name ||
+            getRtti!T !is descr.rtti) return false;
+        else
+            return true;
     }
 
     void addPropertyPublisher(PropDescriptor!Object* objDescr)
@@ -1091,7 +1054,7 @@ private:
                 case _char:   addValueProp!char; break;
                 case _wchar:  addValueProp!wchar; break;
                 case _dchar:  addValueProp!dchar; break;
-                case _enum:   addValueProp!GenericEnum; break;
+                case _enum:   addIstNodeForDescriptor(descr.typedAs!GenericEnum); break;
                 //case _string: addValueProp!string; break;
                 //case _wstring:addValueProp!wstring; break;
                 case _object:
@@ -1242,12 +1205,14 @@ public:
 
                             if (fromRef || !o)
                             {
-                                Object* po = ReferenceMan.reference!(Object)(childNode.identifiersChain);
+                                //TODO-cserializer: find ref from rtti.classInfo.identifier
+                                Object po = ReferenceMan.reference!(Object)(childNode.identifiersChain);
                                 if (po)
                                 {
-                                    t2.set(*po);
+                                    t2.set(po);
                                     done = true;
                                 }
+                                else writeln("not set");
                             }
                             else
                             {
@@ -1644,9 +1609,9 @@ version(unittest)
 
     unittest
     {
-        foreach(fmt;EnumMembers!SerializationFormat)
-            testByFormat!fmt();
-        //testByFormat!(SerializationFormat.iztxt)();
+        //foreach(fmt;EnumMembers!SerializationFormat)
+        //    testByFormat!fmt();
+        testByFormat!(SerializationFormat.iztxt)();
         //testByFormat!(SerializationFormat.izbin)();
         //testByFormat!(SerializationFormat.json)();
     }
@@ -1658,7 +1623,7 @@ version(unittest)
         mixin PropertyPublisherImpl;
 
         SerializableReference fSerRef;
-        Referenced1 * fRef;
+        Referenced1 fRef;
 
         void doRestore(Object sender)
         {
@@ -1812,40 +1777,41 @@ version(unittest)
         //----
 
         // store & restore a serializable reference ---+
-        auto ref1 = construct!(Referenced1);
+        auto ref1 = construct!Referenced1;
         auto ref2 = construct!Referenced1;
         auto usrr = construct!ReferencedUser;
         scope(exit) destructEach(ref1, ref2, usrr);
         
-        assert(ReferenceMan.storeReference!Referenced1(&ref1, "referenced.ref1"));
-        assert(ReferenceMan.storeReference!Referenced1(&ref2, "referenced.ref2"));
-        assert(ReferenceMan.referenceID!Referenced1(&ref1) == "referenced.ref1");
-        assert(ReferenceMan.referenceID!Referenced1(&ref2) == "referenced.ref2");
+        assert(ReferenceMan.storeReference!Referenced1(ref1, "referenced.ref1"));
+        assert(ReferenceMan.storeReference!Referenced1(ref2, "referenced.ref2"));
+        assert(ReferenceMan.referenceID!Referenced1(ref1) == "referenced.ref1");
+        assert(ReferenceMan.referenceID!Referenced1(ref2) == "referenced.ref2");
+        assert(ReferenceMan.reference!Referenced1("referenced.ref1") == ref1);
+        assert(ReferenceMan.reference!Referenced1("referenced.ref2") == ref2);
 
         str.clear;
-        usrr.fRef = &ref1;
+        usrr.fRef = ref1;
         ser.publisherToStream(usrr, str, format);
 
-        //import std.stdio;
-        //writeln(cast(string)str.ubytes);
+        writeln(cast(string)str.ubytes);
         //
-        usrr.fRef = &ref2;
-        assert(*usrr.fRef is ref2);
+        usrr.fRef = ref2;
+        assert(usrr.fRef == ref2);
         str.position = 0;
         ser.streamToPublisher(str, usrr, format);
-        assert(*usrr.fRef is ref1);
+        assert(usrr.fRef == ref1);
         //
         usrr.fRef = null;
         assert(usrr.fRef is null);
         str.position = 0;
         ser.streamToPublisher(str, usrr, format);
-        assert(*usrr.fRef is ref1);
+        assert(usrr.fRef is ref1);
         //
         str.clear;
         usrr.fRef = null;
         ser.publisherToStream(usrr, str, format);
-        usrr.fRef = &ref2;
-        assert(*usrr.fRef is ref2);
+        usrr.fRef = ref2;
+        assert(usrr.fRef is ref2);
         str.position = 0;
         ser.streamToPublisher(str, usrr, format);
         assert(usrr.fRef is null);
@@ -2036,7 +2002,7 @@ version(unittest)
         @SetGet byte _b = 21;
         @SetGet byte _c = 31;
         @SetGet dchar[] _t = "line1\"inside dq\"\nline2\nline3"d.dup;
-        @SetGet void delegate(uint) _delegate;
+        //@SetGet void delegate(uint) _delegate;
         MemoryStream _stream;
 
         @SetGet RefPublisher _refPublisher; //initially null, so it's a ref.
@@ -2062,23 +2028,25 @@ version(unittest)
             collectPublications!MainPublisher;
 
             _delegateSource = &delegatetarget;
-            _delegate = _delegateSource;
+            //_delegate = _delegateSource;
             _refPublisher = _refPublisherSource; // e.g assingation during runtime
 
             assert(_refPublisher.declarator !is this);
             assert(_refPublisher.declarator is null);
 
-            auto dDescr = publication!GenericDelegate("delegate", false);
-            assert(dDescr);
+            //auto dDescr = publication!GenericDelegate("delegate", false);
+            //assert(dDescr);
 
             auto strDesc = publicationFromName("stream");
             assert(strDesc);
 
-            ReferenceMan.storeReference(cast(Object*)&_refPublisherSource,
+            //TODO-cserializer: if ref found from rtti.classInfo.identifier no need to cast to Object
+            ReferenceMan.storeReference!Object(cast(Object) _refPublisherSource,
                 "root.refPublisher");
-            ReferenceMan.storeReference(cast(void*)&_delegateSource,
+            ReferenceMan.storeReference(&_delegateSource,
                 "mainpub.at.delegatetarget");
-            dDescr.referenceID = "mainpub.at.delegatetarget";
+            //dDescr.referenceID = "mainpub.at.delegatetarget";
+
         }
         ~this()
         {
@@ -2094,7 +2062,7 @@ version(unittest)
             _subPublisher.destruct;
             _subPublisher = null; // wont be found anymore during deser.
             _anotherSubPubliser._someChars = "".dup;
-            _delegate = null;
+            //_delegate = null;
             _refPublisher = null;
             _stream.size = 0;
         }
@@ -2141,11 +2109,11 @@ version(unittest)
         assert(c._c == 31);
         assert(c._e == E.e0);
         assert(c._t == "line1\"inside dq\"\nline2\nline3");
-        assert(c._refPublisher is c._refPublisherSource);
+        assert(c._refPublisher == c._refPublisherSource);
         assert(c._anotherSubPubliser._someChars == "awhyes");
-        assert(c._delegate);
-        c._delegate(123);
-        assert(c.dgTest == "awyesss");
+        //assert(c._delegate);
+        //c._delegate(123);
+        //assert(c.dgTest == "awyesss");
 
         assert(c._stream.readUbyte == 0xFE);
         assert(c._stream.readUbyte == 0xFD);

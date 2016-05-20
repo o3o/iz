@@ -12,7 +12,7 @@ import
     std.datetime, std.stdio;
 import
     iz.types, iz.memory, iz.containers, iz.streams, iz.properties,
-    iz.serializer, iz.referencable, iz.observer, iz.strings;
+    iz.serializer, iz.referencable, iz.observer, iz.strings, iz.rtti;
 
 /**
  * The PublishedObjectArray class template allows to serialize an array of
@@ -457,7 +457,7 @@ unittest
  *      T = The array element type.
  */
 final class Published2dArray(T): PropertyPublisher
-if (isSerSimpleType!T)
+if (isBasicRtType!T)
 {
 
     mixin PropertyPublisherImpl;
@@ -736,7 +736,7 @@ public:
      */
     ~this()
     {
-        ReferenceMan.removeReference(cast(Component*)this);
+        ReferenceMan.removeReference(this);
         foreach_reverse(o; _owned)
         {
             // observers can invalidate any escaped reference to a owned
@@ -796,10 +796,10 @@ public:
     final @Set name(const(char)[] value)
     {
         if (_name == value) return;
-        ReferenceMan.removeReference(cast(Component*)this);
+        ReferenceMan.removeReference(this);
         if (nameAvailable(value)) _name = value.dup;
         else _name = getUniqueName(value);
-        ReferenceMan.storeReference(cast(Component*)this, qualifiedName);
+        ReferenceMan.storeReference(this, qualifiedName);
     }
     /// ditto
     final @Get const(char)[] name() {return _name;}
@@ -859,7 +859,7 @@ unittest
 {
     auto c = Component.create!Component(null);
     c.name = "a";
-    assert(ReferenceMan.referenceID(cast(Component*)c) == "a");
+    assert(ReferenceMan.referenceID(cast(Component)c) == "a");
 }
 
 package abstract class BaseTimer: PropertyPublisher
