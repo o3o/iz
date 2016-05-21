@@ -684,7 +684,7 @@ mixin template PropertyPublisherImpl()
     protected void collectPublicationsFromFields(T)()
     {
         import iz.types: ScopedReachability;
-        import std.traits: isCallable, isDelegate, isFunctionPointer;
+        import std.traits: isCallable, isDelegate, isFunctionPointer, getUDAs;
         import iz.rtti: Rtti, getRtti;
 
         bool isFieldPrefix(char c)
@@ -741,7 +741,7 @@ mixin template PropertyPublisherImpl()
     {
         import iz.types: ScopedReachability;
         import iz.rtti: Rtti, getRtti;
-        import std.traits: isCallable, Parameters, ReturnType;
+        import std.traits: isCallable, Parameters, ReturnType, getUDAs;
         import std.meta: AliasSeq, staticIndexOf;
         import std.algorithm.mutation: remove;
         import std.algorithm.searching: countUntil;

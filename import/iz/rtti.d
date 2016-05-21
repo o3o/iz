@@ -504,7 +504,7 @@ if (B.length < 2)
             const Rtti result = Rtti(RtType._enum, dim, typeCtors,
                 EnumInfo(T.stringof, members, values, getRtti!(OriginalType!T)));
         }
-        else static assert(0, err ~ "only enum whose type is convertible to int are supported");
+        else static assert(0, err ~ "only enums whose type is convertible to int are supported");
     }
     else static if (is(PointerTarget!T == function) || is(T == delegate))
     {
