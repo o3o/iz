@@ -1,7 +1,5 @@
 /**
  * The iz Runtime type informations.
- *
- *
  */
 module iz.rtti;
 
@@ -102,7 +100,7 @@ template isBasicRtType(T)
  * Indicates the size of a variable according to its RtType
  *
  * Returns:
- *      `0` is returned if the size is unknown otherwise the equivalent
+ *      `0` is returned if the size is variable otherwise the equivalent
  *      of the .sizeof property.
  */
 ubyte size(RtType type)
@@ -136,8 +134,21 @@ unittest
     assert(ui.getRtti.type.size == 4);
     long lo;
     assert(lo.getRtti.type.size == 8);
+    real re;
+    assert(re.getRtti.type.size == real.sizeof);
 }
 
+/**
+ * Returns the identifier of a type.
+ *
+ * Params:
+ *      t = Either a RtType or a pointer to a Rtti.
+ * Returns:
+ *      For the basic types, always the equivalent of the keyword .stringof property.
+ *      For the other types, if `t` is a RtType then "struct" then "enum", "Object",
+ *      etc are returned, otherwise if `t` is a pointer to a Rtti then the type
+ *      identifier is returned, e.g "E" for `enum E {e}`.
+ */
 string typeString(T)(T t)
 {
     static if (is(T == RtType))
@@ -194,13 +205,13 @@ struct FunPtrInfo
 {
     /// Indicates the function type identifier.
     string identifier;
-    /// If hasContext then it's a delegate, otherwise a pointer to a function.
+    /// If hasContext is true then it's a delegate, otherwise a pointer to a function.
     bool hasContext;
     /// Indicates the return type.
     const Rtti* returnType;
-    /// Contains the Rtti of each parameters.
+    /// Contains the Rtti of each parameter.
     const Rtti*[] parameters;
-    /// Indicates the size
+    /// Indicates the size of the pointer.
     ubyte size() const
     {
         if (hasContext) return size_t.sizeof * 2;
@@ -622,13 +633,6 @@ unittest
     enum Option {o1 = 2, o2, o3}
     Option[][] opts = [[Option.o1, Option.o2],[Option.o1, Option.o2]];
     assert(getRtti(opts[0]) is getRtti(opts[1]));
-}
-
-unittest
-{
-    void bar();
-    // only func ptr are interesting to serialize
-    //static assert(!is(typeof(getRtti(bar))));
 }
 
 unittest
