@@ -78,7 +78,9 @@ bool runTestBattery(T, bool stopOnFailure = true)(T t)
                 writeln("test ", i, ": failed");
                 writeln(err.file, "(", err.line, "):", err.msg);
                 static if (stopOnFailure)
-                    break;
+                {
+                    throw err;
+                }
                 else 
                     continue;
             }

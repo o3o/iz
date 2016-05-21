@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -e
 echo ---------------------------------------
 echo compiling library...
 dmd tester.d\
