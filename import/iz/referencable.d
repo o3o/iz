@@ -210,6 +210,29 @@ public:
 // -----------------------------------------------------------------------------
 // Remove stuff ---------------------------------------------------------------+
 
+
+    /**
+     * Removes all the references for a type.
+     *
+     * Params:
+     *      RT = The type of the references to remove.
+     */
+    static void removeReferences(RT)()
+    {
+        if (t = RT.stringof in fStore)
+            t.clear;
+    }
+
+    /**
+     * Empties the storage.
+     */
+    static void clear()
+    {
+        foreach(k; fStore.byKey)
+            fStore[k].clear;
+        fStore.clear;
+    }
+
     /**
      * Tries to remove the reference matching to an ID.
      *
@@ -423,6 +446,9 @@ unittest
     ////
     ReferenceMan.storeReference( f1, "a.f1" );
     assert( ReferenceMan.isTypeStored!Foo );
+    ///
+    ReferenceMan.clear;
+    assert( !ReferenceMan.isTypeStored!Foo );
 }
 
 unittest

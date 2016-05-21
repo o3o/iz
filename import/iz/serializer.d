@@ -1605,9 +1605,10 @@ version(unittest)
 
     unittest
     {
-        //foreach(fmt;EnumMembers!SerializationFormat)
-        //    testByFormat!fmt();
-        testByFormat!(SerializationFormat.iztxt)();
+        foreach(fmt;EnumMembers!SerializationFormat)
+            testByFormat!fmt();
+
+        //testByFormat!(SerializationFormat.iztxt)();
         //testByFormat!(SerializationFormat.izbin)();
         //testByFormat!(SerializationFormat.json)();
     }
@@ -1708,6 +1709,8 @@ version(unittest)
     // by format only use the system based on manual declarations
     void testByFormat(SerializationFormat format)()
     {
+        ReferenceMan.clear;
+
         MemoryStream str  = construct!MemoryStream;
         Serializer ser    = construct!Serializer;
         ClassB b = construct!ClassB;
