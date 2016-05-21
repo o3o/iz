@@ -881,6 +881,7 @@ alias WantObjectEvent = void delegate(IstNode node, ref Object obj, out bool fro
 
 
 //TODO-cserializer: error handling (using isDamaged + format readers errors).
+//TODO-cserializer: handle the PropHints to optimize the stream size (noDefault)
 
 /**
  * The Serializer class is specialized to store and restore the members of

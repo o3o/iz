@@ -188,7 +188,7 @@ private mixin template setContext()
 }
 
 /**
- * Runtime information for the points to functions.
+ * Runtime information for the function pointers.
  */
 struct FunPtrInfo
 {

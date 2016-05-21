@@ -6,7 +6,7 @@ module iz.properties;
 import
     std.traits;
 import
-    iz.memory, iz.types, iz.containers, iz.rtti;
+    iz.memory, iz.types, iz.containers, iz.rtti, iz.enumset;
 
 version(unittest) import std.stdio;
 
@@ -25,7 +25,12 @@ enum PropAccess
     rw
 }
 
+/**
+ * Used as a generic property descriptor when Rtti are used to detect
+ * the target type.
+ */
 alias GenericDescriptor = PropDescriptor!int;
+
 
 /**
  * Describes a property declared in an aggregate.
@@ -54,6 +59,8 @@ struct PropDescriptor(T)
         PropGetter _getter;
         Object _declarator;
         const(Rtti)* _rtti;
+
+        PropHints _hints;
 
         T* _setPtr;
         T* _getPtr;
@@ -363,10 +370,45 @@ enum Get;
 enum SetGet;
 /// ditto
 alias GetSet = SetGet;
-/// designed to make undetectable a property collected in a ancestor.
+/// designed to make undetectable a property collected in an ancestor.
 enum HideSet;
 /// ditto
 enum HideGet;
+
+/**
+ * Enumerates the property hints.
+ *
+ * Hints can be attributed to a property. They may be used or not,
+ * depending on the context.
+ */
+enum PropHint
+{
+    /**
+     * Indicates that a special behavior should be adopted
+     * when the property value is equal to its initializer.
+     */
+    noDefault,
+    /**
+     * Indicates that a property should be considered read-only,
+     * even if a setter is detected.
+     */
+    dontSet,
+    /**
+     * Indicates that a property should be considered write-only,
+     * even if a getter is detected.
+     */
+    dontGet,
+    /**
+     * Indicates that a property shouldn't be used anymore.
+     */
+    obsolete
+}
+
+/**
+ * PropHints can be used to set the hints attributed to a property,
+ * using the UDA syntax: `@PropHints(...)`
+ */
+alias PropHints = EnumSet!(PropHint, Set8);
 
 /**
  * When mixed in an agregate this generates a property. 
@@ -414,8 +456,8 @@ mixin(genStandardPropDescriptors);
  *
  * Inspiration:
  * The semantic used for this interface is inspired by the Object-Pascal
- * "published" visibility attribute. In pascal, "published" causes the
- * member (called a property) to have some matching RTTI emitted. They
+ * "published" protection attribute. In pascal, "published" causes the
+ * member (called a property) to have the matching RTTI emitted. They
  * are used to stream objects, to build IDE inspectors, bindings list, etc.
  *
  * This interface (as well as its default implementation) reproduces a similar
@@ -677,6 +719,9 @@ mixin template PropertyPublisherImpl()
                     if (pub) pub.declarator = this;
                 }
                 //
+                enum h = getUDAs!(__traits(getMember, T, member), PropHints);
+                static if (h.length) descriptor._hints = h[0];
+                //
                 version(none) writeln(attribute.stringof, " : ", member);
                 break;
             }
@@ -734,7 +779,10 @@ mixin template PropertyPublisherImpl()
                     // RAII: if it's initialized then it's mine
                     if (pub) pub.declarator = this;
                 }
-                //   
+                //
+                enum h = getUDAs!(overload, PropHints);
+                static if (h.length) descriptor._hints = h[0];
+                //
                 version(none) writeln(attribute.stringof, " < ", member);
             }
             // define the setter
@@ -751,6 +799,9 @@ mixin template PropertyPublisherImpl()
                     ti == descriptor.rtti,
                     "setter and getter type mismatch for " ~ descriptor.name);
                 descriptor.define(dg, descriptor.getter, member);
+                //
+                enum h = getUDAs!(overload, PropHints);
+                static if (h.length) descriptor._hints = h[0];
                 //
                 version(none) writeln(attribute.stringof, " > ", member);
             }
@@ -807,9 +858,12 @@ unittest
         private uint _a, _b;
         private char[] _c;
 
+        @PropHints(PropHint.noDefault)
         @Get uint propA(){return _a;}
+
         @Set void propA(uint aValue){_a = aValue;}
 
+        @PropHints(PropHint.noDefault,PropHint.dontSet)
         @Get uint propB(){return _b;}
         @Set void propB(uint aValue){_b = aValue;}
 
