@@ -4,22 +4,6 @@
  */
 module iz.referencable;
 
-package string typeString(T)()
-{
-    return typeid(T).toString;
-}
-
-version(unittest)
-{
-    class TestModuleScope{}
-}
-
-unittest
-{
-    class Foo{}
-    assert( typeString!int == "int");
-    assert( typeString!TestModuleScope == __MODULE__ ~ ".TestModuleScope" );
-}
 
 /**
  * interface for a class reference.
@@ -32,6 +16,11 @@ interface Referenced
     string refType();
 }
 
+private template isReferenceType(T)
+{
+    enum isReferenceType = is(T == class) || is(T == interface);
+}
+
 /**
  * Associates an pointer (a reference) to an unique ID (ulong).
  */
@@ -42,7 +31,6 @@ private alias itemsById = void*[char[]];
  */
 private alias refStore = itemsById[string];
 
-
 /**
  * The Referencable manager associates variables of a particular type to
  * an unique identifier.
@@ -51,7 +39,7 @@ private alias refStore = itemsById[string];
  * For example, in a setting file, it allows to store the unique identifier
  * associated to a class instance, rather than storing all its properties, as
  * the instance settings may be saved elsewhere.
- * This also allow to serialize fat pointers, such as delegates.
+ * It also allow to serialize fat pointers, such as delegates.
  */
 static struct ReferenceMan
 {
@@ -75,7 +63,7 @@ public:
      */
     static bool isTypeStored(RT)()
     {
-        return ((typeString!RT in fStore) !is null);
+        return ((RT.stringof in fStore) !is null);
     }
 
     /**
@@ -89,6 +77,13 @@ public:
      *      True if the variable is referenced otherwise false.
      */
     static bool isReferenced(RT)(RT* aReference)
+    if (!isReferenceType!RT)
+    {
+        return (referenceID!RT(aReference) != "");
+    }
+
+    static bool isReferenced(RT)(RT aReference)
+    if (isReferenceType!RT)
     {
         return (referenceID!RT(aReference) != "");
     }
@@ -97,7 +92,14 @@ public:
      * Support for the in operator.
      * Evaluates to true if the variable is referenced otherwise false.
      */
-    static bool opBinaryRight(string op : "in", RT)(RT* aReference)
+    static bool opBinaryRight(string op, RT)(RT* aReference)
+    if (!isReferenceType!RT && op == "in")
+    {
+        return (referenceID!RT(aReference) != "");
+    }
+
+    static bool opBinaryRight(string op, RT)(RT aReference)
+    if (isReferenceType!RT && op == "in")
     {
         return (referenceID!RT(aReference) != "");
     }
@@ -107,7 +109,7 @@ public:
      */
     static void reset()
     {
-        fStore = fStore.init;
+        fStore.clear;
     }
 // -----------------------------------------------------------------------------
 // Add stuff ------------------------------------------------------------------+
@@ -121,7 +123,7 @@ public:
      */
     static void storeType(RT)()
     {
-        fStore[typeString!RT][""] = null;
+        fStore[RT.stringof][""] = null;
     }
 
     /**
@@ -149,10 +151,10 @@ public:
         }
 
         // try to get an available ID in the existing range
-        foreach(immutable i; 0 .. fStore[typeString!RT].length)
+        foreach(immutable i; 0 .. fStore[RT.stringof].length)
         {
             import std.string: format;
-            if (fStore[typeString!RT][i] == null)
+            if (fStore[RT.stringof][i] == null)
                 return format("entry_%d", i);
         }
 
@@ -160,7 +162,7 @@ public:
         foreach(immutable i; 0 .. ulong.max)
         {
             import std.string: format;
-            if (i > fStore[typeString!RT].length)
+            if (i > fStore[RT.stringof].length)
                 return format("entry_%d", i);
         }
 
@@ -179,6 +181,7 @@ public:
      *      true if the reference is added otherwise false.
      */
     static bool storeReference(RT)(RT* aReference, in char[] anID)
+    if (!isReferenceType!RT)
     {
         if (anID == "") return false;
         // what's already there ?
@@ -186,9 +189,24 @@ public:
         if (curr == aReference) return true;
         if (curr != null) return false;
         //
-        fStore[typeString!RT][anID] = aReference;
+        fStore[RT.stringof][anID] = aReference;
         return true;
     }
+
+    /// ditto
+    static bool storeReference(RT)(RT aReference, in char[] anID)
+    if (isReferenceType!RT)
+    {
+        if (anID == "") return false;
+        // what's already there ?
+        auto curr = reference!RT(anID);
+        if (curr == aReference) return true;
+        if (curr !is null) return false;
+        //
+        fStore[RT.stringof][anID] = cast(RT*)aReference;
+        return true;
+    }
+
 // -----------------------------------------------------------------------------
 // Remove stuff ---------------------------------------------------------------+
 
@@ -202,10 +220,10 @@ public:
      * Returns:
      *      The reference if it's found otherwise null.
      */
-    static RT* removeReference(RT)(in char[] anID)
+    static auto removeReference(RT)(in char[] anID)
     {
         auto result = reference!RT(anID);
-        if (result) fStore[typeString!RT][anID] = null;
+        if (result) fStore[RT.stringof][anID] = null;
         return result;
     }
 
@@ -217,9 +235,18 @@ public:
      *      aReference = The pointer to the RT to be removed.
      */
     static void removeReference(RT)(RT* aReference)
+    if (!isReferenceType!RT)
     {
         if (auto id = referenceID!RT(aReference))
-            fStore[typeString!RT][id] = null;
+            fStore[RT.stringof][id] = null;
+    }
+
+    /// ditto
+    static void removeReference(RT)(RT aReference)
+    if (isReferenceType!RT)
+    {
+        if (auto id = referenceID!RT(aReference))
+            fStore[RT.stringof][id] = null;
     }
 
 // -----------------------------------------------------------------------------
@@ -230,17 +257,42 @@ public:
      *
      * Params:
      *      RT = The type of the reference. Optional, likely to be infered.
-     *      aReference = A pointer to a RT.
+     *      aReference = A pointer to a RT or a RT.
      *
      * Returns:
      *      A non empty string if the variable is referenced.
      */
     static const(char)[] referenceID(RT)(RT* aReference)
+    if (!isReferenceType!RT)
     {
         if (!isTypeStored!RT) return "";
-        foreach (k; fStore[typeString!RT].keys)
+        foreach (k; fStore[RT.stringof].keys)
         {
-            if (fStore[typeString!RT][k] == aReference)
+            static if (!is(RT == delegate))
+            {
+                if (fStore[RT.stringof][k] == aReference)
+                    return k;
+            }
+            else
+            {
+                struct Dg {void* a,b;}
+                auto stored = *cast(Dg*) fStore[RT.stringof][k];
+                auto passed = *cast(Dg*) aReference;
+                if (stored.a == passed.a && stored.b == passed.b)
+                    return k;
+            }
+        }
+        return "";
+    }
+
+    /// ditto
+    static const(char)[] referenceID(RT)(RT aReference)
+    if (isReferenceType!RT)
+    {
+        if (!isTypeStored!RT) return "";
+        foreach (k; fStore[RT.stringof].keys)
+        {
+            if (fStore[RT.stringof][k] == cast(void*)aReference)
                 return k;
         }
         return "";
@@ -254,13 +306,47 @@ public:
      *      anID = The unique identifier of the reference to retrieve.
      *
      * Returns:
-     *      Null if the operation fails otherwise a pointer to a RT.
+     *      Null if the operation fails otherwise a pointer to a RT, or
+     *      a RT if RT is a reference type.
      */
     static RT* reference(RT)(in char[] anID)
+    if (!isReferenceType!RT)
     {
         if (anID == "") return null;
         if (!isTypeStored!RT) return null;
-        return cast(RT*) fStore[typeString!RT].get(anID, null);
+        if (void** result = anID in fStore[RT.stringof])
+            return *cast(RT**) result;
+        else
+            return null;
+    }
+
+    static RT reference(RT)(in char[] anID)
+    if (isReferenceType!RT)
+    {
+        if (anID == "") return null;
+        if (!isTypeStored!RT) return null;
+        if (void* result = anID in fStore[RT.stringof])
+            return *cast(RT*) result;
+        else
+            return null;
+    }
+
+    /**
+     * Retrieves a reference without the static type
+     *
+     * Params:
+     *      type = A string that represents the type of the reference.
+     *      anID = The unique identifier of the reference to retrieve.
+     *
+     * Returns:
+     *      Null if the operation fails otherwise a raw pointer.
+     */
+    static void* reference(in char[] type, in char[] anID)
+    {
+        if (anID == "") return null;
+        if (type !in fStore) return null;
+        if (fStore[type].get(anID, null) == null) return null;
+        return fStore[type].get(anID, null);
     }
 // -----------------------------------------------------------------------------        
 
@@ -291,47 +377,72 @@ unittest
     auto f3 = construct!Foo;
     scope(exit) destructEach(f1,f2,f3);
 
-    assert( !ReferenceMan.isReferenced(&f1) );
-    assert( !ReferenceMan.isReferenced(&f2) );
-    assert( !ReferenceMan.isReferenced(&f3) );
+    assert( !ReferenceMan.isReferenced(f1) );
+    assert( !ReferenceMan.isReferenced(f2) );
+    assert( !ReferenceMan.isReferenced(f3) );
+    //
+    assert( ReferenceMan.referenceID(f1) == "");
+    assert( ReferenceMan.referenceID(f2) == "");
+    assert( ReferenceMan.referenceID(f3) == "");
+    //
+    ReferenceMan.storeReference( f1, "a.f1" );
+    ReferenceMan.storeReference( f2, "a.f2" );
+    ReferenceMan.storeReference( f3, "a.f3" );
 
-    assert( ReferenceMan.referenceID(&f1) == "");
-    assert( ReferenceMan.referenceID(&f2) == "");
-    assert( ReferenceMan.referenceID(&f3) == "");
+    assert( ReferenceMan.reference!Foo("a.f1") == f1);
+    assert( ReferenceMan.reference!Foo("a.f2") == f2);
+    assert( ReferenceMan.reference!Foo("a.f3") == f3);
 
-    ReferenceMan.storeReference( &f1, "a.f1" );
-    ReferenceMan.storeReference( &f2, "a.f2" );
-    ReferenceMan.storeReference( &f3, "a.f3" );
+    assert( ReferenceMan.referenceID(f1) == "a.f1");
+    assert( ReferenceMan.referenceID(f2) == "a.f2");
+    assert( ReferenceMan.referenceID(f3) == "a.f3");
 
-    assert( ReferenceMan.reference!Foo("a.f1") == &f1);
-    assert( ReferenceMan.reference!Foo("a.f2") == &f2);
-    assert( ReferenceMan.reference!Foo("a.f3") == &f3);
-
-    assert( ReferenceMan.referenceID(&f1) == "a.f1");
-    assert( ReferenceMan.referenceID(&f2) == "a.f2");
-    assert( ReferenceMan.referenceID(&f3) == "a.f3");
-
-    assert( ReferenceMan.isReferenced(&f1) );
-    assert( ReferenceMan.isReferenced(&f2) );
-    assert( ReferenceMan.isReferenced(&f3) );
-    assert( &f3 in ReferenceMan );
-
-    ReferenceMan.removeReference(&f1);
-    ReferenceMan.removeReference(&f2);
+    assert( ReferenceMan.isReferenced(f1) );
+    assert( ReferenceMan.isReferenced(f2) );
+    assert( ReferenceMan.isReferenced(f3) );
+    assert( f3 in ReferenceMan );
+    //
+    auto f11 = f1;
+    assert( ReferenceMan.referenceID!Foo(f11) == "a.f1");
+    assert( ReferenceMan.reference("Foo","a.f1") != null);
+    //
+    ReferenceMan.removeReference(f1);
+    ReferenceMan.removeReference(f2);
     ReferenceMan.removeReference!Foo("a.f3");
-
-    assert( !ReferenceMan.isReferenced(&f1) );
-    assert( !ReferenceMan.isReferenced(&f2) );
-    assert( !ReferenceMan.isReferenced(&f3) );
-
+    ////
+    assert( !ReferenceMan.isReferenced(f1) );
+    assert( !ReferenceMan.isReferenced(f2) );
+    assert( !ReferenceMan.isReferenced(f3) );
+    ////
     ReferenceMan.removeReference!Foo("a.f1");
-    ReferenceMan.removeReference(&f2);
+    ReferenceMan.removeReference(f2);
     ReferenceMan.removeReference!Foo("a.f3");
-    
+    ////
     ReferenceMan.reset;
     assert( !ReferenceMan.isTypeStored!Foo );
-    
-    ReferenceMan.storeReference( &f1, "a.f1" );
+    ////
+    ReferenceMan.storeReference( f1, "a.f1" );
     assert( ReferenceMan.isTypeStored!Foo );
+}
+
+unittest
+{
+    struct Foo
+    {
+        this(bool){adg = &a;}
+        void a(){}
+        void delegate() adg;
+    }
+    Foo foo = Foo(false);
+    Foo bar = Foo(false);
+    auto dg1 = foo.adg;
+    ReferenceMan.storeReference(&foo.adg, "foo.adg");
+    assert(ReferenceMan.isReferenced(&foo.adg));
+    assert(ReferenceMan.referenceID(&foo.adg) == "foo.adg");
+    assert(ReferenceMan.reference!(typeof(dg1))("foo.adg") );
+    assert(*ReferenceMan.reference!(typeof(dg1))("foo.adg") == foo.adg);
+    assert(!ReferenceMan.isReferenced(&bar.adg));
+    assert(ReferenceMan.referenceID(&bar.adg) == "");
+    assert( ReferenceMan.referenceID(&dg1) == "foo.adg");
 }
 

@@ -4,9 +4,9 @@
 module iz.serializer;
 
 import
-    std.range, std.typetuple, std.conv, std.traits;
+    std.range, std.typetuple, std.conv, std.traits, std.stdio;
 import
-    iz.memory, iz.containers, iz.strings;
+    iz.memory, iz.containers, iz.strings, iz.rtti;
 
 public
 {
@@ -82,9 +82,9 @@ public:
      *
      * Usually called before the serialization.
      */
-    void storeReference(RT)(RT* reference)
+    void storeReference(RT)(ref RT reference)
     {
-        _tp = (typeString!RT).dup;
+        _tp = RT.stringof.dup;
         _id = ReferenceMan.referenceID!RT(reference).dup;
     }
 
@@ -94,7 +94,7 @@ public:
      * Usually called after the deserialization of after the
      * the reference owner is notified by onRestored().
      */
-    RT* restoreReference(RT)()
+    auto restoreReference(RT)()
     {
         return ReferenceMan.reference!RT(_id);
     }
@@ -115,53 +115,6 @@ public:
     }
 }
 
-/**
- * Enumerates the types automatically handled by a Serializer.
- */
-enum SerializableType
-{
-    // must match iz.types.RuntimeType
-    _invalid= 0,
-    _bool   = 0x01, _byte, _ubyte, _short, _ushort, _int, _uint, _long, _ulong,
-    _float  = 0x10, _double,
-    _char   = 0x20, _wchar, _dchar, _string, _wstring,
-    _object = 0x30,
-    _stream = 0x38,
-    _delegate = 0x50, _function
-}
-
-private struct InvalidSerType{}
-
-// must match iz.types.RuntimeType
-private alias SerializableTypes = AliasSeq!(
-    InvalidSerType, 
-    bool, byte, ubyte, short, ushort, int, uint, long, ulong,
-    float, double,
-    char, wchar, dchar, string, wstring,
-    Object,
-    Stream,
-    GenericDelegate, GenericFunction,
-);
-
-private static immutable string[SerializableType] type2text;
-private static immutable SerializableType[string] text2type;
-private static immutable size_t[SerializableType] type2size;
-
-static this()
-{
-    foreach(i, t; EnumMembers!SerializableType)
-    {
-        type2text[t] = SerializableTypes[i].stringof;
-        text2type[SerializableTypes[i].stringof] = t;
-        type2size[t] = SerializableTypes[i].sizeof;
-    }
-    // the txt format doesnt support a type representation with spaces.
-    type2text[SerializableType._delegate] = "GenericDelegate";
-    text2type["GenericDelegate"] = SerializableType._delegate;
-    type2text[SerializableType._function] = "GenericFunction";
-    text2type["GenericFunction"] = SerializableType._function;
-}
-
 package bool isSerObjectType(T)()
 {
     static if (is(T : Stream)) return false;
@@ -169,19 +122,9 @@ package bool isSerObjectType(T)()
     else return false;
 }
 
-package bool isSerObjectType(SerializableType type)
+package bool isSerObjectType(RtType type)
 {
-    with(SerializableType) return type == _object;
-}
-
-package bool isSerSimpleType(T)()
-{
-    static if (isArray!T && !isNarrowString!T) return false;
-    else static if (is(T : GenericDelegate)) return false;
-    else static if (isSerObjectType!T) return false;
-    else static if (staticIndexOf!(T, SerializableTypes) == -1) return false;
-    else static if (is(T : Stream)) return false;
-    else return true;
+    with(RtType) return type == _object;
 }
 
 package bool isSerArrayType(T)()
@@ -193,22 +136,25 @@ package bool isSerArrayType(T)()
         alias TT = typeof(T.init[0]);
         static if (isSomeFunction!TT) return false;
         else static if (isNarrowString!TT) return true;
-        else static if (isSerObjectType!TT) return true;
-        else static if (staticIndexOf!(TT, SerializableTypes) == -1) return false;
+        else static if (!isBasicRtType!TT) return false;
         else return true;
     }
     else return true;
 }
 
-/// Returns true if the template parameter is a serializable type.
+/**
+ * Only a sub set of the type representable as a Rtti are serializable.
+ * This template only evaluates to true if it's the case.
+ */
 bool isSerializable(T)()
 {
-    static if (isSerSimpleType!T) return true;
+    static if (isBasicRtType!T) return true;
     else static if (isSerArrayType!T) return true;
     else static if (is(T : Stream)) return true;
     else static if (isSerObjectType!T) return true;
     else static if (is(T==delegate)) return true;
-    else static if (is(T==function)) return true;
+    else static if (is(PointerTarget!T==function)) return true;
+    else static if (is(T==GenericEnum)) return true;
     else return false;
 }
 
@@ -226,27 +172,6 @@ unittest
     static assert( isSerializable!MemoryStream);
     static assert( isSerializable!GenericDelegate);
 }
-
-private string getElemStringOf(T)()
-if (isArray!T)
-{
-    return (ArrayElementType!T).stringof;
-}
-
-unittest
-{
-    static assert( getElemStringOf!(int[]) == int.stringof );
-    static assert( getElemStringOf!(int[1]) == int.stringof );
-    static assert( getElemStringOf!(int[0]) != "azertyui" );
-}
-
-private string getSerializableTypeString(T)()
-{
-    static if (isArray!T) return getElemStringOf!T;
-    else static if (isSerSimpleType!T) return T.stringof;
-    else static if (is(T:Object)) return Object.stringof;
-    assert(0, "failed to get the string for a serializable type");
-}
 // -----------------------------------------------------------------------------
 
 // Intermediate Serialization Tree --------------------------------------------+
@@ -254,8 +179,8 @@ private string getSerializableTypeString(T)()
 /// Represents a serializable property without genericity.
 struct SerNodeInfo
 {
-    /// the type of the property
-    SerializableType type;
+    /// the rtti of the property
+    const(Rtti)* rtti;
     /// a pointer to a PropDescriptor
     Ptr     descriptor;
     /// the raw value
@@ -264,8 +189,6 @@ struct SerNodeInfo
     string  name;
     /// the property level in the IST
     uint    level;
-    /// indicates if the property is an array
-    bool    isArray;
     /// indicates if any error occured during processing
     bool    isDamaged;
     /// hint to rebuild the IST
@@ -382,12 +305,11 @@ char[] value2text(const SerNodeInfo* nodeInfo)
 {
     char[] v2t_1(T)(){return to!string(*cast(T*)nodeInfo.value.ptr).dup;}
     char[] v2t_2(T)(){return to!string(cast(T[])nodeInfo.value[]).dup;}
-    char[] v2t(T)(){if (!nodeInfo.isArray) return v2t_1!T; else return v2t_2!T;}
+    char[] v2t(T)(){if (!nodeInfo.rtti.dimension) return v2t_1!T; else return v2t_2!T;}
     //
-    with (SerializableType) final switch(nodeInfo.type)
+    with (RtType) final switch(nodeInfo.rtti.type)
     {
         case _invalid:  return invalidText;
-        case _object:   return cast(char[])(nodeInfo.value);
         case _bool:     return v2t!bool;
         case _ubyte:    return v2t!ubyte;
         case _byte:     return v2t!byte;
@@ -399,36 +321,39 @@ char[] value2text(const SerNodeInfo* nodeInfo)
         case _long:     return v2t!long;
         case _float:    return v2t!float;
         case _double:   return v2t!double;
+        case _real:     return v2t!real;
         case _char:     return v2t!char;
         case _wchar:    return v2t!wchar;
-        case _string:   return v2t!string;
-        case _wstring:  return v2t!wstring;
         case _dchar:    return v2t!dchar;
+        case _enum:     return v2t_2!char;
+        case _object:   return cast(char[])(nodeInfo.value);
         case _stream:   return to!(char[])(nodeInfo.value[]);
-        case _delegate: return v2t_2!char;
-        case _function: return v2t_2!char;
+        case _struct:   assert(0, "todo");
+        case _funptr:   return v2t_2!char;
     }
 }
 
 /// Converts the literal representation to a ubyte array according to type.
 ubyte[] text2value(char[] text, const SerNodeInfo* nodeInfo)
 {
-    ubyte[] t2v_1(T)(){
-        auto res = new ubyte[](type2size[nodeInfo.type]);
+    ubyte[] t2v_1(T)()
+    {
+        auto res = new ubyte[](T.sizeof);
         *cast(T*) res.ptr = to!T(text);
         return res;
     }
-    ubyte[] t2v_2(T)(){
+    ubyte[] t2v_2(T)()
+    {
         auto v = to!(T[])(text);
-        auto res = new ubyte[](v.length * type2size[nodeInfo.type]);
+        auto res = new ubyte[](v.length * T.sizeof);
         moveMem(res.ptr, v.ptr, res.length);
         return res;
     }
     ubyte[] t2v(T)(){
-        if (!nodeInfo.isArray) return t2v_1!T; else return t2v_2!T;
+        if (!nodeInfo.rtti.dimension) return t2v_1!T; else return t2v_2!T;
     }
     //    
-    with(SerializableType) final switch(nodeInfo.type)
+    with(RtType) final switch(nodeInfo.rtti.type)
     {
         case _invalid:  return cast(ubyte[])invalidText;
         case _bool:     return t2v!bool;
@@ -442,13 +367,15 @@ ubyte[] text2value(char[] text, const SerNodeInfo* nodeInfo)
         case _long:     return t2v!long;
         case _float:    return t2v!float;
         case _double:   return t2v!double;
+        case _real:     return t2v!real;
         case _char:     return t2v!char;
         case _wchar:    return t2v_2!wchar;
         case _dchar:    return t2v!dchar;
-        case _string:   return t2v!string;
-        case _wstring:  return t2v!wstring;
+        case _enum:     return cast(ubyte[]) text;
+        case _object:   return cast(ubyte[]) text;
         case _stream:   return t2v_2!ubyte;
-        case _object, _delegate, _function: return cast(ubyte[]) text;
+        case _struct:   assert(0, "todo");
+        case _funptr:   return cast(ubyte[]) text;
     }
 }
 //----
@@ -467,12 +394,12 @@ void nodeInfo2Declarator(const SerNodeInfo* nodeInfo)
         descr.set(cast(T[]) nodeInfo.value[]);
     }
     void toDecl(T)() {
-        (!nodeInfo.isArray) ? toDecl1!T : toDecl2!T;
+        (!nodeInfo.rtti.dimension) ? toDecl1!T : toDecl2!T;
     }
     //
-    with (SerializableType) final switch(nodeInfo.type)
+    with (RtType) final switch(nodeInfo.rtti.type)
     {
-        case _invalid, _object: break;
+        case _invalid:  break;
         case _bool:     toDecl!bool; break;
         case _byte:     toDecl!byte; break;
         case _ubyte:    toDecl!ubyte; break;
@@ -484,11 +411,19 @@ void nodeInfo2Declarator(const SerNodeInfo* nodeInfo)
         case _ulong:    toDecl!ulong; break;
         case _float:    toDecl!float; break;
         case _double:   toDecl!double; break;
+        case _real:     toDecl!real; break;
         case _char:     toDecl!char; break;
         case _wchar:    toDecl!wchar; break;
         case _dchar:    toDecl!dchar; break;
-        case _string:   toDecl!string; break;
-        case _wstring:  toDecl!wstring; break;
+        case _enum:
+            import std.algorithm.searching;
+            int i = cast(int) countUntil(nodeInfo.rtti.enumInfo.members, cast(string) nodeInfo.value);
+            assert(i > -1);
+            auto descr = cast(PropDescriptor!int *) nodeInfo.descriptor;
+            descr.set(nodeInfo.rtti.enumInfo.values[i]);
+            break;
+        case _object:   break;
+        case _struct:   break;
         case _stream:
             MemoryStream str = construct!MemoryStream;
             scope(exit) destruct(str);
@@ -497,17 +432,18 @@ void nodeInfo2Declarator(const SerNodeInfo* nodeInfo)
             auto descr = cast(PropDescriptor!Stream*) nodeInfo.descriptor;
             descr.set(str);
             break;
-        case _delegate, _function:
+        case _funptr:
             char[] refId = cast(char[]) nodeInfo.value[];
-            void* refvoid = ReferenceMan.reference!(void)(refId);
             void setFromRef(T)()
             {
-                auto stuff = *cast(T*) refvoid;
+                T funordg = *ReferenceMan.reference!(T)(refId);
                 auto descr = cast(PropDescriptor!T*) nodeInfo.descriptor;
-                descr.set(stuff);
+                descr.set(funordg);
             }
-            if (nodeInfo.type == _delegate) setFromRef!GenericDelegate;
-            else setFromRef!GenericFunction;
+            if (nodeInfo.rtti.funptrInfo.hasContext)
+                setFromRef!GenericDelegate;
+            else
+                setFromRef!GenericFunction;
             break;
     }
 }
@@ -517,78 +453,72 @@ void setNodeInfo(T)(SerNodeInfo* nodeInfo, PropDescriptor!T* descriptor)
 {
     scope(failure) nodeInfo.isDamaged = true;
 
+    nodeInfo.rtti = descriptor.rtti;
+    nodeInfo.descriptor = cast(Ptr) descriptor;
+    nodeInfo.name = descriptor.name.dup;
+
     // simple, fixed-length (or convertible to), types
-    static if (isSerSimpleType!T)
+    static if (isBasicRtType!T)
     {
-        nodeInfo.type = text2type[T.stringof];
-        nodeInfo.isArray = false;
-        nodeInfo.value.length = type2size[nodeInfo.type];
-        nodeInfo.descriptor = cast(Ptr) descriptor;
-        nodeInfo.name = descriptor.name.dup;
+        nodeInfo.value.length = nodeInfo.rtti.type.size;
         *cast(T*) nodeInfo.value.ptr = descriptor.get();
-        //
         return;
     }
 
     // arrays types
     else static if (isSerArrayType!T)
     {
-        nodeInfo.type = text2type[getElemStringOf!T];
         T value = descriptor.get();
-        nodeInfo.value.length = value.length * type2size[nodeInfo.type];
+        nodeInfo.value.length = value.length * nodeInfo.rtti.type.size;
         moveMem(nodeInfo.value.ptr, cast(void*) value.ptr, nodeInfo.value.length);
-        //
-        nodeInfo.isArray = true;
-        nodeInfo.descriptor = cast(Ptr) descriptor;
-        nodeInfo.name = descriptor.name.dup;
-        //
         return;
+    }
+
+    // enums
+    else static if (is(T == GenericEnum))
+    {
+        int v = cast(int) descriptor.get();
+        import std.algorithm.searching: countUntil;
+        int i = cast(int) countUntil(nodeInfo.rtti.enumInfo.values, v);
+        assert(i > -1);
+        nodeInfo.value = cast(ubyte[]) nodeInfo.rtti.enumInfo.members[i];
     }
 
     // Serializable or Object
     else static if (isSerObjectType!T)
     {
-        Object obj;
-        char[] value;
-
-        obj = cast(Object) descriptor.get();
-        value = className(obj).dup;
-        nodeInfo.type = text2type[typeof(obj).stringof];
-
-        nodeInfo.isArray = false;
-        nodeInfo.descriptor = cast(Ptr) descriptor;
-        nodeInfo.name = descriptor.name.dup;
+        Object obj = cast(Object) descriptor.get();
+        char[] value = className(obj).dup;
         nodeInfo.value.length = value.length;
         moveMem(nodeInfo.value.ptr, value.ptr, nodeInfo.value.length);
-        //
         return;
     }
 
     // stream
     else static if (is(T : Stream))
     {
-        nodeInfo.type = text2type[T.stringof];
-        nodeInfo.isArray = false;
-        nodeInfo.descriptor = cast(Ptr) descriptor;
-        nodeInfo.name = descriptor.name.dup;
-        //
         Stream value = descriptor.get();
         value.position = 0;
-        nodeInfo.value.length = cast(uint) value.size;
-        value.read(nodeInfo.value.ptr, cast(uint) value.size);
-        //
+        static if (is(T == MemoryStream))
+        {
+            nodeInfo.value = (cast(MemoryStream)value).ubytes;
+        }
+        else
+        {
+            nodeInfo.value.length = cast(uint) value.size;
+            value.read(nodeInfo.value.ptr, cast(uint) value.size);
+        }
         return;   
     }
 
     // delegate & function
     else static if (is(T == GenericDelegate) || is(T == GenericFunction))
     {
-        nodeInfo.type = text2type[T.stringof];
-        nodeInfo.isArray = false;
-        nodeInfo.descriptor = cast(Ptr) descriptor;
-        nodeInfo.name = descriptor.name.dup;
-        //
-        nodeInfo.value = cast(ubyte[]) descriptor.referenceID;
+        //nodeInfo.value = cast(ubyte[]) descriptor.referenceID;
+        auto dg = descriptor.get;
+        auto id = ReferenceMan.referenceID(&dg);
+        assert(id.length, to!string(id != ""));
+        nodeInfo.value = cast(ubyte[]) id;
     }
 }
 //----
@@ -619,12 +549,10 @@ private void writeJSON(IstNode istNode, Stream stream)
     version(assert) const bool pretty = true; else const bool pretty = false;
     //    
     auto level  = JSONValue(istNode.level);
-    auto type   = JSONValue(istNode.info.type);
+    auto type   = JSONValue(typeString(istNode.info.rtti));
     auto name   = JSONValue(istNode.info.name.idup);
-    auto isarray= JSONValue(cast(ubyte)istNode.info.isArray);
     auto value  = JSONValue(value2text(istNode.info).idup);
-    auto prop   = JSONValue(["level": level, "type": type, "name": name,
-        "isarray": isarray, "value": value]);
+    auto prop   = JSONValue(["level": level, "type": type, "name": name, "value": value]);
     auto txt = toJSON(&prop, pretty).dup;
     //
     stream.write(txt.ptr, txt.length);   
@@ -670,20 +598,14 @@ private void readJSON(Stream stream, IstNode istNode)
         istNode.info.isDamaged = true;
         
     const(JSONValue)* type = "type" in prop;
-    if (type && type.type == JSON_TYPE.INTEGER)
-        istNode.info.type = cast(SerializableType) type.integer;
+    if (type && type.type == JSON_TYPE.STRING)
+        istNode.info.rtti = getRtti(type.str);
     else 
         istNode.info.isDamaged = true;
         
     const(JSONValue)* name = "name" in prop;
     if (name && name.type == JSON_TYPE.STRING)
         istNode.info.name = name.str.dup;
-    else 
-        istNode.info.isDamaged = true;
-        
-    const JSONValue* isarray = "isarray" in prop;
-    if (isarray && isarray.type == JSON_TYPE.INTEGER)
-        istNode.info.isArray = cast(bool) isarray.integer;
     else 
         istNode.info.isDamaged = true;
         
@@ -701,11 +623,9 @@ private void writeText(IstNode istNode, Stream stream)
     // indentation
     foreach(i; 0 .. istNode.level) stream.writeChar('\t');
     // type
-    char[] type = type2text[istNode.info.type].dup;
+    char[] type = typeString(istNode.info.rtti).dup;
+    type = replace(type, " ", "-");
     stream.write(type.ptr, type.length);
-    // array
-    char[2] arr = "[]";
-    if (istNode.info.isArray) stream.write(arr.ptr, arr.length);
     stream.writeChar(' ');
     // name
     char[] name = istNode.info.name.dup;
@@ -715,8 +635,8 @@ private void writeText(IstNode istNode, Stream stream)
     stream.write(name_value.ptr, name_value.length);
     // value
     char[] value = value2text(istNode.info);
-    with (SerializableType) if (istNode.info.type >= _char &&
-        istNode.info.type <= _dchar && istNode.info.isArray)
+    with (RtType) if (istNode.info.rtti.type >= _char &&
+        istNode.info.rtti.type <= _dchar && istNode.info.rtti.dimension > 0)
     {
         value = escape(value, [['\n','n'],['"','"']]);
     }
@@ -765,11 +685,9 @@ private void readText(Stream stream, IstNode istNode)
     istNode.info.level = cast(uint) identifier.length;
     // type
     identifier = nextWord(propText);
-    if (identifier.length > 2)
-        istNode.info.isArray = (identifier[$-2 .. $] == "[]");
-    if (istNode.info.isArray)
-        identifier = identifier[0 .. $-2];
-    istNode.info.type = text2type[identifier];
+    identifier = replace(identifier, "-", " ");
+    istNode.info.rtti = getRtti(identifier);
+    assert(istNode.info.rtti, identifier);
     // name
     istNode.info.name = nextWord(propText).idup;
     // name value separator
@@ -778,8 +696,8 @@ private void readText(Stream stream, IstNode istNode)
     // value
     skipWordUntil(propText, '"');
     identifier = propText[1..$-1];
-    with (SerializableType) if (istNode.info.type >= _char &&
-        istNode.info.type <= _dchar && istNode.info.isArray)
+    with (RtType) if (istNode.info.rtti.type >= _char &&
+        istNode.info.rtti.type <= _dchar && istNode.info.rtti.dimension > 0)
     {
         identifier = unEscape(identifier, [['\n','n'],['"','"']]);
     }
@@ -827,9 +745,18 @@ private void writeBin(IstNode istNode, Stream stream)
     // level
     stream.writeUint(cast(uint) istNode.level);
     // type
-    stream.writeUbyte(cast(ubyte) istNode.info.type);
+    stream.writeUbyte(cast(ubyte) istNode.info.rtti.type);
+    // opt type identifier
+    if (istNode.info.rtti.type == RtType._enum || istNode.info.rtti.type == RtType._struct ||
+        istNode.info.rtti.type == RtType._funptr || istNode.info.rtti.type == RtType._object)
+    {
+        data = cast(ubyte[]) istNode.info.rtti.enumInfo.identifier;
+        datalength = cast(uint) data.length;
+        stream.writeUint(datalength);
+        stream.write(data.ptr, datalength);
+    }
     // as array
-    stream.writeBool(istNode.info.isArray);
+    stream.writeBool(istNode.info.rtti.dimension > 0);
     // name length then name
     data = cast(ubyte[]) istNode.info.name;
     datalength = cast(uint) data.length;
@@ -874,12 +801,23 @@ private void readBin(Stream stream, IstNode istNode)
     datalength = *cast(uint*) data.ptr;
     istNode.info.level = datalength;
     // type and array
-    istNode.info.type = cast(SerializableType) data[4];
-    istNode.info.isArray = cast(bool) data[5];      
+    string tstr;
+    uint offs;
+    if (data[4] == RtType._enum || data[4] == RtType._struct ||
+        data[4] == RtType._funptr || data[4] == RtType._object)
+    {
+        offs = *cast(uint*) (data.ptr + 5);
+        tstr = cast(string) data[9 .. 9 + offs].idup;
+        offs += 4;
+    }
+    else tstr = typeString(cast(RtType) data[4]);
+    if (data[5 + offs]) tstr ~= "[]";
+    istNode.info.rtti = getRtti(tstr);
+    assert(istNode.info.rtti, `"` ~ tstr ~ `"` );
     // name length then name;
-    datalength = *cast(uint*) (data.ptr + 6);
-    istNode.info.name = cast(string) data[10.. 10 + datalength].idup;
-    beg =  10 +  datalength;      
+    datalength = *cast(uint*) (data.ptr + offs + 6);
+    istNode.info.name = cast(string) data[10 + offs.. 10 + offs + datalength].idup;
+    beg =  10 +  datalength + offs;
     // value length then value
     version(LittleEndian)
     {
@@ -890,7 +828,7 @@ private void readBin(Stream stream, IstNode istNode)
     {
         datalength = *cast(uint*) (data.ptr + beg);
         data = data[beg + 4 .. beg + 4 + datalength];
-        istNode.info.value = swapBE(data, type2size[istNode.info.type]);
+        istNode.info.value = swapBE(data, istNode.info.type.size);
     } 
 }  
 //----
@@ -942,7 +880,7 @@ alias WantDescriptorEvent = void delegate(IstNode node, ref Ptr descriptor, out 
 alias WantObjectEvent = void delegate(IstNode node, ref Object obj, out bool fromRefererence);
 
 
-//TODO-cfeature: Serializer error handling (using isDamaged + format readers errors).
+//TODO-cserializer: error handling (using isDamaged + format readers errors).
 
 /**
  * The Serializer class is specialized to store and restore the members of
@@ -1043,7 +981,7 @@ private:
             nodeInfo2Declarator(node.info);
             return true;
         }
-        else if (isSerObjectType(node.info.type))
+        else if (isSerObjectType(node.info.rtti.type))
             return true;
         return false;
     }
@@ -1051,12 +989,10 @@ private:
     bool descriptorMatchesNode(T)(PropDescriptor!T* descr, IstNode node)
     if (isSerializable!T)
     {   
-        if (!descr) return false;
-        if (!node.info.name.length) return false;
-        if (descr.name != node.info.name) return false;
-        static if (isArray!T) if (!node.info.isArray) return false;
-        if (getSerializableTypeString!T != type2text[node.info.type]) return false;
-        return true;
+        if (!descr || !node.info.name.length || descr.name != node.info.name ||
+            getRtti!T !is descr.rtti) return false;
+        else
+            return true;
     }
 
     void addPropertyPublisher(PropDescriptor!Object* objDescr)
@@ -1088,16 +1024,16 @@ private:
         foreach(immutable i; 0 .. publisher.publicationCount)
         {
             auto descr = cast(GenericDescriptor*) publisher.publicationFromIndex(i);
-            const RuntimeTypeInfo rtti = descr.rtti;
+            const(Rtti)* rtti = descr.rtti;
             //
             void addValueProp(T)()
             {
-                if (!rtti.arrayDimensions) addIstNodeForDescriptor(descr.typedAs!T);
+                if (!rtti.dimension) addIstNodeForDescriptor(descr.typedAs!T);
                 else addIstNodeForDescriptor(descr.typedAs!(T[]));
             }
-            with(RuntimeType) final switch(rtti.type)
+            with(RtType) final switch(rtti.type)
             {
-                case _void, _struct, _real: assert(0);
+                case _invalid, _struct: assert(0);
                 case _bool:   addValueProp!bool; break;
                 case _byte:   addValueProp!byte; break;
                 case _ubyte:  addValueProp!ubyte; break;
@@ -1108,12 +1044,14 @@ private:
                 case _long:   addValueProp!long; break;
                 case _ulong:  addValueProp!ulong; break;
                 case _float:  addValueProp!float; break;
+                case _real:   addValueProp!real; break;
                 case _double: addValueProp!double; break;
                 case _char:   addValueProp!char; break;
                 case _wchar:  addValueProp!wchar; break;
                 case _dchar:  addValueProp!dchar; break;
-                case _string: addValueProp!string; break;
-                case _wstring:addValueProp!wstring; break;
+                case _enum:   addIstNodeForDescriptor(descr.typedAs!GenericEnum); break;
+                //case _string: addValueProp!string; break;
+                //case _wstring:addValueProp!wstring; break;
                 case _object:
                     auto _oldParentNode = _parentNode;
                     addPropertyPublisher(descr.typedAs!Object);
@@ -1122,11 +1060,11 @@ private:
                 case _stream:
                     addIstNodeForDescriptor(descr.typedAs!Stream);
                     break;
-                case _delegate:
-                    addIstNodeForDescriptor(descr.typedAs!GenericDelegate);
-                    break;
-                case _function:
-                    addIstNodeForDescriptor(descr.typedAs!GenericFunction);
+                case _funptr:
+                    if (descr.rtti.funptrInfo.hasContext)
+                        addIstNodeForDescriptor(descr.typedAs!GenericDelegate);
+                    else
+                        addIstNodeForDescriptor(descr.typedAs!GenericFunction);
                     break;
             }
         }
@@ -1167,7 +1105,7 @@ public:
             foreach(node; parent.children)
             {
                 auto child = cast(IstNode) node;
-                if (isSerObjectType(child.info.type))
+                if (isSerObjectType(child.info.rtti.type))
                     writeNodesFrom(child);
                 else writeFormat(_format)(child, _stream); 
             }
@@ -1248,12 +1186,11 @@ public:
                 if (void* t0 = target.publicationFromName(childNode.info.name))
                 {
                     PropDescriptor!int* t1 = cast(PropDescriptor!int*)t0;
-                    if (t1.rtti.arrayDimensions == childNode.info.isArray &&
-                    t1.rtti.type == childNode.info.type)
+                    if (t1.rtti is childNode.info.rtti)
                     {
                         childNode.info.descriptor = t1;
                         nodeInfo2Declarator(childNode.info);
-                        if (isSerObjectType(childNode.info.type))
+                        if (isSerObjectType(childNode.info.rtti.type))
                         {
                             auto t2 = cast(PropDescriptor!Object*) t1;
                             Object o = t2.get();
@@ -1263,10 +1200,13 @@ public:
 
                             if (fromRef || !o)
                             {
-                                Object* po = ReferenceMan.reference!(Object)(childNode.identifiersChain);
+                                void* po = ReferenceMan.reference(
+                                    childNode.info.rtti.classInfo.identifier,
+                                    childNode.identifiersChain
+                                );
                                 if (po)
                                 {
-                                    t2.set(*po);
+                                    t2.set(cast(Object) po);
                                     done = true;
                                 }
                             }
@@ -1348,7 +1288,7 @@ public:
         {
             unorderNodes[i-1].info.isLastChild = 
               unorderNodes[i].info.level < unorderNodes[i-1].info.level ||
-              (isSerObjectType(unorderNodes[i-1].info.type) && unorderNodes[i-1].info.level ==
+              (isSerObjectType(unorderNodes[i-1].info.rtti.type) && unorderNodes[i-1].info.level ==
                 unorderNodes[i].info.level);
         }
         
@@ -1360,10 +1300,10 @@ public:
 
             // !!! object wihtout props !!! (e.g reference)
             
-            if (node.info.isLastChild && !isSerObjectType(node.info.type))
+            if (node.info.isLastChild && !isSerObjectType(node.info.rtti.type))
                 parents.length -= 1;
              
-            if (isSerObjectType(node.info.type)  && !node.info.isLastChild )
+            if (isSerObjectType(node.info.rtti.type)  && !node.info.isLastChild )
                 parents ~= node;
         }  
         //
@@ -1452,7 +1392,7 @@ public:
             {
                 auto childNode = cast(IstNode) child;
                 if (!restore(childNode)) return false;
-                if (isSerObjectType(childNode.info.type) & recursive)
+                if (isSerObjectType(childNode.info.rtti.type) & recursive)
                     if (!restoreLoop(childNode)) return false;
             }
             return true;
@@ -1605,6 +1545,8 @@ void fileToPublisher(in char[] filename, Object pub,
 
 version(unittest)
 {
+    import std.stdio;
+
     unittest
     {
         char[] text;
@@ -1613,17 +1555,15 @@ version(unittest)
         //
         value = [13];
         text = "13".dup;
-        inf.type = SerializableType._byte;
+        inf.rtti = getRtti!(typeof(value[0]));
         inf.value = value ;
-        inf.isArray = false;
         assert(value2text(&inf) == text);
         assert(text2value(text, &inf) == value);
         //
         value = [13,14];
         text = "[13, 14]".dup;
-        inf.type = SerializableType._byte ;
+        inf.rtti = getRtti!(typeof(value));
         inf.value = value ;
-        inf.isArray = true;
         assert(value2text(&inf) == text);
         assert(text2value(text, &inf) == value);
         //  
@@ -1650,7 +1590,7 @@ version(unittest)
 
         testType('c');
         testType("azertyuiop".dup);
-        testType!uint(ic); 
+        testType!uint(ic);
         testType(cast(byte)8);      testType(cast(byte[])[8,8]);
         testType(cast(ubyte)8);     testType(cast(ubyte[])[8,8]);
         testType(cast(short)8);     testType(cast(short[])[8,8]);
@@ -1663,11 +1603,11 @@ version(unittest)
         testType(cast(double).8);   testType(cast(double[])[.8,.8]);
     }
 
-    unittest 
+    unittest
     {
-        foreach(fmt;EnumMembers!SerializationFormat)
-            testByFormat!fmt();
-        //testByFormat!(SerializationFormat.iztxt)();
+        //foreach(fmt;EnumMembers!SerializationFormat)
+        //    testByFormat!fmt();
+        testByFormat!(SerializationFormat.iztxt)();
         //testByFormat!(SerializationFormat.izbin)();
         //testByFormat!(SerializationFormat.json)();
     }
@@ -1679,7 +1619,7 @@ version(unittest)
         mixin PropertyPublisherImpl;
 
         SerializableReference fSerRef;
-        Referenced1 * fRef;
+        Referenced1 fRef;
 
         void doRestore(Object sender)
         {
@@ -1797,7 +1737,7 @@ version(unittest)
         assert(!ser.findNode(""));
         //----
 
-        // restore elsewhere than in the declarator ---+
+        // restore elsewhere that in the declarator ---+
         float outside;
         auto node = ser.findNode("root.aFloat");
         auto aFloatDescr = PropDescriptor!float(&outside, "aFloat");
@@ -1833,37 +1773,39 @@ version(unittest)
         //----
 
         // store & restore a serializable reference ---+
-        auto ref1 = construct!(Referenced1);
+        auto ref1 = construct!Referenced1;
         auto ref2 = construct!Referenced1;
         auto usrr = construct!ReferencedUser;
         scope(exit) destructEach(ref1, ref2, usrr);
         
-        assert(ReferenceMan.storeReference!Referenced1(&ref1, "referenced.ref1"));
-        assert(ReferenceMan.storeReference!Referenced1(&ref2, "referenced.ref2"));
-        assert(ReferenceMan.referenceID!Referenced1(&ref1) == "referenced.ref1");
-        assert(ReferenceMan.referenceID!Referenced1(&ref2) == "referenced.ref2");
+        assert(ReferenceMan.storeReference!Referenced1(ref1, "referenced.ref1"));
+        assert(ReferenceMan.storeReference!Referenced1(ref2, "referenced.ref2"));
+        assert(ReferenceMan.referenceID!Referenced1(ref1) == "referenced.ref1");
+        assert(ReferenceMan.referenceID!Referenced1(ref2) == "referenced.ref2");
+        assert(ReferenceMan.reference!Referenced1("referenced.ref1") == ref1);
+        assert(ReferenceMan.reference!Referenced1("referenced.ref2") == ref2);
 
         str.clear;
-        usrr.fRef = &ref1;
+        usrr.fRef = ref1;
         ser.publisherToStream(usrr, str, format);
-
-        usrr.fRef = &ref2;
-        assert(*usrr.fRef is ref2);
+        //
+        usrr.fRef = ref2;
+        assert(usrr.fRef == ref2);
         str.position = 0;
         ser.streamToPublisher(str, usrr, format);
-        assert(*usrr.fRef is ref1);
-
+        assert(usrr.fRef == ref1);
+        //
         usrr.fRef = null;
         assert(usrr.fRef is null);
         str.position = 0;
         ser.streamToPublisher(str, usrr, format);
-        assert(*usrr.fRef is ref1);
-
+        assert(usrr.fRef is ref1);
+        //
         str.clear;
         usrr.fRef = null;
         ser.publisherToStream(usrr, str, format);
-        usrr.fRef = &ref2;
-        assert(*usrr.fRef is ref2);
+        usrr.fRef = ref2;
+        assert(usrr.fRef is ref2);
         str.position = 0;
         ser.streamToPublisher(str, usrr, format);
         assert(usrr.fRef is null);
@@ -2002,7 +1944,7 @@ version(unittest)
         MemoryStream str = construct!MemoryStream;
         scope(exit) destructEach(source, ser, str, target);
 
-        ser.publisherToStream(source, str);
+        ser.publisherToStream(source, str, SerializationFormat.izbin);
         str.position = 0;
 
         void error(IstNode node, ref Ptr matchingDescriptor, out bool stop)
@@ -2014,7 +1956,7 @@ version(unittest)
             stop = false;
         }
         ser.onWantDescriptor = &error;
-        ser.streamToPublisher(str, target);
+        ser.streamToPublisher(str, target, SerializationFormat.izbin);
         assert(target._c == 78);
         assert(cast(char[])target._d == "foobar");
     }
@@ -2022,7 +1964,7 @@ version(unittest)
 
     // test the RuntimeTypeInfo-based serialization ----+
 
-    enum E:short {e0 = -1, e1 = 1}
+    enum E:int {e0 = -1, e1 = 1}
     class SubPublisher: PropertyPublisher
     {
         // fully serialized (initializer is MainPub)
@@ -2089,11 +2031,14 @@ version(unittest)
             auto strDesc = publicationFromName("stream");
             assert(strDesc);
 
-            ReferenceMan.storeReference(cast(Object*)&_refPublisherSource,
+            ReferenceMan.storeReference(_refPublisherSource,
                 "root.refPublisher");
-            ReferenceMan.storeReference(cast(void*)&_delegateSource,
-                "mainpub.at.delegatetarget");
-            dDescr.referenceID = "mainpub.at.delegatetarget";
+            ReferenceMan.storeReference!GenericDelegate(
+                cast(GenericDelegate*) &_delegateSource,
+                "root.delegate");
+
+            assert(*ReferenceMan.reference!GenericDelegate("root.delegate") ==
+                cast(GenericDelegate)_delegateSource);
         }
         ~this()
         {
@@ -2117,11 +2062,12 @@ version(unittest)
         {
             return _stream;
         }
-        @Set stream(Stream str)
+        @Set void stream(Stream str)
         {
             str.position = 0;
             _stream.loadFromStream(str);
             _stream.position = 0;
+            assert(str.size > 0);
         }
     }
 
@@ -2143,23 +2089,27 @@ version(unittest)
         }
 
         ser.onWantObject = &objectNotFound;
-        ser.publisherToStream(c, str);
-        //str.saveToFile(r"test.txt");
-
+        ser.publisherToStream(c, str/*, SerializationFormat.izbin*/);
+        str.saveToFile(r"test.txt");
+        //
         c.reset;
         str.position = 0;
-        ser.streamToPublisher(str, c);
-
+        ser.streamToPublisher(str, c/*, SerializationFormat.izbin*/);
+        //
         assert(c._a == 12);
         assert(c._b == 21);
         assert(c._c == 31);
         assert(c._e == E.e0);
         assert(c._t == "line1\"inside dq\"\nline2\nline3");
-        assert(c._refPublisher is c._refPublisherSource);
+        assert(c._refPublisher == c._refPublisherSource);
         assert(c._anotherSubPubliser._someChars == "awhyes");
         assert(c._delegate);
+        assert(c._delegate.funcptr == c._delegateSource.funcptr);
+        assert(c._delegate.ptr == c._delegateSource.ptr);
+
         c._delegate(123);
         assert(c.dgTest == "awyesss");
+
         assert(c._stream.readUbyte == 0xFE);
         assert(c._stream.readUbyte == 0xFD);
         assert(c._stream.readUbyte == 0xFC);
@@ -2189,13 +2139,13 @@ version(unittest)
             destruct(source);
         }
 
-        @Get const(char)[] objectReference()
+        @Get const(char[]) objectReference()
         {
             // get ID from what's currently assigned
             return ReferenceMan.referenceID!void(cast(void*)target);
         }
 
-        @Set objectReference(char[] value)
+        @Set objectReference(const(char[]) value)
         {
             // ID -> Reference -> assign the variable
             target = cast(Object) ReferenceMan.reference!void(value);

@@ -12,7 +12,7 @@ import
     std.datetime, std.stdio;
 import
     iz.types, iz.memory, iz.containers, iz.streams, iz.properties,
-    iz.serializer, iz.referencable, iz.observer, iz.strings;
+    iz.serializer, iz.referencable, iz.observer, iz.strings, iz.rtti;
 
 /**
  * The PublishedObjectArray class template allows to serialize an array of
@@ -457,7 +457,7 @@ unittest
  *      T = The array element type.
  */
 final class Published2dArray(T): PropertyPublisher
-if (isSerSimpleType!T)
+if (isBasicRtType!T)
 {
 
     mixin PropertyPublisherImpl;
@@ -736,7 +736,7 @@ public:
      */
     ~this()
     {
-        ReferenceMan.removeReference(cast(Component*)this);
+        ReferenceMan.removeReference(this);
         foreach_reverse(o; _owned)
         {
             // observers can invalidate any escaped reference to a owned
@@ -796,21 +796,21 @@ public:
     final @Set name(const(char)[] value)
     {
         if (_name == value) return;
-        ReferenceMan.removeReference(cast(Component*)this);
+        ReferenceMan.removeReference(this);
         if (nameAvailable(value)) _name = value.dup;
         else _name = getUniqueName(value);
-        ReferenceMan.storeReference(cast(Component*)this, qualifiedName);
+        ReferenceMan.storeReference(this, qualifiedName);
     }
     /// ditto
-    final @Get char[] name() {return _name;}
+    final @Get const(char)[] name() {return _name;}
 
     /**
      * Returns the fully qualified name of this component in the owner
      * Component tree.
      */
-    final char[] qualifiedName()
+    final const(char)[] qualifiedName()
     {
-        char[][] result;
+        const(char)[][] result;
         result ~= _name;
         Component c = _owner;
         while (c)
@@ -859,7 +859,7 @@ unittest
 {
     auto c = Component.create!Component(null);
     c.name = "a";
-    assert(ReferenceMan.referenceID(cast(Component*)c) == "a");
+    assert(ReferenceMan.referenceID(cast(Component)c) == "a");
 }
 
 package abstract class BaseTimer: PropertyPublisher
@@ -1139,7 +1139,7 @@ public:
     /**
      * Sets or gets the process executable.
      */
-    @Set void executable(const(char[]) value)
+    @Set void executable(const(char)[] value)
     {
         _executable = value.dup;
     }
@@ -1153,7 +1153,7 @@ public:
     /**
      * Sets or gets the process working directory.
      */
-    @Set void workingDirectory(const(char[]) value)
+    @Set void workingDirectory(const(char)[] value)
     {
         _workingDirectory = value.dup;
     }
@@ -1182,7 +1182,7 @@ public:
      *      each group separated by the system's pathSeparator and in a group,
      *      the name separated of its value(s) by the equal symbol.
      */
-    @Set void environment(const(char[]) value)
+    @Set void environment(const(char)[] value)
     {
         import std.path: pathSeparator;
         string v, k;
@@ -1205,7 +1205,7 @@ public:
     }
 
     /// ditto
-    @Get char[] environment()
+    @Get const(char)[] environment()
     {
         return env();
     }
