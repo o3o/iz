@@ -626,12 +626,12 @@ mixin template PropertyPublisherImpl()
 
     /// see PropertyPublisher
     static if (!__traits(hasMember, ToT, "publicationFromName") || Base)
-    protected GenericDescriptor* publicationFromName(string name)
+    public GenericDescriptor* publicationFromName(string name)
     {return publication!int(name);}
 
     /// see PropertyPublisher
     static if (!__traits(hasMember, ToT, "publicationFromIndex") || Base)
-    protected GenericDescriptor* publicationFromIndex(size_t index)
+    public GenericDescriptor* publicationFromIndex(size_t index)
     {return cast(GenericDescriptor*) _publishedDescriptors[index];}
 
 // templates: no problem with overrides, instantiated according to class This or That
@@ -645,7 +645,7 @@ mixin template PropertyPublisherImpl()
      * Returns:
      *      Null if the operation fails otherwise a pointer to a PropDescriptor!T.
      */
-    protected PropDescriptor!T * publication(T)(string name, bool createIfMissing = false)
+    public PropDescriptor!T * publication(T)(string name, bool createIfMissing = false)
     {
         PropDescriptor!T * descr;
 
@@ -668,7 +668,7 @@ mixin template PropertyPublisherImpl()
     /**
      * Performs all the possible analysis.
      */
-    protected void collectPublications(T)()
+    public void collectPublications(T)()
     {
         collectPublicationsFromPairs!T;
         collectPublicationsFromFields!T;
@@ -681,7 +681,7 @@ mixin template PropertyPublisherImpl()
      * .name member excludes this prefix, otherwise the descriptor .name is
      * identical.
      */
-    protected void collectPublicationsFromFields(T)()
+    public void collectPublicationsFromFields(T)()
     {
         import iz.types: ScopedReachability;
         import std.traits: isCallable, isDelegate, isFunctionPointer, getUDAs;
@@ -737,7 +737,7 @@ mixin template PropertyPublisherImpl()
      * the descriptor created when the ancestor was scanned is removed from the
      * publications.
      */
-    protected void collectPublicationsFromPairs(T)()
+    public void collectPublicationsFromPairs(T)()
     {
         import iz.types: ScopedReachability;
         import iz.rtti: Rtti, getRtti;
@@ -1051,6 +1051,8 @@ unittest
     // dont interfere when mixed in struct
     Bug bug = Bug(0);
     assert(bug.publicationCount == 1);
+    assert(bug.publicationFromName("a") != null);
+    assert(bug.publicationFromName("a") == bug.publicationFromIndex(0));
 }
 
 unittest

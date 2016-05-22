@@ -142,6 +142,8 @@ package bool isSerArrayType(T)()
     else return true;
 }
 
+struct GenericStruct{}
+
 /**
  * Only a sub set of the type representable as a Rtti are serializable.
  * This template only evaluates to true if it's the case.
@@ -155,6 +157,7 @@ bool isSerializable(T)()
     else static if (is(T==delegate)) return true;
     else static if (is(PointerTarget!T==function)) return true;
     else static if (is(T==GenericEnum)) return true;
+    else static if (is(T==GenericStruct)) return true;
     else return false;
 }
 
@@ -328,7 +331,7 @@ char[] value2text(const SerNodeInfo* nodeInfo)
         case _enum:     return v2t_2!char;
         case _object:   return cast(char[])(nodeInfo.value);
         case _stream:   return to!(char[])(nodeInfo.value[]);
-        case _struct:   assert(0, "todo");
+        case _struct:   return cast(char[])(nodeInfo.value);
         case _funptr:   return v2t_2!char;
     }
 }
@@ -488,10 +491,31 @@ void setNodeInfo(T)(SerNodeInfo* nodeInfo, PropDescriptor!T* descriptor)
     else static if (isSerObjectType!T)
     {
         Object obj = cast(Object) descriptor.get();
-        char[] value = className(obj).dup;
-        nodeInfo.value.length = value.length;
-        moveMem(nodeInfo.value.ptr, value.ptr, nodeInfo.value.length);
+        nodeInfo.value = cast(ubyte[]) className(obj);
         return;
+    }
+
+    // struct, warning, T will is set to a dummy struct type
+    else static if (is(T == struct) || is(T==GenericStruct))
+    {
+        const(Rtti)* ti = nodeInfo.rtti;
+        final switch(ti.structInfo.structType)
+        {
+            case StructType._none, StructType._publisher:
+                nodeInfo.value = cast(ubyte[]) ti.structInfo.identifier;
+                break;
+            case StructType._text:
+                auto d = descriptor.get;
+                ti.structInfo.textTraits.setContext(&d);
+                assert(ti.structInfo.textTraits.saveToText.ptr, "struct text traits, context not set");
+                nodeInfo.value = cast(ubyte[]) ti.structInfo.textTraits.saveToText();
+                break;
+            case StructType._binary:
+                auto d = descriptor.get;
+                ti.structInfo.binTraits.setContext(&d);
+                assert(ti.structInfo.binTraits.saveToBytes.ptr, "struct bin traits, context not set");
+                nodeInfo.value = ti.structInfo.binTraits.saveToBytes();
+        }
     }
 
     // stream
@@ -882,6 +906,7 @@ alias WantObjectEvent = void delegate(IstNode node, ref Object obj, out bool fro
 
 //TODO-cserializer: error handling (using isDamaged + format readers errors).
 //TODO-cserializer: handle the PropHints to optimize the stream size (noDefault)
+//TODO-cserializer: convert float to string using format("%.9g",value).
 
 /**
  * The Serializer class is specialized to store and restore the members of
@@ -996,15 +1021,32 @@ private:
             return true;
     }
 
-    void addPropertyPublisher(PropDescriptor!Object* objDescr)
+    void addPropertyPublisher(PD)(PD* pubDescriptor)
     {
-        PropertyPublisher publisher;
-        publisher = cast(PropertyPublisher) objDescr.get();
+        static if (is(PD == PropDescriptor!Object))
+        {
+            PropertyPublisher publisher;
+            publisher = cast(PropertyPublisher) pubDescriptor.get();
+            enum declIsClass = true;
+        }
+        else
+        {
+            const(Rtti)* prtti = pubDescriptor.rtti;
+            if (prtti.type != RtType._struct)
+                return;
+            if (prtti.structInfo.structType != StructType._publisher)
+                return;
+
+            const(PubTraits)* publisher = prtti.structInfo.pubTraits;
+            enum declIsClass = false;
+        }
+
+
 
         // write/Set object node
         if (!_parentNode) _parentNode = _rootNode;
         else _parentNode = _parentNode.addNewChildren;
-        _parentNode.setDescriptor(objDescr);
+        _parentNode.setDescriptor(pubDescriptor);
         if (_mustWrite)
             writeFormat(_format)(_parentNode, _stream);
 
@@ -1012,17 +1054,20 @@ private:
         if(!publisher)
             return;
 
-        // reference: current collector is not owned at all
-        if (_parentNode !is _rootNode && publisher.declarator is null)
-            return;
+        static if (declIsClass)
+        {
+            // reference: current collector is not owned at all
+            if (_parentNode !is _rootNode && publisher.declarator is null)
+                return;
 
-        // reference: current collector is not owned by the declarator
-        if (_parentNode !is _rootNode && objDescr.declarator !is publisher.declarator)
-            return;
+            // reference: current collector is not owned by the declarator
+            if (_parentNode !is _rootNode && pubDescriptor.declarator !is publisher.declarator)
+                return;
+        }
 
         // not a reference: current collector is owned (it has initialized the target),
         // so write its members
-        foreach(immutable i; 0 .. publisher.publicationCount)
+        foreach(immutable i; 0 .. publisher.publicationCount())
         {
             auto descr = cast(GenericDescriptor*) publisher.publicationFromIndex(i);
             const(Rtti)* rtti = descr.rtti;
@@ -1034,7 +1079,7 @@ private:
             }
             with(RtType) final switch(rtti.type)
             {
-                case _invalid, _struct: assert(0);
+                case _invalid:assert(0);
                 case _bool:   addValueProp!bool; break;
                 case _byte:   addValueProp!byte; break;
                 case _ubyte:  addValueProp!ubyte; break;
@@ -1051,8 +1096,6 @@ private:
                 case _wchar:  addValueProp!wchar; break;
                 case _dchar:  addValueProp!dchar; break;
                 case _enum:   addIstNodeForDescriptor(descr.typedAs!GenericEnum); break;
-                //case _string: addValueProp!string; break;
-                //case _wstring:addValueProp!wstring; break;
                 case _object:
                     auto _oldParentNode = _parentNode;
                     addPropertyPublisher(descr.typedAs!Object);
@@ -1062,10 +1105,24 @@ private:
                     addIstNodeForDescriptor(descr.typedAs!Stream);
                     break;
                 case _funptr:
-                    if (descr.rtti.funptrInfo.hasContext)
+                    if (rtti.funptrInfo.hasContext)
                         addIstNodeForDescriptor(descr.typedAs!GenericDelegate);
                     else
                         addIstNodeForDescriptor(descr.typedAs!GenericFunction);
+                    break;
+                case _struct:
+                    final switch (rtti.structInfo.structType)
+                    {
+                        case StructType._none:
+                            assert(0);
+                        case StructType._publisher:
+                            auto _oldParentNode = _parentNode;
+                            addPropertyPublisher(descr.typedAs!int); // struct detected with rtti
+                            _parentNode = _oldParentNode;
+                            break;
+                        case StructType._text, StructType._binary:
+                            addIstNodeForDescriptor(descr.typedAs!GenericStruct);
+                    }
                     break;
             }
         }
@@ -1139,6 +1196,27 @@ public:
         _previousNode = null;
         _parentNode = null;
         PropDescriptor!Object rootDescr = PropDescriptor!Object(&root, "root");
+        addPropertyPublisher(&rootDescr);
+        _mustWrite = false;
+        _stream = null;
+    }
+
+    void publisherToStream(S)(ref S root, Stream outputStream,
+        SerializationFormat format = defaultFormat)
+    if (is(S==struct))
+    {
+        const(Rtti)* rtti = getRtti!S;
+        if (rtti.structInfo.structType != StructType._publisher)
+            return;
+        rtti.structInfo.pubTraits.setContext(&root);
+
+        _format = format;
+        _stream = outputStream;
+        _mustWrite = true;
+        _rootNode.deleteChildren;
+        _previousNode = null;
+        _parentNode = null;
+        PropDescriptor!S rootDescr = PropDescriptor!S(&root, "root");
         addPropertyPublisher(&rootDescr);
         _mustWrite = false;
         _stream = null;
@@ -1604,7 +1682,7 @@ version(unittest)
         testType(cast(double).8);   testType(cast(double[])[.8,.8]);
     }
 
-    unittest
+    version(none)unittest
     {
         foreach(fmt;EnumMembers!SerializationFormat)
             testByFormat!fmt();
@@ -2171,6 +2249,59 @@ version(unittest)
         assert(obj.target == obj.source);
     }
     //----
+
+    // test publishing struct
+    unittest
+    {
+        static struct PubStruct
+        {
+            mixin PropertyPublisherImpl;
+
+            @SetGet uint _ui;
+            @SetGet char[] _cs;
+        }
+
+        PubStruct ps;
+        ps.collectPublications!PubStruct;
+
+        assert(ps.publicationFromName("ui") != null);
+        assert(ps.publicationFromName("cs") != null);
+
+        MemoryStream str = construct!MemoryStream;
+        Serializer ser = construct!Serializer;
+        scope(exit) destructEach(str, ser);
+
+        ser.publisherToStream(ps, str);
+        //str.saveToFile("fromPubStruct.txt");
+    }
+
+    // test text struct
+    unittest
+    {
+        static struct TextStruct
+        {
+            const(char)[] saveToText(){return "content backup";}
+            void loadFromText(const(char)[] value){assert(value == saveToText);}
+        }
+
+        class TextStructParent: PropertyPublisher
+        {
+            mixin PropertyPublisherImpl;
+            @SetGet TextStruct _ts;
+        }
+
+        TextStructParent tsp = construct!TextStructParent;
+        tsp.collectPublications!TextStructParent;
+        assert(tsp.publicationFromName("ts") != null);
+        assert(tsp.publicationFromIndex(0) != null);
+
+        MemoryStream str = construct!MemoryStream;
+        Serializer ser = construct!Serializer;
+        scope(exit) destructEach(str, ser, tsp);
+
+        ser.publisherToStream(tsp, str);
+        //str.saveToFile("fromTextStruct.txt");
+    }
 
 }
 
