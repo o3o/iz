@@ -432,15 +432,17 @@ void nodeInfo2Declarator(const SerNodeInfo* nodeInfo)
                 case StructType._none: assert(0);
                 case StructType._text:
                     void* structPtr = (cast(PropDescriptor!GenericStruct*) nodeInfo.descriptor).get;
-                    nodeInfo.rtti.structInfo.textTraits.setContext(structPtr);
+                    void* oldCtxt = nodeInfo.rtti.structInfo.textTraits.setContext(structPtr);
                     assert(nodeInfo.rtti.structInfo.textTraits.loadFromText.ptr);
                     nodeInfo.rtti.structInfo.textTraits.loadFromText(cast(const(char)[]) nodeInfo.value);
+                    nodeInfo.rtti.structInfo.textTraits.restoreContext(oldCtxt);
                     break;
                 case StructType._binary:
                     void* structPtr = (cast(PropDescriptor!GenericStruct*) nodeInfo.descriptor).get;
-                    nodeInfo.rtti.structInfo.binTraits.setContext(structPtr);
+                    void* oldCtxt = nodeInfo.rtti.structInfo.binTraits.setContext(structPtr);
                     assert(nodeInfo.rtti.structInfo.binTraits.loadFromBytes.ptr);
                     nodeInfo.rtti.structInfo.binTraits.loadFromBytes(cast(ubyte[])nodeInfo.value);
+                    nodeInfo.rtti.structInfo.binTraits.restoreContext(oldCtxt);
                     break;
                 case StructType._publisher:
                     break;
@@ -525,15 +527,17 @@ void setNodeInfo(T)(SerNodeInfo* nodeInfo, PropDescriptor!T* descriptor)
                 break;
             case StructType._text:
                 void* structPtr = descriptor.get;
-                ti.structInfo.textTraits.setContext(structPtr);
+                void* oldCtxt = ti.structInfo.textTraits.setContext(structPtr);
                 assert(ti.structInfo.textTraits.saveToText.ptr);
                 nodeInfo.value = cast(ubyte[]) ti.structInfo.textTraits.saveToText();
+                ti.structInfo.textTraits.restoreContext(oldCtxt);
                 break;
             case StructType._binary:
                 void* structPtr = descriptor.get;
-                ti.structInfo.binTraits.setContext(structPtr);
+                void* oldCtxt = ti.structInfo.binTraits.setContext(structPtr);
                 assert(ti.structInfo.binTraits.saveToBytes.ptr);
                 nodeInfo.value = ti.structInfo.binTraits.saveToBytes();
+                ti.structInfo.binTraits.restoreContext(oldCtxt);
         }
     }
 
@@ -1157,8 +1161,9 @@ private:
                             auto _oldParentNode = _parentNode;
                             PropDescriptor!GenericStruct* des = cast(PropDescriptor!GenericStruct*) descr;
                             void* structPtr = des.get;
-                            rtti.structInfo.pubTraits.setContext(structPtr);
+                            void* oldCtxt = rtti.structInfo.pubTraits.setContext(structPtr);
                             addPropertyPublisher(des); // struct detected with rtti
+                            rtti.structInfo.pubTraits.restoreContext(oldCtxt);
                             _parentNode = _oldParentNode;
                             break;
                         case StructType._text, StructType._binary:
@@ -1372,8 +1377,9 @@ public:
                             /*
                             if not structPtr then onWantObject.....
                             */
-                            t2.rtti.structInfo.pubTraits.setContext(structPtr);
+                            void* oldCtxt = t2.rtti.structInfo.pubTraits.setContext(structPtr);
                             restoreFrom(childNode, t2.rtti.structInfo.pubTraits);
+                            t2.rtti.structInfo.pubTraits.restoreContext(oldCtxt);
                             done = true;
                         }
                         else done = true;

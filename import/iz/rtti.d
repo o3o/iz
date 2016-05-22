@@ -190,12 +190,23 @@ string typeString(T)(T t)
 
 private mixin template setContext()
 {
-    void setContext(void* context) const
+    private auto internalSetContext(bool restore)(void* context) const
     {
+        static if (!restore) void* old;
         foreach(member; __traits(allMembers, typeof(this)))
             static if (is(typeof(__traits(getMember, typeof(this), member)) == delegate))
+            {
+                static if (!restore) old = __traits(getMember, typeof(this), member).ptr;
                 __traits(getMember, typeof(this), member).ptr = context;
+            }
+        static if (!restore) return old;
     }
+
+    /// Sets the context before usage.
+    public alias setContext = internalSetContext!false;
+
+    /// Restores the context after usage.
+    public alias restoreContext = internalSetContext!true;
 }
 
 /**
