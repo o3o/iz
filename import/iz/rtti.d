@@ -328,14 +328,14 @@ struct StructInfo
     this(string identifier, StructType type)
     {
         this.identifier = identifier;
-        structType = type;
+        this.type = type;
     }
 
     /// Constructs the info for a specual struct.
     this(T)(string identifier, StructType type, T t)
     {
         this.identifier = identifier;
-        structType = type;
+        this.type = type;
         static if (is(T == PubTraits))
             structInfo.publisherInfo = t;
         else static if (is(T == TextTraits))
@@ -349,7 +349,7 @@ struct StructInfo
     string identifier;
 
     /// Indicates the special struct type.
-    StructType structType;
+    StructType type;
 
     /// The information for the structure.
     StructTraits structSpecialInfo;
@@ -710,7 +710,7 @@ unittest
     Bar bar;
     const(Rtti)* rtti = getRtti(bar);
     assert(rtti.type == RtType._struct);
-    assert(rtti.structInfo.structType == StructType._publisher);
+    assert(rtti.structInfo.type == StructType._publisher);
     assert(rtti.structInfo.identifier == "Bar");
     rtti.structInfo.pubTraits.setContext(cast(void*) &bar);
     assert(rtti.structInfo.pubTraits.publicationCount == &bar.publicationCount);
@@ -747,7 +747,7 @@ unittest
     Hop hop;
     const(Rtti)* rtti = getRtti(hop);
     assert(rtti.type == RtType._struct);
-    assert(rtti.structInfo.structType == StructType._text);
+    assert(rtti.structInfo.type == StructType._text);
     assert(rtti.structInfo.identifier == "Hop");
     rtti.structInfo.textTraits.setContext(cast(void*) &hop);
     assert(rtti.structInfo.textTraits.saveToText == &hop.saveToText);
@@ -767,7 +767,7 @@ unittest
     Boo boo;
     const(Rtti)* rtti = getRtti(boo);
     assert(rtti.type == RtType._struct);
-    assert(rtti.structInfo.structType == StructType._binary);
+    assert(rtti.structInfo.type == StructType._binary);
     assert(rtti.structInfo.identifier == "Boo");
     rtti.structInfo.binTraits.setContext(cast(void*) &boo);
     assert(rtti.structInfo.binTraits.saveToBytes == &boo.saveToBytes);

@@ -427,7 +427,7 @@ void nodeInfo2Declarator(const SerNodeInfo* nodeInfo)
             break;
         case _object:   break;
         case _struct:
-            final switch(nodeInfo.rtti.structInfo.structType)
+            final switch(nodeInfo.rtti.structInfo.type)
             {
                 case StructType._none: assert(0);
                 case StructType._text:
@@ -520,7 +520,7 @@ void setNodeInfo(T)(SerNodeInfo* nodeInfo, PropDescriptor!T* descriptor)
     else static if (is(T == struct) || is(T==GenericStruct))
     {
         const(Rtti)* ti = nodeInfo.rtti;
-        final switch(ti.structInfo.structType)
+        final switch(ti.structInfo.type)
         {
             case StructType._none, StructType._publisher:
                 nodeInfo.value = cast(ubyte[]) ti.structInfo.identifier;
@@ -999,24 +999,6 @@ private:
     bool _mustWrite;
     bool _mustRead;
 
-    auto PubItfOrStruct(T)(auto ref T t)
-    {
-        static if (is(T==class))
-        {
-            PropertyPublisher pub = cast(PropertyPublisher) t;
-            return pub;
-        }
-        else static if (is(T==struct))
-        {
-            const(Rtti)* rtti = getRtti!T;
-            if (rtti.structInfo.structType == StructType._publisher)
-            {
-
-            }
-            return t;
-        }
-    }
-
     void addIstNodeForDescriptor(T)(PropDescriptor!T * descriptor)
     if (isSerializable!T && !isSerObjectType!T)
     in
@@ -1031,7 +1013,6 @@ private:
 
         if (_mustWrite)
             writeFormat(_format)(propNode, _stream);
-
 
         _previousNode = propNode;
     }
@@ -1075,14 +1056,12 @@ private:
             const(Rtti)* prtti = pubDescriptor.rtti;
             if (prtti.type != RtType._struct)
                 return;
-            if (prtti.structInfo.structType != StructType._publisher)
+            if (prtti.structInfo.type != StructType._publisher)
                 return;
 
             const(PubTraits)* publisher = prtti.structInfo.pubTraits;
             enum declIsClass = false;
         }
-
-
 
         // write/Set object node
         if (!_parentNode) _parentNode = _rootNode;
@@ -1091,7 +1070,7 @@ private:
         if (_mustWrite)
             writeFormat(_format)(_parentNode, _stream);
 
-        // reference: if not a PropDescriptorCollection
+        // reference: if not a PropPublisher
         if(!publisher)
             return;
 
@@ -1152,7 +1131,7 @@ private:
                         addIstNodeForDescriptor(descr.typedAs!GenericFunction);
                     break;
                 case _struct:
-                    final switch (rtti.structInfo.structType)
+                    final switch (rtti.structInfo.type)
                     {
                         case StructType._none:
                             assert(0);
@@ -1253,7 +1232,7 @@ public:
     if (is(S==struct))
     {
         const(Rtti)* rtti = getRtti!S;
-        if (rtti.structInfo.structType != StructType._publisher)
+        if (rtti.structInfo.type != StructType._publisher)
             return;
         rtti.structInfo.pubTraits.setContext(&root);
 
@@ -1291,7 +1270,7 @@ public:
     if (is(S==struct))
     {
         const(Rtti)* rtti = getRtti!S;
-        if (rtti.structInfo.structType != StructType._publisher)
+        if (rtti.structInfo.type != StructType._publisher)
             return;
         rtti.structInfo.pubTraits.setContext(&root);
 
@@ -1370,7 +1349,7 @@ public:
 
                         }
                         else if (childNode.info.rtti.type == RtType._struct &&
-                            childNode.info.rtti.structInfo.structType == StructType._publisher)
+                            childNode.info.rtti.structInfo.type == StructType._publisher)
                         {
                             auto t2 = cast(PropDescriptor!GenericStruct*) t1;
                             void* structPtr = t2.get;
@@ -1400,7 +1379,7 @@ public:
         else static if (is(R == struct))
         {
             const(Rtti)* rtti = getRtti!R;
-            if (rtti.structInfo.structType != StructType._publisher)
+            if (rtti.structInfo.type != StructType._publisher)
                 return;
             restoreFrom(_rootNode, root);
         }
@@ -1458,7 +1437,7 @@ public:
         foreach(immutable i; 1 .. unorderNodes.length)
         {
             bool prevIsPubItf = unorderNodes[i-1].info.rtti.type == RtType._object;
-            bool prevIsPubStr = unorderNodes[i-1].info.rtti.type == RtType._struct && unorderNodes[i-1].info.rtti.structInfo.structType == StructType._publisher;
+            bool prevIsPubStr = unorderNodes[i-1].info.rtti.type == RtType._struct && unorderNodes[i-1].info.rtti.structInfo.type == StructType._publisher;
 
             unorderNodes[i-1].info.isLastChild = 
               unorderNodes[i].info.level < unorderNodes[i-1].info.level ||
@@ -1472,7 +1451,7 @@ public:
             parents[$-1].addChild(node);
 
             bool isPubItf = node.info.rtti.type == RtType._object;
-            bool isPubStr = node.info.rtti.type == RtType._struct && node.info.rtti.structInfo.structType == StructType._publisher;
+            bool isPubStr = node.info.rtti.type == RtType._struct && node.info.rtti.structInfo.type == StructType._publisher;
 
             // !!! object wihtout props !!! (e.g reference)
             
