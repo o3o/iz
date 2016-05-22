@@ -46,12 +46,24 @@ struct PropDescriptor(T)
 {
     public
     {
-        /// setter proptotype
-        alias PropSetter = void delegate(T value);
-        /// getter prototype
-        alias PropGetter = T delegate();
-        /// alternative setter prototype.
-        alias PropSetterConst = void delegate(const T value);
+        static if (!is(T == struct))
+        {
+            /// setter proptotype
+            alias PropSetter = void delegate(T value);
+            /// getter prototype
+            alias PropGetter = T delegate();
+            /// alternative setter prototype.
+            alias PropSetterConst = void delegate(const T value);
+        }
+        else
+        {
+            /// setter proptotype
+            alias PropSetter = void delegate(T* value);
+            /// getter prototype
+            alias PropGetter = T* delegate();
+            /// alternative setter prototype.
+            alias PropSetterConst = void delegate(ref const T* value);
+        }
     }
     private
     {
@@ -62,8 +74,7 @@ struct PropDescriptor(T)
 
         PropHints _hints;
 
-        T* _setPtr;
-        T* _getPtr;
+        T* _directPtr;
 
         PropAccess _access;
 
@@ -71,8 +82,7 @@ struct PropDescriptor(T)
 
         void cleanup()
         {
-            _setPtr = null;
-            _getPtr = null; 
+            _directPtr = null;
             _setter = null;
             _getter = null;
             _declarator = null;
@@ -92,17 +102,31 @@ struct PropDescriptor(T)
         }
 
         // pseudo setter internally used when a T is directly written.
-        void internalSetter(T value)
+        static if (!is(T == struct))
+            void internalSetter(T value)
         {
             alias TT = Unqual!T;
             const T current = getter()();
-            if (value != current) *(cast(TT*)_setPtr) = value;
+            if (value != current) *(cast(TT*)_directPtr) = value;
+        }
+        else
+            void internalSetter(T* value)
+        {
+            alias TT = Unqual!T;
+            const T* current = getter()();
+            if (value != current) (cast(TT*)_directPtr) = value;
         }
 
         // pseudo getter internally used when a T is directly read
-        T internalGetter()
+        static if (!is(T == struct))
+            T internalGetter()
         {
-            return *_getPtr;
+            return *_directPtr;
+        }
+        else
+            T* internalGetter()
+        {
+            return _directPtr;
         }
     }
     public
@@ -226,14 +250,17 @@ struct PropDescriptor(T)
          */
         void setDirectTarget(T* location)
         {
-            _setPtr = location;
+            _directPtr = location;
             _setter = &internalSetter;
             updateAccess;
         }
         /**
          * Sets the property value
          */
-        void set(T value) {_setter(value);}
+        static if (!is(T == struct))
+            void set(T value) {_setter(value);}
+        else
+            void set(T* value) {_setter(value);}
 
 // ---- 
 // getter ---------------------------------------------------------------------+
@@ -254,14 +281,17 @@ struct PropDescriptor(T)
          */
         void setDirectSource(T* value)
         {
-            _getPtr = value;
+            _directPtr = value;
             _getter = &internalGetter;
             updateAccess;
         }
         /**
          * Gets the property value
          */
-        T get(){return _getter();}
+        static if (!is(T == struct))
+            T get(){return _getter();}
+        else
+            T* get(){return _getter();}
 
 // ----     
 // misc -----------------------------------------------------------------------+
@@ -333,8 +363,8 @@ unittest
     class B
     {
         private Si fi;
-        @property Si i(){return fi;}
-        @property void i(const Si aValue){fi = aValue;}
+        @property Si* i(){return &fi;}
+        @property void i(Si* aValue){fi = *aValue;}
     }
 
     auto a = construct!A;
@@ -347,7 +377,7 @@ unittest
     auto refval = Si(1,2,333);
     auto b = construct!B;
     auto descrBi = PropDescriptor!Si(&b.i,&b.i,"I");
-    descrBi.setter()(refval);
+    descrBi.setter()(&refval);
     assert(b.i.e == 333);
     assert(b.i.e == descrBi.getter()().e);
 
