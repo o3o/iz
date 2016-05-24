@@ -1140,3 +1140,66 @@ void throwStaticEx(string message, string file = __FILE__, size_t line = __LINE_
     throw e;
 }
 
+/**
+ * Sets the context and the function of a delegate.
+ *
+ * Params:
+ *      T = The type of the delegate.
+ *      t = The delegate to set.
+ *      context = The context pointer, e.g a pointer to a struct or a class instance.
+ *      code = The pointer to the static function.
+ */
+void setDelegate(T, FT)(ref T t, void* context, FT code)
+if (is(T == delegate) && is(FT == typeof(T.funcptr)))
+{
+    t.ptr = context;
+    t.funcptr = code;
+}
+///
+unittest
+{
+    struct Foo
+    {
+        bool fun(){return true;}
+    }
+    Foo foo;
+    bool delegate() atFun;
+    atFun.setDelegate(&foo, &Foo.fun);
+    assert(atFun());
+}
+
+/**
+ * Sets the context and the function of a new delegate.
+ *
+ * Params:
+ *      T = The type of the delegate.
+ *      t = The delegate to set.
+ *      context = The context pointer, e.g a pointer to a struct or a class instance.
+ *      code = The pointer to the static function.
+ *
+ * Returns:
+ *      A new delegate of type T.
+ */
+auto getDelegate(FT)(void* context, FT code)
+if (is(pointerTarget!FT == function))
+{
+    import std.array: replace;
+    enum type = "alias T = " ~ FT.stringof.replace("function", "delegate") ~ ";";
+    mixin(type);
+    T t;
+    t.ptr = context;
+    t.funcptr = code;
+    return t;
+}
+///
+unittest
+{
+    struct Foo
+    {
+        bool fun(){return true;}
+    }
+    Foo foo;
+    bool delegate() atFun = getDelegate(&foo, &Foo.fun);
+    assert(atFun());
+}
+
