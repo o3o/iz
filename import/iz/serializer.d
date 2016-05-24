@@ -917,19 +917,22 @@ private SerializationReader readFormat(SerializationFormat format)
 alias WantDescriptorEvent = void delegate(IstNode node, ref Ptr descriptor, out bool stop);
 
 /**
- * Prototype of the event called when a serializer failed to get an object to deserialize.
+ * Prototype of the event called when a serializer fails to get an aggregate to
+ * deserialize.
+ *
  * Params:
- *      node = The information the callee uses to set the parameter serializable.
- *      obj = The Object the callee has to return.
- *      fromReference = When set to true, the serializer tries to find the Object
- *      using the ReferenceMan.
+ *      node = The information the callee uses to set the undefined aggregate.
+ *      aggregate = The object or a pointer to the struct where the deserialization
+ *          continues.
+ *      fromReference = When set to true, the serializer tries to find the aggregate
+ *          in the ReferenceMan.
  */
-alias WantObjectEvent = void delegate(IstNode node, ref Object obj, out bool fromRefererence);
+alias WantAggregateEvent = void delegate(IstNode node, ref void* aggregate, out bool fromRefererence);
 
 
 //TODO-cserializer: error handling (using isDamaged + format readers errors).
 //TODO-cserializer: handle the PropHints to optimize the stream size (noDefault)
-//TODO-cserializer: convert float to string using format("%.9g",value).
+//TODO-cserializer: convert FP to string using format("%.{9|17}g",value).
 
 /**
  * The Serializer class is specialized to store and restore the members of
@@ -988,8 +991,8 @@ private:
 
     Object  _declarator;
 
+    WantAggregateEvent _onWantAgregate;
     WantDescriptorEvent _onWantDescriptor;
-    WantObjectEvent _onWantObject;
 
     SerializationFormat _format;
     
@@ -1320,10 +1323,11 @@ public:
                         if (childNode.info.rtti.type == RtType._object)
                         {
                             auto t2 = cast(PropDescriptor!Object*) t1;
-                            Object o = t2.get();
+                            void* o = cast(void*) t2.get();
                             bool fromRef;
-                            if (!o && _onWantObject)
-                                _onWantObject(childNode, o, fromRef);
+
+                            if (!o && _onWantAgregate)
+                                _onWantAgregate(childNode, o, fromRef);
 
                             if (fromRef || !o)
                             {
@@ -1339,27 +1343,43 @@ public:
                             }
                             else
                             {
-                                auto t3 = cast(PropertyPublisher) o;
+                                auto t3 = cast(PropertyPublisher) cast(Object) o;
                                 if (t3)
                                 {
                                     restoreFrom(childNode, t3);
                                     done = true;
                                 }
                             }
-
                         }
                         else if (childNode.info.rtti.type == RtType._struct &&
                             childNode.info.rtti.structInfo.type == StructType._publisher)
                         {
                             auto t2 = cast(PropDescriptor!GenericStruct*) t1;
                             void* structPtr = t2.get;
-                            /*
-                            if not structPtr then onWantObject.....
-                            */
-                            void* oldCtxt = t2.rtti.structInfo.pubTraits.setContext(structPtr);
-                            restoreFrom(childNode, t2.rtti.structInfo.pubTraits);
-                            t2.rtti.structInfo.pubTraits.restoreContext(oldCtxt);
-                            done = true;
+                            bool fromRef;
+
+                            if (!structPtr && _onWantAgregate)
+                                _onWantAgregate(childNode, structPtr, fromRef);
+
+                            if (fromRef || !structPtr)
+                            {
+                                void* ps = ReferenceMan.reference(
+                                    childNode.info.rtti.classInfo.identifier,
+                                    childNode.identifiersChain
+                                );
+                                if (ps)
+                                {
+                                    t2.set(cast(GenericStruct*) ps);
+                                    done = true;
+                                }
+                            }
+                            else
+                            {
+                                void* oldCtxt = t2.rtti.structInfo.pubTraits.setContext(structPtr);
+                                restoreFrom(childNode, t2.rtti.structInfo.pubTraits);
+                                t2.rtti.structInfo.pubTraits.restoreContext(oldCtxt);
+                                done = true;
+                            }
                         }
                         else done = true;
                     }
@@ -1590,11 +1610,11 @@ public:
     /// ditto
     @property void onWantDescriptor(WantDescriptorEvent value){_onWantDescriptor = value;}
 
-    /// Event called when the serializer misses a PropDescriptor!Object
-    @property WantObjectEvent onWantObject(){return _onWantObject;}
+    /// Event called when the serializer misses an aggregate
+    @property WantAggregateEvent onWantAggregate(){return _onWantAgregate;}
 
     /// ditto
-    @property void onWantObject(WantObjectEvent value){_onWantObject = value;}
+    @property void onWantAggregate(WantAggregateEvent value){_onWantAgregate = value;}
 
 //------------------------------------------------------------------------------
 
@@ -1660,12 +1680,12 @@ unittest
  */
 void publisherToFile(Object pub, in char[] filename,
     SerializationFormat format = defaultFormat,
-    WantObjectEvent woe = null, WantDescriptorEvent wde = null)
+    WantAggregateEvent wae = null, WantDescriptorEvent wde = null)
 {
     MemoryStream str = construct!MemoryStream;
     Serializer ser = construct!Serializer;
     scope(exit) destructEach(str, ser);
-    ser.onWantObject = woe;
+    ser.onWantAggregate = wae;
     ser.onWantDescriptor = wde;
     //
     ser.publisherToStream(pub, str, format);
@@ -1685,12 +1705,12 @@ void publisherToFile(Object pub, in char[] filename,
  */
 void fileToPublisher(in char[] filename, Object pub,
     SerializationFormat format = defaultFormat,
-    WantObjectEvent woe = null, WantDescriptorEvent wde = null)
+    WantAggregateEvent wae = null, WantDescriptorEvent wde = null)
 {
     MemoryStream str = construct!MemoryStream;
     Serializer ser = construct!Serializer;
     scope(exit) destructEach(str, ser);
-    ser.onWantObject = woe;
+    ser.onWantAggregate = wae;
     ser.onWantDescriptor = wde;
     //
     str.loadFromFile(filename);
@@ -2238,17 +2258,17 @@ version(unittest)
         MemoryStream str = construct!MemoryStream;
         scope(exit) destructEach(c, ser, str);
 
-        void objectNotFound(IstNode node, ref Object serializable, out bool fromReference)
+        void objectNotFound(IstNode node, ref void* serializable, out bool fromReference)
         {
             if (node.info.name == "subPublisher")
             {
-                serializable = c._anotherSubPubliser;
+                serializable = cast(void*) c._anotherSubPubliser;
             }
             if (node.info.name == "refPublisher")
                 fromReference = true;
         }
 
-        ser.onWantObject = &objectNotFound;
+        ser.onWantAggregate = &objectNotFound;
         ser.publisherToStream(c, str/*, SerializationFormat.izbin*/);
         str.saveToFile(r"test.txt");
         //
