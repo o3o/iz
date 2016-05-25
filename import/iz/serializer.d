@@ -329,10 +329,14 @@ char[] value2text(const SerNodeInfo* nodeInfo)
         case _wchar:    return v2t!wchar;
         case _dchar:    return v2t!dchar;
         case _enum:     return v2t_2!char;
-        case _object:   return cast(char[])(nodeInfo.value);
+        case _object:   return cast(char[]) nodeInfo.value;
         case _stream:   return to!(char[])(nodeInfo.value[]);
-        case _struct:   return cast(char[])(nodeInfo.value);
         case _funptr:   return v2t_2!char;
+        case _struct:
+            if (nodeInfo.rtti.structInfo.type == StructType._binary)
+                return v2t_2!ubyte;
+            else
+                return cast(char[]) nodeInfo.value;
     }
 }
 
@@ -377,8 +381,12 @@ ubyte[] text2value(char[] text, const SerNodeInfo* nodeInfo)
         case _enum:     return cast(ubyte[]) text;
         case _object:   return cast(ubyte[]) text;
         case _stream:   return t2v_2!ubyte;
-        case _struct:   return cast(ubyte[]) text;
         case _funptr:   return cast(ubyte[]) text;
+        case _struct:
+            if (nodeInfo.rtti.structInfo.type == StructType._binary)
+                return t2v_2!ubyte;
+            else
+                return cast(ubyte[]) text;
     }
 }
 //----
@@ -468,7 +476,6 @@ void nodeInfo2Declarator(const SerNodeInfo* nodeInfo)
                 setFromRef!GenericDelegate;
             else
                 setFromRef!GenericFunction;
-            break;
     }
 }
 
@@ -916,6 +923,7 @@ private SerializationReader readFormat(SerializationFormat format)
  */
 alias WantDescriptorEvent = void delegate(IstNode node, ref Ptr descriptor, out bool stop);
 
+
 /**
  * Prototype of the event called when a serializer fails to get an aggregate to
  * deserialize.
@@ -991,7 +999,7 @@ private:
 
     Object  _declarator;
 
-    WantAggregateEvent _onWantAgregate;
+    WantAggregateEvent _onWantAggregate;
     WantDescriptorEvent _onWantDescriptor;
 
     SerializationFormat _format;
@@ -1024,17 +1032,16 @@ private:
     {
         if (!_onWantDescriptor) 
             return false;
-        bool done;
         _onWantDescriptor(node, node.info.descriptor, stop);
-        done = (node.info.descriptor != null);
-        if (done) 
+        if (node.info.descriptor)
         {
             nodeInfo2Declarator(node.info);
             return true;
         }
         else if (isSerObjectType(node.info.rtti.type))
             return true;
-        return false;
+        else
+            return false;
     }
 
     bool descriptorMatchesNode(T)(PropDescriptor!T* descr, IstNode node)
@@ -1079,16 +1086,16 @@ private:
 
         static if (declIsClass)
         {
-            // reference: current collector is not owned at all
+            // reference: current publisher is not owned at all
             if (_parentNode !is _rootNode && publisher.declarator is null)
                 return;
 
-            // reference: current collector is not owned by the declarator
+            // reference: current publisher is not owned by the declarator
             if (_parentNode !is _rootNode && pubDescriptor.declarator !is publisher.declarator)
                 return;
         }
 
-        // not a reference: current collector is owned (it has initialized the target),
+        // not a reference: current publisher is owned (it has initialized the target),
         // so write its members
         foreach(immutable i; 0 .. publisher.publicationCount())
         {
@@ -1151,7 +1158,6 @@ private:
                         case StructType._text, StructType._binary:
                             addIstNodeForDescriptor(descr.typedAs!GenericStruct);
                     }
-                    break;
             }
         }
     }
@@ -1163,7 +1169,7 @@ public:
     {
         _rootNode = construct!IstNode;
     }
-    ///
+
     ~this()
     {
         _rootNode.deleteChildren;
@@ -1304,10 +1310,10 @@ public:
      *      a PropPublisher.
      */
     void istToPublisher(R)(auto ref R root)
+    if (is(R == class) || is(R == struct))
     {
         void restoreFrom(T)(IstNode node, T target)
         {
-
             //if (!target) return;
             foreach(child; node.children)
             {
@@ -1326,8 +1332,8 @@ public:
                             void* o = cast(void*) t2.get();
                             bool fromRef;
 
-                            if (!o && _onWantAgregate)
-                                _onWantAgregate(childNode, o, fromRef);
+                            if (!o && _onWantAggregate)
+                                _onWantAggregate(childNode, o, fromRef);
 
                             if (fromRef || !o)
                             {
@@ -1358,8 +1364,8 @@ public:
                             void* structPtr = t2.get;
                             bool fromRef;
 
-                            if (!structPtr && _onWantAgregate)
-                                _onWantAgregate(childNode, structPtr, fromRef);
+                            if (!structPtr && _onWantAggregate)
+                                _onWantAggregate(childNode, structPtr, fromRef);
 
                             if (fromRef || !structPtr)
                             {
@@ -1418,6 +1424,7 @@ public:
      */
     void streamToPublisher(R)(Stream inputStream, auto ref R root,
         SerializationFormat format = defaultFormat)
+    if (is(R == class) || is(R == struct))
     {
         streamToIst(inputStream, format);
         istToPublisher(root);
@@ -1611,10 +1618,10 @@ public:
     @property void onWantDescriptor(WantDescriptorEvent value){_onWantDescriptor = value;}
 
     /// Event called when the serializer misses an aggregate
-    @property WantAggregateEvent onWantAggregate(){return _onWantAgregate;}
+    @property WantAggregateEvent onWantAggregate(){return _onWantAggregate;}
 
     /// ditto
-    @property void onWantAggregate(WantAggregateEvent value){_onWantAgregate = value;}
+    @property void onWantAggregate(WantAggregateEvent value){_onWantAggregate = value;}
 
 //------------------------------------------------------------------------------
 
@@ -2412,6 +2419,41 @@ version(unittest)
         str.position = 0;
         ser.streamToPublisher(str, tsp);
         assert(tsp._ts._value == "content backup", tsp._ts._value);
+    }
+
+    // test bin struct
+    unittest
+    {
+        static struct BinStruct
+        {
+            ubyte[] _value = cast(ubyte[])"content backup".dup;
+            ubyte[] saveToBytes(){return _value;}
+            void loadFromBytes(ubyte[] value){_value = value;}
+        }
+
+        class BinStructParent: PropertyPublisher
+        {
+            mixin PropertyPublisherImpl;
+            @SetGet BinStruct _bs;
+        }
+
+        BinStructParent bsp = construct!BinStructParent;
+        bsp.collectPublications!BinStructParent;
+        assert(bsp.publicationFromName("bs") != null);
+        assert(bsp.publicationFromIndex(0) != null);
+        assert(bsp._bs._value == "content backup");
+
+        MemoryStream str = construct!MemoryStream;
+        Serializer ser = construct!Serializer;
+        scope(exit) destructEach(str, ser, bsp);
+
+        ser.publisherToStream(bsp, str);
+        //str.saveToFile("binstruct.txt");
+        bsp._bs._value = bsp._bs._value.init;
+
+        str.position = 0;
+        ser.streamToPublisher(str, bsp);
+        assert(bsp._bs._value == "content backup");
     }
 
     // test nested publishing structs
