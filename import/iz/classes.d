@@ -279,7 +279,7 @@ unittest
  * does the task automatically by splitting keys and values in two arrays.
  *
  * This class template can only be instantiated if the $(I AA) key and value
- * type is basic (see iz.types.BasicTypes).
+ * type is basic (see iz.rtti.BasicRtTypes).
  *
  * Params:
  *      AA = The type of the associative array.

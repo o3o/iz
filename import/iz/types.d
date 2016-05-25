@@ -1,6 +1,5 @@
 /**
- * Several templates, alias or functions related to types.
- * Contains also the functions related to the iz RTTI system.
+ * Several templates, alias, traits or functions related to types.
  */
 module iz.types;
 

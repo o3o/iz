@@ -202,9 +202,8 @@ static bool enumFitsInSet(E, S)() if (is(E==enum) && isSetSuitable!S)
  * * using the Pascal-like intrinsics (here some functions): include(), exclude() and the 'in' operator.
  *
  * Params:
- * S = a Set8, Set16, Set32 or Set64. It must be wide enough to contain all the enum members,
- * otherwise the template is not instantiated.
- * E = an enum, which must have at least one members.
+ * S = A Set8, Set16, Set32 or Set64. It must be wide enough to contain all the enum members.
+ * E = An enum, which must have at least one members.
  *
  * Example:
  * ---
@@ -808,6 +807,18 @@ public:
     ref const(SetType) container() nothrow @safe @nogc
     {
         return _container;
+    }
+
+    /// Implements the iz.rtti "text struct" traits to allow the deserialization.
+    void loadFromText(const(char)[] value)
+    {
+        fromString(value.idup);
+    }
+
+    /// Implements the iz.rtti "text struct" traits to allow the serialization.
+    const(char)[] saveToText()
+    {
+        return toString;
     }
 
 //------------------------------------------------------------------------------

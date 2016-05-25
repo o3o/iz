@@ -9,7 +9,7 @@ import
     iz.sugar;
 
 //TODO-cstrings: next/skipWord, could return a lazy range, like sugar.takeWhile
-//TODO-cstrings: affix, look-ahaed systel to skip appending of the suffix on the last element
+//TODO-cstrings: affix, look-ahead system to skip appending of the suffix on the last element
 
 version(unittest) import std.stdio;
 
@@ -2000,7 +2000,6 @@ public:
 
         void addSuffix(const T suffix) nothrow @trusted @nogc
         {
-            //TODO-csuffixarray: value returned by find() doesnt allow addSuffix without casting const away.
             if (!suffix.length)
                 _terminates = true;
             else

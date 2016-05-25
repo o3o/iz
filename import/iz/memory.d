@@ -267,10 +267,14 @@ private __gshared TypeInfo_Class[string] registeredClasses;
 /**
  * Register a class type that can be created dynamically, using its name.
  *
+ * Class registration should only be done in module constructors. This allow
+ * the registration to be thread safe since module constructors are executed
+ * in the main thread.
+ *
  * Params:
  *      T = A class.
  *      name = The name used to register the class.
- *      By default the T.stringof is used.
+ *      By default the `T.stringof` is used.
  */
 void registerFactoryClass(T)(string name = "")
 if (is(T == class) && !isAbstractClass!T)
@@ -441,7 +445,7 @@ unittest
     class A{string text; this(){text = "A";}}
     class B{string text; this(){text = "B";}}
     class C{int[] array; this(){array = [1,2,3];}}
-    TypeInfo_Class[3] tics = [typeid(A),typeid(B),typeid(C)];
+    enum TypeInfo_Class[3] tics = [typeid(A),typeid(B),typeid(C)];
 
     A a = cast(A) construct(tics[0]);
     assert(a.text == "A");

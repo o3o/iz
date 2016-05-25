@@ -21,7 +21,7 @@ public
  * The reference must be stored in the ReferenceMan.
  *
  * A "referenced variable" is typically something that is assigned
- * at the run-time but not owned by the entity that want to keep track of it,
+ * at the run-time but not owned by the entity that wants to keep track of it,
  * or that is serialized by another entity.
  *
  * Note that this class is not needed to serialize a reference to an object or to
@@ -938,7 +938,7 @@ alias WantDescriptorEvent = void delegate(IstNode node, ref Ptr descriptor, out 
 alias WantAggregateEvent = void delegate(IstNode node, ref void* aggregate, out bool fromRefererence);
 
 
-//TODO-cserializer: error handling (using isDamaged + format readers errors).
+//TODO-cserializer: error handling (using isDamaged + errors when reading a format).
 //TODO-cserializer: handle the PropHints to optimize the stream size (noDefault)
 //TODO-cserializer: convert FP to string using format("%.{9|17}g",value).
 
@@ -947,7 +947,7 @@ alias WantAggregateEvent = void delegate(IstNode node, ref void* aggregate, out 
  * an Object.
  *
  * PropertyPublisher:
- * A Serializer serializes trees of classes that implements the
+ * A Serializer serializes trees of classes and struct that implement the
  * PropertyPublisher interface. Their publications define what is saved or
  * restored. Object descriptors leading to an owned Object define the structure.
  * Basics types and array of basic types are handled. Special cases exist to
@@ -973,8 +973,8 @@ alias WantAggregateEvent = void delegate(IstNode node, ref void* aggregate, out 
  * $(D streamToPublisher()) but the IST also allows to convert a Stream or
  * to find and restores a specific property.
  *
- * Errors:
- * Two events ($(D onWantDescriptor) and  $(D onWantObject)) allow to handle
+ * Error:
+ * Two events ($(D onWantDescriptor) and  $(D onWantAggregate)) allow to handle
  * the errors that could be encountered when restoring.
  * They permit a PropertyPublisher to be modified without any risk of deserialization
  * failure. Data saved from an older version can be recovered by deserializing in
