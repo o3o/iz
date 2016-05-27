@@ -1296,11 +1296,13 @@ unittest
     // b._a1 still exists.
 }
 
+//TODO-cproperties: findPublisher overload that can also take a pub struct and return a pointer to a publisher
+
 /**
  * Finds a sub-publisher in an object's publications tree.
  *
  * Params:
- *      pub = The root publisher.
+ *      pub = The root publisher, either a class or a struct.
  *      accessChain = A string made of property names separated by dots.
  *      It must not starts with the name of the root.
  * Returns:
@@ -1402,15 +1404,57 @@ unittest
  *
  * Params:
  *      recursive = Indicates if the process is recursive.
- *      source = The aggregate from where the properties values are copied.
+ *      src = The aggregate from where the properties values are copied.
  *          Either a class or a struct that's mixed with PropertyPublisherImpl
  *          or a PropertyPublisher.
- *      target = The aggregate where the properties values are copied.
- *          As for the Target type, same requirement as the source.
+ *      trg = The aggregate to where the properties values are copied.
+ *          The Target type has the same requirement as the source type.
  */
-void bindPublications(bool recursive = false, Source, Target)(Source source, Target target)
-if (isPropertyPublisher!Source && isPropertyPublisher!Target)
+void bindPublications(bool recursive = false, S, T)(auto ref S src, auto ref T trg)
 {
+    // try to get a publisher from src
+    static if (is(S == class))
+    {
+        PropertyPublisher source = cast(PropertyPublisher) src;
+        if (!src)
+            return;
+    }
+    else static if (is(S == PropertyPublisher))
+    {
+        alias source = src;
+        if (!src)
+            return;
+    }
+    else static if (is(S == struct))
+    {
+        if (!isPublisingStruct(getRtti!S))
+            return;
+        alias source = src;
+    }
+    else static assert(0, S.stringof ~ " cannot be a PropertyPublisher");
+
+    // try to get a publisher from trg
+    static if (is(T == class))
+    {
+        PropertyPublisher target = cast(PropertyPublisher) trg;
+        if (!trg)
+            return;
+    }
+    else static if (is(T == PropertyPublisher))
+    {
+        alias target = trg;
+        if (!trg)
+            return;
+    }
+    else static if (is(T == struct))
+    {
+        if (!isPublisingStruct(getRtti!T))
+            return;
+        alias target = trg;
+    }
+    else static assert(0, T.stringof ~ " cannot be a PropertyPublisher");
+
+    // bind publications
     GenericDescriptor* srcP, trgP;
     foreach(immutable i; 0 .. source.publicationCount)
     {
@@ -1429,6 +1473,8 @@ if (isPropertyPublisher!Source && isPropertyPublisher!Target)
             else
                 (cast(PT0) trgP).set((cast(PT0) srcP).get());
         }
+
+        //TODO-cproperties: bindPublications handling of struct members with special traits
 
         void setObject()
         {
@@ -1450,7 +1496,7 @@ if (isPropertyPublisher!Source && isPropertyPublisher!Target)
 
         with(RtType) final switch (srcP.rtti.type)
         {
-            case _invalid, _struct, _enum, _funptr: break;
+            case _invalid:  break;
             case _bool:     set!bool; break;
             case _ubyte:    set!ubyte; break;
             case _byte:     set!byte; break;
@@ -1466,22 +1512,13 @@ if (isPropertyPublisher!Source && isPropertyPublisher!Target)
             case _char:     set!char; break;
             case _wchar:    set!wchar; break;
             case _dchar:    set!dchar; break;
-            //case _string:   set!string; break;
-            //case _wstring:  set!wstring; break;
             case _stream:   set!Stream; break;
-            //case _delegate: set!GenericDelegate; break;
-            //case _function: set!GenericFunction; break;
+            case _funptr:   set!GenericFunction; break;
+            case _enum:     set!GenericEnum; break;
+            case _struct:   set!GenericStruct; break;
             case _object:   setObject; break;
         }
     }
-}
-
-/// ditto
-void bindPublications(bool recursive = false)(Object from, Object to)
-{
-    auto source = cast(PropertyPublisher) from;
-    auto target = cast(PropertyPublisher) to;
-    if (source && target) bindPublications!true(source, target);
 }
 
 unittest
@@ -1493,12 +1530,12 @@ unittest
         this()
         {
             static if (Nested) _sub = new Foo!false;
-            str = new MemoryStream;
+            str = construct!MemoryStream;
             collectPublications!Foo;
         }
         ~this()
         {
-            //destruct(str);
+            destruct(str);
         }
         @SetGet uint _a;
         @SetGet ulong _b;

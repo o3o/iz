@@ -639,6 +639,26 @@ unittest
     assert(rtti3.enumInfo.valueType is getRtti!ubyte);
 }
 
+/**
+ * Returns true if the Rtti passed as argument are for a "publising" struct.
+ */
+bool isPublisingStruct(const(Rtti)* ti)
+{
+    bool result;
+    if (ti && ti.type == RtType._struct && ti.structInfo.type == StructType._publisher)
+        result = true;
+    return result;
+}
+
+unittest
+{
+    static struct PubStr
+    {
+        mixin PropertyPublisherImpl;
+    }
+    assert(isPublisingStruct(getRtti!PubStr));
+}
+
 unittest
 {
     enum Option {o1 = 2, o2, o3}
