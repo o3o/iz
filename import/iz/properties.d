@@ -1425,6 +1425,10 @@ void bindPublications(bool recursive = false, S, T)(auto ref S src, auto ref T t
         if (!src)
             return;
     }
+    else static if (is(S == const(PubTraits)))
+    {
+        alias source = src;
+    }
     else static if (is(S == struct))
     {
         if (!isPublisingStruct(getRtti!S))
@@ -1446,6 +1450,10 @@ void bindPublications(bool recursive = false, S, T)(auto ref S src, auto ref T t
         if (!trg)
             return;
     }
+    else static if (is(T == const(PubTraits)))
+    {
+        alias target = src;
+    }
     else static if (is(T == struct))
     {
         if (!isPublisingStruct(getRtti!T))
@@ -1454,9 +1462,11 @@ void bindPublications(bool recursive = false, S, T)(auto ref S src, auto ref T t
     }
     else static assert(0, T.stringof ~ " cannot be a PropertyPublisher");
 
+    enum PubIsStruct = is(S == struct);
+
     // bind publications
     GenericDescriptor* srcP, trgP;
-    foreach(immutable i; 0 .. source.publicationCount)
+    foreach(immutable i; 0 .. source.publicationCount())
     {
         srcP = cast(GenericDescriptor*) source.publicationFromIndex(i);
         trgP = cast(GenericDescriptor*) target.publicationFromName(srcP.name);
@@ -1464,6 +1474,7 @@ void bindPublications(bool recursive = false, S, T)(auto ref S src, auto ref T t
         if (!trgP) continue;
         if (srcP.rtti !is trgP.rtti) continue;
 
+        // basic type / array of
         void set(T)()
         {
             alias PT0 = PropDescriptor!T*;
@@ -1474,21 +1485,61 @@ void bindPublications(bool recursive = false, S, T)(auto ref S src, auto ref T t
                 (cast(PT0) trgP).set((cast(PT0) srcP).get());
         }
 
-        //TODO-cproperties: bindPublications handling of struct members with special traits
+        //TODO-cproperties: test struct binding
+
 
         void setObject()
         {
-            // reference
-            if (srcP.declarator !is source.declarator
-                && trgP.declarator !is target.declarator)
-                    set!Object;
-            // sub object
-            else static if (recursive)
+            static if (!PubIsStruct) // PubTraits should also have declarator, even if not used
             {
-                bindPublications!true(
-                    (cast(PropDescriptor!Object*) srcP).get(),
-                    (cast(PropDescriptor!Object*) trgP).get()
-                );
+                // reference
+                if (srcP.declarator !is source.declarator
+                    && trgP.declarator !is target.declarator)
+                        set!Object;
+                // sub object
+                else static if (recursive)
+                {
+                    bindPublications!true(
+                        (cast(PropDescriptor!Object*) srcP).get(),
+                        (cast(PropDescriptor!Object*) trgP).get()
+                    );
+                }
+            }
+        }
+
+        void setStruct()
+        {
+            GenericStruct* srcStruct = (cast(PropDescriptor!GenericStruct*) srcP).get();
+            GenericStruct* trgStruct = (cast(PropDescriptor!GenericStruct*) trgP).get();
+            with(StructType) final switch(srcP.rtti.structInfo.type)
+            {
+                case _none:
+                    break;
+                case _text:
+                    void* oldPtr = srcP.rtti.structInfo.textTraits.setContext(srcStruct);
+                    const(char)[] value = srcP.rtti.structInfo.textTraits.saveToText();
+                    srcP.rtti.structInfo.textTraits.restoreContext(oldPtr);
+                    oldPtr = trgP.rtti.structInfo.textTraits.setContext(trgStruct);
+                    trgP.rtti.structInfo.textTraits.loadFromText(value);
+                    trgP.rtti.structInfo.textTraits.restoreContext(oldPtr);
+                    break;
+                case _binary:
+                    void* oldPtr = srcP.rtti.structInfo.binTraits.setContext(srcStruct);
+                    ubyte[] value = srcP.rtti.structInfo.binTraits.saveToBytes();
+                    srcP.rtti.structInfo.binTraits.restoreContext(oldPtr);
+                    oldPtr = trgP.rtti.structInfo.binTraits.setContext(trgStruct);
+                    trgP.rtti.structInfo.binTraits.loadFromBytes(value);
+                    trgP.rtti.structInfo.binTraits.restoreContext(oldPtr);
+                    break;
+                case _publisher:
+                    static if (recursive)
+                    {
+                        const(PubTraits) srcPub = *srcP.rtti.structInfo.pubTraits;
+                        const(PubTraits) trgPub = *srcP.rtti.structInfo.pubTraits;
+                        srcPub.setContext(srcStruct);
+                        trgPub.setContext(srcStruct);
+                        bindPublications!true(srcPub, trgPub);
+                    }
             }
         }
 
@@ -1515,7 +1566,7 @@ void bindPublications(bool recursive = false, S, T)(auto ref S src, auto ref T t
             case _stream:   set!Stream; break;
             case _funptr:   set!GenericFunction; break;
             case _enum:     set!GenericEnum; break;
-            case _struct:   set!GenericStruct; break;
+            case _struct:   setStruct; break;
             case _object:   setObject; break;
         }
     }

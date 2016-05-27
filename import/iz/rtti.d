@@ -837,3 +837,24 @@ unittest
     assert(getRtti(str).type == RtType._stream);
 }
 
+unittest
+{
+    struct Cup
+    {
+        ubyte[] saveToBytes(){return [0x0];}
+        void loadFromBytes(ubyte[] value){}
+    }
+    Cup cup0;
+    Cup cup1;
+    const(Rtti)* rtti = getRtti(cup0);
+
+    // to bind, two simultaneous xxxTraits must exist
+    const(BinTraits) bt0 = *rtti.structInfo.binTraits;
+    const(BinTraits) bt1 = *rtti.structInfo.binTraits;
+    bt0.setContext(&cup0);
+    bt1.setContext(&cup1);
+
+    assert(bt0.saveToBytes.funcptr == bt1.saveToBytes.funcptr);
+    assert(bt0.saveToBytes.ptr != bt1.saveToBytes.ptr);
+}
+
