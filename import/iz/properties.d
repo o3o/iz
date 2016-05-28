@@ -103,7 +103,7 @@ struct PropDescriptor(T)
             void internalSetter(T value)
         {
             alias TT = Unqual!T;
-            const T current = getter()();
+            T current = getter()();
             if (value != current) *(cast(TT*)_directPtr) = value;
         }
         else
@@ -1511,15 +1511,24 @@ void bindPublications(bool recursive = false, S, T)(auto ref S src, auto ref T t
         if (!trgP) continue;
         if (srcP.rtti !is trgP.rtti) continue;
 
-        // basic type / array of
-        void set(T)()
+        void setBasicType(T)()
         {
-            alias PT0 = PropDescriptor!T*;
-            alias PT1 = PropDescriptor!(T[])*;
-            if (srcP.rtti.dimension)
-                (cast(PT1) trgP).set((cast(PT1) srcP).get());
-            else
-                (cast(PT0) trgP).set((cast(PT0) srcP).get());
+            final switch (srcP.rtti.dimension != 0)
+            {
+                case false:
+                    alias DT0 = PropDescriptor!T*;
+                    (cast(DT0) trgP).set((cast(DT0) srcP).get());
+                    break;
+                case true:
+                    alias DT1 = PropDescriptor!(T[])*;
+                    (cast(DT1) trgP).set((cast(DT1) srcP).get());
+            }
+        }
+
+        void setAA()
+        {
+            alias DT = PropDescriptor!(int[int])*;
+            (cast(DT) trgP).set((cast(DT) srcP).get());
         }
 
         void setObject()
@@ -1529,7 +1538,7 @@ void bindPublications(bool recursive = false, S, T)(auto ref S src, auto ref T t
                 // reference
                 if (srcP.declarator !is source.declarator
                     && trgP.declarator !is target.declarator)
-                        set!Object;
+                        setBasicType!Object;
                 // sub object
                 else static if (recursive)
                 {
@@ -1582,24 +1591,25 @@ void bindPublications(bool recursive = false, S, T)(auto ref S src, auto ref T t
         with(RtType) final switch (srcP.rtti.type)
         {
             case _invalid:  break;
-            case _bool:     set!bool; break;
-            case _ubyte:    set!ubyte; break;
-            case _byte:     set!byte; break;
-            case _ushort:   set!ushort; break;
-            case _short:    set!short; break;
-            case _uint:     set!uint; break;
-            case _int:      set!int; break;
-            case _ulong:    set!ulong; break;
-            case _long:     set!long; break;
-            case _float:    set!float; break;
-            case _double:   set!double; break;
-            case _real:     set!real; break;
-            case _char:     set!char; break;
-            case _wchar:    set!wchar; break;
-            case _dchar:    set!dchar; break;
-            case _stream:   set!Stream; break;
-            case _funptr:   set!GenericFunction; break;
-            case _enum:     set!GenericEnum; break;
+            case _aa:       setAA; break;
+            case _bool:     setBasicType!bool; break;
+            case _ubyte:    setBasicType!ubyte; break;
+            case _byte:     setBasicType!byte; break;
+            case _ushort:   setBasicType!ushort; break;
+            case _short:    setBasicType!short; break;
+            case _uint:     setBasicType!uint; break;
+            case _int:      setBasicType!int; break;
+            case _ulong:    setBasicType!ulong; break;
+            case _long:     setBasicType!long; break;
+            case _float:    setBasicType!float; break;
+            case _double:   setBasicType!double; break;
+            case _real:     setBasicType!real; break;
+            case _char:     setBasicType!char; break;
+            case _wchar:    setBasicType!wchar; break;
+            case _dchar:    setBasicType!dchar; break;
+            case _stream:   setBasicType!Stream; break;
+            case _funptr:   setBasicType!GenericFunction; break;
+            case _enum:     setBasicType!GenericEnum; break;
             case _struct:   setStruct; break;
             case _object:   setObject; break;
         }
@@ -1644,6 +1654,7 @@ unittest
         @SetGet int[][][] _e;
         @SetGet Bytes _bytes;
         @SetGet Text _text;
+        @SetGet int[string] _f;
         MemoryStream str;
 
         @Set void stream(Stream s)
@@ -1661,6 +1672,7 @@ unittest
     source._a = 8; source._b = ulong.max; source._c = "123";
     source._d = [[0,1,2,3],[4,5,6,7]];
     source._e = [[[0,1],[2,3]],[[4,5],[6,7]],[[8,9],[10,11]]];
+    source._f = ["a":0, "b":1];
     source._sub._a = 8; source._sub._b = ulong.max; source._sub._c = "123";
     source.str.writeInt(1);source.str.writeInt(2);source.str.writeInt(3);
     source._sub.str.writeInt(1);source._sub.str.writeInt(2);source._sub.str.writeInt(3);
@@ -1671,6 +1683,7 @@ unittest
     assert(target._c == source._c);
     assert(target._d == source._d);
     assert(target._e == source._e);
+    assert(target._f == source._f);
     assert(target._sub._a == source._sub._a);
     assert(target._sub._b == source._sub._b);
     assert(target._sub._c == source._sub._c);

@@ -39,7 +39,8 @@ enum RtType: ubyte
     _object, _struct,
     _enum,
     _funptr,
-    _stream
+    _stream,
+    _aa
 }
 
 /**
@@ -63,7 +64,8 @@ private static immutable RtTypeArr =
     RtType._object, RtType._struct,
     RtType._enum,
     RtType._funptr,
-    RtType._stream
+    RtType._stream,
+    RtType._aa
 ];
 
 package struct GenericStruct{}
@@ -77,7 +79,7 @@ package alias GenericRtTypes = AliasSeq!(
     char, wchar, dchar,
     Object, GenericStruct, GenericEnum,
     GenericFunPtr,
-    Stream
+    Stream,
 );
 
 package alias BasicRtTypes = AliasSeq!(
@@ -107,7 +109,7 @@ ubyte size(RtType type)
 {
     with(RtType) final switch (type)
     {
-        case _invalid, _object, _struct, _funptr, _stream, _enum:
+        case _invalid, _object, _struct, _funptr, _stream, _enum, _aa:
             return 0;
         case _bool, _byte, _ubyte, _char:
             return 1;
@@ -155,6 +157,7 @@ string typeString(T)(T t)
     {
         with(RtType) final switch (t)
         {
+            case _aa:       return "aa";
             case _invalid:  return "invalid";
             case _bool:     return "bool";
             case _byte:     return "byte";
@@ -382,6 +385,14 @@ struct ReferencedInfo
     string identifier;
 }
 
+/**
+ * Runtime information for the associative array
+ */
+struct AAInfo
+{
+    const(Rtti)* keyType, valueType;
+}
+
 private union Infos
 {
     FunPtrInfo funptrInfo;
@@ -389,6 +400,7 @@ private union Infos
     EnumInfo enumInfo;
     StructInfo structInfo;
     ReferencedInfo referencedInfo;
+    AAInfo aaInfo;
 }
 
 /**
@@ -410,6 +422,8 @@ struct Rtti
             infos.enumInfo = t;
         else static if (is(T == StructInfo))
             infos.structInfo = t;
+        else static if (is(T == AAInfo))
+            infos.aaInfo = t;
         else static assert(0, "last argument of Rtti ctor must be an Info");
     }
 
@@ -464,6 +478,12 @@ struct Rtti
     const(StructInfo)* structInfo() const
     {
         return &infos.structInfo;
+    }
+
+    /// Returns the information valid when type is equal to RtT._aa.
+    const(AAInfo)* aaInfo() const
+    {
+        return &infos.aaInfo;
     }
 }
 
@@ -606,6 +626,10 @@ if (B.length < 2)
     else static if (is(T == struct))
     {
         const Rtti result = Rtti(RtType._struct, dim, typeCtors, StructInfo(T.stringof, StructType._none));
+    }
+    else static if (isAssociativeArray!T)
+    {
+        const Rtti result = Rtti(RtType._aa, dim, typeCtors, AAInfo(getRtti!(KeyType!T), getRtti!(ValueType!T)));
     }
     else
     {
@@ -856,5 +880,22 @@ unittest
 
     assert(bt0.saveToBytes.funcptr == bt1.saveToBytes.funcptr);
     assert(bt0.saveToBytes.ptr != bt1.saveToBytes.ptr);
+
+    bt0.loadFromBytes(bt0.saveToBytes());
+}
+
+unittest
+{
+    int[byte] k;
+    const(Rtti)* kti = getRtti(k);
+    assert(kti.type == RtType._aa);
+    assert(kti.aaInfo.keyType is getRtti!byte);
+    assert(kti.aaInfo.valueType is getRtti!int);
+
+    long[string] h;
+    const(Rtti)* hti = getRtti(h);
+    assert(hti.type == RtType._aa);
+    assert(hti.aaInfo.keyType is getRtti!string);
+    assert(hti.aaInfo.valueType is getRtti!long);
 }
 
