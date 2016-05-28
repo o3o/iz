@@ -371,7 +371,7 @@ unittest
     foo.valueDescriptor.setter()(1);
     assert(foo.valueDescriptor.getter()() == 1);
     // a descriptor has a fixed size, whatever is it's specialization,
-    // that allows to cast safely to any other descriptor type type
+    // that allows to cast safely to any other descriptor type.
     PropDescriptor!float* des = cast(PropDescriptor!float*) &foo.valueDescriptor;
     // that's why a helper is integrated to cast
     auto other = des.typedAs!byte;
@@ -429,15 +429,15 @@ unittest
 }
 
 
-/// designed to annotate a detectable property setter.
+/// designed to annotate a property setter, e.g @Set
 enum Set;
-/// designed to annotate a detectable property getter. 
+/// designed to annotate a property getter, e.g @Get
 enum Get;
-/// designed to annotate a detectable "direct" field.
+/// designed to annotate a field used as a property without accessors.
 enum SetGet;
 /// ditto
 alias GetSet = SetGet;
-/// designed to make undetectable a property collected in an ancestor.
+/// designed to cancel the effect of @Set and @Get in the ancestor classes.
 enum HideSet;
 /// ditto
 enum HideGet;

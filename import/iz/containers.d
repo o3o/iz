@@ -2094,8 +2094,9 @@ public:
     void siblingIndex(size_t position)
     {
         auto old = siblings[position];
-        version(none) exchangeSibling(old,self);
-        version(all)
+        version(none) if (old !is self)
+            exchangeSibling(old,self);
+        version(all) if (old !is self)
         {
             removeSibling(self);
             old.insertSibling(position,self);

@@ -616,7 +616,7 @@ if (B.length < 2)
     {
         static if (!__traits(hasMember, T, "saveToText") ||
             !is(UnAttr!(typeof(&__traits(getMember, T, "saveToText"))) == const(char)[] function()))
-            static assert(0, "no valid saveToText member: " ~ typeof(&__traits(getMember, T, "saveToText")).stringof);
+            static assert(0, "no valid saveToText member");
 
         static if (!__traits(hasMember, T, "loadFromText") ||
             !is(UnAttr!(typeof(&__traits(getMember, T, "loadFromText"))) == void function(const(char)[])))
@@ -696,6 +696,7 @@ unittest
 
 unittest
 {
+    import std.algorithm.searching: countUntil;
     enum Enumeration: ubyte {a1, a2, a3}
     const(Rtti)* ati = getRtti!Enumeration;
     assert(ati.enumInfo.values[0] == 0);
@@ -704,9 +705,6 @@ unittest
     assert(ati.enumInfo.members[0] == "a1");
     assert(ati.enumInfo.members[1] == "a2");
     assert(ati.enumInfo.members[2] == "a3");
-    //
-    import std.algorithm;
-
     assert(0 == countUntil(ati.enumInfo.values, 0));
     assert(1 == countUntil(ati.enumInfo.values, 1));
     assert(2 == countUntil(ati.enumInfo.values, 2));
