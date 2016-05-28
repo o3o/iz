@@ -258,7 +258,7 @@ struct EnumInfo
     /// Contains the identifier of each member.
     string[] members;
     /// Contains the value of each member.
-    int[] values;
+    uint[] values;
     /// Indicates the type of the values.
     const(Rtti)* valueType;
 }
@@ -511,7 +511,9 @@ if (B.length < 2)
     if (Rtti* result = TT.stringof in _name2rtti)
         return result;
 
-    enum err = "unsupported type \"" ~ TT.stringof ~ ": ";
+    enum err = "unsupported type \"" ~ TT.stringof ~ "\": ";
+
+    alias UnAttr(T) = SetFunctionAttributes!(T, "D", 0);
 
     enum dim = dimensionCount!TT;
     static assert(dim <= ubyte.max);
@@ -533,14 +535,16 @@ if (B.length < 2)
     }
     else static if (is(T == enum))
     {
-        static if (isImplicitlyConvertible!(OriginalType!T, int))
+        static if (isImplicitlyConvertible!(OriginalType!T, uint))
         {
             string[] members;
-            int[] values;
+            uint[] values;
             foreach(e; __traits(allMembers, T))
             {
                 members ~= e;
                 values  ~= __traits(getMember, T, e);
+                static assert(__traits(getMember, T, e) > -1, err ~
+                    "negative enum values are not supported");
                 static assert(!is(e == enum), err ~ "nested enums are not supported");
             }
             const Rtti result = Rtti(RtType._enum, dim, typeCtors,
@@ -596,11 +600,11 @@ if (B.length < 2)
     else static if (is(T == struct) && __traits(hasMember, T, "saveToBytes"))
     {
         static if (!__traits(hasMember, T, "saveToBytes") ||
-            !is(typeof(&__traits(getMember, T, "saveToBytes")) == ubyte[] function()))
+            !is(UnAttr!(typeof(&__traits(getMember, T, "saveToBytes"))) == ubyte[] function()))
             static assert(0, "no valid saveToBytes member");
 
         static if (!__traits(hasMember, T, "loadFromBytes") ||
-            !is(typeof(&__traits(getMember, T, "loadFromBytes")) == void function(ubyte[])))
+            !is(UnAttr!(typeof(&__traits(getMember, T, "loadFromBytes"))) == void function(ubyte[])))
             static assert(0, "no valid loadFromBytes member");
 
         const Rtti result = Rtti(RtType._struct, dim, typeCtors, StructInfo(T.stringof, StructType._binary));
@@ -611,11 +615,11 @@ if (B.length < 2)
     else static if (is(T == struct) && __traits(hasMember, T, "saveToText"))
     {
         static if (!__traits(hasMember, T, "saveToText") ||
-            !is(typeof(&__traits(getMember, T, "saveToText")) == const(char)[] function()))
-            static assert(0, "no valid saveToText member");
+            !is(UnAttr!(typeof(&__traits(getMember, T, "saveToText"))) == const(char)[] function()))
+            static assert(0, "no valid saveToText member: " ~ typeof(&__traits(getMember, T, "saveToText")).stringof);
 
         static if (!__traits(hasMember, T, "loadFromText") ||
-            !is(typeof(&__traits(getMember, T, "loadFromText")) == void function(const(char)[])))
+            !is(UnAttr!(typeof(&__traits(getMember, T, "loadFromText"))) == void function(const(char)[])))
             static assert(0, "no valid loadFromText member");
 
         const Rtti result = Rtti(RtType._struct, dim, typeCtors, StructInfo(T.stringof, StructType._text));
@@ -688,6 +692,24 @@ unittest
     enum Option {o1 = 2, o2, o3}
     Option[][] opts = [[Option.o1, Option.o2],[Option.o1, Option.o2]];
     assert(getRtti(opts[0]) is getRtti(opts[1]));
+}
+
+unittest
+{
+    enum Enumeration: ubyte {a1, a2, a3}
+    const(Rtti)* ati = getRtti!Enumeration;
+    assert(ati.enumInfo.values[0] == 0);
+    assert(ati.enumInfo.values[1] == 1);
+    assert(ati.enumInfo.values[2] == 2);
+    assert(ati.enumInfo.members[0] == "a1");
+    assert(ati.enumInfo.members[1] == "a2");
+    assert(ati.enumInfo.members[2] == "a3");
+    //
+    import std.algorithm;
+
+    assert(0 == countUntil(ati.enumInfo.values, 0));
+    assert(1 == countUntil(ati.enumInfo.values, 1));
+    assert(2 == countUntil(ati.enumInfo.values, 2));
 }
 
 unittest

@@ -509,10 +509,16 @@ void setNodeInfo(T)(SerNodeInfo* nodeInfo, PropDescriptor!T* descriptor)
     // enums
     else static if (is(T == GenericEnum))
     {
-        int v = cast(int) descriptor.get();
+        uint v = (*descriptor.typedAs!uint).get();
+        switch(nodeInfo.rtti.enumInfo.valueType.type.size)
+        {
+            case 1: v &= 0xFF; break;
+            case 2: v &= 0xFFFF; break;
+            default:
+        }
         import std.algorithm.searching: countUntil;
-        int i = cast(int) countUntil(nodeInfo.rtti.enumInfo.values, v);
-        assert(i > -1);
+        ptrdiff_t i = countUntil(nodeInfo.rtti.enumInfo.values, v);
+        assert (i != -1);
         nodeInfo.value = cast(ubyte[]) nodeInfo.rtti.enumInfo.members[i];
     }
 
@@ -2149,7 +2155,7 @@ version(unittest)
     //----
 
     // test the RuntimeTypeInfo-based serialization ----+
-    enum E:int {e0 = -1, e1 = 1}
+    enum E:byte {e0 = 1, e1 = 2}
 
     class SubPublisher: PropertyPublisher
     {
