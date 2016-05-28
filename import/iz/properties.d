@@ -31,16 +31,13 @@ enum PropAccess
  */
 alias GenericDescriptor = PropDescriptor!int;
 
-
 /**
  * Describes a property declared in an aggregate.
  *
- * A property is described by a name, a setter and a getter. Severals constructors
+ * A property is described by a name, a setter and a getter. Several constructors
  * allow to define the descriptor using a setter, a getter but also a pointer to
- * the targeted field.
- *
- * Addional information includes an iz.types.RunTimeTpeInfo structure matching to
- * the instance specialization.
+ * the targeted field. Another useful member is the pointer to the Rtti structure
+ * matching to the descriptor specialization.
  */
 struct PropDescriptor(T)
 {
@@ -350,6 +347,38 @@ struct PropDescriptor(T)
 
     }
 }
+///
+unittest
+{
+    static struct Foo
+    {
+        private int _value = 1;
+        PropDescriptor!int valueDescriptor;
+
+        void value(int v){_value = v;}
+        int value(){return _value;}
+    }
+
+    Foo foo;
+    // defines the property using the setter and the getter.
+    foo.valueDescriptor.define(&foo.value, &foo.value, "foo.value");
+    // defines the property using the setter and a pointer to the field.
+    foo.valueDescriptor.define(&foo.value, &foo._value, "foo.value");
+    // .get and .set allow to access the property value
+    foo.valueDescriptor.set(2);
+    assert(foo.valueDescriptor.get == 2);
+    // getter() and setter() too but they are used to set/get the delegates.
+    foo.valueDescriptor.setter()(1);
+    assert(foo.valueDescriptor.getter()() == 1);
+    // a descriptor has a fixed size, whatever is it's specialization,
+    // that allows to cast safely to any other descriptor type type
+    PropDescriptor!float* des = cast(PropDescriptor!float*) &foo.valueDescriptor;
+    // that's why a helper is integrated to cast
+    auto other = des.typedAs!byte;
+    // and the actual type can be retrieved with the rtti
+    assert(des.rtti is getRtti!int);
+    assert(other.rtti is getRtti!int);
+}
 
 unittest
 {
@@ -380,6 +409,14 @@ unittest
     descrBi.setter()(&refval);
     assert(b.i.e == 333);
     assert(b.i.e == descrBi.getter()().e);
+
+    auto descrSi0 = PropDescriptor!Si(&b.i, &b.fi);
+    auto descrSi1 = PropDescriptor!Si(&b.fi);
+    assert(*descrSi0.get() == *descrSi1.get());
+    assert(descrSi0.genericDescriptor.rtti is descrSi0.rtti);
+
+    auto refval0 = Si(1,2,3);
+    descrSi1.set(&refval0);
 
     destructEach(a,b);
 }
@@ -523,7 +560,7 @@ interface PropertyPublisher
 unittest
 {
     import iz.streams;
-    class StuffPublisher: PropertyPublisher
+    static class StuffPublisher: PropertyPublisher
     {
         // implements the interface as well as other usefull functions.
         mixin PropertyPublisherImpl;
@@ -1391,7 +1428,7 @@ unittest
     PropDescriptor!int bDescriptor = PropDescriptor!int(&b, "a");
     assert(areBindable(&aDescriptor, &bDescriptor));
 
-    // it also works with different static types because of RTTI
+    // it also works with different static types thanks to the RTTI
     auto cDescriptor = cast(PropDescriptor!float*) &aDescriptor;
     assert(areBindable(cDescriptor, &bDescriptor));
 }
@@ -1435,7 +1472,7 @@ void bindPublications(bool recursive = false, S, T)(auto ref S src, auto ref T t
             return;
         alias source = src;
     }
-    else static assert(0, S.stringof ~ " cannot be a PropertyPublisher");
+    else static assert(0, S.stringof ~ " is not a property publisher");
 
     // try to get a publisher from trg
     static if (is(T == class))
@@ -1452,7 +1489,7 @@ void bindPublications(bool recursive = false, S, T)(auto ref S src, auto ref T t
     }
     else static if (is(T == const(PubTraits)))
     {
-        alias target = src;
+        alias target = trg;
     }
     else static if (is(T == struct))
     {
@@ -1484,9 +1521,6 @@ void bindPublications(bool recursive = false, S, T)(auto ref S src, auto ref T t
             else
                 (cast(PT0) trgP).set((cast(PT0) srcP).get());
         }
-
-        //TODO-cproperties: test struct binding
-
 
         void setObject()
         {
@@ -1535,9 +1569,9 @@ void bindPublications(bool recursive = false, S, T)(auto ref S src, auto ref T t
                     static if (recursive)
                     {
                         const(PubTraits) srcPub = *srcP.rtti.structInfo.pubTraits;
-                        const(PubTraits) trgPub = *srcP.rtti.structInfo.pubTraits;
+                        const(PubTraits) trgPub = *trgP.rtti.structInfo.pubTraits;
                         srcPub.setContext(srcStruct);
-                        trgPub.setContext(srcStruct);
+                        trgPub.setContext(trgStruct);
                         bindPublications!true(srcPub, trgPub);
                     }
             }
@@ -1575,6 +1609,21 @@ void bindPublications(bool recursive = false, S, T)(auto ref S src, auto ref T t
 unittest
 {
     import iz.streams: Stream, MemoryStream;
+
+    static struct Bytes
+    {
+        enum ubyte[] _value = [0,1,2,3];
+        ubyte[] saveToBytes() {return _value;}
+        void loadFromBytes(ubyte[] value){assert(value == _value);}
+    }
+
+    static struct Text
+    {
+        enum const(char)[] _value = "value";
+        const(char)[] saveToText() {return _value;}
+        void loadFromText(const(char)[] value){assert(value == _value);}
+    }
+
     class Foo(bool Nested) : PropertyPublisher
     {
         mixin PropertyPublisherImpl;
@@ -1593,6 +1642,8 @@ unittest
         @SetGet string _c;
         @SetGet int[][] _d;
         @SetGet int[][][] _e;
+        @SetGet Bytes _bytes;
+        @SetGet Text _text;
         MemoryStream str;
 
         @Set void stream(Stream s)
@@ -1631,6 +1682,45 @@ unittest
     assert(target._sub.str.readInt == 1);
     assert(target._sub.str.readInt == 2);
     assert(target._sub.str.readInt == 3);
+}
+
+unittest
+{
+    static struct Child
+    {
+        mixin PropertyPublisherImpl;
+        @SetGet int _a = 8;
+        @SetGet int _b = 9;
+    }
+
+    static struct Parent
+    {
+        mixin PropertyPublisherImpl;
+        @SetGet Child _child1;
+        @SetGet Child _child2;
+    }
+
+    Parent p0, p1;
+    p0.collectPublications!Parent;
+    p0._child1.collectPublications!Child;
+    p0._child2.collectPublications!Child;
+    p1.collectPublications!Parent;
+    p1._child1.collectPublications!Child;
+    p1._child2.collectPublications!Child;
+
+    assert(p0.publicationCount == 2);
+    assert(p0._child1.publicationCount == 2);
+
+    p0._child1._a = 0;
+    p0._child1._b = 0;
+    p0._child2._a = 0;
+    p0._child2._b = 0;
+
+    bindPublications!true(p0, p1);
+    assert(p1._child1._a == 0);
+    assert(p1._child1._b == 0);
+    assert(p1._child2._a == 0);
+    assert(p1._child2._b == 0);
 }
 
 /**
