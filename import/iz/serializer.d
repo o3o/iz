@@ -470,9 +470,11 @@ void nodeInfo2Declarator(const SerNodeInfo* nodeInfo)
             char[] refId = cast(char[]) nodeInfo.value[];
             void setFromRef(T)()
             {
-                T funordg = *ReferenceMan.reference!(T)(refId);
-                auto descr = cast(PropDescriptor!T*) nodeInfo.descriptor;
-                descr.set(funordg);
+                if (T* funOrDg = ReferenceMan.reference!(T)(refId))
+                {
+                    auto descr = cast(PropDescriptor!T*) nodeInfo.descriptor;
+                    descr.set(*funOrDg);
+                }
             }
             if (nodeInfo.rtti.funptrInfo.hasContext)
                 setFromRef!GenericDelegate;
