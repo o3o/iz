@@ -1506,6 +1506,9 @@ public:
 ///
 version(Posix) unittest
 {
+    import std.process: environment;
+    if (environment.get("TRAVIS") == "true")
+        return;
 
     import std.file: write, exists, tempDir, getcwd, remove;
     import std.path: dirSeparator;
