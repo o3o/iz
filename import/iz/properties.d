@@ -1612,6 +1612,7 @@ void bindPublications(bool recursive = false, S, T)(auto ref S src, auto ref T t
             case _enum:     setBasicType!GenericEnum; break;
             case _struct:   setStruct; break;
             case _object:   setObject; break;
+            case _pointer:  setBasicType!(int*);
         }
     }
 }

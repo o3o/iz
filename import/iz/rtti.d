@@ -35,12 +35,13 @@ enum RtType: ubyte
     _invalid,
     _bool, _byte, _ubyte, _short, _ushort, _int, _uint, _long, _ulong,
     _float, _double, _real,
-    _char, _wchar, _dchar, /*_string, _wstring, _dstring,*/
+    _char, _wchar, _dchar,
     _object, _struct,
     _enum,
     _funptr,
     _stream,
-    _aa
+    _aa,
+    _pointer,
 }
 
 /**
@@ -65,7 +66,8 @@ private static immutable RtTypeArr =
     RtType._enum,
     RtType._funptr,
     RtType._stream,
-    RtType._aa
+    RtType._aa,
+    RtType._pointer
 ];
 
 package struct GenericStruct{}
@@ -109,7 +111,7 @@ ubyte size(RtType type)
 {
     with(RtType) final switch (type)
     {
-        case _invalid, _object, _struct, _funptr, _stream, _enum, _aa:
+        case _invalid, _object, _struct, _funptr, _stream, _enum, _aa, _pointer:
             return 0;
         case _bool, _byte, _ubyte, _char:
             return 1;
@@ -157,6 +159,7 @@ string typeString(T)(T t)
     {
         with(RtType) final switch (t)
         {
+            case _pointer:  return "pointer";
             case _aa:       return "aa";
             case _invalid:  return "invalid";
             case _bool:     return "bool";
@@ -393,6 +396,15 @@ struct AAInfo
     const(Rtti)* keyType, valueType;
 }
 
+/**
+ * Runtime information for the pointers
+ */
+struct PointerInfo
+{
+    /// the pointer target type
+    const(Rtti)* type;
+}
+
 private union Infos
 {
     FunPtrInfo funptrInfo;
@@ -401,6 +413,7 @@ private union Infos
     StructInfo structInfo;
     ReferencedInfo referencedInfo;
     AAInfo aaInfo;
+    PointerInfo pointerInfo;
 }
 
 /**
@@ -424,6 +437,8 @@ struct Rtti
             infos.structInfo = t;
         else static if (is(T == AAInfo))
             infos.aaInfo = t;
+        else static if (is(T == PointerInfo))
+            infos.pointerInfo = t;
         else static assert(0, "last argument of Rtti ctor must be an Info");
     }
 
@@ -484,6 +499,12 @@ struct Rtti
     const(AAInfo)* aaInfo() const
     {
         return &infos.aaInfo;
+    }
+
+    /// Returns the information valid when type is equal to RtT._pointer.
+    const(PointerInfo)* pointerInfo() const
+    {
+        return &infos.pointerInfo;
     }
 }
 
@@ -634,6 +655,10 @@ if (B.length < 2)
     else static if (isAssociativeArray!T)
     {
         const Rtti result = Rtti(RtType._aa, dim, typeCtors, AAInfo(getRtti!(KeyType!T), getRtti!(ValueType!T)));
+    }
+    else static if (isPointer!T)
+    {
+        const Rtti result = Rtti(RtType._pointer, dim, typeCtors, PointerInfo(getRtti!(PointerTarget!T)));
     }
     else
     {
@@ -917,5 +942,19 @@ unittest
     assert(hti.type == RtType._aa);
     assert(hti.aaInfo.keyType is getRtti!string);
     assert(hti.aaInfo.valueType is getRtti!long);
+}
+
+unittest
+{
+    int* i;
+    const(Rtti)* iti = getRtti(i);
+    assert(iti.type == RtType._pointer);
+    assert(iti.pointerInfo.type is getRtti!int);
+
+    int** pi;
+    const(Rtti)* piti = getRtti(pi);
+    assert(piti.type == RtType._pointer);
+    assert(piti.pointerInfo.type is getRtti!(int*));
+    assert(piti.pointerInfo.type.pointerInfo.type is getRtti!(int));
 }
 

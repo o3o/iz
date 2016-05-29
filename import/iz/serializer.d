@@ -313,7 +313,7 @@ char[] value2text(const SerNodeInfo* nodeInfo)
     //
     with (RtType) final switch(nodeInfo.rtti.type)
     {
-        case _invalid, _aa: return invalidText;
+        case _invalid, _aa, _pointer: return invalidText;
         case _bool:     return v2t!bool;
         case _ubyte:    return v2t!ubyte;
         case _byte:     return v2t!byte;
@@ -363,7 +363,7 @@ ubyte[] text2value(char[] text, const SerNodeInfo* nodeInfo)
     //    
     with(RtType) final switch(nodeInfo.rtti.type)
     {
-        case _invalid, _aa: return cast(ubyte[])invalidText;
+        case _invalid, _aa, _pointer: return cast(ubyte[])invalidText;
         case _bool:     return t2v!bool;
         case _ubyte:    return t2v!ubyte;
         case _byte:     return t2v!byte;
@@ -411,7 +411,7 @@ void nodeInfo2Declarator(const SerNodeInfo* nodeInfo)
     //
     with (RtType) final switch(nodeInfo.rtti.type)
     {
-        case _invalid, _aa:  break;
+        case _invalid, _aa, _pointer:  break;
         case _bool:     toDecl!bool; break;
         case _byte:     toDecl!byte; break;
         case _ubyte:    toDecl!ubyte; break;
@@ -1116,7 +1116,7 @@ private:
             }
             with(RtType) final switch(rtti.type)
             {
-                case _invalid, _aa: assert(0);
+                case _invalid, _aa, _pointer: assert(0);
                 case _bool:   addValueProp!bool; break;
                 case _byte:   addValueProp!byte; break;
                 case _ubyte:  addValueProp!ubyte; break;
@@ -2504,6 +2504,44 @@ version(unittest)
         assert(parent._child1._b == 9);
         assert(parent._child2._a == 8);
         assert(parent._child2._b == 9);
+    }
+
+    unittest
+    {
+        static struct Child
+        {
+            mixin PropertyPublisherImpl;
+            @SetGet int _a = 8;
+            @SetGet int _b = 9;
+        }
+        static struct Parent
+        {
+            mixin PropertyPublisherImpl;
+            Child _child1;
+            @Get Child* child1(){return &_child1;}
+            @Set void child1(Child* value) {}
+        }
+
+        Serializer ser = construct!Serializer;
+        MemoryStream str = construct!MemoryStream;
+        scope(exit) destructEach(str, ser);
+        Parent parent;
+        parent.collectPublications!Parent;
+        parent._child1.collectPublications!Child;
+
+        assert(parent.publicationFromName("child1") != null);
+        assert(parent._child1.publicationFromName("a") != null);
+        assert(parent._child1.publicationFromName("b") != null);
+
+        // publishing structs only works when they are themselves published from a field
+        /*ser.publisherToStream(parent, str);
+        parent._child1._a = 0;
+        parent._child1._b = 0;
+
+        /* str.position = 0;
+        ser.streamToPublisher(str, parent);
+        assert(parent._child1._a == 8);
+        assert(parent._child1._b == 9);*/
     }
 
 }
