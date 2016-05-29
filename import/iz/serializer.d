@@ -440,14 +440,15 @@ void nodeInfo2Declarator(const SerNodeInfo* nodeInfo)
             {
                 case StructType._none: assert(0);
                 case StructType._text:
-                    void* structPtr = (cast(PropDescriptor!GenericStruct*) nodeInfo.descriptor).get;
+
+                    void* structPtr = (cast(PropDescriptor!GenericStruct*) nodeInfo.descriptor).getter()().getThis;
                     void* oldCtxt = nodeInfo.rtti.structInfo.textTraits.setContext(structPtr);
                     assert(nodeInfo.rtti.structInfo.textTraits.loadFromText.ptr);
                     nodeInfo.rtti.structInfo.textTraits.loadFromText(cast(const(char)[]) nodeInfo.value);
                     nodeInfo.rtti.structInfo.textTraits.restoreContext(oldCtxt);
                     break;
                 case StructType._binary:
-                    void* structPtr = (cast(PropDescriptor!GenericStruct*) nodeInfo.descriptor).get;
+                    void* structPtr = (cast(PropDescriptor!GenericStruct*) nodeInfo.descriptor).getter()().getThis;
                     void* oldCtxt = nodeInfo.rtti.structInfo.binTraits.setContext(structPtr);
                     assert(nodeInfo.rtti.structInfo.binTraits.loadFromBytes.ptr);
                     nodeInfo.rtti.structInfo.binTraits.loadFromBytes(cast(ubyte[])nodeInfo.value);
@@ -540,14 +541,14 @@ void setNodeInfo(T)(SerNodeInfo* nodeInfo, PropDescriptor!T* descriptor)
                 nodeInfo.value = cast(ubyte[]) ti.structInfo.identifier;
                 break;
             case StructType._text:
-                void* structPtr = descriptor.get;
+                void* structPtr = descriptor.getter()().getThis;
                 void* oldCtxt = ti.structInfo.textTraits.setContext(structPtr);
                 assert(ti.structInfo.textTraits.saveToText.ptr);
                 nodeInfo.value = cast(ubyte[]) ti.structInfo.textTraits.saveToText();
                 ti.structInfo.textTraits.restoreContext(oldCtxt);
                 break;
             case StructType._binary:
-                void* structPtr = descriptor.get;
+                void* structPtr = descriptor.getter()().getThis;
                 void* oldCtxt = ti.structInfo.binTraits.setContext(structPtr);
                 assert(ti.structInfo.binTraits.saveToBytes.ptr);
                 nodeInfo.value = ti.structInfo.binTraits.saveToBytes();
@@ -1153,10 +1154,9 @@ private:
                         case StructType._none:
                             assert(0);
                         case StructType._publisher:
-                            writeln(rtti.structInfo.identifier);
                             auto _oldParentNode = _parentNode;
                             PropDescriptor!GenericStruct* des = cast(PropDescriptor!GenericStruct*) descr;
-                            void* structPtr = des.get;
+                            void* structPtr = des.getter()().getThis;
                             void* oldCtxt = rtti.structInfo.pubTraits.setContext(structPtr);
                             addPropertyPublisher(des); // struct detected with rtti
                             rtti.structInfo.pubTraits.restoreContext(oldCtxt);
@@ -1368,7 +1368,7 @@ public:
                             childNode.info.rtti.structInfo.type == StructType._publisher)
                         {
                             auto t2 = cast(PropDescriptor!GenericStruct*) t1;
-                            void* structPtr = t2.get;
+                            void* structPtr = t2.getter()().getThis;
                             bool fromRef;
 
                             if (!structPtr && _onWantAggregate)
@@ -1382,7 +1382,7 @@ public:
                                 );
                                 if (ps)
                                 {
-                                    t2.set(cast(GenericStruct*) ps);
+                                    //t2.set(cast(GenericStruct*) ps);
                                     done = true;
                                 }
                             }
@@ -2518,8 +2518,8 @@ version(unittest)
         {
             mixin PropertyPublisherImpl;
             Child _child1;
-            @Get Child* child1(){return &_child1;}
-            @Set void child1(Child* value) {}
+            @Get ref Child child1(){return _child1;}
+            @Set void child1(Child value) {}
         }
 
         Serializer ser = construct!Serializer;
@@ -2533,15 +2533,14 @@ version(unittest)
         assert(parent._child1.publicationFromName("a") != null);
         assert(parent._child1.publicationFromName("b") != null);
 
-        // publishing structs only works when they are themselves published from a field
-        /*ser.publisherToStream(parent, str);
+        ser.publisherToStream(parent, str);
         parent._child1._a = 0;
         parent._child1._b = 0;
 
-        /* str.position = 0;
+        str.position = 0;
         ser.streamToPublisher(str, parent);
         assert(parent._child1._a == 8);
-        assert(parent._child1._b == 9);*/
+        assert(parent._child1._b == 9);
     }
 
 }

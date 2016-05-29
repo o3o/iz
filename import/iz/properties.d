@@ -55,11 +55,11 @@ struct PropDescriptor(T)
         else
         {
             /// setter proptotype
-            alias PropSetter = void delegate(T* value);
+            alias PropSetter = void delegate(T value);
             /// getter prototype
-            alias PropGetter = T* delegate();
+            alias PropGetter = ref T delegate();
             /// alternative setter prototype.
-            alias PropSetterConst = void delegate(ref const T* value);
+            alias PropSetterConst = void delegate(const T value);
         }
     }
     private
@@ -99,31 +99,24 @@ struct PropDescriptor(T)
         }
 
         // pseudo setter internally used when a T is directly written.
-        static if (!is(T == struct))
-            void internalSetter(T value)
+        void internalSetter(T value)
         {
             alias TT = Unqual!T;
             T current = getter()();
-            if (value != current) *(cast(TT*)_directPtr) = value;
-        }
-        else
-            void internalSetter(T* value)
-        {
-            alias TT = Unqual!T;
-            const T* current = getter()();
-            if (value != current) (cast(TT*)_directPtr) = value;
+            if (value != current)
+                *cast(TT*)_directPtr = value;
         }
 
         // pseudo getter internally used when a T is directly read
-        static if (!is(T == struct))
-            T internalGetter()
+        static if (is(T==struct))
+            ref T internalGetter()
         {
             return *_directPtr;
         }
         else
-            T* internalGetter()
+            T internalGetter()
         {
-            return _directPtr;
+            return *_directPtr;
         }
     }
     public
@@ -254,11 +247,7 @@ struct PropDescriptor(T)
         /**
          * Sets the property value
          */
-        static if (!is(T == struct))
-            void set(T value) {_setter(value);}
-        else
-            void set(T* value) {_setter(value);}
-
+        void set(T value) {_setter(value);}
 // ---- 
 // getter ---------------------------------------------------------------------+
 
@@ -285,11 +274,7 @@ struct PropDescriptor(T)
         /**
          * Gets the property value
          */
-        static if (!is(T == struct))
-            T get(){return _getter();}
-        else
-            T* get(){return _getter();}
-
+        T get(){return _getter();}
 // ----     
 // misc -----------------------------------------------------------------------+
 
@@ -392,8 +377,8 @@ unittest
     class B
     {
         private Si fi;
-        @property Si* i(){return &fi;}
-        @property void i(Si* aValue){fi = *aValue;}
+        @property ref Si i(){return fi;}
+        @property void i(Si aValue){fi = aValue;}
     }
 
     auto a = construct!A;
@@ -405,18 +390,18 @@ unittest
 
     auto refval = Si(1,2,333);
     auto b = construct!B;
-    auto descrBi = PropDescriptor!Si(&b.i,&b.i,"I");
-    descrBi.setter()(&refval);
+    auto descrBi = PropDescriptor!(Si)(&b.i,&b.i,"I");
+    descrBi.setter()(refval);
     assert(b.i.e == 333);
     assert(b.i.e == descrBi.getter()().e);
 
-    auto descrSi0 = PropDescriptor!Si(&b.i, &b.fi);
-    auto descrSi1 = PropDescriptor!Si(&b.fi);
-    assert(*descrSi0.get() == *descrSi1.get());
+    auto descrSi0 = PropDescriptor!(Si)(&b.i, &b.fi);
+    auto descrSi1 = PropDescriptor!(Si)(&b.fi);
+    assert(descrSi0.get() == descrSi1.get());
     assert(descrSi0.genericDescriptor.rtti is descrSi0.rtti);
 
     auto refval0 = Si(1,2,3);
-    descrSi1.set(&refval0);
+    descrSi1.set(refval0);
 
     destructEach(a,b);
 }
@@ -428,6 +413,31 @@ unittest
     static assert((PropDescriptor!(string)).sizeof == (PropDescriptor!(ubyte[][][][])).sizeof);
 }
 
+/**
+ * Allows to get the original `this` of a struct, for example when
+ * passed from a `ref` getter function.
+ */
+void* getThis(T)(ref T t)
+if (is(T == struct))
+{
+    return (cast(void*) &t);
+}
+///
+unittest
+{
+    static struct Bar {uint[64] ui;}
+    class Foo
+    {
+        Bar bar;
+        ref Bar barRef(){return bar;}
+        Bar barMov(){return bar;}
+    }
+
+    Foo foo = new Foo;
+    assert(&foo.bar == foo.barRef.getThis);
+    Bar b = foo.barRef;
+    assert(&foo.bar != &b);
+}
 
 /// designed to annotate a property setter, e.g @Set
 enum Set;
@@ -1515,13 +1525,16 @@ void bindPublications(bool recursive = false, S, T)(auto ref S src, auto ref T t
         {
             final switch (srcP.rtti.dimension != 0)
             {
+                // value ABI
                 case false:
                     alias DT0 = PropDescriptor!T*;
                     (cast(DT0) trgP).set((cast(DT0) srcP).get());
                     break;
+                // array ABI
                 case true:
                     alias DT1 = PropDescriptor!(T[])*;
                     (cast(DT1) trgP).set((cast(DT1) srcP).get());
+                    break;
             }
         }
 
@@ -1552,33 +1565,37 @@ void bindPublications(bool recursive = false, S, T)(auto ref S src, auto ref T t
 
         void setStruct()
         {
-            GenericStruct* srcStruct = (cast(PropDescriptor!GenericStruct*) srcP).get();
-            GenericStruct* trgStruct = (cast(PropDescriptor!GenericStruct*) trgP).get();
-            with(StructType) final switch(srcP.rtti.structInfo.type)
+            auto srcPd = cast(PropDescriptor!GenericStruct*) srcP;
+            auto trgPd = cast(PropDescriptor!GenericStruct*) trgP;
+            void* srcStruct = getThis(srcPd.getter()());
+            void* trgStruct = getThis(trgPd.getter()());
+            const(StructInfo)* srcStructRtti(){return srcP.rtti.structInfo;}
+            const(StructInfo)* trgStructRtti(){return trgP.rtti.structInfo;}
+            with(StructType) final switch(srcStructRtti.type)
             {
                 case _none:
                     break;
                 case _text:
-                    void* oldPtr = srcP.rtti.structInfo.textTraits.setContext(srcStruct);
-                    const(char)[] value = srcP.rtti.structInfo.textTraits.saveToText();
-                    srcP.rtti.structInfo.textTraits.restoreContext(oldPtr);
-                    oldPtr = trgP.rtti.structInfo.textTraits.setContext(trgStruct);
-                    trgP.rtti.structInfo.textTraits.loadFromText(value);
-                    trgP.rtti.structInfo.textTraits.restoreContext(oldPtr);
+                    void* oldPtr = srcStructRtti.textTraits.setContext(srcStruct);
+                    const(char)[] value = srcStructRtti.textTraits.saveToText();
+                    srcStructRtti.textTraits.restoreContext(oldPtr);
+                    oldPtr = trgStructRtti.textTraits.setContext(trgStruct);
+                    trgStructRtti.textTraits.loadFromText(value);
+                    trgStructRtti.textTraits.restoreContext(oldPtr);
                     break;
                 case _binary:
-                    void* oldPtr = srcP.rtti.structInfo.binTraits.setContext(srcStruct);
-                    ubyte[] value = srcP.rtti.structInfo.binTraits.saveToBytes();
-                    srcP.rtti.structInfo.binTraits.restoreContext(oldPtr);
-                    oldPtr = trgP.rtti.structInfo.binTraits.setContext(trgStruct);
-                    trgP.rtti.structInfo.binTraits.loadFromBytes(value);
-                    trgP.rtti.structInfo.binTraits.restoreContext(oldPtr);
+                    void* oldPtr = srcStructRtti.binTraits.setContext(srcStruct);
+                    ubyte[] value = srcStructRtti.binTraits.saveToBytes();
+                    srcStructRtti.binTraits.restoreContext(oldPtr);
+                    oldPtr = trgStructRtti.binTraits.setContext(trgStruct);
+                    trgStructRtti.binTraits.loadFromBytes(value);
+                    trgStructRtti.binTraits.restoreContext(oldPtr);
                     break;
                 case _publisher:
                     static if (recursive)
                     {
-                        const(PubTraits) srcPub = *srcP.rtti.structInfo.pubTraits;
-                        const(PubTraits) trgPub = *trgP.rtti.structInfo.pubTraits;
+                        const(PubTraits) srcPub = *srcStructRtti.pubTraits;
+                        const(PubTraits) trgPub = *trgStructRtti.pubTraits;
                         srcPub.setContext(srcStruct);
                         trgPub.setContext(trgStruct);
                         bindPublications!true(srcPub, trgPub);
@@ -1724,12 +1741,12 @@ unittest
 
     assert(p0.publicationCount == 2);
     assert(p0._child1.publicationCount == 2);
-
+    //
     p0._child1._a = 0;
     p0._child1._b = 0;
     p0._child2._a = 0;
     p0._child2._b = 0;
-
+    //
     bindPublications!true(p0, p1);
     assert(p1._child1._a == 0);
     assert(p1._child1._b == 0);

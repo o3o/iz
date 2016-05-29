@@ -380,15 +380,6 @@ struct StructInfo
 }
 
 /**
- * Runtime information for anything that's registered in the "refman"
- */
-struct ReferencedInfo
-{
-    /// the type of the reference
-    string identifier;
-}
-
-/**
  * Runtime information for the associative array
  */
 struct AAInfo
@@ -411,7 +402,6 @@ private union Infos
     ClassInfo classInfo;
     EnumInfo enumInfo;
     StructInfo structInfo;
-    ReferencedInfo referencedInfo;
     AAInfo aaInfo;
     PointerInfo pointerInfo;
 }
