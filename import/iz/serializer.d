@@ -497,7 +497,6 @@ void setNodeInfo(T)(SerNodeInfo* nodeInfo, PropDescriptor!T* descriptor)
     {
         nodeInfo.value.length = nodeInfo.rtti.type.size;
         *cast(T*) nodeInfo.value.ptr = descriptor.get();
-        return;
     }
 
     // arrays types
@@ -506,7 +505,6 @@ void setNodeInfo(T)(SerNodeInfo* nodeInfo, PropDescriptor!T* descriptor)
         T value = descriptor.get();
         nodeInfo.value.length = value.length * nodeInfo.rtti.type.size;
         moveMem(nodeInfo.value.ptr, cast(void*) value.ptr, nodeInfo.value.length);
-        return;
     }
 
     // enums
@@ -530,10 +528,9 @@ void setNodeInfo(T)(SerNodeInfo* nodeInfo, PropDescriptor!T* descriptor)
     {
         Object obj = cast(Object) descriptor.get();
         nodeInfo.value = cast(ubyte[]) className(obj);
-        return;
     }
 
-    // struct, warning, T will is set to a dummy struct type
+    // struct, warning, T is set to a dummy struct type
     else static if (is(T == struct) || is(T==GenericStruct))
     {
         const(Rtti)* ti = nodeInfo.rtti;
@@ -572,7 +569,6 @@ void setNodeInfo(T)(SerNodeInfo* nodeInfo, PropDescriptor!T* descriptor)
             nodeInfo.value.length = cast(uint) value.size;
             value.read(nodeInfo.value.ptr, cast(uint) value.size);
         }
-        return;   
     }
 
     // delegate & function
@@ -584,6 +580,8 @@ void setNodeInfo(T)(SerNodeInfo* nodeInfo, PropDescriptor!T* descriptor)
         assert(id.length, to!string(id != ""));
         nodeInfo.value = cast(ubyte[]) id;
     }
+
+    else static assert(0, "cannot set the ISTnode for a " ~ T.stringof);
 }
 //----
 
@@ -983,7 +981,7 @@ alias WantAggregateEvent = void delegate(IstNode node, ref void* aggregate, out 
  * $(D streamToPublisher()) but the IST also allows to convert a Stream or
  * to find and restores a specific property.
  *
- * Error:
+ * Errors:
  * Two events ($(D onWantDescriptor) and  $(D onWantAggregate)) allow to handle
  * the errors that could be encountered when restoring.
  * They permit a PropertyPublisher to be modified without any risk of deserialization
@@ -992,6 +990,12 @@ alias WantAggregateEvent = void delegate(IstNode node, ref void* aggregate, out 
  * without stopping the whole processing. Missing objects can be created when
  * The serializer ask for, since in this case, the original Object type and the
  * original variable names are passed as hint.
+ *
+ * Hints:
+ * The serializer handles the PropHints of the publications. If `PropHint.dontSet`
+ * is in the hints then a property is not restored. If `PropHint.dontGet` is in the
+ * hints then the property is not stored. These two hints allow to deprecate some
+ * publications, without breaking the realoding.
  */
 class Serializer
 {
@@ -1029,6 +1033,8 @@ private:
     }
     body
     {
+        if (PropHint.dontGet in descriptor.hints)
+            return;
         IstNode propNode = _parentNode.addNewChildren;
         propNode.setDescriptor(descriptor);
 
@@ -1065,6 +1071,11 @@ private:
 
     void addPropertyPublisher(PD)(PD* pubDescriptor)
     {
+        assert(pubDescriptor);
+
+        if (PropHint.dontGet in pubDescriptor.hints)
+            return;
+
         static if (is(PD == PropDescriptor!Object))
         {
             PropertyPublisher publisher;
@@ -1331,6 +1342,8 @@ public:
                 if (void* t0 = target.publicationFromName(childNode.info.name))
                 {
                     PropDescriptor!int* t1 = cast(PropDescriptor!int*)t0;
+                    if (PropHint.dontSet in t1.hints)
+                        continue;
                     if (t1.rtti is childNode.info.rtti)
                     {
                         childNode.info.descriptor = t1;
@@ -1562,9 +1575,13 @@ public:
      */  
     void nodeToPublisher(IstNode node, bool recursive = false)
     {
+        // TODO-cserializer: handle publishing structs in nodeToPublisher
         bool restore(IstNode current)
         {
             bool result = true;
+            GenericDescriptor* des = cast(GenericDescriptor*) current.info.descriptor;
+            if (des && PropHint.dontSet in des.hints)
+                return result;
             if (current.info.descriptor && current.info.name ==
                 (cast(PropDescriptor!byte*)current.info.descriptor).name)
                     nodeInfo2Declarator(current.info);
@@ -1602,6 +1619,8 @@ public:
      */
     void nodeToProperty(T)(IstNode node, PropDescriptor!T* descriptor = null)
     {
+        if (descriptor && PropHint.dontSet in descriptor.hints)
+            return;
         if (descriptorMatchesNode!T(descriptor, node))
         {
             node.info.descriptor = descriptor;
@@ -2545,5 +2564,38 @@ version(unittest)
         assert(parent._child1._b == 9);
     }
 
+    unittest
+    {
+        class Foo: PropertyPublisher
+        {
+            mixin PropertyPublisherImpl;
+
+            @PropHints(PropHint.dontGet)
+            @SetGet int _i = 1;
+            @PropHints(PropHint.dontSet)
+            @SetGet int _j = 1;
+
+            this()
+            {
+                collectPublications!Foo;
+            }
+        }
+
+        Foo foo = construct!Foo;
+        MemoryStream str = construct!MemoryStream;
+        Serializer ser = construct!Serializer;
+        scope(exit) destructEach(foo, ser, str);
+
+        ser.publisherToStream(foo, str);
+        assert(ser.findNode("i") is null);  // dontGet, so not in IST
+        assert(ser.findNode("root.j") !is null); // in IST...
+
+        foo._i = 0;
+        foo._j = 0;
+        str.position = 0;
+        ser.streamToPublisher(str, foo);
+        assert(foo._i == 0);
+        assert(foo._j == 0); //...but not restored
+    }
 }
 

@@ -62,14 +62,16 @@ struct PropDescriptor(T)
             alias PropSetterConst = void delegate(const T value);
         }
     }
+    package
+    {
+        PropHints _hints;
+    }
     private
     {
         PropSetter _setter;
         PropGetter _getter;
         Object _declarator;
         const(Rtti)* _rtti;
-
-        PropHints _hints;
 
         T* _directPtr;
 
@@ -301,6 +303,7 @@ struct PropDescriptor(T)
         {
             return _access;
         }
+
         /** 
          * Defines the string used to identify the property
          */
@@ -308,11 +311,13 @@ struct PropDescriptor(T)
         {
             _name = value;
         }
+
         /// ditto
         @property string name()
         {
             return _name;
         }
+
         /**
          * The object that declares this property.
          * When really needed, this value is set automatically.
@@ -321,12 +326,19 @@ struct PropDescriptor(T)
         {
             _declarator = value;
         }
+
         /// ditto
         @property Object declarator(){return _declarator;}
+
         /**
          * Returns the RuntimeTypeInfo struct for the property type.
          */
         @property const(Rtti*) rtti(){return _rtti;}
+
+        /**
+         * Returns the hints for this property.
+         */
+        ref PropHints hints(){return _hints;}
 
 // ----        
 
@@ -462,9 +474,9 @@ enum PropHint
 {
     /**
      * Indicates that a special behavior should be adopted
-     * when the property value is equal to its initializer.
+     * depending on if the value is equal or not the initializer.
      */
-    noDefault,
+    initCare,
     /**
      * Indicates that a property should be considered read-only,
      * even if a setter is detected.
@@ -935,12 +947,12 @@ unittest
         private uint _a, _b;
         private char[] _c;
 
-        @PropHints(PropHint.noDefault)
+        @PropHints(PropHint.initCare)
         @Get uint propA(){return _a;}
 
         @Set void propA(uint aValue){_a = aValue;}
 
-        @PropHints(PropHint.noDefault,PropHint.dontSet)
+        @PropHints(PropHint.initCare,PropHint.dontSet)
         @Get uint propB(){return _b;}
         @Set void propB(uint aValue){_b = aValue;}
 
