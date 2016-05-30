@@ -995,7 +995,7 @@ alias WantAggregateEvent = void delegate(IstNode node, ref void* aggregate, out 
  * The serializer handles the PropHints of the publications. If `PropHint.dontSet`
  * is in the hints then a property is not restored. If `PropHint.dontGet` is in the
  * hints then the property is not stored. These two hints allow to deprecate some
- * publications, without breaking the realoding.
+ * publications, without breaking the restoration.
  */
 class Serializer
 {
@@ -1575,7 +1575,6 @@ public:
      */  
     void nodeToPublisher(IstNode node, bool recursive = false)
     {
-        // TODO-cserializer: handle publishing structs in nodeToPublisher
         bool restore(IstNode current)
         {
             bool result = true;
@@ -1600,7 +1599,9 @@ public:
             {
                 auto childNode = cast(IstNode) child;
                 if (!restore(childNode)) return false;
-                if (isSerObjectType(childNode.info.rtti.type) & recursive)
+                if (recursive && (childNode.info.rtti.type == RtType._object ||
+                    (childNode.info.rtti.type == RtType._struct &&
+                    childNode.info.rtti.structInfo.type == StructType._publisher)))
                     if (!restoreLoop(childNode)) return false;
             }
             return true;
@@ -1916,7 +1917,6 @@ version(unittest)
             }
     }
 
-    // by format only use the system based on manual declarations
     void testByFormat(SerializationFormat format)()
     {
         ReferenceMan.clear;
@@ -2484,7 +2484,7 @@ version(unittest)
         assert(bsp._bs._value == "content backup");
     }
 
-    // test nested publishing structs
+    // test nested publishing structs, detected from fields
     unittest
     {
         static struct Child
@@ -2527,6 +2527,7 @@ version(unittest)
         assert(parent._child2._b == 9);
     }
 
+    // test nested publishing structs, detected from get/set pair
     unittest
     {
         static struct Child
@@ -2564,6 +2565,7 @@ version(unittest)
         assert(parent._child1._b == 9);
     }
 
+    // PropHints dontSet/dontGet
     unittest
     {
         class Foo: PropertyPublisher
