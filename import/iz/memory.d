@@ -127,27 +127,20 @@ enum NoGc;
 template MustAddGcRange(T)
 if (is(T==struct) || is(T==union) || is(T==class))
 {
-    mixin ScopedReachability;
-
     bool check()
     {
         bool result = false;
-        bool isMarkedNogc(string member)()
+        import std.meta: aliasSeqOf;
+        import std.range: iota;
+        foreach(i;  aliasSeqOf!(iota(0, T.tupleof.length)))
         {
-            return hasUDA!(__traits(getMember, T, member), NoGc);
-        }
-        foreach(member; __traits(allMembers, T))
-        {
-            static if (isMemberReachable!(T, member))
-            {
-                alias MT = typeof(__traits(getMember, T, member)); // issue 15371
-                static if (isDynamicArray!MT && !isMarkedNogc!member)
-                    result = true;
-                static if (isPointer!MT && !isMarkedNogc!member)
-                    result = true;
-                static if (is(MT == class) && !isMarkedNogc!member)
-                    result = true;
-            }
+            alias MT = typeof(T.tupleof[i]);
+            static if (isDynamicArray!MT && !hasUDA!(T.tupleof[i], NoGc))
+                result = true;
+            static if (isPointer!MT && !hasUDA!(T.tupleof[i], NoGc))
+                result = true;
+            static if (is(MT == class) && !hasUDA!(T.tupleof[i], NoGc))
+                result = true;
         }
         return result;
     }
@@ -156,15 +149,14 @@ if (is(T==struct) || is(T==union) || is(T==class))
 ///
 unittest
 {
-    // 'member' will be managed with expand/Shrink
+    // 'a' will be managed with expand/Shrink
     class Foo{@NoGc int[] a; @NoGc void* b;}
     static assert(!MustAddGcRange!Foo);
-    // 'member' will be managed with '.length' so druntime.
+    // 'a' will be managed with '.length' so druntime.
     class Bar{int[] a; @NoGc void* b;}
     // b's annotation is canceled by a type.
     static assert(MustAddGcRange!Bar);
 }
-
 
 /**
  * Returns a new, GC-free, class instance.
@@ -181,8 +173,7 @@ if (is(CT == class) && !isAbstractClass!CT)
     memory[0 .. size] = typeid(CT).init[];
     static if (__traits(hasMember, CT, "__ctor"))
         (cast(CT) (memory)).__ctor(a);
-    // blocked by DMD issue 15371
-    //static if (MustAddGcRange!CT)
+    static if (MustAddGcRange!CT)
     {
         import core.memory: GC;
         GC.addRange(memory, size, typeid(CT));
@@ -235,7 +226,7 @@ if(is(ST==struct) || is(ST==union))
         (cast(ST*) (memory)).__ctor(a);
     else static if (A.length)
         static assert (0, "cannot construct without a user defined ctor");
-    //static if (MustAddGcRange!ST)
+    static if (MustAddGcRange!ST)
     {
         import core.memory: GC;
         GC.addRange(memory, size, typeid(ST));
