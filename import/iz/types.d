@@ -107,7 +107,7 @@ unittest
 mixin template ScopedReachability()
 {
     bool isMemberReachable(T, string member)()
-    if (is(T==class) || is(T==struct))
+    if (is(T==class) || is(T==struct) || is(T==union))
     {
         return is(typeof(__traits(getMember, T, member)));
     }
