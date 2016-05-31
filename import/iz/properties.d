@@ -683,6 +683,18 @@ mixin template PropertyPublisherImpl()
     static if (!__traits(hasMember, typeof(this), "_publishedDescriptors"))
     protected void*[] _publishedDescriptors;
 
+    /*
+     * Must be called in the aggragate destructor since the descriptors are
+     * allocated using construct.
+     */
+    /*static if (!__traits(hasMember, typeof(this), "destructDescriptors"))
+    protected void destructDescriptors()
+    {
+        import iz.memory: destruct;
+        foreach(ptr; _publishedDescriptors)
+            destruct(cast(GenericDescriptor*) ptr);
+    }*/
+
     static if (!__traits(hasMember, typeof(this), "_declarator"))
     protected Object _declarator;
 
@@ -736,19 +748,20 @@ mixin template PropertyPublisherImpl()
      */
     public PropDescriptor!T * publication(T)(string name, bool createIfMissing = false)
     {
-        PropDescriptor!T * descr;
-
+        PropDescriptor!T* descr;
         foreach(immutable i; 0 .. _publishedDescriptors.length)
         {
-            auto maybe = cast(PropDescriptor!T *) _publishedDescriptors[i];
+            auto maybe = cast(PropDescriptor!T*) _publishedDescriptors[i];
             if (maybe.name != name) continue;
             descr = maybe; break;
         }
-
         if (createIfMissing && !descr)
         {
+            import iz.memory: construct;
+            //TODO-cproperties: allocate the descriptors with construct
+            //descr = construct!(PropDescriptor!T);
             descr = new PropDescriptor!T;
-            descr.name = name;
+            descr.name = name.idup;
             _publishedDescriptors ~= descr;
         }
         return descr;
