@@ -109,7 +109,10 @@ public:
      */
     static void reset()
     {
-        fStore.clear;
+        version(DigitalMars)
+            fStore.clear;
+        else
+            fStore = fStore.init;
     }
 // -----------------------------------------------------------------------------
 // Add stuff ------------------------------------------------------------------+
@@ -219,7 +222,7 @@ public:
      */
     static void removeReferences(RT)()
     {
-        if (t = RT.stringof in fStore)
+        if (auto t = RT.stringof in fStore)
             t.clear;
     }
 
@@ -228,9 +231,16 @@ public:
      */
     static void clear()
     {
-        foreach(k; fStore.byKey)
-            fStore[k].clear;
-        fStore.clear;
+        version(DigitalMars)
+        {
+            foreach(k; fStore.byKey)
+                fStore[k].clear;
+            fStore.clear;
+        }
+        else
+        {
+            fStore = fStore.init;
+        }
     }
 
     /**
