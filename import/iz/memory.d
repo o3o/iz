@@ -114,17 +114,17 @@ if (isPointer!T && isBasicType!(pointerTarget!T))
 
 /**
  * This enum must be used as an UDA to mark a variable of a type that looks
- * like a GC-managed but that is actually not GC-managed.
+ * like GC-managed but that is actually not GC-managed.
  */
 enum NoGc;
 
 /**
  * Indicates if an aggregate contains members that might be
- * collected gy the garbage collector. This is used in `construct`
+ * collected by the garbage collector. This is used in `construct`
  * to determine if the content of a manually allocated aggregate must
  * be declared to the GC.
  */
-template MustAddGcRange(T)
+template MustAddGcRange(T = void)
 if (is(T==struct) || is(T==union) || is(T==class))
 {
     bool check()
@@ -132,6 +132,18 @@ if (is(T==struct) || is(T==union) || is(T==class))
         bool result = false;
         import std.meta: aliasSeqOf;
         import std.range: iota;
+
+        static if (is(T == class))
+        {
+            foreach(BT; BaseClassesTuple!T)
+            {
+                static if (MustAddGcRange!BT)
+                    result = true;
+                if (result)
+                    return result;
+            }
+        }
+
         foreach(i;  aliasSeqOf!(iota(0, T.tupleof.length)))
         {
             alias MT = typeof(T.tupleof[i]);
@@ -141,6 +153,13 @@ if (is(T==struct) || is(T==union) || is(T==class))
                 result = true;
             static if (is(MT == class) && !hasUDA!(T.tupleof[i], NoGc))
                 result = true;
+            static if (is(MT == struct) && !is(MT == T) && !hasUDA!(T.tupleof[i], NoGc))
+            //TODO-cconstruct, replace with a OpOrEqu once issue 16107 fixed
+                result = result | MustAddGcRange!MT;
+            static if (is(MT == union) && !is(MT == T) && !hasUDA!(T.tupleof[i], NoGc))
+                result = result | MustAddGcRange!MT;
+            if (result)
+                break;
         }
         return result;
     }
@@ -156,6 +175,9 @@ unittest
     class Bar{int[] a; @NoGc void* b;}
     // b's annotation is canceled by a type.
     static assert(MustAddGcRange!Bar);
+    // Baz base is not @NoGc
+    class Baz: Bar{@NoGc void* c;}
+    static assert(MustAddGcRange!Baz);
 }
 
 /**
