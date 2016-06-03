@@ -50,6 +50,8 @@ protected:
         }
     }
 
+@PropHints(PropHint.initCare):
+
     @Get char[] type()
     {
         return _tp;
@@ -574,10 +576,8 @@ void setNodeInfo(T)(SerNodeInfo* nodeInfo, PropDescriptor!T* descriptor)
     // delegate & function
     else static if (is(T == GenericDelegate) || is(T == GenericFunction))
     {
-        //nodeInfo.value = cast(ubyte[]) descriptor.referenceID;
         auto dg = descriptor.get;
         auto id = ReferenceMan.referenceID(&dg);
-        assert(id.length, to!string(id != ""));
         nodeInfo.value = cast(ubyte[]) id;
     }
 
@@ -1048,9 +1048,17 @@ private:
                 if (descriptor.get() == false)
                     return;
             }
+            else static if (isArray!T)
+            {
+                if (!descriptor.get().length)
+                    return;
+            }
             else static if (is(T == GenericFunction) ||is(T == GenericDelegate))
             {
-                if (descriptor.get() == null)
+                auto dg = descriptor.get();
+                if (dg == null)
+                    return;
+                if (ReferenceMan.referenceID(&dg).length == 0)
                     return;
             }
         }
