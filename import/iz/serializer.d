@@ -947,7 +947,6 @@ alias WantAggregateEvent = void delegate(IstNode node, ref void* aggregate, out 
 
 
 //TODO-cserializer: error handling (using isDamaged + errors when reading a format).
-//TODO-cserializer: handle the PropHints to optimize the stream size (noDefault)
 //TODO-cserializer: convert FP to string using format("%.{9|17}g",value).
 
 /**
@@ -1035,6 +1034,19 @@ private:
     {
         if (PropHint.dontGet in descriptor.hints)
             return;
+        if (PropHint.initCare in descriptor.hints)
+        {
+            static if (isNumeric!T)
+            {
+                if (descriptor.get() == 0)
+                    return;
+            }
+            else static if (is(T == GenericFunction) ||is(T == GenericDelegate))
+            {
+                if (descriptor.get() == null)
+                    return;
+            }
+        }
         IstNode propNode = _parentNode.addNewChildren;
         propNode.setDescriptor(descriptor);
 
@@ -2577,6 +2589,8 @@ version(unittest)
             @SetGet int _i = 1;
             @PropHints(PropHint.dontSet)
             @SetGet int _j = 1;
+            @PropHints(PropHint.initCare)
+            @SetGet int _k = 0;
 
             this()
             {
@@ -2591,12 +2605,15 @@ version(unittest)
 
         ser.publisherToStream(foo, str);
         assert(ser.findNode("i") is null);  // dontGet, so not in IST
+        assert(ser.findNode("root.k") is null); // _k was equyal to 0
         assert(ser.findNode("root.j") !is null); // in IST...
 
         foo._i = 0;
         foo._j = 0;
+        foo._k = 1;
         str.position = 0;
         ser.streamToPublisher(str, foo);
+        assert(foo._k == 1);
         assert(foo._i == 0);
         assert(foo._j == 0); //...but not restored
     }
