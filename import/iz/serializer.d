@@ -994,7 +994,9 @@ alias WantAggregateEvent = void delegate(IstNode node, ref void* aggregate, out 
  * The serializer handles the PropHints of the publications. If `PropHint.dontSet`
  * is in the hints then a property is not restored. If `PropHint.dontGet` is in the
  * hints then the property is not stored. These two hints allow to deprecate some
- * publications, without breaking the restoration.
+ * publications, without breaking the restoration. The hint `PropHint.initCare`
+ * indicates if a property equal to its initializer is written. For floating point
+ * types there is an exception that is the intializer is considered to be 0.
  */
 class Serializer
 {
@@ -1034,11 +1036,16 @@ private:
     {
         if (PropHint.dontGet in descriptor.hints)
             return;
-        if (PropHint.initCare in descriptor.hints)
+        if (PropHint.initCare !in descriptor.hints)
         {
             static if (isNumeric!T)
             {
                 if (descriptor.get() == 0)
+                    return;
+            }
+            else static if (is(T == bool))
+            {
+                if (descriptor.get() == false)
                     return;
             }
             else static if (is(T == GenericFunction) ||is(T == GenericDelegate))
@@ -2605,7 +2612,7 @@ version(unittest)
 
         ser.publisherToStream(foo, str);
         assert(ser.findNode("i") is null);  // dontGet, so not in IST
-        assert(ser.findNode("root.k") is null); // _k was equyal to 0
+        assert(ser.findNode("root.k") !is null); // _k was equyal to 0
         assert(ser.findNode("root.j") !is null); // in IST...
 
         foo._i = 0;
@@ -2613,7 +2620,7 @@ version(unittest)
         foo._k = 1;
         str.position = 0;
         ser.streamToPublisher(str, foo);
-        assert(foo._k == 1);
+        assert(foo._k == 0);
         assert(foo._i == 0);
         assert(foo._j == 0); //...but not restored
     }

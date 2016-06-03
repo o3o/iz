@@ -822,7 +822,7 @@ mixin template PropertyPublisherImpl()
                 }
                 //
                 enum h = getUDAs!(__traits(getMember, T, member), PropHints);
-                static if (h.length) descriptor._hints = h[0];
+                static if (h.length) descriptor.hints = h[0];
                 //
                 version(none) writeln(attribute.stringof, " : ", member);
                 break;
@@ -883,7 +883,7 @@ mixin template PropertyPublisherImpl()
                 }
                 //
                 enum h = getUDAs!(overload, PropHints);
-                static if (h.length) descriptor._hints = h[0];
+                static if (h.length) descriptor.hints = h[0];
                 //
                 version(none) writeln(attribute.stringof, " < ", member);
             }
@@ -903,7 +903,7 @@ mixin template PropertyPublisherImpl()
                 descriptor.define(dg, descriptor.getter, member);
                 //
                 enum h = getUDAs!(overload, PropHints);
-                static if (h.length) descriptor._hints = h[0];
+                static if (h.length) descriptor.hints = h[0];
                 //
                 version(none) writeln(attribute.stringof, " > ", member);
             }
