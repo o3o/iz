@@ -1061,7 +1061,7 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
 // position -------------------------------------------------------------------+
 
         /// see the Stream interface.
-        @property long position() @nogc
+        @property long position() const @nogc
         {
             return _position;
         }
@@ -1124,9 +1124,17 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
         /**
          * Returns the stream content as a read-only ubyte array.
          */
-        const(ubyte[]) ubytes() @nogc
+        const(ubyte[]) ubytes() const @nogc
         {
             return cast(ubyte[]) _memory[0 .. _size];
+        }
+
+        /**
+         * Returns the stream content as a read-only char array.
+         */
+        const(char[]) chars() const @nogc
+        {
+            return cast(char[]) _memory[0 .. _size];
         }
 
 // -----------------------------------------------------------------------------
@@ -1254,7 +1262,7 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
         }
 
         /// see the FilePersist8 interface.
-        @property string filename() @nogc
+        @property string filename() const @nogc
         {
             return _filename;
         }
@@ -1310,7 +1318,11 @@ unittest
 
 unittest
 {
-    /*auto sz = 0x1_FFFF_FFFFL;
+    import std.process: environment;
+    if (environment.get("TRAVIS") == "true")
+        return;
+
+    auto sz = 0x1_FFFF_FFFFL;
     FileStream huge = construct!FileStream("huge.bin");
     scope(exit)
     {
@@ -1319,7 +1331,7 @@ unittest
     }
     huge.size(sz);
     huge.position = 0;
-    assert(huge.size == sz);*/
+    assert(huge.size == sz);
 }
 
 unittest
