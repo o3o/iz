@@ -1707,7 +1707,7 @@ public:
     }
 
     /**
-     * Retuens the parent.
+     * Returns the parent.
      */
     TreeItemType parent()
     {
@@ -1723,7 +1723,7 @@ public:
     }
 
     /**
-     * Return an input range that allows to iterate the siblings.
+     * Returns an input range that allows to iterate the siblings.
      * The array syntax is also supported.
      */
     TreeItemSiblings!TreeItemType siblings()
@@ -1733,7 +1733,7 @@ public:
     }
 
     /**
-     * Return an input range that allows to iterate the children.
+     * Returns an input range that allows to iterate the children.
      * The array syntax is also supported.
      */
     TreeItemChildren!TreeItemType children()

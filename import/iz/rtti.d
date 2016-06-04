@@ -155,7 +155,7 @@ unittest
  */
 string typeString(T)(T t)
 {
-    static if (is(T == RtType))
+    static if (is(Unqual!T == RtType))
     {
         with(RtType) final switch (t)
         {
