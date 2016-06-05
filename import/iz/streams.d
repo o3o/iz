@@ -1327,7 +1327,8 @@ unittest
     scope(exit)
     {
         huge.destruct;
-        std.stdio.remove("huge.bin");
+        import std.stdio: remove;
+        remove("huge.bin");
     }
     huge.size(sz);
     huge.position = 0;

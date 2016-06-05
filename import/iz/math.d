@@ -471,7 +471,7 @@ pure @safe nothrow unittest
  * Convenience function that calls hypot() either with a clfloat, a cdouble or
  * a std.complex.Complex.
  */
-auto magn(T)(T t) pure @trusted nothrow
+auto magn(T)(T t)
 if (is(T==cfloat) || is(T==cdouble) || is(T==Complex!float) || is(T==Complex!double))
 {
     return hypot(t.re, t.im);
@@ -483,5 +483,62 @@ nothrow pure @safe unittest
     assert(magn(cfloat(3.0f+4.0fi)) == 5.0f);
     assert(magn(complex(3.0f,4.0f)) == 5.0f);
     assert(magn(complex(3.0,4.0)) == 5.0);
+}
+
+/**
+ * Wraps a numeric value between 0 and a max value.
+ *
+ * Params:
+ *      bound = a string that indicates if the max is excluded (`")"`), the default
+ *          or if the max is included (`"]"`).
+ *      value = the value to wrap.
+ *      max the maximal value.
+ */
+T wrap(string bound = ")", T)(T value, T max)
+if (isNumeric!T && bound == ")" || bound == "]")
+{
+    static if (bound == ")")
+    {
+        if (value > max)
+            return value - max;
+    }
+    static if (bound == "]")
+    {
+        if (value >= max)
+            return value - max;
+    }
+    if (value < 0)
+        return max + value;
+    else
+        return value;
+}
+///
+nothrow @nogc @safe pure unittest
+{
+    import std.math: approxEqual;
+    import std.math: modf;
+    // wrap past max
+    assert(wrap(1,1) == 1);
+    assert(wrap(3,2) == 1);
+    assert(wrap(-1,3) == 2);
+    assert(wrap(1.5,1).approxEqual(0.5));
+    assert(wrap(1.01,1).approxEqual(0.01));
+    assert(wrap(-0.5,2).approxEqual(1.5));
+    // wrap from max
+    assert(wrap!"]"(1,1) == 0);
+    assert(wrap!"]"(3,2) == 1);
+    assert(wrap!"]"(3,3) == 0);
+    assert(wrap!"]"(1.0,1.0) == 0.0);
+    assert(wrap!"]"(-0.5,1.0) == 0.5);
+    // two phases in sync
+    double incr = 0.0125;
+    double sync = 0.25;
+    double phase1 = 0, phase2 = 0;
+    foreach(i; 0 .. 100000)
+    {
+        phase1 = wrap(phase1 + incr, 1.0);
+        phase2 = wrap(phase1 - sync, 1.0);
+        assert(phase1 < 1.0 && phase2 < 1.0);
+    }
 }
 

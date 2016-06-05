@@ -630,15 +630,27 @@ private void writeJSON(IstNode istNode, Stream stream, const FormatToken tok)
     switch (tok)
     {
         case FormatToken.beg:
-            stream.writeChar('{');
+            //stream.writeChar('{');
             return;
         case FormatToken.end:
-            stream.writeChar('}');
+            //stream.writeChar('}');
             return;
         case FormatToken.objEnd:
             foreach(i; 0 .. istNode.level) stream.writeChar('\t');
+            if (pretty)
+            {
+                stream.position = stream.position - 2;
+                stream.writeChar(' ');
+                stream.writeChar(' ');
+            }
+            else
+            {
+                stream.position = stream.position - 1;
+                stream.writeChar(' ');
+            }
+            stream.writeChar(']');
             stream.writeChar('}');
-            stream.writeChar('}');
+            stream.writeChar(',');
             stream.writeChar('\n');
             return;
         default:
@@ -652,13 +664,13 @@ private void writeJSON(IstNode istNode, Stream stream, const FormatToken tok)
     if (tok == FormatToken.objBeg)
     {
         auto prop   = JSONValue(["level": level, "type": type, "name": name]);
-        txt    = (toJSON(&prop, pretty)[0..$-1] ~ "\"value\" : {").dup;
+        txt    = (toJSON(&prop, pretty)[0..$-1] ~ ",\"value\" : [").dup;
     }
     else
     {
         auto value  = JSONValue(value2text(istNode.info).idup);
         auto prop   = JSONValue(["level": level, "type": type, "name": name, "value": value]);
-        txt = toJSON(&prop, pretty).dup;
+        txt = (toJSON(&prop, pretty) ~ ",").dup;
     }
 
 
@@ -1809,7 +1821,17 @@ unittest
     A a = construct!A;
     // serializes
     serializer.publisherToStream(a, stream/*, SerializationFormat.json*/);
-    //stream.saveToFile("r.txt");
+
+
+    /*import std.json;
+    stream.saveToFile("r.txt");
+    JSONValue js = parseJSON(cast(string)stream.ubytes);
+    stream.clear;
+    auto s = toJSON(&js, true);
+    void* p = cast(void*)s.ptr;
+    stream.write(p, s.length);
+    stream.saveToFile("r.txt");*/
+
     // reset the fields
     a.sub1.reset;
     a.sub2.reset;
@@ -2695,7 +2717,7 @@ version(unittest)
         assert(parent._child1._b == 9);
     }
 
-    // PropHints dontSet/dontGet
+    // PropHints
     unittest
     {
         class Foo: PropertyPublisher
@@ -2722,7 +2744,7 @@ version(unittest)
 
         ser.publisherToStream(foo, str);
         assert(ser.findNode("i") is null);  // dontGet, so not in IST
-        assert(ser.findNode("root.k") !is null); // _k was equyal to 0
+        assert(ser.findNode("root.k") !is null); // _k was equal to 0
         assert(ser.findNode("root.j") !is null); // in IST...
 
         foo._i = 0;
