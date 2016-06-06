@@ -517,14 +517,14 @@ nothrow @nogc @safe pure unittest
 {
     import std.math: approxEqual;
     import std.math: modf;
-    // wrap past max
+    // wrap from max
     assert(wrap(1,1) == 1);
     assert(wrap(3,2) == 1);
     assert(wrap(-1,3) == 2);
     assert(wrap(1.5,1).approxEqual(0.5));
     assert(wrap(1.01,1).approxEqual(0.01));
     assert(wrap(-0.5,2).approxEqual(1.5));
-    // wrap from max
+    // wrap past max
     assert(wrap!"]"(1,1) == 0);
     assert(wrap!"]"(3,2) == 1);
     assert(wrap!"]"(3,3) == 0);
@@ -540,5 +540,22 @@ nothrow @nogc @safe pure unittest
         phase2 = wrap(phase1 - sync, 1.0);
         assert(phase1 < 1.0 && phase2 < 1.0);
     }
+}
+
+/**
+ * Allows to represent fractions of PI without using the usual suffixes such as
+ * "two", "half", etc.
+ */
+template Pi(int a, int b = 1)
+{
+    import std.math: PI;
+    enum Pi = PI * a / b;
+}
+///
+unittest
+{
+    static assert(Pi!(2,1) == Pi!(4,2));
+    static assert(Pi!(1,2) == Pi!(1,8) * 4);
+    static assert(Pi!(4,2) == Pi!2);
 }
 
