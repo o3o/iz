@@ -663,13 +663,13 @@ private void writeJSON(IstNode istNode, Stream stream, const FormatToken tok)
     char[] txt;
     if (tok == FormatToken.objBeg)
     {
-        auto prop   = JSONValue(["level": level, "type": type, "name": name]);
+        auto prop   = JSONValue(["type": type, "name": name]);
         txt    = (toJSON(&prop, pretty)[0..$-1] ~ ",\"value\" : [").dup;
     }
     else
     {
         auto value  = JSONValue(value2text(istNode.info).idup);
-        auto prop   = JSONValue(["level": level, "type": type, "name": name, "value": value]);
+        auto prop   = JSONValue(["type": type, "name": name, "value": value]);
         txt = (toJSON(&prop, pretty) ~ ",").dup;
     }
 
@@ -2466,8 +2466,7 @@ version(unittest)
         assert(c._b == 21);
         assert(c._c == 31);
         assert(c._e == E.e0);
-        //TODO-cbugfix: escaping double quotes in iztext reader
-        //assert(c._t == "line1\"inside dq\"\nline2\nline3", c._t);
+        assert(c._t == "line1\"inside dq\"\nline2\nline3", c._t);
         assert(c._refPublisher == c._refPublisherSource);
         assert(c._anotherSubPubliser._someChars == "awhyes");
         assert(c._delegate);
