@@ -193,7 +193,7 @@ struct PropDescriptor(T)
             _rtti = getRtti!T;
             setter(aSetter);
             getter(aGetter);
-            if (aName != "") {name(aName.idup);}
+            if (aName != "") {name(aName);}
             _declarator = cast(Object) aSetter.ptr;
         }
 
@@ -207,7 +207,7 @@ struct PropDescriptor(T)
             _rtti = getRtti!T;
             setter(aSetter);
             setDirectSource(aSourceData);
-            if (aName != "") {name(aName.idup);}
+            if (aName != "") {name(aName);}
             _declarator = cast(Object) aSetter.ptr;
         }
         /**
@@ -220,7 +220,7 @@ struct PropDescriptor(T)
             _rtti = getRtti!T;
             setDirectSource(aData);
             setDirectTarget(aData);
-            if (aName != "") {name(aName.idup);}
+            if (aName != "") {name(aName);}
             _declarator = aDeclarator;
         }
 // ----
@@ -760,9 +760,9 @@ mixin template PropertyPublisherImpl()
             import iz.memory: construct;
             //TODO-cproperties: allocate the descriptors with construct
             //descr = construct!(PropDescriptor!T);
-            descr = new PropDescriptor!T;
-            descr.name = name.idup;
-            _publishedDescriptors ~= descr;
+            _publishedDescriptors ~= new PropDescriptor!T;
+            (cast(typeof(descr))_publishedDescriptors[$-1]).name = name.idup; // GC eats name otherwise
+            descr = cast(typeof(descr)) _publishedDescriptors[$-1];
         }
         return descr;
     }
@@ -810,7 +810,7 @@ mixin template PropertyPublisherImpl()
                 auto propName = member[1..$];
                 else auto propName = member;
                 auto descriptor = publication!Type(propName, true);
-                descriptor.define(propPtr, propName.idup);
+                descriptor.define(propPtr, propName);
                 //
                 static if (is(T : Object)) descriptor.declarator = cast(Object)this;
                 static if (is(Type : Object))
@@ -871,7 +871,7 @@ mixin template PropertyPublisherImpl()
                     // note: rtti unqalifies the type
                     ti is descriptor.rtti,
                     "setter and getter type mismatch for " ~ descriptor.name);
-                descriptor.define(descriptor.setter, dg, member.idup);
+                descriptor.define(descriptor.setter, dg, member);
                 //
                 static if (is(T : Object)) descriptor.declarator = cast(Object)this;
                 static if (is(Type : Object))
@@ -900,7 +900,7 @@ mixin template PropertyPublisherImpl()
                 version(assert) if (descriptor.getter) assert (
                     ti == descriptor.rtti,
                     "setter and getter type mismatch for " ~ descriptor.name);
-                descriptor.define(dg, descriptor.getter, member.idup);
+                descriptor.define(dg, descriptor.getter, member);
                 //
                 enum h = getUDAs!(overload, PropHints);
                 static if (h.length) descriptor.hints = h[0];
@@ -932,7 +932,6 @@ mixin template PropertyPublisherImpl()
                 _publishedDescriptors = _publishedDescriptors.remove(i);
             }
         }
-        //TODO-cbugfix: there's a problem with name when a lot of descr are created
         if (flag)
         {
             static immutable messg =
