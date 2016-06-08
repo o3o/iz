@@ -614,11 +614,8 @@ void setNodeInfo(T)(SerNodeInfo* nodeInfo, PropDescriptor!T* descriptor)
         auto dg = descriptor.get;
         const(char)[] id;
         id = ReferenceMan.referenceID(&dg);
-        if (!id.length)
-        {
-            id = ReferenceMan.referenceID!(is(T == GenericDelegate))
-                (nodeInfo.rtti.funptrInfo.identifier, &dg);
-        }
+        if (!id.length) id = ReferenceMan.referenceID!(is(T == GenericDelegate))
+            (nodeInfo.rtti.funptrInfo.identifier, &dg);
         nodeInfo.value = cast(ubyte[]) id;
     }
 

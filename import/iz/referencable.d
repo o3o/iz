@@ -413,8 +413,10 @@ public:
         import std.stdio;
         if (anID == "") return null;
         if (type !in fStore) return null;
-        if (fStore[type].get(anID, null) == null) return null;
-        return fStore[type].get(anID, null);
+        if (void** result = anID in fStore[type])
+            return *result;
+        else
+            return null;
     }
 // -----------------------------------------------------------------------------        
 
