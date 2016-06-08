@@ -286,7 +286,7 @@ public:
 // Query stuff ----------------------------------------------------------------+
 
     /**
-     * Indicates if a variable is referenced.
+     * Indicates the reference ID of a variable.
      *
      * Params:
      *      RT = The type of the reference. Optional, likely to be infered.
@@ -327,6 +327,40 @@ public:
         {
             if (fStore[RT.stringof][k] == cast(void*)aReference)
                 return k;
+        }
+        return "";
+    }
+
+    /**
+     * Indicates the reference ID of a variable, without using its static type.
+     *
+     * Params:
+     *      dg = indicates if the reference to find points to a delegate.
+     *      type = The `.stringof` of the type of the reference.
+     *      aReference = A pointer to a variable
+     *
+     * Returns:
+     *      A non empty string if the variable is referenced.
+     */
+    static const(char)[] referenceID(bool dg = false)(in char[] type, void* aReference)
+    {
+        if (type == "") return "";
+        if (type !in fStore) return "";
+        foreach (k; fStore[type].keys)
+        {
+            static if (!dg)
+            {
+                if (fStore[type][k] == aReference)
+                    return k;
+            }
+            else
+            {
+                struct Dg {void* a,b;}
+                auto stored = *cast(Dg*) fStore[type][k];
+                auto passed = *cast(Dg*) aReference;
+                if (stored.a == passed.a && stored.b == passed.b)
+                    return k;
+            }
         }
         return "";
     }
@@ -376,6 +410,7 @@ public:
      */
     static void* reference(in char[] type, in char[] anID)
     {
+        import std.stdio;
         if (anID == "") return null;
         if (type !in fStore) return null;
         if (fStore[type].get(anID, null) == null) return null;

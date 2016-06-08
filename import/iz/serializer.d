@@ -470,18 +470,52 @@ void nodeInfo2Declarator(const SerNodeInfo* nodeInfo)
             break;
         case _funptr:
             char[] refId = cast(char[]) nodeInfo.value[];
-            void setFromRef(T)()
+            bool setFromGenericRef(T)()
             {
+                bool result;
                 if (T* funOrDg = ReferenceMan.reference!(T)(refId))
                 {
                     auto descr = cast(PropDescriptor!T*) nodeInfo.descriptor;
                     descr.set(*funOrDg);
+                    result = true;
                 }
+                return result;
             }
+
+            bool setFuncFromTypeIdentifier()
+            {
+                bool result;
+                if (void* fod = ReferenceMan.reference(nodeInfo.rtti.funptrInfo.identifier, refId))
+                {
+                    result =  true;
+                    auto descr = cast(PropDescriptor!GenericFunction*) nodeInfo.descriptor;
+                    descr.set(cast(GenericFunction)fod);
+                }
+                return result;
+            }
+
+            bool setDgFromTypeIdentifier()
+            {
+                bool result;
+                if (void* fod = ReferenceMan.reference(nodeInfo.rtti.funptrInfo.identifier, refId))
+                {
+                    result = true;
+                    auto descr = cast(PropDescriptor!GenericDelegate*) nodeInfo.descriptor;
+                    descr.set(*cast(GenericDelegate*)fod);
+                }
+                return result;
+            }
+
             if (nodeInfo.rtti.funptrInfo.hasContext)
-                setFromRef!GenericDelegate;
+            {
+                if (!setDgFromTypeIdentifier)
+                    setFromGenericRef!GenericDelegate;
+            }
             else
-                setFromRef!GenericFunction;
+            {
+                if (!setFuncFromTypeIdentifier)
+                    setFromGenericRef!GenericFunction;
+            }
     }
 }
 
@@ -578,7 +612,13 @@ void setNodeInfo(T)(SerNodeInfo* nodeInfo, PropDescriptor!T* descriptor)
     else static if (is(T == GenericDelegate) || is(T == GenericFunction))
     {
         auto dg = descriptor.get;
-        auto id = ReferenceMan.referenceID(&dg);
+        const(char)[] id;
+        id = ReferenceMan.referenceID(&dg);
+        if (!id.length)
+        {
+            id = ReferenceMan.referenceID!(is(T == GenericDelegate))
+                (nodeInfo.rtti.funptrInfo.identifier, &dg);
+        }
         nodeInfo.value = cast(ubyte[]) id;
     }
 
@@ -1157,7 +1197,10 @@ private:
                 auto dg = descriptor.get();
                 if (dg == null)
                     return;
-                if (ReferenceMan.referenceID(&dg).length == 0)
+                const(char)[] id = ReferenceMan.referenceID(&dg);
+                if (!id.length) id = ReferenceMan.referenceID!(is(T == GenericDelegate))
+                    (descriptor.rtti.funptrInfo.identifier, &dg);
+                if (id.length == 0)
                     return;
             }
         }
@@ -2400,12 +2443,14 @@ version(unittest)
 
             ReferenceMan.storeReference(_refPublisherSource,
                 "root.refPublisher");
-            ReferenceMan.storeReference!GenericDelegate(
-                cast(GenericDelegate*) &_delegateSource,
+            ReferenceMan.storeReference(&_delegateSource,
                 "root.delegate");
 
-            assert(*ReferenceMan.reference!GenericDelegate("root.delegate") ==
-                cast(GenericDelegate)_delegateSource);
+            alias DGT = typeof(_delegateSource);
+            assert(*cast(DGT*) ReferenceMan.reference(DGT.stringof, "root.delegate") ==
+                _delegateSource);
+
+            assert(publicationFromName("delegate") != null);
         }
         ~this()
         {
@@ -2457,7 +2502,7 @@ version(unittest)
 
         ser.onWantAggregate = &objectNotFound;
         ser.publisherToStream(c, str);
-        //str.saveToFile(r"test.txt");
+        str.saveToFile(r"test.txt");
         //
         c.reset;
         str.position = 0;
