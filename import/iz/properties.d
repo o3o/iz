@@ -41,6 +41,8 @@ alias GenericDescriptor = PropDescriptor!int;
  */
 struct PropDescriptor(T)
 {
+    @disable this(this);
+
     public
     {
         static if (!is(T == struct))

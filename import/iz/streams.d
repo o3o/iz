@@ -161,8 +161,6 @@ interface FilePersist8
     void saveToFile(in char[] aFilename);
     /// Loads something to aFilename.
     void loadFromFile(in char[] aFilename);
-    /// Returns the filename passed as argument in saveToFile or loadFromFile.
-    string filename();
 }
 
 /// Generates all the typed write() and read() of a Stream implementation.
@@ -929,11 +927,10 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
     private
     {
         size_t _size;
-        Ptr _memory;
+        @NoGc Ptr _memory;
 
         bool _freeFlag = true;
         size_t _position;
-        string _filename;
     }
     public
     {
@@ -1217,7 +1214,6 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
                 if (numRead != _size)
                     throw new Exception(format("stream exception: '%s' is corrupted", aFilename));
             }
-            _filename = aFilename.idup;
         }
 
         /// see the FilePersist8 interface.
@@ -1258,13 +1254,6 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
                 if (numRead != _size)
                     throw new Exception(format("stream exception: '%s' is not correctly loaded", aFilename));
             }
-            _filename = aFilename.idup;
-        }
-
-        /// see the FilePersist8 interface.
-        @property string filename() const @nogc
-        {
-            return _filename;
         }
 // ----
     }

@@ -119,6 +119,13 @@ if (isPointer!T && isBasicType!(pointerTarget!T))
 enum NoGc;
 
 /**
+ * When this enum is used as UDA on aggregate types whose instances are
+ * created with construct() a compile time message indicates if a GC range
+ * will be added for the members.
+ */
+enum TellRangeAdded;
+
+/**
  * Indicates if an aggregate contains members that might be
  * collected by the garbage collector. This is used in `construct`
  * to determine if the content of a manually allocated aggregate must
@@ -164,6 +171,15 @@ if (is(T==struct) || is(T==union) || is(T==class))
         return result;
     }
     enum MustAddGcRange = check();
+
+    static if (hasUDA!(T, TellRangeAdded))
+    {
+        static if (MustAddGcRange)
+            pragma(msg, "a GC range will be added for any new " ~ T.stringof);
+        else
+            pragma(msg, "a GC range wont be added for any new " ~ T.stringof);
+    }
+
 }
 ///
 unittest
