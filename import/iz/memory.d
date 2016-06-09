@@ -257,48 +257,129 @@ if(is(ST==struct) || is(ST==union))
 }
 
 /**
- * Destructs a class or a struct that's been previously
- * constructed with $(D construct()).
+ * Destructs a struct or a union that's been previously constructed
+ * with $(D construct()).
  *
  * The function calls the destructor and, when passed as reference,
  * set the the instance to null.
  *
  * Params:
- *      T = A class type or a struct type, likely to be infered.
+ *      T = A union or a struct type, likely to be infered.
  *      instance = A $(D T) instance.
  */
-void destruct(T)(auto ref T instance) @trusted
-if (is(T == class) || (isPointer!T && is(PointerTarget!T == struct))
-    || (isPointer!T && is(PointerTarget!T == union)))
+void destruct(T)(auto ref T* instance)
 {
-    if (!instance) return;
-    import core.memory: GC;
-    GC.removeRange(&instance);
-    static if (__traits(hasMember, T, "__dtor"))
-        instance.__dtor();
+    if (!instance)
+        return;
+    static if (hasElaborateDestructor!T)
+        instance.__dtor;
     freeMem(cast(void*)instance);
     static if ((ParameterStorageClassTuple!destruct)[0] ==
         ParameterStorageClass.ref_) instance = null;
 }
 
 /**
- * Destructs the object from where an interface has been extracted.
+ * Destructs a class that's been previously constructed with $(D construct()).
  *
- * The function retrieve the Object and call the other $(D destruct)
- * overload. When passed as reference, the instance is null after the
- * call.
+ * The function calls the destructor and, when passed as reference,
+ * set the the instance to null.
  *
  * Params:
- *      I = An interface type, likely to be infered.
- *      instance = A $(D I) instance.
+ *      assumeNoCtor = When no __ctor is found this avoids a to search one
+ *      in the sub classes.
+ *      T = A class type, likely to be infered.
+ *      instance = A $(D T) instance.
  */
-void destruct(I)(auto ref I instance)
-if (is(I == interface))
+void destruct(bool assumeNoCtor = false, T)(auto ref T instance)
+if (is(T == class) && T.stringof != Object.stringof)
 {
-    if (Object obj = cast(Object) instance)
-        obj.destruct;
-    static if ((ParameterStorageClassTuple!destruct)[0] ==
-        ParameterStorageClass.ref_) instance = null;
+    if (instance)
+    {
+        static if (__traits(hasMember, T, "__dtor") || assumeNoCtor)
+        {
+            static if (__traits(hasMember, T, "__dtor"))
+                instance.__dtor;
+            static if ((ParameterStorageClassTuple!destruct)[0] ==
+                ParameterStorageClass.ref_) instance = null;
+            freeMem(cast(void*)instance);
+        }
+        else // dtor might be in an ancestor
+        {
+            destruct(cast(Object) instance);
+        }
+    }
+}
+
+/**
+ * Destructs a class that's been previously constructed with $(D construct()).
+ *
+ * This overload is never @nogc. It should be used for classes that are downcasted
+ * to a base type, where a __ctor is not yet implemented.
+ *
+ * Params:
+ *      T = A class type, likely to be infered.
+ *      instance = A $(D T) instance.
+ */
+void destruct(T)(auto ref T instance)
+if (is(T == class) && T.stringof == Object.stringof)
+{
+    // the content of this overload can't be in the previous because when the
+    // static type is not known (e.g after cast from interface to Object) dispose()
+    // can't be @nogc since the dtor is a delegate determined at runtime.
+    if (instance)
+    {
+        TypeInfo_Class tic = cast(TypeInfo_Class) typeid(instance);
+
+        void* dtorPtr = tic.destructor;
+        while (!dtorPtr && tic.base)
+        {
+            tic = tic.base;
+            dtorPtr = tic.destructor;
+        }
+        if (dtorPtr)
+        {
+            void delegate() dtor;
+            dtor.funcptr = cast(void function()) dtorPtr;
+            dtor.ptr = cast(void*) instance;
+            dtor();
+        }
+        freeMem(cast(void*)instance);
+        static if ((ParameterStorageClassTuple!destruct)[0] ==
+            ParameterStorageClass.ref_) instance = null;
+    }
+}
+
+/**
+ * Destructs an interface implemented in an Object that's been previously
+ * constructed with $(D construct()).
+ *
+ * This overload is never @nogc.
+ *
+ * Params:
+ *      T = A class type, likely to be infered.
+ *      instance = A $(D T) instance.
+ */
+void destruct(T)(auto ref T instance)
+if (is(T == interface))
+{
+    if (instance)
+    {
+        version(Windows)
+        {
+            import core.sys.windows.unknwn: IUnknown;
+            static assert(!is(T: IUnknown), "COM interfaces can't be destroyed in "
+                ~ __PRETTY_FUNCTION__);
+        }
+        static if (__traits(allMembers, T).length)
+        {
+            foreach (ov; __traits(getOverloads, T, __traits(allMembers, T)[0]))
+            static assert(functionLinkage!ov != "C++", "C++ interfaces can't be destroyed in "
+                ~ __PRETTY_FUNCTION__);
+        }
+        destruct(cast(Object) instance);
+        static if ((ParameterStorageClassTuple!destruct)[0] ==
+            ParameterStorageClass.ref_) instance = null;
+    }
 }
 
 /**
@@ -463,9 +544,9 @@ unittest
     assert(ab is null);
 }
 
-@nogc @safe unittest
+@nogc unittest
 {
-    class Foo {@nogc this(int a){}}
+    class Foo {@nogc this(int a){} @nogc~this(){}}
     Foo foo = construct!Foo(0);
     destruct(foo);
     assert(foo is null);

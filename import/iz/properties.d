@@ -752,14 +752,18 @@ mixin template PropertyPublisherImpl()
         foreach(immutable i; 0 .. _publishedDescriptors.length)
         {
             auto maybe = cast(PropDescriptor!T*) _publishedDescriptors[i];
-            if (maybe.name != name) continue;
-            descr = maybe; break;
+            if (maybe.name == name)
+            {
+                descr = maybe;
+                break;
+            }
         }
         if (createIfMissing && !descr)
         {
-            import iz.memory: construct;
+            //import iz.memory: construct;
             //TODO-cproperties: allocate the descriptors with construct
             //descr = construct!(PropDescriptor!T);
+
             _publishedDescriptors ~= new PropDescriptor!T;
             (cast(typeof(descr))_publishedDescriptors[$-1]).name = name.idup; // GC eats name otherwise
             descr = cast(typeof(descr)) _publishedDescriptors[$-1];
