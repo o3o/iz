@@ -1203,3 +1203,48 @@ unittest
     assert(atFun());
 }
 
+/**
+ * The delegate union is a conveniant way to setup non gc delegates that
+ * are compatible with D delegates.
+ */
+union Delegate(FT)
+if (is(pointerTarget!FT == function))
+{
+    /// Defines the delegate layout as defined in the D ABI
+    struct DgMembers
+    {
+        void* ptr;
+        FT funcptr;
+    }
+
+    //// The delegates members;
+    DgMembers members;
+    alias members this;
+
+    import std.array: replace;
+    enum type = "alias T = " ~ FT.stringof.replace("function", "delegate") ~ ";";
+    mixin(type);
+
+    /// Allows to use this union as a true D delegate.
+    T dg;
+
+    /// Helper to call the delegate without accessing `dg`.
+    auto opCall(A...)(A a)
+    {
+        return dg(a);
+    }
+}
+///
+unittest
+{
+    struct Foo
+    {
+        bool fun(){return true;}
+    }
+    Foo foo;
+    Delegate!(typeof(&Foo.fun)) atFun;
+    atFun.ptr = &foo,
+    atFun.funcptr = &Foo.fun,
+    assert(atFun());
+}
+
