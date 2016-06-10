@@ -1517,89 +1517,84 @@ public:
     {
         void restoreFrom(T)(IstNode node, T target)
         {
-            //if (!target) return;
+            static if (is(T : Object))
+                if (!target) return;
+
             foreach(child; node.children)
             {
-                bool done;
                 IstNode childNode = cast(IstNode) child;
-                if (void* t0 = target.publicationFromName(childNode.info.name))
+
+                bool stop;
+                void* gdPtr = target.publicationFromName(childNode.info.name);
+                if (!gdPtr)
                 {
-                    PropDescriptor!int* t1 = cast(PropDescriptor!int*)t0;
-                    if (PropHint.dontSet in t1.hints)
-                        continue;
-                    if (t1.rtti is childNode.info.rtti)
+                    restoreFromEvent(childNode, stop);
+                    if (stop)
+                        return;
+                    gdPtr = node.info.descriptor;
+                }
+
+                if (!gdPtr) continue;
+
+                GenericDescriptor* gd = cast(GenericDescriptor*) gdPtr;
+                if (PropHint.dontSet in gd.hints)
+                    continue;
+                if (gd.rtti is childNode.info.rtti)
+                {
+                    childNode.info.descriptor = gd;
+                    nodeInfo2Declarator(childNode.info);
+                    if (childNode.info.rtti.type == RtType._object)
                     {
-                        childNode.info.descriptor = t1;
-                        nodeInfo2Declarator(childNode.info);
-                        if (childNode.info.rtti.type == RtType._object)
+                        auto od = cast(PropDescriptor!Object*) gd;
+                        void* o = cast(void*) od.get();
+                        bool fromRef;
+
+                        if (!o && _onWantAggregate)
+                            _onWantAggregate(childNode, o, fromRef);
+
+                        if (fromRef || !o)
                         {
-                            auto t2 = cast(PropDescriptor!Object*) t1;
-                            void* o = cast(void*) t2.get();
-                            bool fromRef;
-
-                            if (!o && _onWantAggregate)
-                                _onWantAggregate(childNode, o, fromRef);
-
-                            if (fromRef || !o)
-                            {
-                                void* po = ReferenceMan.reference(
-                                    childNode.info.rtti.classInfo.identifier,
-                                    childNode.identifiersChain
-                                );
-                                if (po)
-                                {
-                                    t2.set(cast(Object) po);
-                                    done = true;
-                                }
-                            }
-                            else
-                            {
-                                auto t3 = cast(PropertyPublisher) cast(Object) o;
-                                if (t3)
-                                {
-                                    restoreFrom(childNode, t3);
-                                    done = true;
-                                }
-                            }
+                            void* po = ReferenceMan.reference(
+                                childNode.info.rtti.classInfo.identifier,
+                                childNode.identifiersChain
+                            );
+                            if (po)
+                                od.set(cast(Object) po);
                         }
-                        else if (childNode.info.rtti.type == RtType._struct &&
-                            childNode.info.rtti.structInfo.type == StructType._publisher)
+                        else
                         {
-                            auto t2 = cast(PropDescriptor!GenericStruct*) t1;
-                            void* structPtr = t2.getter()().getThis;
-                            bool fromRef;
-
-                            if (!structPtr && _onWantAggregate)
-                                _onWantAggregate(childNode, structPtr, fromRef);
-
-                            if (fromRef || !structPtr)
-                            {
-                                void* ps = ReferenceMan.reference(
-                                    childNode.info.rtti.classInfo.identifier,
-                                    childNode.identifiersChain
-                                );
-                                if (ps)
-                                {
-                                    //t2.set(cast(GenericStruct*) ps);
-                                    done = true;
-                                }
-                            }
-                            else
-                            {
-                                void* oldCtxt = t2.rtti.structInfo.pubTraits.setContext(structPtr);
-                                restoreFrom(childNode, t2.rtti.structInfo.pubTraits);
-                                t2.rtti.structInfo.pubTraits.restoreContext(oldCtxt);
-                                done = true;
-                            }
+                            if (PropertyPublisher pub = cast(PropertyPublisher) cast(Object) o)
+                                restoreFrom(childNode, pub);
                         }
-                        else done = true;
+                    }
+                    else if (childNode.info.rtti.type == RtType._struct &&
+                        childNode.info.rtti.structInfo.type == StructType._publisher)
+                    {
+                        auto sd = cast(PropDescriptor!GenericStruct*) gd;
+                        void* structPtr = sd.getter()().getThis;
+                        bool fromRef;
+
+                        if (!structPtr && _onWantAggregate)
+                            _onWantAggregate(childNode, structPtr, fromRef);
+
+                        if (fromRef || !structPtr)
+                        {
+                            void* ps = ReferenceMan.reference(
+                                childNode.info.rtti.classInfo.identifier,
+                                childNode.identifiersChain
+                            );
+                            if (ps)
+                                sd.set(*cast(GenericStruct*) ps);
+                        }
+                        else
+                        {
+                            void* oldCtxt = sd.rtti.structInfo.pubTraits.setContext(structPtr);
+                            restoreFrom(childNode, sd.rtti.structInfo.pubTraits);
+                            sd.rtti.structInfo.pubTraits.restoreContext(oldCtxt);
+                        }
                     }
                 }
-                if (!done)
-                {
-                    bool noop;
-                    restoreFromEvent(childNode, noop);
-                }
+
             }
         }
         static if(is(R == class))
