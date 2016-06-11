@@ -1531,6 +1531,7 @@ public:
                     restoreFromEvent(childNode, stop);
                     if (stop)
                         return;
+                    stop = false;
                     gdPtr = node.info.descriptor;
                 }
 
@@ -1594,7 +1595,13 @@ public:
                         }
                     }
                 }
-
+                else
+                {
+                    restoreFromEvent(childNode, stop);
+                    if (stop)
+                        return;
+                    stop = false;
+                }
             }
         }
         static if(is(R == class))

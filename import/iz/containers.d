@@ -1932,7 +1932,7 @@ public:
                     sibling._nextSibling = item1oldnext;
                     old._nextSibling = sibling;
                     item1oldnext._prevSibling = sibling;
-                    sibling._parent = parent;
+                    sibling._parent = _parent;
                     assert(sibling.siblingIndex == index);
 
                     return;
@@ -2009,15 +2009,25 @@ public:
      *      true if the item is a sibling otherwise false.
      */
     bool removeSibling(TreeItemType sibling)
-    in
     {
-        assert(sibling);
-    }
-    body
-    {
-        ptrdiff_t i = findSibling(sibling);
-        if (i != -1) removeSibling(i);
-        return i != -1;
+        if (!sibling || sibling.parent && sibling.parent != parent)
+            return false;
+
+        TreeItemType oldprev = sibling._prevSibling;
+        TreeItemType oldnext = sibling._nextSibling;
+        if (oldprev) oldprev._nextSibling = oldnext;
+        if (oldnext) oldnext._prevSibling = oldprev;
+
+        if (parent && parent.firstChild is sibling)
+        {
+            parent._firstChild = oldnext;
+        }
+
+        sibling._prevSibling = null;
+        sibling._nextSibling = null;
+        sibling._parent = null;
+
+        return true;
     }
 
     /**
@@ -2038,7 +2048,7 @@ public:
             if (oldprev) oldprev._nextSibling = oldnext;
             if (oldnext) oldnext._prevSibling = oldprev;
 
-            if (result.parent && parent.firstChild is result)
+            if (parent && parent.firstChild is result)
             {
                 parent._firstChild = result._nextSibling;
             }
@@ -2077,7 +2087,7 @@ public:
      */
     ptrdiff_t siblingIndex()
     {
-        size_t result = size_t.max; // -1
+        ptrdiff_t result = -1;
         TreeItemType current = self;
         while(current)
         {
@@ -2093,13 +2103,13 @@ public:
      */
     void siblingIndex(size_t position)
     {
-        auto old = siblings[position];
-        version(none) if (old !is self)
-            exchangeSibling(old,self);
-        version(all) if (old !is self)
+        TreeItemType old = siblings[position];
+        if (old !is self)
         {
+            TreeItemType prt = _parent;
             removeSibling(self);
-            old.insertSibling(position,self);
+            old.insertSibling(position, self);
+            _parent = prt;
         }
     }
 
@@ -2645,5 +2655,41 @@ unittest
     assert(r.front == c2);
     r.popFront;
     assert(r.empty);
+}
+
+unittest
+{
+    ObjectTreeItem root = construct!ObjectTreeItem;
+    ObjectTreeItem c0 = root.addNewChild!ObjectTreeItem;
+    ObjectTreeItem c1 = root.addNewChild!ObjectTreeItem;
+    ObjectTreeItem c2 = root.addNewChild!ObjectTreeItem;
+    scope(exit) destructEach(root, c0, c1, c2);
+
+    size_t it;
+    foreach(ObjectTreeItem child; root.children)
+    {
+        assert(c0.parent);
+        assert(c1.parent);
+        assert(c2.parent);
+        if (it == 0)
+        {
+            c1.siblingIndex = c1.siblingCount-1;
+            c0.siblingIndex = c0.siblingCount-1;
+            c0.siblingIndex = 0;
+        }
+        else if (it == 1)
+        {
+            c1.siblingIndex = c1.siblingCount-1;
+            c0.siblingIndex = c0.siblingCount-1;
+            c0.siblingIndex = 0;
+        }
+        else if (it == 2)
+        {
+            c1.siblingIndex = c1.siblingCount-1;
+            c0.siblingIndex = c0.siblingCount-1;
+            c0.siblingIndex = 0;
+        }
+        it++;
+    }
 }
 
