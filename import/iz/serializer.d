@@ -1184,6 +1184,11 @@ private:
                 if (descriptor.get() == false)
                     return;
             }
+            else static if (is(T == GenericEnum))
+            {
+                //if (descriptor.get() == 0)
+                //    return;
+            }
             else static if (isArray!T)
             {
                 if (!descriptor.get().length)

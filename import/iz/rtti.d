@@ -70,8 +70,11 @@ private static immutable RtTypeArr =
     RtType._pointer
 ];
 
-package struct GenericStruct{}
-package struct GenericEnum{int value; alias value this;}
+/// used as a wildcard to represent any struct.
+package struct GenericStruct {}
+/// used as a wildcard to represent any enum.
+package struct GenericEnum {int value; alias value this;}
+/// not reall used...
 package struct GenericFunPtr{}
 
 package alias GenericRtTypes = AliasSeq!(
@@ -384,7 +387,10 @@ struct StructInfo
  */
 struct AAInfo
 {
-    const(Rtti)* keyType, valueType;
+    /// A pointer to the Rtti of the keys.
+    const(Rtti)* keyType;
+    /// A pointer to the Rtti of the values.
+    const(Rtti)* valueType;
 }
 
 /**
@@ -392,7 +398,7 @@ struct AAInfo
  */
 struct PointerInfo
 {
-    /// the pointer target type
+    /// A pointer to the Rtti of the target.
     const(Rtti)* type;
 }
 
