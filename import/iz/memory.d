@@ -126,6 +126,16 @@ enum NoGc;
 enum TellRangeAdded;
 
 /**
+ * When this enum is used as UDA on aggregate types whose instances are
+ * created with construct() they won't be initialized, i.e the
+ * static layout representing the initial value of the members is not copied.
+ *
+ * For example it can be used on a struct that has a `@disable this()` and
+ * when the others constructor are suposed to do the initialization job.
+ */
+enum NoInit;
+
+/**
  * Indicates if an aggregate contains members that might be
  * collected by the garbage collector. This is used in `construct`
  * to determine if the content of a manually allocated aggregate must
@@ -208,7 +218,8 @@ if (is(CT == class) && !isAbstractClass!CT)
 {
     auto size = typeid(CT).init.length;
     auto memory = getMem(size);
-    memory[0 .. size] = typeid(CT).init[];
+    static if (!hasUDA!(CT, NoInit))
+        memory[0 .. size] = typeid(CT).init[];
     static if (__traits(hasMember, CT, "__ctor"))
         (cast(CT) (memory)).__ctor(a);
     static if (MustAddGcRange!CT)
@@ -257,9 +268,12 @@ if(is(ST==struct) || is(ST==union))
 {
     auto size = ST.sizeof;
     auto memory = getMem(size);
-    __gshared static ST init = ST.init;
-    void* atInit = &init;
-    memory[0..size] = atInit[0..size];
+    static if (!hasUDA!(ST, NoInit))
+    {
+        __gshared static ST init = ST.init;
+        void* atInit = &init;
+        memory[0..size] = atInit[0..size];
+    }
     static if (__traits(hasMember, ST, "__ctor") & A.length)
         (cast(ST*) (memory)).__ctor(a);
     else static if (A.length)
@@ -670,5 +684,15 @@ unittest
     ubyte* ovl = (cast (ubyte*)src) + 16;
     moveMem(cast(void*)ovl, cast(void*)src, 32);
     assert((cast (ubyte*)ovl)[31] == 7);
+}
+
+@nogc unittest
+{
+    @NoInit static struct Foo {uint a = 1;}
+    Foo* foo = construct!Foo;
+    assert(foo.a != 1);
+    @NoInit static class Bar {uint a = 1;}
+    Bar bar = construct!Bar;
+    assert(bar.a != 1);
 }
 
