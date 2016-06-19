@@ -388,8 +388,19 @@ if (is(T == interface))
         }
         static if (__traits(allMembers, T).length)
         {
-            foreach (ov; __traits(getOverloads, T, __traits(allMembers, T)[0]))
-            static assert(functionLinkage!ov != "C++", "C++ interfaces can't be destroyed in "
+            bool allCpp()
+            {
+                bool result = true;
+                foreach (member; __traits(allMembers, T))
+                    foreach (ov; __traits(getOverloads, T, member))
+                        static if (functionLinkage!ov != "C++")
+                {
+                    result = false;
+                    break;
+                }
+                return result;
+            }
+            static assert(!allCpp, "C++ interfaces can't be destroyed in "
                 ~ __PRETTY_FUNCTION__);
         }
         destruct(cast(Object) instance);
