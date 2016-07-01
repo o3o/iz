@@ -274,10 +274,13 @@ if(is(ST==struct) || is(ST==union))
         void* atInit = &init;
         memory[0..size] = atInit[0..size];
     }
-    static if (__traits(hasMember, ST, "__ctor") & A.length)
-        (cast(ST*) (memory)).__ctor(a);
-    else static if (A.length)
-        static assert (0, "cannot construct without a user defined ctor");
+    static if (A.length)
+    {
+        static if (__traits(hasMember, ST, "__ctor"))
+            (cast(ST*) (memory)).__ctor(a);
+        else
+            static assert (0, "cannot construct without a user defined ctor");
+    }
     static if (MustAddGcRange!ST)
     {
         import core.memory: GC;
@@ -592,10 +595,15 @@ unittest
     destruct(foo);
     assert(foo is null);
 
-    struct Bar {}
+    static struct Bar {}
     Bar* bar = construct!Bar;
     destruct(bar);
     assert(bar is null);
+
+    static struct Baz {int i; this(int,int) @nogc {}}
+    Baz* baz = construct!Baz(0,0);
+    destruct(baz);
+    assert(baz is null);
 }
 
 unittest
