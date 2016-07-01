@@ -180,7 +180,11 @@ if (is(T==struct) || is(T==union) || is(T==class))
         }
         return result;
     }
-    enum MustAddGcRange = check();
+
+    static if (hasUDA!(T, NoGc))
+        enum MustAddGcRange = false;
+    else
+        enum MustAddGcRange = check();
 
     static if (hasUDA!(T, TellRangeAdded))
     {
