@@ -14,6 +14,26 @@ import
     iz.types, iz.memory, iz.containers, iz.streams, iz.properties,
     iz.serializer, iz.referencable, iz.observer, iz.strings, iz.rtti;
 
+
+private template isAAKeyValid(T, string field)
+if (is(T == class))
+{
+    bool check()
+    {
+        bool result;
+        if (field.length) foreach(member; __traits(allMembers, T))
+        {
+            if (member == field)
+            {
+                result = true;
+                break;
+            }
+        }
+        return result;
+    }
+    enum isAAKeyValid = check();
+}
+
 /**
  * The PublishedObjectArray class template allows to serialize an array of
  * PropertyPublisher.
@@ -25,9 +45,11 @@ import
  *
  * Params:
  *      ItemClass = The common items type. It must be a PropertyPublisher descendant.
+ *      aaKey = The member of ItemClass used to build an associative array that
+ *          indexes each item with the value of this member.
  */
-class PublishedObjectArray(ItemClass): PropertyPublisher
-if(is(ItemClass : PropertyPublisher))
+class PublishedObjectArray(ItemClass, string aaKey = ""): PropertyPublisher
+if (is(ItemClass : PropertyPublisher))
 {
 
     mixin PropertyPublisherImpl;
@@ -35,6 +57,11 @@ if(is(ItemClass : PropertyPublisher))
 private:
 
     size_t _firstItemsDescrIndex;
+    static if (isAAKeyValid!(ItemClass, aaKey))
+    {
+        alias KeyType = typeof(__traits(getMember, ItemClass, aaKey));
+        ItemClass[KeyType] _aa;
+    }
 
 protected:
 
@@ -46,7 +73,7 @@ public:
     ///
     this()
     {
-        collectPublications!(PublishedObjectArray!ItemClass);
+        collectPublications!(PublishedObjectArray!(ItemClass, aaKey));
     }
 
     ~this()
@@ -196,6 +223,34 @@ public:
     {
         return _items[lo .. hi];
     }
+
+    /**
+     * Returns a pointer to the item whose the member that matches to the
+     * parameter passed as key during instanciation as the same value as `key`.
+     */
+    static if (isAAKeyValid!(ItemClass, aaKey))
+    const(ItemClass)* opBinaryRight(string op = "in")(KeyType key)
+    if (op == "in")
+    {
+        return key in _aa;
+    }
+
+    /**
+     * Updates the associative array that exists when the member passed as key
+     * during the instanciation is not empty.
+     */
+    static if (isAAKeyValid!(ItemClass, aaKey))
+    void updateAA()
+    {
+        _aa.clear;
+        enum getValue = "auto v = item." ~ aaKey ~ ";";
+        foreach(item; _items)
+        {
+            mixin(getValue);
+            _aa[v] = item;
+        }
+    }
+
 }
 ///
 unittest
@@ -219,6 +274,38 @@ unittest
     // serializes the object array to a file
     version(none) publisherToFile(itemArray, "backup.txt");
     destruct(itemArray);
+}
+
+unittest
+{
+    class ItemT: PropertyPublisher
+    {
+        mixin PropertyPublisherImpl;
+        @SetGet string name;
+        @SetGet int value;
+
+        this()
+        {
+            collectPublications!ItemT;
+        }
+
+        this(string name, int value)
+        {
+            collectPublications!ItemT;
+            this.name = name;
+            this.value = value;
+        }
+    }
+
+    alias ArrType = PublishedObjectArray!(ItemT, "name");
+    ArrType arr = construct!(ArrType);
+    arr.addItem("item0", 0);
+    arr.addItem("item1", 1);
+    arr.updateAA;
+    assert("item0" in arr);
+    assert("item1" in arr);
+    assert("item2" !in arr);
+    destruct(arr);
 }
 
 unittest
@@ -285,7 +372,7 @@ unittest
  *      AA = The type of the associative array.
  */
 final class PublishedAA(AA): PropertyPublisher
-if(isAssociativeArray!AA && isSerializable!(KeyType!AA) &&
+if (isAssociativeArray!AA && isSerializable!(KeyType!AA) &&
     isSerializable!(ValueType!AA))
 {
 
