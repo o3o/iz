@@ -8,9 +8,6 @@ import
 import
     iz.sugar;
 
-//TODO-cstrings: next/skipWord, could return a lazy range, like sugar.takeWhile
-//TODO-cstrings: affix, look-ahead system to skip appending of the suffix on the last element
-
 version(unittest) import std.stdio;
 
 // Character-related-structs --------------------------------------------------+
@@ -1173,106 +1170,6 @@ if (isInputRange!Range && isSomeChar!(ElementType!Range))
     assert(range.empty);
 }
 
-
-/**
- * Affixes each element of a range with a prefix and a suffix.
- *
- * Params:
- *      firstPre = If true, the first element is always decorated with the prefix.
- *      lastSuff = If true, the last element is always decorated with the suffix.
- *      range = A range that yields a range of character, e.g byWord().
- *      prefix = The string to which is appended each range element.
- *      suffix = The string appended to each range element.
- */
-auto affix(bool firstPre = false, bool lastSuff = false, Range)(auto ref Range range, string prefix, string suffix)
-if (isInputRange!Range && isInputRange!(ElementType!Range) &&
-    isSomeChar!(ElementType!(ElementType!Range)))
-{
-    struct Decorator
-    {
-        private bool _first, _last;
-        private ElementType!Range _elem;
-        private void cache()
-        {
-            _first = true;
-            _elem = range.front;
-        }
-        auto front()
-        {
-            if (_first)
-            {
-                _first = false;
-                static if (firstPre)
-                {
-                    if (prefix.length && suffix.length)
-                        return prefix ~ _elem ~ suffix;
-                    else if (prefix.length)
-                        return prefix ~ _elem;
-                    else
-                        return _elem ~ suffix;
-                }
-                else return _elem ~ suffix;
-            }
-            else if (!_last)
-            {
-                if (prefix.length && suffix.length)
-                    return prefix ~ _elem ~ suffix;
-                else if (prefix.length)
-                    return prefix ~ _elem;
-                else
-                    return _elem ~ suffix;
-            }
-            else
-            {
-                static if (lastSuff)
-                {
-                    if (prefix.length && suffix.length)
-                        return prefix ~ _elem ~ suffix;
-                    else if (prefix.length)
-                        return prefix ~ _elem;
-                    else
-                        return _elem ~ suffix;
-                }
-                else return prefix ~ _elem;
-            }
-        }
-
-        void popFront()
-        {
-            range.popFront;
-            _elem = range.front;
-            _last = range.empty;
-        }
-
-        bool empty()
-        {
-            return range.empty;
-        }
-    }
-    Decorator dec;
-    dec.cache;
-    return dec;
-}
-///
-@safe pure unittest
-{
-    string src = "0 1 2";
-    auto dec1 = src.byWord.affix!(true, true)("[", "]");
-    assert(dec1.front == "[0]");
-    dec1.popFront;
-    assert(dec1.front == "[1]");
-    dec1.popFront;
-    assert(dec1.front == "[2]");
-}
-
-@safe pure unittest
-{
-    string src = "0";
-    auto dec1 = src.byWord.affix("", ",");
-    //assert(dec1.front == "0");
-}
-
-
 /**
  * Immediatly reads a decimal number.
  */
@@ -1460,78 +1357,6 @@ body
     assert(`\\\\`.unEscape([]) == `\\`);
     assert(`\\`.unEscape([]) == `\`);
     assert(`\`.unEscape([]) == `\`);
-}
-
-/**
- *
- */
-auto multiLine(bool addNewLine = true, Range)(auto ref Range range,
-    size_t minLength = 100, size_t knee = 10)
-if (isInputRange!Range && isInputRange!(ElementType!Range) &&
-    isSomeChar!(ElementType!(ElementType!Range)))
-{
-    struct MultiLine
-    {
-        private CharType!(ElementType!Range)[] _line;
-        ///
-        void popFront()
-        {
-            _line = [];
-            while (!range.empty && _line.length < minLength)
-            {
-                auto next = range.front;
-
-                static if (hasLength!(ElementType!Range))
-                {
-                    if (_line.length + next.length > minLength - knee)
-                        break;
-                    else
-                    {
-                        _line ~= next;
-                        range.popFront;
-                    }
-                }
-                else
-                {
-                    _line ~= next;
-                    range.popFront;
-                }
-            }
-        }
-        ///
-        auto front()
-        {
-            static if (addNewLine)
-            {
-                import std.ascii: newline;
-                if (range.empty)
-                    return _line ~ newline;
-                else
-                    return _line;
-            }
-            else return _line;
-        }
-
-        bool empty()
-        {
-            return range.empty && !_line.length;
-        }
-    }
-    MultiLine ml;
-    if (!range.empty)
-        ml.popFront;
-    return ml;
-}
-///
-@safe pure unittest
-{
-    string src = "0,     1,      2,   3";
-    auto ml1 = src.byWord.affix!(true,true)("", " ").multiLine!false(4);
-    assert(ml1.front == "0, 1, ");
-    ml1.popFront;
-    assert(ml1.front == "2, 3 ");
-    ml1.popFront;
-    assert(ml1.empty);
 }
 
 //------------------------------------------------------------------------------
