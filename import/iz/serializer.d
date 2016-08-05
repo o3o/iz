@@ -858,9 +858,7 @@ private FormatToken readText(Stream stream, IstNode istNode)
     if (identifier != "=") istNode.info.isDamaged = true;
     // value
     skipWordUntil(text, '"');
-    text = text[1..$];
-    identifier = nextWordUntil(text, '"');
-
+    identifier = text[1..$-1];
     with (RtType) if (istNode.info.rtti.type >= _char &&
         istNode.info.rtti.type <= _dchar && istNode.info.rtti.dimension > 0)
     {
@@ -2516,8 +2514,7 @@ version(unittest)
         assert(c._b == 21);
         assert(c._c == 31);
         assert(c._e == E.e0);
-        //TODO-cserializer: text reader, escapes error
-        //assert(c._t == "line1\"inside dq\"\nline2\nline3", c._t);
+        assert(c._t == "line1\"inside dq\"\nline2\nline3", c._t);
         assert(c._refPublisher == c._refPublisherSource);
         assert(c._anotherSubPubliser._someChars == "awhyes");
         assert(c._delegate);
