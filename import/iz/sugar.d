@@ -1248,3 +1248,42 @@ unittest
     assert(atFun());
 }
 
+/**
+ * Safely cast a value of a type to another, if both have the same size.
+ *
+ * Unlike `bruteCast`, the same location si not shared between the
+ * source and the target and no pointer is used.
+ * This function is inspired by http://www.forwardscattering.org/post/27
+ */
+template bitCast(T, S)
+if (T.sizeof == S.sizeof
+    && !is(S == T)
+    && !is(S == class)     && !is(T == class)
+    && !is(S == interface) && !is(T == interface))
+{
+    private union BitCaster
+    {
+        S ss;
+        T tt;
+    }
+
+    static assert(BitCaster.sizeof == S.sizeof);
+
+    pragma(inline, true)
+    T bitCast(auto ref S s)
+    {
+        BitCaster bt;
+        bt.ss = s;
+        return bt.tt;
+    }
+}
+///
+@safe pure nothrow unittest
+{
+    assert(bitCast!int(1.0f) == 0x3f800000);
+    version(LittleEndian)
+        assert(bitCast!(ubyte[2])(ushort(0x1234)) == [0x34, 0x12]);
+    else
+        assert(bitCast!(ubyte[2])(ushort(0x1234)) == [0x12, 0x34]);
+}
+
