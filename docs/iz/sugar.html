@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../style.css"/>
+<script src="../highlight.pack.js"></script>
+<title>iz.sugar</title>
+<base href="../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.sugar</small>
+</div>
+<div class="sidebar">
+<a href="iz/sugar.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/sugar.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li>iz.<a href="iz/classes.html">classes</a></li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li>iz.<a href="iz/enumset.html">enumset</a></li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li>iz.<a href="iz/strings.html">strings</a></li>
+<li><span class=" selected">iz.<a href="iz/sugar.html">sugar</a></span>
+</li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><a class="anchor" id="reset"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/sugar.html#reset">reset</a>(T)(ref T t)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Void version of the init() type function.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">T</td><td class="paramDoc"><p>the argument type, likely to be infered.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">t</td><td class="paramDoc"><p>a reference to a T.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>uint a = 159;
+string b = "bla";
+a.<a href="iz/sugar.html#reset">reset</a>;
+assert(a == 0);
+b.<a href="iz/sugar.html#reset">reset</a>;
+assert(b == "");
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="not"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/sugar.html#not">not</a>(T)(auto ref T t) @safe @nogc nothrow pure 
+if(implicitConvToBool!T)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Boolean not.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>void* ptr = null;
+assert(<a href="iz/sugar.html#not">not</a>(true) == false);
+assert(<a href="iz/sugar.html#not">not</a>(false) == true);
+assert(<a href="iz/sugar.html#not">not</a>(1) == 0);
+assert(<a href="iz/sugar.html#not">not</a>(0) == 1);
+assert(<a href="iz/sugar.html#not">not</a>(123456) == 0);
+assert(<a href="iz/sugar.html#not">not</a>(ptr));
+assert(1.<a href="iz/sugar.html#not">not</a> == false);
+assert(((1+2)/3)<a href="iz/sugar.html#not">.not</a> == false);
+assert(0.<a href="iz/sugar.html#not">not</a> );
+assert(!1.<a href="iz/sugar.html#not">not</a> );
+assert(0.<a href="iz/sugar.html#not">not</a>.<a href="iz/sugar.html#not">not</a>.<a href="iz/sugar.html#not">not</a> );
+assert(!0.<a href="iz/sugar.html#not">not</a>.<a href="iz/sugar.html#not">not</a>.<a href="iz/sugar.html#not">not</a>.<a href="iz/sugar.html#not">not</a> );
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="and"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/sugar.html#and">and</a>(T1, T2)(
+    auto ref T1 t1, 
+    auto ref T2 t2) @safe @nogc nothrow pure 
+if(implicitConvToBool!T1 && implicitConvToBool!T2)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Boolean and.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>assert(true.<a href="iz/sugar.html#and">and</a>(true));
+assert(!false.<a href="iz/sugar.html#and">and</a>(false));
+assert((1)<a href="iz/sugar.html#and">.and</a>(2)<a href="iz/sugar.html#and">.and</a>(3)<a href="iz/sugar.html#and">.and</a>(4));
+assert(!(0)<a href="iz/sugar.html#and">.and</a>(1)<a href="iz/sugar.html#and">.and</a>(2)<a href="iz/sugar.html#and">.and</a>(3));
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="and"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/sugar.html#and">and</a>(T...)(auto ref T t) @safe @nogc nothrow pure
+</code></pre>
+<div class="section"><h2></h2>
+<p>Batch <code class="d_inlinecode">and()</code> a list of variable.
+<code class="d_inlinecode">bool</code>.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">t</td><td class="paramDoc"><p>the list of argument, each must be implicitly convertible <code class="d_inlinecode">bool</code>.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>true if all variables are true.
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>assert(!<a href="iz/sugar.html#and">and</a>(true,3,false));
+assert(<a href="iz/sugar.html#and">and</a>(58,true,true));
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="or"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/sugar.html#or">or</a>(T1, T2)(
+    auto ref T1 t1, 
+    auto ref T2 t2) @safe @nogc nothrow pure 
+if(implicitConvToBool!T1 && implicitConvToBool!T2)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Boolean or.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>void* ptr = null;
+assert(true.<a href="iz/sugar.html#or">or</a>(false));
+assert(!false.<a href="iz/sugar.html#or">or</a>(false));
+assert((1)<a href="iz/sugar.html#or">.or</a>(2)<a href="iz/sugar.html#or">.or</a>(3)<a href="iz/sugar.html#or">.or</a>(4));
+assert((0)<a href="iz/sugar.html#or">.or</a>(1)<a href="iz/sugar.html#or">.or</a>(2)<a href="iz/sugar.html#or">.or</a>(3));
+assert(!(0)<a href="iz/sugar.html#or">.or</a>(false)<a href="iz/sugar.html#or">.or</a>(ptr));
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="or"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/sugar.html#or">or</a>(T...)(auto ref T t) @safe @nogc nothrow pure
+</code></pre>
+<div class="section"><h2></h2>
+<p>Batch <code class="d_inlinecode">or()</code> a list of variable.
+<code class="d_inlinecode">bool</code>.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">t</td><td class="paramDoc"><p>the list of argument, each must be implicitly convertible <code class="d_inlinecode">bool</code>.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>true if one argument is true.
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>assert(!<a href="iz/sugar.html#or">or</a>(false,false,false));
+assert(<a href="iz/sugar.html#or">or</a>(123,false,true));
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="bruteCast"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/sugar.html#bruteCast">bruteCast</a>(OT, IT)(auto ref IT it)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Allows forbidden casts.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">OT</td><td class="paramDoc"><p>The output type.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">IT</td><td class="paramDoc"><p>The input type, optional, likely to be infered.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">it</td><td class="paramDoc"><p>A reference to an IT.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>the same as <code class="d_inlinecode">cast(OT) it</code>, except that it never fails to compile.
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>uint[] array = [0u,1u,2u];
+size_t len;
+//len = cast(uint) array; // <a href="iz/sugar.html#not">not</a> allowed.
+len = <a href="iz/sugar.html#bruteCast">bruteCast</a>!uint(array);
+assert(len == array.length);
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="mask"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/sugar.html#mask">mask</a>(size_t index, <a href="iz/sugar/MaskKind.html">MaskKind</a> kind = <a href="iz/sugar/MaskKind.html">MaskKind</a>.Byte, T)(const T value) nothrow @safe pure 
+if((kind == <a href="iz/sugar/MaskKind.html">MaskKind</a>.Byte && index <= T.sizeof) || (kind == <a href="iz/sugar/MaskKind.html">MaskKind</a>.Nibble && index <= T.sizeof * 2) || (kind == <a href="iz/sugar/MaskKind.html">MaskKind</a>.Bit && index <= T.sizeof * 8))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Masks, at compile-time, a byte, a nibble or a bit in the argument.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">index</td><td class="paramDoc"><p>the position, 0-based, of the element to mask.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">kind</td><td class="paramDoc"><p>the kind of the element to mask.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">value</td><td class="paramDoc"><p>the value mask.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>The input argument with the element masked.
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>// <a href="iz/sugar/MaskKind.html#Byte">MaskKind.Byte</a> by default.
+static assert(<a href="iz/sugar.html#mask">mask</a>!1(0x12345678) == 0x12340078);
+static assert(<a href="iz/sugar.html#mask">mask</a>!(1,<a href="iz/sugar/MaskKind.html#Nibble">MaskKind.Nibble</a>)(0x12345678) == 0x12345608);
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="maskNibble"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/sugar.html#maskNibble">maskNibble</a>(size_t index, T)(const T value) nothrow @safe pure
+</code></pre>
+<div class="section"><h2></h2>
+<p>Compile-time <code class="d_inlinecode">mask()</code> partially specialized for nibble-masking.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>static assert(<a href="iz/sugar.html#maskNibble">maskNibble</a>!1(0x12345678) == 0x12345608);
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="maskBit"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/sugar.html#maskBit">maskBit</a>(size_t index, T)(const T value) nothrow @safe pure
+</code></pre>
+<div class="section"><h2></h2>
+<p>Compile-time <code class="d_inlinecode">mask()</code> partially specialized for bit-masking.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>static assert(<a href="iz/sugar.html#maskBit">maskBit</a>!1(0b1111) == 0b1101);
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="mask"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/sugar.html#mask">mask</a>(<a href="iz/sugar/MaskKind.html">MaskKind</a> kind = <a href="iz/sugar/MaskKind.html">MaskKind</a>.Byte, T)(
+    const T value, 
+    size_t index) nothrow @safe pure
+</code></pre>
+<div class="section"><h2></h2>
+<p>Masks, at run-time, a byte, a nibble or a bit in the argument.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">index</td><td class="paramDoc"><p>the position, 0-based, of the element to mask.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">kind</td><td class="paramDoc"><p>the kind of the element to mask.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">value</td><td class="paramDoc"><p>the value mask.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>The input argument with the element masked.
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>// <a href="iz/sugar/MaskKind.html#Byte">MaskKind.Byte</a> by default.
+assert(<a href="iz/sugar.html#mask">mask</a>(0x12345678,1) == 0x12340078);
+assert(<a href="iz/sugar.html#mask">mask</a>!(<a href="iz/sugar/MaskKind.html#Nibble">MaskKind.Nibble</a>)(0x12345678,1) == 0x12345608);
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="maskNibble"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/sugar.html#maskNibble">maskNibble</a>(T)(
+    const T value, 
+    size_t index) nothrow @safe pure
+</code></pre>
+<div class="section"><h2></h2>
+<p>Run-time <code class="d_inlinecode">mask()</code> partially specialized for nibble-masking.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>assert(<a href="iz/sugar.html#maskNibble">maskNibble</a>(0x12345678,1) == 0x12345608);
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="maskBit"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/sugar.html#maskBit">maskBit</a>(T)(
+    const T value, 
+    size_t index) nothrow @safe pure
+</code></pre>
+<div class="section"><h2></h2>
+<p>Run-time <code class="d_inlinecode">mask()</code> partially specialized for bit-masking.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>assert(<a href="iz/sugar.html#maskBit">maskBit</a>(0b1111,1) == 0b1101);
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="pickAndCall"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/sugar.html#pickAndCall">pickAndCall</a>(T, Fun, A...)(
+    T t, 
+    Fun fun, 
+    auto ref A a) 
+if(isNumeric!T && isCallable!Fun && is(ReturnType!Fun == <a href="http://dlang.org/type.html#basic-data-types">void</a>))
+</code></pre>
+<div class="section "><h2>Contracts</h2><pre><code>in
+{
+
+    static immutable string err = "chance to pick must be in the 0..100 range";
+    assert (t <= 100, err);
+    assert (t >= 0, err);
+}
+</code></pre>
+
+</div>
+<div class="section"><h2></h2>
+<p>Calls a function according to a probability
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">t</td><td class="paramDoc"><p>The chance to call, in percentage.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">fun</td><td class="paramDoc"><p>The function to call. It must be a void function.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">a</td><td class="paramDoc"><p>The variadic argument passed to fun.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>false if no luck.
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>uint cnt;
+bool test;
+void foo(uint param0, out bool param1) @safe
+{
+    cnt += param0;
+    param1 = true;
+}
+foreach(immutable i; 0 .. 100)
+    <a href="iz/sugar.html#pickAndCall">pickAndCall</a>!(double)(75.0, &foo, 1, test);
+assert(cnt > 25);
+assert(test);
+cnt = 0;
+test = false;
+foreach(immutable i; 0 .. 100)
+    <a href="iz/sugar.html#pickAndCall">pickAndCall</a>!(byte)(0, &foo, 1, test);
+assert(cnt == 0);
+assert(!test);
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="popWhile"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/sugar.html#popWhile">popWhile</a>(alias pred, Range)(ref Range range) 
+if(isInputRange!Range && is(typeof(unaryFun!pred)) && isImplicitlyConvertible!(typeof(unaryFun!pred((ElementType!Range).init)), <a href="http://dlang.org/type.html#basic-data-types">bool</a>))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Pops an input range while a predicate is true.
+Consumes the input argument.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">pred</td><td class="paramDoc"><p>the predicate.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">range</td><td class="paramDoc"><p>an input range, must be a lvalue.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>string r0 = "aaaaabcd";
+r0.<a href="iz/sugar.html#popWhile">popWhile</a>!"a == 'a'";
+assert(r0 == "bcd");
+
+static bool lessTwo(T)(T t)
+{
+    return t < 2;
+}
+int[] r1 = [0,1,2,0,1,2];
+r1.<a href="iz/sugar.html#popWhile">popWhile</a>!lessTwo;
+assert(r1 == [2,0,1,2]);
+
+static bool posLessFive(T)(T t)
+{
+    return t < 5 && t > 0;
+}
+int[] r3 = [2,3,4,-1];
+r3.<a href="iz/sugar.html#popWhile">popWhile</a>!posLessFive;
+assert(r3 == [-1]);
+int[] r4 = [2,3,4,5];
+r4.<a href="iz/sugar.html#popWhile">popWhile</a>!posLessFive;
+assert(r4 == [5]);
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="dropWhile"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/sugar.html#dropWhile">dropWhile</a>(alias pred, Range)(auto ref Range range) 
+if(isInputRange!Range && is(typeof(unaryFun!pred)) && isImplicitlyConvertible!(typeof(unaryFun!pred((ElementType!Range).init)), <a href="http://dlang.org/type.html#basic-data-types">bool</a>))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Convenience function that calls popWhile() on the input argument
+and returns the consumed range to allow function pipelining.
+In addition this wrapper accepts rvalues.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>assert("aaaaabcd"<a href="iz/sugar.html#dropWhile">.dropWhile</a>!"a == 'a'" == "bcd");
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="popBackWhile"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/sugar.html#popBackWhile">popBackWhile</a>(alias pred, Range)(ref Range range) 
+if(isBidirectionalRange!Range && is(typeof(unaryFun!pred)) && isImplicitlyConvertible!(typeof(unaryFun!pred((ElementType!Range).init)), <a href="http://dlang.org/type.html#basic-data-types">bool</a>))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Pops back an input range while a predicate is true.
+Consumes the input argument.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">pred</td><td class="paramDoc"><p>the predicate.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">range</td><td class="paramDoc"><p>an input range, must be a lvalue.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>string r0 = "bcdaaaa";
+r0.<a href="iz/sugar.html#popBackWhile">popBackWhile</a>!"a == 'a'";
+assert(r0 == "bcd");
+
+static bool lessTwo(T)(T t)
+{
+    return t < 2;
+}
+int[] r1 = [0,1,2,2,1,0];
+r1.<a href="iz/sugar.html#popBackWhile">popBackWhile</a>!lessTwo;
+assert(r1 == [0,1,2,2]);
+
+static bool posLessFive(T)(T t)
+{
+    return t < 5 && t > 0;
+}
+int[] r3 = [-1,2,3,4];
+r3.<a href="iz/sugar.html#popBackWhile">popBackWhile</a>!posLessFive;
+assert(r3 == [-1]);
+int[] r4 = [5,2,3,4];
+r4.<a href="iz/sugar.html#popBackWhile">popBackWhile</a>!posLessFive;
+assert(r4 == [5]);
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="dropBackWhile"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/sugar.html#dropBackWhile">dropBackWhile</a>(alias pred, Range)(auto ref Range range) 
+if(isBidirectionalRange!Range && is(typeof(unaryFun!pred)) && isImplicitlyConvertible!(typeof(unaryFun!pred((ElementType!Range).init)), <a href="http://dlang.org/type.html#basic-data-types">bool</a>))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Convenience function that calls popBackWhile() on the input argument
+and returns the consumed range to allow function pipelining.
+In addition this wrapper accepts rvalues.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>assert("abcdefgh"<a href="iz/sugar.html#dropBackWhile">.dropBackWhile</a>!"a > 'e'" == "abcde");
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="flipFlop"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/sugar.html#flipFlop">flipFlop</a>(R1, R2)(
+    auto ref R1 flip, 
+    auto ref R2 flop) 
+if(isInputRange!R1 && isInputRange!R2 && is(ElementType!R1 == ElementType!R2))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns a lazy input range that alterntively returns the state of one of two
+sub-ranges.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>Similar to std.range roundRobin() or chain() except that the resulting range
+is considered as empty when one of the sub range is consumed.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">flip</td><td class="paramDoc"><p>the first input range.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">flop</td><td class="paramDoc"><p>the second input range.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>import std.array: array;
+assert(<a href="iz/sugar.html#flipFlop">flipFlop</a>([0,2,4],[1,3,5]).array == [0,1,2,3,4,5]);
+assert(<a href="iz/sugar.html#flipFlop">flipFlop</a>([0,2],[1,3,5]).array == [0,1,2,3]);
+assert(<a href="iz/sugar.html#flipFlop">flipFlop</a>([0,2,4],[1,3]).array == [0,1,2,3,4]);
+int[] re = [];
+assert(<a href="iz/sugar.html#flipFlop">flipFlop</a>([0], re).array == [0]);
+assert(<a href="iz/sugar.html#flipFlop">flipFlop</a>(re, re).array == []);
+assert(<a href="iz/sugar.html#flipFlop">flipFlop</a>(re, [0]).array == []);
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="takeWhile"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/sugar.html#takeWhile">takeWhile</a>(alias pred, Range)(auto ref Range range) 
+if(isInputRange!Range && is(typeof(unaryFun!pred)) && isImplicitlyConvertible!(typeof(unaryFun!pred((ElementType!Range).init)), <a href="http://dlang.org/type.html#basic-data-types">bool</a>))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns a lazy input range that takes from the input while a predicate is
+verified and the input is not empty.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">pred</td><td class="paramDoc"><p>the predicate.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">range</td><td class="paramDoc"><p>an input range, only consumed when passed by reference.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>import std.range: array;
+import std.ascii: isDigit;
+auto r = "012A";
+assert(<a href="iz/sugar.html#takeWhile">takeWhile</a>!((a) => isDigit(a))(r).array == "012");
+assert(r == "A");
+assert(<a href="iz/sugar.html#takeWhile">takeWhile</a>!((a) => isDigit(a))(r).array == "");
+assert(<a href="iz/sugar.html#takeWhile">takeWhile</a>!((a) => isDigit(a))("").array == "");
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="takeBackWhile"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/sugar.html#takeBackWhile">takeBackWhile</a>(alias pred, Range)(auto ref Range range) 
+if(isBidirectionalRange!Range && is(typeof(unaryFun!pred)) && isImplicitlyConvertible!(typeof(unaryFun!pred((ElementType!Range).init)), <a href="http://dlang.org/type.html#basic-data-types">bool</a>))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns a lazy input range that takes from the input tail while a
+predicate is verified and the input is not empty.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">pred</td><td class="paramDoc"><p>the predicate.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">range</td><td class="paramDoc"><p>an bidirectional range, only consumed when passed by reference.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>import std.range: array;
+import std.ascii: isDigit;
+auto r = "A123";
+assert(<a href="iz/sugar.html#takeBackWhile">takeBackWhile</a>!((a) => isDigit(a))(r).array == "321");
+assert(r == "A");
+assert(<a href="iz/sugar.html#takeBackWhile">takeBackWhile</a>!((a) => isDigit(a))(r).array == "");
+assert(<a href="iz/sugar.html#takeBackWhile">takeBackWhile</a>!((a) => isDigit(a))("").array == "");
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="mutatedCount"></a><div class="symbol"><div class="description"><pre><code>public size_t <a href="iz/sugar.html#mutatedCount">mutatedCount</a>(Range)(Range range) 
+if(isInputRange!Range && is(typeof((ElementType!Range).init)) && isMutable!(ElementType!Range) && !isNarrowString!Range)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Indicates how many elements of a range are mutated.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">range</td><td class="paramDoc"><p>An input range. The elements must be mutable and initializable.
+     Narrow srings are not considered as validate input parameter.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>A number equal to the count of elements that are different from their
+     initializer.
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>int[] i = [0,0,1];
+assert(i.<a href="iz/sugar.html#mutatedCount">mutatedCount</a> == 1);
+assert(i[0..$-1]<a href="iz/sugar.html#mutatedCount">.mutatedCount</a> == 0);
+
+string[] s = ["","a"];
+assert(s.<a href="iz/sugar.html#mutatedCount">mutatedCount</a> == 1);
+
+dchar[] dc = [dchar.init, 'g'];
+assert(dc.<a href="iz/sugar.html#mutatedCount">mutatedCount</a> == 1);
+
+class Foo {}
+Foo[] f = new Foo[](8);
+assert(f.<a href="iz/sugar.html#mutatedCount">mutatedCount</a> == 0);
+f[0] = new Foo;
+f[1] = new Foo;
+assert(f.<a href="iz/sugar.html#mutatedCount">mutatedCount</a> == 2);
+
+// w/char.init leads to decoding invalid UTF8 sequence
+static assert(!is(typeof(<a href="iz/sugar.html#mutatedCount">mutatedCount</a>!(char[]))));
+static assert(!is(typeof(<a href="iz/sugar.html#mutatedCount">mutatedCount</a>!(wchar[]))));
+
+static assert(is(typeof(<a href="iz/sugar.html#mutatedCount">mutatedCount</a>!(dchar[]))));
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="rValue"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/sugar.html#rValue">rValue</a>(T)(auto ref T t)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Allows to pass always a parameter as value even if it would be accepted
+as reference.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>void foo(T)(ref T t){}
+uint a;
+static assert(is(typeof(foo(a))));
+static assert(!is(typeof(foo(a.<a href="iz/sugar.html#rValue">rValue</a>))));
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="compare"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/sugar.html#compare">compare</a>(string op, L, R, string fname = __FILE__, <a href="http://dlang.org/type.html#basic-data-types">int</a> line = __LINE__)(
+    auto ref L lhs, 
+    auto ref R rhs) 
+if((isIntegral!R && isIntegral!L) && op == "<" || op == ">" || op == "<=" || op == ">=" || op == "==" || op == "!=")
+</code></pre>
+<div class="section"><h2></h2>
+<p>Compares two integral values with additional static checkings.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>If the comparison mixes signed and unsigned operands then the function tries
+to widen the unsigned operand to perform a valid comparison, otherwise
+a DMD-style warning is emitted.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">op</td><td class="paramDoc"><p>The comparison operator, must be either >, < , <= or >=. Equality
+         is also allowed even if this is always a transparent operation.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">lhs</td><td class="paramDoc"><p>The left operand, an integer.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">rhs</td><td class="paramDoc"><p>The right operand, an integer.
+</p>
+<p> Returns
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>A bool, the comparison result.
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>int a = -1; uint b;
+assert(a > b); // wrong result
+assert(<a href="iz/sugar.html#compare">compare</a>!">"(a,b) == false); // fixed by operand widening
+assert(b < a); // wrong result
+assert(<a href="iz/sugar.html#compare">compare</a>!"<"(b,a) == false); // fixed by operand widening
+
+long aa = -1; ulong bb;
+assert(aa > bb); // wrong result
+assert(<a href="iz/sugar.html#compare">compare</a>!">"(aa,bb) == true); // <a href="iz/sugar.html#not">not</a> statically fixable
+assert(bb < aa); // wrong result
+assert(<a href="iz/sugar.html#compare">compare</a>!"<"(bb,aa) == true); // <a href="iz/sugar.html#not">not</a> statically fixable
+
+assert(<a href="iz/sugar.html#compare">compare</a>!"!="(bb,aa) == true); // test for equality is always transparent OP
+
+immutable long aaa = -1; const ulong bbb;
+assert(<a href="iz/sugar.html#compare">compare</a>!">"(aaa,bbb) == true);
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="throwStaticEx"></a><div class="symbol"><div class="description"><pre><code>public @nogc @safe <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/sugar.html#throwStaticEx">throwStaticEx</a>(T, string file = __FILE__, size_t line = __LINE__)()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Throws a static exception, suitable for @nogc functions.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="throwStaticEx"></a><div class="symbol"><div class="description"><pre><code>public @nogc @safe <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/sugar.html#throwStaticEx">throwStaticEx</a>(string message, string file = __FILE__, size_t line = __LINE__)()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Throws a static exception, suitable for @nogc functions.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="setDelegate"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/sugar.html#setDelegate">setDelegate</a>(T, FT)(
+    ref T t, 
+    <a href="http://dlang.org/type.html#basic-data-types">void</a>* context, 
+    FT code) 
+if(is(T == delegate) && is(FT == typeof(T.funcptr)))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets the context and the function of a delegate.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">T</td><td class="paramDoc"><p>The type of the delegate.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">t</td><td class="paramDoc"><p>The delegate to set.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">context</td><td class="paramDoc"><p>The context pointer, e.g a pointer to a struct or a class instance.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">code</td><td class="paramDoc"><p>The pointer to the static function.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>struct Foo
+{
+    bool fun(){return true;}
+}
+Foo foo;
+bool delegate() atFun;
+atFun.<a href="iz/sugar.html#setDelegate">setDelegate</a>(&foo, &Foo.fun);
+assert(atFun());
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="getDelegate"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/sugar.html#getDelegate">getDelegate</a>(FT)(
+    <a href="http://dlang.org/type.html#basic-data-types">void</a>* context, 
+    FT code) 
+if(is(pointerTarget!FT == function))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets the context and the function of a new delegate.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">T</td><td class="paramDoc"><p>The type of the delegate.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">t</td><td class="paramDoc"><p>The delegate to set.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">context</td><td class="paramDoc"><p>The context pointer, e.g a pointer to a struct or a class instance.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">code</td><td class="paramDoc"><p>The pointer to the static function.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>A new delegate of type T.
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>struct Foo
+{
+    bool fun(){return true;}
+}
+Foo foo;
+bool delegate() atFun = <a href="iz/sugar.html#getDelegate">getDelegate</a>(&foo, &Foo.fun);
+assert(atFun());
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="members"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/sugar/DgMembers.html">DgMembers</a> members
+</code></pre>
+<div class="section"><h2></h2>
+<p>/ The delegates members;
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="dg"></a><div class="symbol"><div class="description"><pre><code>public T dg
+</code></pre>
+<div class="section"><h2></h2>
+<p>Allows to use this union as a true D delegate.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="opCall"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/sugar.html#opCall">opCall</a>(A...)(A a)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Helper to call the delegate without accessing <pre style="display:inline;" class="d_inline_code">dg</pre>.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><div class="description"><div class="section"><h2></h2>
+<p>Several trivial functions and structures
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div><div class="section members"><h2>Enums</h2><table><tr><td><a href="iz/sugar/MaskKind.html">MaskKind</a></td><td></td><td></td></tr></table><h2>Variables</h2><table><tr><td><a href="iz/sugar.html#members">members</a></td><td><pre><code><a href="iz/sugar/DgMembers.html">DgMembers</a>
+</code></pre>
+</td><td></td></tr><tr><td><a href="iz/sugar.html#dg">dg</a></td><td><pre><code>T
+</code></pre>
+</td><td></td></tr></table><h2>Functions</h2><table><tr><td><a href="iz/sugar.html#reset">reset</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/sugar.html#not">not</a><span class="extrainfo"><span class="method-attribs"><span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-pure">pure</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/sugar.html#and">and</a><span class="extrainfo"><span class="method-attribs"><span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-pure">pure</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/sugar.html#and">and</a><span class="extrainfo"><span class="method-attribs"><span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-pure">pure</span></span></span></td><td></td><td>Returns: <p>true if all variables are true.
+</p>
+</td></tr><tr><td><a href="iz/sugar.html#or">or</a><span class="extrainfo"><span class="method-attribs"><span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-pure">pure</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/sugar.html#or">or</a><span class="extrainfo"><span class="method-attribs"><span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-pure">pure</span></span></span></td><td></td><td>Returns: <p>true if one argument is true.
+</p>
+</td></tr><tr><td><a href="iz/sugar.html#bruteCast">bruteCast</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td>Returns: <p>the same as <code class="d_inlinecode">cast(OT) it</code>, except that it never fails to compile.
+</p>
+</td></tr><tr><td><a href="iz/sugar.html#mask">mask</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-pure">pure</span></span><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td>Returns: <p>The input argument with the element masked.
+</p>
+</td></tr><tr><td><a href="iz/sugar.html#maskNibble">maskNibble</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-pure">pure</span></span><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/sugar.html#maskBit">maskBit</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-pure">pure</span></span><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/sugar.html#mask">mask</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-pure">pure</span></span><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td>Returns: <p>The input argument with the element masked.
+</p>
+</td></tr><tr><td><a href="iz/sugar.html#maskNibble">maskNibble</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-pure">pure</span></span><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/sugar.html#maskBit">maskBit</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-pure">pure</span></span><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/sugar.html#pickAndCall">pickAndCall</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>false if no luck.
+</p>
+</td></tr><tr><td><a href="iz/sugar.html#popWhile">popWhile</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/sugar.html#dropWhile">dropWhile</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/sugar.html#popBackWhile">popBackWhile</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/sugar.html#dropBackWhile">dropBackWhile</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/sugar.html#flipFlop">flipFlop</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/sugar.html#takeWhile">takeWhile</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/sugar.html#takeBackWhile">takeBackWhile</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/sugar.html#mutatedCount">mutatedCount</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>A number equal to the count of elements that are different from their
+     initializer.
+</p>
+</td></tr><tr><td><a href="iz/sugar.html#rValue">rValue</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/sugar.html#compare">compare</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>A bool, the comparison result.
+</p>
+</td></tr><tr><td><a href="iz/sugar.html#throwStaticEx">throwStaticEx</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/sugar.html#throwStaticEx">throwStaticEx</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/sugar.html#setDelegate">setDelegate</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/sugar.html#getDelegate">getDelegate</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td>Returns: <p>A new delegate of type T.
+</p>
+</td></tr><tr><td><a href="iz/sugar.html#opCall">opCall</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr></table><h2>Structs</h2><table><tr><td><a href="iz/sugar/ArrayRange.html">ArrayRange</a></td><td></td><td></td></tr><tr><td><a href="iz/sugar/DgMembers.html">DgMembers</a></td><td></td><td></td></tr></table><h2>Templates</h2><table><tr><td><a href="iz/sugar/olderSuperCall.html">olderSuperCall</a></td><td></td><td></td></tr><tr><td><a href="iz/sugar/bitCast.html">bitCast</a></td><td></td><td></td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

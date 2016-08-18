@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../../style.css"/>
+<script src="../../highlight.pack.js"></script>
+<title>Rtti</title>
+<base href="../../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.<a href=iz/rtti.html>rtti</a>.</small><span class="highlight">Rtti</span>
+</div>
+<div class="sidebar">
+<a href="iz/rtti.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/rtti.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li>iz.<a href="iz/classes.html">classes</a></li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li>iz.<a href="iz/enumset.html">enumset</a></li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li><span class=" selected">iz.<a href="iz/rtti.html">rtti</a></span>
+</li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li>iz.<a href="iz/strings.html">strings</a></li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><div class="description"><pre><code>public struct Rtti
+</code></pre>
+<div class="section"><h2></h2>
+<p>Runtime type information
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>public this(T)(
+    <a href="iz/rtti/RtType.html">RtType</a> type, 
+    <a href="http://dlang.org/type.html#basic-data-types">ubyte</a> dim, 
+    <a href="iz/rtti.html#TypeCtors">TypeCtors</a> typeCtors, 
+    auto ref T t)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Constructs a Rtti with a type and the info for this type.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>public this(
+    <a href="iz/rtti/RtType.html">RtType</a> rtType, 
+    <a href="http://dlang.org/type.html#basic-data-types">ubyte</a> dim, 
+    <a href="iz/rtti.html#TypeCtors">TypeCtors</a> typeCtors)
+</code></pre>
+<div class="section "><h2>Contracts</h2><pre><code>in
+{
+    import std.conv : to;
+    assert (rtType >= <a href="iz/rtti/RtType.html">RtType</a>._invalid && rtType <= <a href="iz/rtti/RtType.html">RtType</a>._dchar, "<a href="iz/rtti/Rtti.html#this">this</a> ctor must only be used with basic types");
+}
+</code></pre>
+
+</div>
+<div class="section"><h2></h2>
+<p>Constructs a Rtti with a (basic) type.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="type"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/rtti/RtType.html">RtType</a> type
+</code></pre>
+<div class="section"><h2></h2>
+<p>The runtime type
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="dimension"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">ubyte</a> dimension
+</code></pre>
+<div class="section"><h2></h2>
+<p>Type is an array
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="typeCtors"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/rtti.html#TypeCtors">TypeCtors</a> typeCtors
+</code></pre>
+<div class="section"><h2></h2>
+<p>Attributes for this type
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="infos"></a><div class="symbol"><div class="description"><pre><code>public Infos infos
+</code></pre>
+<div class="section"><h2></h2>
+<p>The information for this type.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="funptrInfo"></a><div class="symbol"><div class="description"><pre><code>public const(<a href="iz/rtti/FunPtrInfo.html">FunPtrInfo</a>)* <a href="iz/rtti/Rtti.html#funptrInfo">funptrInfo</a>() const
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the information valid when type is equal to RtT._callable.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="classInfo"></a><div class="symbol"><div class="description"><pre><code>public const(<a href="iz/rtti/ClassInfo.html">ClassInfo</a>)* <a href="iz/rtti/Rtti.html#classInfo">classInfo</a>() const
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the information valid when type is equal to RtT._object.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="enumInfo"></a><div class="symbol"><div class="description"><pre><code>public const(<a href="iz/rtti/EnumInfo.html">EnumInfo</a>)* <a href="iz/rtti/Rtti.html#enumInfo">enumInfo</a>() const
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the information valid valid when type is equal to RtT._enum.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="structInfo"></a><div class="symbol"><div class="description"><pre><code>public const(<a href="iz/rtti/StructInfo.html">StructInfo</a>)* <a href="iz/rtti/Rtti.html#structInfo">structInfo</a>() const
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the information valid when type is equal to RtT._struct.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="aaInfo"></a><div class="symbol"><div class="description"><pre><code>public const(<a href="iz/rtti/AAInfo.html">AAInfo</a>)* <a href="iz/rtti/Rtti.html#aaInfo">aaInfo</a>() const
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the information valid when type is equal to RtT._aa.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="pointerInfo"></a><div class="symbol"><div class="description"><pre><code>public const(<a href="iz/rtti/PointerInfo.html">PointerInfo</a>)* <a href="iz/rtti/Rtti.html#pointerInfo">pointerInfo</a>() const
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the information valid when type is equal to RtT._pointer.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><div class="section members"><h2>Variables</h2><table><tr><td><a href="iz/rtti/Rtti.html#type">type</a></td><td><pre><code><a href="iz/rtti/RtType.html">RtType</a>
+</code></pre>
+</td><td></td></tr><tr><td><a href="iz/rtti/Rtti.html#dimension">dimension</a></td><td><pre><code><a href="http://dlang.org/type.html#basic-data-types">ubyte</a>
+</code></pre>
+</td><td></td></tr><tr><td><a href="iz/rtti/Rtti.html#typeCtors">typeCtors</a></td><td><pre><code><a href="iz/rtti.html#TypeCtors">TypeCtors</a>
+</code></pre>
+</td><td></td></tr><tr><td><a href="iz/rtti/Rtti.html#infos">infos</a></td><td><pre><code>Infos
+</code></pre>
+</td><td></td></tr></table><h2>Functions</h2><table><tr><td><a href="iz/rtti/Rtti.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/Rtti.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/Rtti.html#funptrInfo">funptrInfo</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/rtti/Rtti.html#classInfo">classInfo</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/rtti/Rtti.html#enumInfo">enumInfo</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/rtti/Rtti.html#structInfo">structInfo</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/rtti/Rtti.html#aaInfo">aaInfo</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/rtti/Rtti.html#pointerInfo">pointerInfo</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span></span></span></td><td></td><td></td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

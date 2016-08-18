@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../style.css"/>
+<script src="../highlight.pack.js"></script>
+<title>iz.math</title>
+<base href="../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.math</small>
+</div>
+<div class="sidebar">
+<a href="iz/math.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/math.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li>iz.<a href="iz/classes.html">classes</a></li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li>iz.<a href="iz/enumset.html">enumset</a></li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li><span class=" selected">iz.<a href="iz/math.html">math</a></span>
+</li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li>iz.<a href="iz/strings.html">strings</a></li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><a class="anchor" id="saveIzRoundingMode"></a><div class="symbol"><div class="description"><pre><code>public const(<a href="http://dlang.org/type.html#basic-data-types">int</a>) <a href="iz/math.html#saveIzRoundingMode">saveIzRoundingMode</a>() @trusted pure nothrow
+</code></pre>
+<div class="section"><h2></h2>
+<p>Saves the rounding mode used in iz.math
+(always the 13th and 14th bit of SSE MXCSR).
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Returns</h2>
+<p>The current rounding mode, as a read-only integer value.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="setIzRoundingMode"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/math.html#setIzRoundingMode">setIzRoundingMode</a>(<a href="http://dlang.org/type.html#basic-data-types">int</a> value) @trusted pure nothrow
+</code></pre>
+<div class="section"><h2></h2>
+<p>Restores the rounding mode used in iz.math (MXCSR).
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>iz.math provides the functions to set all the possible modes and this function
+should only be used to restore a value saved by the roundToXXX functions.
+When used freely, this function will only work when the 13th and the 14th bit
+modify the current MXCSR register.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="roundToNearest"></a><div class="symbol"><div class="description"><pre><code>public const(<a href="http://dlang.org/type.html#basic-data-types">int</a>) <a href="iz/math.html#roundToNearest">roundToNearest</a>() @trusted pure nothrow
+</code></pre>
+<div class="section"><h2></h2>
+<p>Resets the default rounding mode.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>After the call, floor() and ceil() are conform to the specifications.
+</p>
+
+
+</div>
+<div class="section"><h2>Returns</h2>
+<p>The previous rounding mode, which can be restored with setIzRoundingMode().
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="roundToPositive"></a><div class="symbol"><div class="description"><pre><code>public const(<a href="http://dlang.org/type.html#basic-data-types">int</a>) <a href="iz/math.html#roundToPositive">roundToPositive</a>() @trusted pure nothrow
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets round() to behave like floor().
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>After the call, floor() and ceil() are not anymore reliable.
+</p>
+
+
+</div>
+<div class="section"><h2>Returns</h2>
+<p>The previous rounding mode, which can be restored with setIzRoundingMode().
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="roundToNegative"></a><div class="symbol"><div class="description"><pre><code>public const(<a href="http://dlang.org/type.html#basic-data-types">int</a>) <a href="iz/math.html#roundToNegative">roundToNegative</a>() @trusted pure nothrow
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets round() to behave like ceil().
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>After the call, floor() and ceil() are not anymore reliable.
+</p>
+
+
+</div>
+<div class="section"><h2>Returns</h2>
+<p>The previous rounding mode, which can be restored with setIzRoundingMode().
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="roundToZero"></a><div class="symbol"><div class="description"><pre><code>public const(<a href="http://dlang.org/type.html#basic-data-types">int</a>) <a href="iz/math.html#roundToZero">roundToZero</a>() @trusted pure nothrow
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets round() to behave like trunc().
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>After the call, floor() and ceil() are not anymore reliable.
+</p>
+
+
+</div>
+<div class="section"><h2>Returns</h2>
+<p>The previous rounding mode, which can be restored with setIzRoundingMode().
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>auto sav = <a href="iz/math.html#roundToNearest">roundToNearest</a>;
+assert(<a href="iz/math.html#round">round</a>(0.4) == 0);
+auto dnc0 = <a href="iz/math.html#roundToZero">roundToZero</a>;
+assert(<a href="iz/math.html#round">round</a>(0.8) == 0);
+assert(<a href="iz/math.html#round">round</a>(-0.8) == 0);
+auto dnc1 = <a href="iz/math.html#roundToNegative">roundToNegative</a>;
+assert(<a href="iz/math.html#round">round</a>(1.8) == 1);
+assert(<a href="iz/math.html#round">round</a>(-0.8) == -1);
+auto dnc2 = <a href="iz/math.html#roundToPositive">roundToPositive</a>;
+assert(<a href="iz/math.html#round">round</a>(1.8) == 2);
+assert(<a href="iz/math.html#round">round</a>(-0.8) == 0);
+<a href="iz/math.html#setIzRoundingMode">setIzRoundingMode</a>(sav);
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="round"></a><div class="symbol"><div class="description"><pre><code>public extern (C) <a href="http://dlang.org/type.html#basic-data-types">int</a> <a href="iz/math.html#round">round</a>(T)(T value) @trusted pure nothrow
+</code></pre>
+<div class="section"><h2></h2>
+<p>Converts a floating point value to an integer.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>This function requires the SSE2 instruction set and it can't be inlined.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">value</td><td class="paramDoc"><p>Either a float or a double.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>An integer equal to the nearest integral value.
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>assert(<a href="iz/math.html#round">round</a>(0.2f) == 0);
+assert(<a href="iz/math.html#round">round</a>(0.8f) == 1);
+assert(<a href="iz/math.html#round">round</a>(-0.2f) == 0);
+assert(<a href="iz/math.html#round">round</a>(-0.8f) == -1);
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="floor"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">int</a> <a href="iz/math.html#floor">floor</a>(T)(T value) @trusted pure nothrow 
+if(isFloatingPoint!T)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Converts a floating point value to an integer.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>This function requires the SSE2 instruction set and it can't be inlined.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">value</td><td class="paramDoc"><p>Either a float or a double.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>The largest integral value that is not greater than <i>value</i>.
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>assert(<a href="iz/math.html#floor">floor</a>(0.2f) == 0);
+assert(<a href="iz/math.html#floor">floor</a>(0.8f) == 0);
+assert(<a href="iz/math.html#floor">floor</a>(-0.2f) == -1);
+assert(<a href="iz/math.html#floor">floor</a>(-0.8f) == -1);
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="ceil"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">int</a> <a href="iz/math.html#ceil">ceil</a>(T)(T value) @trusted pure nothrow 
+if(isFloatingPoint!T)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Converts a floating point value to an integer.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>This function requires the SSE2 instruction set and it can't be inlined.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">value</td><td class="paramDoc"><p>Either a float or a double.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>The smallest integral value that is not less than <i>value</i>.
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>assert(<a href="iz/math.html#ceil">ceil</a>(0.2f) == 1);
+assert(<a href="iz/math.html#ceil">ceil</a>(0.8f) == 1);
+assert(<a href="iz/math.html#ceil">ceil</a>(-0.2f) == 0);
+assert(<a href="iz/math.html#ceil">ceil</a>(-0.8f) == 0);
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="trunc"></a><div class="symbol"><div class="description"><pre><code>public extern (C) <a href="http://dlang.org/type.html#basic-data-types">int</a> <a href="iz/math.html#trunc">trunc</a>(T)(T value) @trusted pure nothrow
+</code></pre>
+<div class="section"><h2></h2>
+<p>Converts a floating point value to an integer.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>This function requires the SSE2 instruction set and it can't be inlined.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">value</td><td class="paramDoc"><p>Either a float or a double.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>An integral value equal to the <i>value</i> nearest integral toward 0.
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>assert(<a href="iz/math.html#trunc">trunc</a>(0.2f) == 0);
+assert(<a href="iz/math.html#trunc">trunc</a>(0.8f) == 0);
+assert(<a href="iz/math.html#trunc">trunc</a>(-0.2f) == 0);
+assert(<a href="iz/math.html#trunc">trunc</a>(-8.8f) == -8);
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="dtrunc"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">int</a> <a href="iz/math.html#dtrunc">dtrunc</a>(T)(T value) @trusted pure nothrow
+</code></pre>
+<div class="section"><h2></h2>
+<p>Converts a floating point value to an integer.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>This function relies on the D behavior when casting a floating point value
+to an integer. It uses SSE2 on X86_64 and the FPU on X86 but it can always be
+inlined.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">value</td><td class="paramDoc"><p>Either a float or a double.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>An integral value equal to the <i>value</i> nearest integral toward 0.
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>assert(<a href="iz/math.html#dtrunc">dtrunc</a>(0.2f) == 0);
+assert(<a href="iz/math.html#dtrunc">dtrunc</a>(0.8f) == 0);
+assert(<a href="iz/math.html#dtrunc">dtrunc</a>(-0.2f) == 0);
+assert(<a href="iz/math.html#dtrunc">dtrunc</a>(-8.8f) == -8);
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="hypot"></a><div class="symbol"><div class="description"><pre><code>public extern (C) T <a href="iz/math.html#hypot">hypot</a>(T)(
+    T x, 
+    T y) pure @trusted nothrow
+</code></pre>
+<div class="section"><h2></h2>
+<p>Computes the hypothenus of two FP numbers.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>This function requires the SSE2 instruction set and it can't be inlined.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">x</td><td class="paramDoc"><p>Either a float or a double.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">y</td><td class="paramDoc"><p>Either a float or a double.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>A floating point value of type T.
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>assert(<a href="iz/math.html#hypot">hypot</a>(3.0,4.0) == 5.0);
+assert(<a href="iz/math.html#hypot">hypot</a>(3.0f,4.0f) == 5.0f);
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="magn"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/math.html#magn">magn</a>(T)(T t) 
+if(is(T == <a href="http://dlang.org/type.html#basic-data-types">cfloat</a>) || is(T == <a href="http://dlang.org/type.html#basic-data-types">cdouble</a>) || is(T == Complex!float) || is(T == Complex!double))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the magnitude of a complex number.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>Convenience function that calls hypot() either with a clfloat, a cdouble or
+a std.complex.Complex.
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>assert(<a href="iz/math.html#magn">magn</a>(cdouble(3.0+4.0i)) == 5.0);
+assert(<a href="iz/math.html#magn">magn</a>(cfloat(3.0f+4.0fi)) == 5.0f);
+assert(<a href="iz/math.html#magn">magn</a>(complex(3.0f,4.0f)) == 5.0f);
+assert(<a href="iz/math.html#magn">magn</a>(complex(3.0,4.0)) == 5.0);
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="wrap"></a><div class="symbol"><div class="description"><pre><code>public T <a href="iz/math.html#wrap">wrap</a>(string bound = ")", T)(
+    T value, 
+    T max) 
+if(isNumeric!T && bound == ")" || bound == "]")
+</code></pre>
+<div class="section"><h2></h2>
+<p>Wraps a numeric value between 0 and a max value.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">bound</td><td class="paramDoc"><p>a string that indicates if the max is excluded (<pre style="display:inline;" class="d_inline_code"><font color=red>"</font>"</pre>)), the default
+         or if the max is included (<pre style="display:inline;" class="d_inline_code"><font color=red>"]"</font></pre>).
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">value</td><td class="paramDoc"><p>the value to wrap.
+     max the maximal value.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>import std.math: approxEqual;
+import std.math: modf;
+// <a href="iz/math.html#wrap">wrap</a> from max
+assert(<a href="iz/math.html#wrap">wrap</a>(1,1) == 1);
+assert(<a href="iz/math.html#wrap">wrap</a>(3,2) == 1);
+assert(<a href="iz/math.html#wrap">wrap</a>(-1,3) == 2);
+assert(<a href="iz/math.html#wrap">wrap</a>(1.5,1).approxEqual(0.5));
+assert(<a href="iz/math.html#wrap">wrap</a>(1.01,1).approxEqual(0.01));
+assert(<a href="iz/math.html#wrap">wrap</a>(-0.5,2).approxEqual(1.5));
+// <a href="iz/math.html#wrap">wrap</a> past max
+assert(<a href="iz/math.html#wrap">wrap</a>!"]"(1,1) == 0);
+assert(<a href="iz/math.html#wrap">wrap</a>!"]"(3,2) == 1);
+assert(<a href="iz/math.html#wrap">wrap</a>!"]"(3,3) == 0);
+assert(<a href="iz/math.html#wrap">wrap</a>!"]"(1.0,1.0) == 0.0);
+assert(<a href="iz/math.html#wrap">wrap</a>!"]"(-0.5,1.0) == 0.5);
+// two phases in sync
+double incr = 0.0125;
+double sync = 0.25;
+double phase1 = 0, phase2 = 0;
+foreach(i; 0 .. 100000)
+{
+    phase1 = <a href="iz/math.html#wrap">wrap</a>(phase1 + incr, 1.0);
+    phase2 = <a href="iz/math.html#wrap">wrap</a>(phase1 - sync, 1.0);
+    assert(phase1 < 1.0 && phase2 < 1.0);
+}
+
+</code></pre>
+
+</div>
+</div></div><div class="description"><div class="section"><h2></h2>
+<p>Several simple math functions.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>They are rather dedicated to the X86_64 architecture but implemented for
+X86 too, even if parameters loading is less adequate and slower under this
+architecture.
+</p>
+
+
+</div>
+</div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/math.html#saveIzRoundingMode">saveIzRoundingMode</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span>, <span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span></span></span></td><td></td><td>Returns: <p>The current rounding mode, as a read-only integer value.
+</p>
+</td></tr><tr><td><a href="iz/math.html#setIzRoundingMode">setIzRoundingMode</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span>, <span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/math.html#roundToNearest">roundToNearest</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span>, <span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span></span></span></td><td></td><td>Returns: <p>The previous rounding mode, which can be restored with setIzRoundingMode().
+</p>
+</td></tr><tr><td><a href="iz/math.html#roundToPositive">roundToPositive</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span>, <span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span></span></span></td><td></td><td>Returns: <p>The previous rounding mode, which can be restored with setIzRoundingMode().
+</p>
+</td></tr><tr><td><a href="iz/math.html#roundToNegative">roundToNegative</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span>, <span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span></span></span></td><td></td><td>Returns: <p>The previous rounding mode, which can be restored with setIzRoundingMode().
+</p>
+</td></tr><tr><td><a href="iz/math.html#roundToZero">roundToZero</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span>, <span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span></span></span></td><td></td><td>Returns: <p>The previous rounding mode, which can be restored with setIzRoundingMode().
+</p>
+</td></tr><tr><td><a href="iz/math.html#round">round</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span>, <span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span></span></span></td><td></td><td>Returns: <p>An integer equal to the nearest integral value.
+</p>
+</td></tr><tr><td><a href="iz/math.html#floor">floor</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span>, <span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span></span></span></td><td></td><td>Returns: <p>The largest integral value that is not greater than <i>value</i>.
+</p>
+</td></tr><tr><td><a href="iz/math.html#ceil">ceil</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span>, <span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span></span></span></td><td></td><td>Returns: <p>The smallest integral value that is not less than <i>value</i>.
+</p>
+</td></tr><tr><td><a href="iz/math.html#trunc">trunc</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span>, <span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span></span></span></td><td></td><td>Returns: <p>An integral value equal to the <i>value</i> nearest integral toward 0.
+</p>
+</td></tr><tr><td><a href="iz/math.html#dtrunc">dtrunc</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span>, <span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span></span></span></td><td></td><td>Returns: <p>An integral value equal to the <i>value</i> nearest integral toward 0.
+</p>
+</td></tr><tr><td><a href="iz/math.html#hypot">hypot</a><span class="extrainfo"><span class="method-attribs"><span class="attr-pure">pure</span>, <span class="attr-trusted">@trusted</span>, <span class="attr-nothrow">nothrow</span></span></span></td><td></td><td>Returns: <p>A floating point value of type T.
+</p>
+</td></tr><tr><td><a href="iz/math.html#magn">magn</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/math.html#wrap">wrap</a><span class="extrainfo"></span></td><td></td><td></td></tr></table><h2>Templates</h2><table><tr><td><a href="iz/math/Pi.html">Pi</a></td><td></td><td></td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

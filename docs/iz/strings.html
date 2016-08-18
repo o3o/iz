@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../style.css"/>
+<script src="../highlight.pack.js"></script>
+<title>iz.strings</title>
+<base href="../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.strings</small>
+</div>
+<div class="sidebar">
+<a href="iz/strings.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/strings.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li>iz.<a href="iz/classes.html">classes</a></li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li>iz.<a href="iz/enumset.html">enumset</a></li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li><span class=" selected">iz.<a href="iz/strings.html">strings</a></span>
+</li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><a class="anchor" id="decimalChars"></a><div class="symbol"><div class="description"><pre><code>public static immutable <a href="iz/strings/CharRange.html">CharRange</a> decimalChars
+</code></pre>
+<div class="section"><h2></h2>
+<p>a CharRange that verify characters for decimal numbers.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="octalChars"></a><div class="symbol"><div class="description"><pre><code>public static immutable <a href="iz/strings/CharRange.html">CharRange</a> octalChars
+</code></pre>
+<div class="section"><h2></h2>
+<p>a CharRange that verify characters for octal numbers.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="hexChars"></a><div class="symbol"><div class="description"><pre><code>public immutable <a href="iz/strings/CharMap.html">CharMap</a> hexChars
+</code></pre>
+<div class="section"><h2></h2>
+<p>A CharMap that includes the hexadecimal characters.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="whiteChars"></a><div class="symbol"><div class="description"><pre><code>public immutable <a href="iz/strings/CharMap.html">CharMap</a> whiteChars
+</code></pre>
+<div class="section"><h2></h2>
+<p>A CharMap that includes the white characters.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="nullTerminated"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/strings.html#nullTerminated">nullTerminated</a>(<a href="http://dlang.org/type.html#basic-data-types">bool</a> decode = false, C)(const C c) 
+if(isPointer!C && isSomeChar!(PointerTarget!(C)))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns an input range that processes directly a null terminated C string,
+without fully converting it to a phobos string.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">decode</td><td class="paramDoc"><p>When set to true the front is decoded otherwise (the default)
+         each code point is supposed to contain 1 unit.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">c</td><td class="paramDoc"><p>A pointer to a character.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>When decoding is enabled, nullTerminated always returns a range of dchar
+     otherwise the front type is the same as target type of the pointer passed
+     as parameter.
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>auto text = "ab cd\0";
+auto cString = <a href="iz/strings.html#nullTerminated">nullTerminated</a>(text.ptr);
+assert(<a href="iz/strings.html#nextWord">nextWord</a>(cString) == "ab");
+auto saved = <a href="iz/strings.html#nullTerminated">nullTerminated</a>(cString.save);
+assert(<a href="iz/strings.html#nextWord">nextWord</a>(cString) == "cd");
+assert(<a href="iz/strings.html#nextWord">nextWord</a>(saved) == "cd");
+assert(cString.empty);
+auto wtext = "ab cd\0"w;
+auto cWideString = <a href="iz/strings.html#nullTerminated">nullTerminated</a>(wtext.ptr);
+assert(<a href="iz/strings.html#nextWord">nextWord</a>(cWideString) == "ab"w);
+assert(<a href="iz/strings.html#nextWord">nextWord</a>(cWideString) == "cd"w);
+assert(cWideString.empty);
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="nextWord"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/strings.html#nextWord">nextWord</a>(Range, T, <a href="http://dlang.org/type.html#basic-data-types">bool</a> until = false)(
+    ref Range range, 
+    T charTester) 
+if(isInputRange!Range && isSomeChar!(ElementType!Range) && <a href="iz/strings/isCharTester.html">isCharTester</a>!T)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the next word in the range passed as argument.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">range</td><td class="paramDoc"><p>A character input range. The range is consumed for each word.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">charTester</td><td class="paramDoc"><p>Defines the valid characters to make a word.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>A string containing the word. If the result length is null then the
+     range parameter has not been consumed.
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>auto cs1 = "azertyuiopqsdfghjklmwxcvbn";
+auto cs2 = " \r\n\t";
+auto cs3 = <a href="iz/strings/CharRange.html">CharRange</a>('a','z');
+bool[dchar] cs4 = ['\r':true, '\n': true, '\t':true, ' ':true ];
+auto src1 = "az er
+ty";
+auto src2 = "az er
+ty";
+
+auto w1 = <a href="iz/strings.html#nextWord">nextWord</a>(src1, cs1);
+assert(w1 == "az");
+<a href="iz/strings.html#nextWord">nextWord</a>(src1, cs2);
+auto w2 = <a href="iz/strings.html#nextWord">nextWord</a>(src1, cs1);
+assert(w2 == "er");
+<a href="iz/strings.html#nextWord">nextWord</a>(src1, cs2);
+auto w3 = <a href="iz/strings.html#nextWord">nextWord</a>(src1, cs1);
+assert(w3 == "ty");
+<a href="iz/strings.html#nextWord">nextWord</a>(src1, cs2);
+
+auto w11 = <a href="iz/strings.html#nextWord">nextWord</a>(src2, cs3);
+assert(w11 == "az");
+<a href="iz/strings.html#nextWord">nextWord</a>(src2, cs4);
+auto w22 = <a href="iz/strings.html#nextWord">nextWord</a>(src2, cs3);
+assert(w22 == "er");
+<a href="iz/strings.html#nextWord">nextWord</a>(src2, cs4);
+import std.ascii: isAlpha, isDigit;
+assert(<a href="iz/strings.html#nextWord">nextWord</a>(src2, &isDigit) == "");
+auto w33 = <a href="iz/strings.html#nextWord">nextWord</a>(src2, &isAlpha);
+assert(w33 == "ty");
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="nextWordUntil"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/strings.html#nextWordUntil">nextWordUntil</a>(Range, T)(
+    ref Range range, 
+    T charTester)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the next word in the range passed as argument.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">range</td><td class="paramDoc"><p>A character input range. The range is consumed for each word.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">charTester</td><td class="paramDoc"><p>Defines the opposite of the valid characters to make a word.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>A string containing the word. If the result length is null then the
+     range parameter has not been consumed.
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>auto src = "azertyuiop
+sdfghjk".dup;
+auto skp = <a href="iz/strings/CharRange.html">CharRange</a>("\r\n\t".dup);
+auto w = <a href="iz/strings.html#nextWordUntil">nextWordUntil</a>(src, skp);
+assert(w == "azertyuiop");
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="skipWord"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/strings.html#skipWord">skipWord</a>(Range, T, <a href="http://dlang.org/type.html#basic-data-types">bool</a> until = false)(
+    ref Range range, 
+    T charTester) 
+if(isInputRange!Range && isSomeChar!(ElementType!Range) && <a href="iz/strings/isCharTester.html">isCharTester</a>!T)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Skips the next word in the range passed as argument.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">range</td><td class="paramDoc"><p>A character input range. The range is consumed for each word.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">charTester</td><td class="paramDoc"><p>Defines the valid characters to make a word.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>auto src1 = "\t\t\r\ndd";
+auto skp1 = <a href="iz/strings/CharRange.html">CharRange</a>("\r\n\t");
+<a href="iz/strings.html#skipWord">skipWord</a>(src1, skp1);
+assert(src1 == "dd");
+import std.ascii: isWhite;
+auto src2 = "\t\t\r\nee";
+<a href="iz/strings.html#skipWord">skipWord</a>(src2, &isWhite);
+assert(src2 == "ee");
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="skipWordUntil"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/strings.html#skipWordUntil">skipWordUntil</a>(Range, T)(
+    ref Range range, 
+    T charTester)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Skips the next word in the range passed as argument.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">range</td><td class="paramDoc"><p>A character input range. The range is consumed for each word.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">charTester</td><td class="paramDoc"><p>Defines the opposite of the valid characters to make a word.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>auto src = "dd\r";
+auto skp = <a href="iz/strings/CharRange.html">CharRange</a>("\r\n\t");
+<a href="iz/strings.html#skipWordUntil">skipWordUntil</a>(src, skp);
+assert(src == "\r");
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="nextSlice"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/strings.html#nextSlice">nextSlice</a>(Range, T)(
+    ref Range range, 
+    T len) 
+if(isInputRange!Range && isSomeChar!(ElementType!Range) && isIntegral!T)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Tries to make a fixed length slice by consuming range.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">range</td><td class="paramDoc"><p>A character input range. The range is consumed for each word.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">len</td><td class="paramDoc"><p>An integral value.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>At the tail a string whose length is less or equal to <i>len</i>, otherwise
+     always a string of length <i>len</i>.
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>auto text0 = "012"; 
+assert(text0.<a href="iz/strings.html#nextSlice">nextSlice</a>(2) == "01");
+auto text1 = "3";
+assert(text1.<a href="iz/strings.html#nextSlice">nextSlice</a>(8) == "3");
+auto text2 = "45";
+assert(text2.<a href="iz/strings.html#nextSlice">nextSlice</a>(0) == "");
+assert(text1.<a href="iz/strings.html#nextSlice">nextSlice</a>(12_34_56) == "");
+auto ut = "é_é";
+assert(ut.<a href="iz/strings.html#nextSlice">nextSlice</a>(3) == "é_é");
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="canRead"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/strings.html#canRead">canRead</a>(Range, Stuff)(
+    ref Range range, 
+    Stuff stuff) 
+if(isInputRange!Range && isSomeChar!(ElementType!Range) && (isSomeChar!Stuff || isSomeString!Stuff))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns true if a string starts with a particular sub string.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+</table>
+</div>
+<div class="section"><h2>range</h2>
+<p>A character input range. The range is not consumed.
+     stuff
+</p>
+
+
+</div>
+<div class="section"><h2>stuff</h2>
+<p>the sub string, also works with single chars.
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>auto text0 = "{0}".dup;
+assert(text0.<a href="iz/strings.html#canRead">canRead</a>('{'));
+auto text1 = "(* bla *)".dup;
+assert(text1.<a href="iz/strings.html#canRead">canRead</a>("(*"));
+assert(text1 == "(* bla *)");
+string text2 = "0x123456";
+assert(!text2.<a href="iz/strings.html#canRead">canRead</a>("0b"));
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="bySlice"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/strings.html#bySlice">bySlice</a>(Range)(
+    auto ref Range range, 
+    size_t len) 
+if(isInputRange!Range && isSomeChar!(ElementType!Range))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns an input range consisting of the input argument sliced by group of
+length len.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>auto text = "AABBCCDD";
+assert(text.<a href="iz/strings.html#bySlice">bySlice</a>(2).array == ["AA","BB","CC","DD"]);
+auto str = "AAE";
+assert(str.<a href="iz/strings.html#bySlice">bySlice</a>(2).array == ["AA","E"]);
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="readEol"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/strings.html#readEol">readEol</a>(Range)(ref Range range) 
+if(isInputRange!Range && isSomeChar!(ElementType!Range))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Tries to read immediatly an EOL in range and returns it.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>auto text0 = "";
+assert(<a href="iz/strings.html#readEol">readEol</a>(text0) == "");
+auto text1 = " ";
+assert(<a href="iz/strings.html#readEol">readEol</a>(text1) == "");
+auto text2 = "\n";
+assert(<a href="iz/strings.html#readEol">readEol</a>(text2) == "\n");
+auto text3 = "\r\n";
+assert(<a href="iz/strings.html#readEol">readEol</a>(text3) == "\r\n");
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="skipEol"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/strings.html#skipEol">skipEol</a>(Range)(ref Range range) 
+if(isInputRange!Range && isSomeChar!(ElementType!Range))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Tries to skip immediatly an EOL in range.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>auto text0 = "";
+<a href="iz/strings.html#skipEol">skipEol</a>(text0);
+assert(text0 == "");
+auto text1 = " ";
+<a href="iz/strings.html#skipEol">skipEol</a>(text1);
+assert(text1 == " ");
+auto text2 = "\n";
+<a href="iz/strings.html#skipEol">skipEol</a>(text2);
+assert(text2 == "");
+auto text3 = "\r\na";
+<a href="iz/strings.html#skipEol">skipEol</a>(text3);
+assert(text3 == "a");
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="nextLine"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/strings.html#nextLine">nextLine</a>(<a href="http://dlang.org/type.html#basic-data-types">bool</a> keepTerminator = false, Range)(ref Range range)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the next line within range.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>auto text = "123456\r\n12345\n1234\r\n123\r\n12\r\n1";
+assert(<a href="iz/strings.html#nextLine">nextLine</a>!false(text) == "123456");
+assert(<a href="iz/strings.html#nextLine">nextLine</a>!false(text) == "12345");
+assert(<a href="iz/strings.html#nextLine">nextLine</a>!false(text) == "1234");
+assert(<a href="iz/strings.html#nextLine">nextLine</a>!false(text) == "123");
+assert(<a href="iz/strings.html#nextLine">nextLine</a>!false(text) == "12");
+assert(<a href="iz/strings.html#nextLine">nextLine</a>!false(text) == "1");
+assert(<a href="iz/strings.html#nextLine">nextLine</a>!false(text) == "");
+assert(<a href="iz/strings.html#nextLine">nextLine</a>!false(text) == "");
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="byLine"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/strings.html#byLine">byLine</a>(Range)(auto ref Range range) 
+if(isInputRange!Range && isSomeChar!(ElementType!Range))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns an input range consisting of each line in the input argument
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>auto text = "aw\r\nyess";
+auto range = text.<a href="iz/strings.html#byLine">byLine</a>;
+assert(range.front == "aw");
+range.popFront;
+assert(range.front == "yess");
+auto nums = "0\n1\n2\n3\n4\n5\n6\n7\n8\n9";
+import std.algorithm.iteration: reduce;
+assert(nums.<a href="iz/strings.html#byLine">byLine</a>.reduce!((a,b) => a ~ b) == "0123456789");
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="lineCount"></a><div class="symbol"><div class="description"><pre><code>public size_t <a href="iz/strings.html#lineCount">lineCount</a>(Range)(Range range)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the lines count within the input range.
+The input range is not consumed.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>auto text1= "";
+assert(text1.<a href="iz/strings.html#lineCount">lineCount</a> == 0);
+auto text2 = "\n\r\n";
+assert(text2.<a href="iz/strings.html#lineCount">lineCount</a> == 2);
+auto text3 = "0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n\n\n";
+assert(text3.<a href="iz/strings.html#lineCount">lineCount</a> == 12);
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="nextWord"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/strings.html#nextWord">nextWord</a>(Range)(ref Range range) pure @safe
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the next word within range.
+Words are spliited using the White characters, which are never included.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>auto text = " lorem ipsum 123456";
+assert(text.<a href="iz/strings.html#nextWord">nextWord</a> == "lorem");
+assert(text.<a href="iz/strings.html#nextWord">nextWord</a> == "ipsum");
+assert(text.<a href="iz/strings.html#nextWord">nextWord</a> == "123456");
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="byWord"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/strings.html#byWord">byWord</a>(Range)(auto ref Range range) 
+if(isInputRange!Range && isSomeChar!(ElementType!Range))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns an input range consisting of each non-blank word in the input argument.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>auto text = "aw yess, this is so cool";
+auto range = text.<a href="iz/strings.html#byWord">byWord</a>;
+assert(range.front == "aw");
+range.popFront;
+assert(range.front == "yess,");
+range.popFront;
+assert(range.front == "this");
+auto nums = "0 1 2 3 4 5 6 7 8 9";
+import std.algorithm.iteration: reduce;
+assert(nums.<a href="iz/strings.html#byWord">byWord</a>.reduce!((a,b) => a ~ b) == "0123456789");
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="wordCount"></a><div class="symbol"><div class="description"><pre><code>public size_t <a href="iz/strings.html#wordCount">wordCount</a>(Range)(Range range)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the word count within the input range.
+Words are separatedd by ascii whites. input range is not consumed.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>auto text = "1 2 3 4 5 6 7 8 9 \n 10";
+assert(text.<a href="iz/strings.html#wordCount">wordCount</a> == 10);
+assert(text == "1 2 3 4 5 6 7 8 9 \n 10");
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="nextSeparated"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/strings.html#nextSeparated">nextSeparated</a>(Range, Separators, <a href="http://dlang.org/type.html#basic-data-types">bool</a> strip = true)(
+    auto ref Range range, 
+    Separators sep)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the next separated word.
+Separators are always removed, white characters optionally.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>auto seps = <a href="iz/strings/CharMap.html">CharMap</a>[',', '\n'];
+auto text = "name, âge \n Douglas, 27 \n Sophia 26";
+assert(text.<a href="iz/strings.html#nextSeparated">nextSeparated</a>(seps) == "name");
+assert(text.<a href="iz/strings.html#nextSeparated">nextSeparated</a>(seps) == "âge");
+assert(text.<a href="iz/strings.html#nextSeparated">nextSeparated</a>(seps) == "Douglas");
+assert(text.<a href="iz/strings.html#nextSeparated">nextSeparated</a>(seps) == "27");
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="bySeparated"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/strings.html#bySeparated">bySeparated</a>(Range, Separators, <a href="http://dlang.org/type.html#basic-data-types">bool</a> strip = true)(
+    auto ref Range range, 
+    Separators sep) 
+if(isInputRange!Range && isSomeChar!(ElementType!Range))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns an input range consisting of each separated word in the input argument
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>auto text = "name = Douglas \n age =27 \n";
+auto range = text.<a href="iz/strings.html#bySeparated">bySeparated</a>(<a href="iz/strings/CharMap.html">CharMap</a>['=', '\n']);
+assert(range.front == "name");
+range.popFront;
+assert(range.front == "Douglas");
+range.popFront;
+assert(range.front == "age");
+range.popFront;
+assert(range.front == "27");
+range.popFront;
+assert(range.empty);
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="readDecNumber"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/strings.html#readDecNumber">readDecNumber</a>(Range)(auto ref Range range)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Immediatly reads a decimal number.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>auto text = "0123456 789";
+assert(text.<a href="iz/strings.html#readDecNumber">readDecNumber</a> == "0123456");
+text.popFront;
+assert(text.<a href="iz/strings.html#readDecNumber">readDecNumber</a> == "789");
+
+string t = "456";
+if (auto num = <a href="iz/strings.html#readDecNumber">readDecNumber</a>(t))
+    assert (num == "456");
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="readHexNumber"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/strings.html#readHexNumber">readHexNumber</a>(Range)(auto ref Range range)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Immediatly reads an hexadecimal number.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>auto text1 = "1a2B3C o";
+assert(text1.<a href="iz/strings.html#readHexNumber">readHexNumber</a> == "1a2B3C");
+assert(text1 == " o");
+auto text2 = "A897F2f2Ff2fF3c6C9c9Cc9cC9c123 o";
+assert(text2.<a href="iz/strings.html#readHexNumber">readHexNumber</a> == "A897F2f2Ff2fF3c6C9c9Cc9cC9c123");
+assert(text2 == " o");
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="stripLeftWhites"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/strings.html#stripLeftWhites">stripLeftWhites</a>(Range)(auto ref Range range)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Strips leading white characters.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>auto text = "  \n\r\v bla".dup;
+auto rng = <a href="iz/sugar/ArrayRange.html">ArrayRange</a>!char(text);
+rng.<a href="iz/strings.html#stripLeftWhites">stripLeftWhites</a>;
+assert(rng.array == "bla");
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="escape"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/strings.html#escape">escape</a>(Range)(
+    Range range, 
+    const <a href="http://dlang.org/type.html#basic-data-types">char</a>[2][] pairs) 
+if(isInputRange!Range && isSomeChar!(ElementType!Range))
+</code></pre>
+<div class="section "><h2>Contracts</h2><pre><code>in
+{
+    
+    foreach (pair; pairs)
+    {
+        assert (pair[0] != '\\', "the backslash should <a href="iz/sugar.html#not">not</a> be set as pair");
+        assert (pair[1] != '\\', "the backslash should <a href="iz/sugar.html#not">not</a> be set as pair");
+    }
+}
+</code></pre>
+
+</div>
+<div class="section"><h2></h2>
+<p>Escapes characters in the input text.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">range</td><td class="paramDoc"><p>The character range to process. The source is not consumed.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">pairs</td><td class="paramDoc"><p>An array of pair. Each pair (char[2]) defines a source and a
+     target character. The slash is automatically escaped and must not be
+     included in the array.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>An array of character whose type matches the range element type.
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>assert(`1"`<a href="iz/strings.html#escape">.escape</a>([['"','"']]) == `1\"`);
+assert(`1"1"11"1`<a href="iz/strings.html#escape">.escape</a>([['"','"']]) == `1\"1\"11\"1`);
+assert("\n\"1"<a href="iz/strings.html#escape">.escape</a>([['"','"'],['\n','n']]) == `\n\"1`);
+assert(`1\"`<a href="iz/strings.html#escape">.escape</a>([['"','"']]) == `1\\"`);
+assert(`\`<a href="iz/strings.html#escape">.escape</a>([]) == `\\`);
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="unEscape"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/strings.html#unEscape">unEscape</a>(Range)(
+    Range range, 
+    const <a href="http://dlang.org/type.html#basic-data-types">char</a>[2][] pairs) 
+if(isInputRange!Range && isSomeChar!(ElementType!Range))
+</code></pre>
+<div class="section "><h2>Contracts</h2><pre><code>in
+{
+    
+    foreach (pair; pairs)
+    {
+        assert (pair[0] != '\\', "the backslash should <a href="iz/sugar.html#not">not</a> be set as pair");
+        assert (pair[1] != '\\', "the backslash should <a href="iz/sugar.html#not">not</a> be set as pair");
+    }
+}
+</code></pre>
+
+</div>
+<div class="section"><h2></h2>
+<p>Un-escapes characters in the input text.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">range</td><td class="paramDoc"><p>The character range to process. The source is not consumed.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">pairs</td><td class="paramDoc"><p>An array of pair. Each pair (char[2]) defines a target and a
+     source character. The slash is automatically unescaped and must not be
+     included in the array.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>An array of character whose type matches the range element type.
+     Even if invalid, any unterminated sequence located at the end of the
+     range is appended to the result.
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>assert( `1\"`<a href="iz/strings.html#unEscape">.unEscape</a>([['"','"']]) == `1"`);
+assert(`1\"1\"11\"1`<a href="iz/strings.html#unEscape">.unEscape</a>([['"','"']]) == `1"1"11"1`);
+assert(`\n\"1`<a href="iz/strings.html#unEscape">.unEscape</a>([['"','"'],['\n','n']]) == "\n\"1");
+assert(`\\\\`<a href="iz/strings.html#unEscape">.unEscape</a>([]) == `\\`);
+assert(`\\`<a href="iz/strings.html#unEscape">.unEscape</a>([]) == `\`);
+assert(`\`<a href="iz/strings.html#unEscape">.unEscape</a>([]) == `\`);
+
+</code></pre>
+
+</div>
+</div></div><div class="description"><div class="section"><h2></h2>
+<p>iz string handling functions, mostly related to lexical scanning
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div><div class="section members"><h2>Variables</h2><table><tr><td><a href="iz/strings.html#decimalChars">decimalChars</a></td><td><pre><code><a href="iz/strings/CharRange.html">CharRange</a>
+</code></pre>
+</td><td></td></tr><tr><td><a href="iz/strings.html#octalChars">octalChars</a></td><td><pre><code><a href="iz/strings/CharRange.html">CharRange</a>
+</code></pre>
+</td><td></td></tr><tr><td><a href="iz/strings.html#hexChars">hexChars</a></td><td><pre><code><a href="iz/strings/CharMap.html">CharMap</a>
+</code></pre>
+</td><td></td></tr><tr><td><a href="iz/strings.html#whiteChars">whiteChars</a></td><td><pre><code><a href="iz/strings/CharMap.html">CharMap</a>
+</code></pre>
+</td><td></td></tr></table><h2>Functions</h2><table><tr><td><a href="iz/strings.html#nullTerminated">nullTerminated</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td>Returns: <p>When decoding is enabled, nullTerminated always returns a range of dchar
+     otherwise the front type is the same as target type of the pointer passed
+     as parameter.
+</p>
+</td></tr><tr><td><a href="iz/strings.html#nextWord">nextWord</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td>Returns: <p>A string containing the word. If the result length is null then the
+     range parameter has not been consumed.
+</p>
+</td></tr><tr><td><a href="iz/strings.html#nextWordUntil">nextWordUntil</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td>Returns: <p>A string containing the word. If the result length is null then the
+     range parameter has not been consumed.
+</p>
+</td></tr><tr><td><a href="iz/strings.html#skipWord">skipWord</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/strings.html#skipWordUntil">skipWordUntil</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/strings.html#nextSlice">nextSlice</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td>Returns: <p>At the tail a string whose length is less or equal to <i>len</i>, otherwise
+     always a string of length <i>len</i>.
+</p>
+</td></tr><tr><td><a href="iz/strings.html#canRead">canRead</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/strings.html#bySlice">bySlice</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/strings.html#readEol">readEol</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/strings.html#skipEol">skipEol</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/strings.html#nextLine">nextLine</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/strings.html#byLine">byLine</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/strings.html#lineCount">lineCount</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/strings.html#nextWord">nextWord</a><span class="extrainfo"><span class="method-attribs"><span class="attr-pure">pure</span>, <span class="attr-safe">@safe</span></span><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/strings.html#byWord">byWord</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/strings.html#wordCount">wordCount</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/strings.html#nextSeparated">nextSeparated</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/strings.html#bySeparated">bySeparated</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/strings.html#readDecNumber">readDecNumber</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/strings.html#readHexNumber">readHexNumber</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/strings.html#stripLeftWhites">stripLeftWhites</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/strings.html#escape">escape</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td>Returns: <p>An array of character whose type matches the range element type.
+</p>
+</td></tr><tr><td><a href="iz/strings.html#unEscape">unEscape</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td>Returns: <p>An array of character whose type matches the range element type.
+     Even if invalid, any unterminated sequence located at the end of the
+     range is appended to the result.
+</p>
+</td></tr></table><h2>Structs</h2><table><tr><td><a href="iz/strings/CharRange.html">CharRange</a></td><td></td><td></td></tr><tr><td><a href="iz/strings/CharMap.html">CharMap</a></td><td></td><td></td></tr><tr><td><a href="iz/strings/SuffixArray.html">SuffixArray</a></td><td></td><td></td></tr></table><h2>Templates</h2><table><tr><td><a href="iz/strings/isCharTester.html">isCharTester</a></td><td></td><td></td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

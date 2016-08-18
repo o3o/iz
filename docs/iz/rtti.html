@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../style.css"/>
+<script src="../highlight.pack.js"></script>
+<title>iz.rtti</title>
+<base href="../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.rtti</small>
+</div>
+<div class="sidebar">
+<a href="iz/rtti.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/rtti.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li>iz.<a href="iz/classes.html">classes</a></li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li>iz.<a href="iz/enumset.html">enumset</a></li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li><span class=" selected">iz.<a href="iz/rtti.html">rtti</a></span>
+</li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li>iz.<a href="iz/strings.html">strings</a></li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><a class="anchor" id="TypeCtors"></a><div class="symbol"><div class="description"><pre><code>alias TypeCtors = <a href="iz/enumset/EnumSet.html">EnumSet</a>!(<a href="iz/rtti/TypeCtor.html">TypeCtor</a>, <a href="iz/enumset.html#Set8">Set8</a>)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Set of TypeCtor.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="size"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">ubyte</a> <a href="iz/rtti.html#size">size</a>(<a href="iz/rtti/RtType.html">RtType</a> type)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Indicates the size of a variable according to its RtType
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Returns</h2>
+<p><pre style="display:inline;" class="d_inline_code">0</pre> is returned if the size is variable otherwise the equivalent
+     of the .sizeof property.
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>struct St {} St st;
+assert(st.<a href="iz/rtti.html#getRtti">getRtti</a>.type.<a href="iz/rtti.html#size">size</a> == 0);
+bool bo;
+assert(bo.<a href="iz/rtti.html#getRtti">getRtti</a>.type.<a href="iz/rtti.html#size">size</a> == 1);
+ushort us;
+assert(us.<a href="iz/rtti.html#getRtti">getRtti</a>.type.<a href="iz/rtti.html#size">size</a> == 2);
+uint ui;
+assert(ui.<a href="iz/rtti.html#getRtti">getRtti</a>.type.<a href="iz/rtti.html#size">size</a> == 4);
+long lo;
+assert(lo.<a href="iz/rtti.html#getRtti">getRtti</a>.type.<a href="iz/rtti.html#size">size</a> == 8);
+real re;
+assert(re.<a href="iz/rtti.html#getRtti">getRtti</a>.type.<a href="iz/rtti.html#size">size</a> == real.sizeof);
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="typeString"></a><div class="symbol"><div class="description"><pre><code>public string <a href="iz/rtti.html#typeString">typeString</a>(T)(T t)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the identifier of a type.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">t</td><td class="paramDoc"><p>Either a RtType or a pointer to a Rtti.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>For the basic types, always the equivalent of the keyword .stringof property.
+     For the other types, if <pre style="display:inline;" class="d_inline_code">t</pre> is a RtType then "struct" then "enum", "Object",
+     etc are returned, otherwise if <pre style="display:inline;" class="d_inline_code">t</pre> is a pointer to a Rtti then the type
+     identifier is returned, e.g "E" for <pre style="display:inline;" class="d_inline_code"><font color=blue>enum</font> E {e}</pre>.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="binTraits"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/rtti/BinTraits.html">BinTraits</a> binTraits
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets the delegates context.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="getRtti"></a><div class="symbol"><div class="description"><pre><code>public const(<a href="iz/rtti/Rtti.html">Rtti</a>)* <a href="iz/rtti.html#getRtti">getRtti</a>(const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] typeString)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the Rtti for the type that has its .stringof property
+equal to <pre style="display:inline;" class="d_inline_code">typeString</pre>.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="getRtti"></a><div class="symbol"><div class="description"><pre><code>public const(<a href="iz/rtti/Rtti.html">Rtti</a>)* <a href="iz/rtti.html#getRtti">getRtti</a>(A = <a href="http://dlang.org/type.html#basic-data-types">void</a>, B...)(auto ref B b) 
+if(B.length < 2)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Registers and returns the Rtti for the type (or the variable)
+passed as argument.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>import std.stdio;
+enum Option: ubyte {o1 = 2, o2, o3}
+Option option1, option2;
+// first call will register
+const(<a href="iz/rtti/Rtti.html">Rtti</a>)* rtti1 = <a href="iz/rtti.html#getRtti">getRtti</a>(option1);
+const(<a href="iz/rtti/Rtti.html">Rtti</a>)* rtti2 = <a href="iz/rtti.html#getRtti">getRtti</a>(option2);
+// variables of same type point to the same info.
+assert(rtti1 is rtti2);
+// get the <a href="iz/rtti/Rtti.html">Rtti</a> without the static type.
+const(<a href="iz/rtti/Rtti.html">Rtti</a>)* rtti3 = <a href="iz/rtti.html#getRtti">getRtti</a>("Option");
+assert(rtti3 is rtti1);
+assert(rtti3.enumInfo.identifier == "Option");
+assert(rtti3.enumInfo.<a href="iz/sugar.html#members">members</a> == ["o1", "o2", "o3"]);
+assert(rtti3.enumInfo.values == [2, 3, 4]);
+assert(rtti3.enumInfo.valueType is <a href="iz/rtti.html#getRtti">getRtti</a>!ubyte);
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="isPublisingStruct"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/rtti.html#isPublisingStruct">isPublisingStruct</a>(const(<a href="iz/rtti/Rtti.html">Rtti</a>)* ti)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns true if the Rtti passed as argument are for a "publising" struct.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><div class="description"><div class="section"><h2></h2>
+<p>The iz Runtime type informations.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div><div class="section members"><h2>Enums</h2><table><tr><td><a href="iz/rtti/TypeCtor.html">TypeCtor</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/RtType.html">RtType</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/StructType.html">StructType</a></td><td></td><td></td></tr></table><h2>Aliases</h2><table><tr><td><a href="iz/rtti.html#TypeCtors">TypeCtors</a></td><td><pre><code><a href="iz/enumset/EnumSet.html">EnumSet</a>!(<a href="iz/rtti/TypeCtor.html">TypeCtor</a>, <a href="iz/enumset.html#Set8">Set8</a>)
+</code></pre>
+</td><td></td></tr></table><h2>Variables</h2><table><tr><td><a href="iz/rtti.html#binTraits">binTraits</a></td><td><pre><code><a href="iz/rtti/BinTraits.html">BinTraits</a>
+</code></pre>
+</td><td></td></tr></table><h2>Functions</h2><table><tr><td><a href="iz/rtti.html#size">size</a><span class="extrainfo"></span></td><td></td><td>Returns: <p><pre style="display:inline;" class="d_inline_code">0</pre> is returned if the size is variable otherwise the equivalent
+     of the .sizeof property.
+</p>
+</td></tr><tr><td><a href="iz/rtti.html#typeString">typeString</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>For the basic types, always the equivalent of the keyword .stringof property.
+     For the other types, if <pre style="display:inline;" class="d_inline_code">t</pre> is a RtType then "struct" then "enum", "Object",
+     etc are returned, otherwise if <pre style="display:inline;" class="d_inline_code">t</pre> is a pointer to a Rtti then the type
+     identifier is returned, e.g "E" for <pre style="display:inline;" class="d_inline_code"><font color=blue>enum</font> E {e}</pre>.
+</p>
+</td></tr><tr><td><a href="iz/rtti.html#getRtti">getRtti</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/rtti.html#getRtti">getRtti</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/rtti.html#isPublisingStruct">isPublisingStruct</a><span class="extrainfo"></span></td><td></td><td></td></tr></table><h2>Structs</h2><table><tr><td><a href="iz/rtti/GenericStruct.html">GenericStruct</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/GenericEnum.html">GenericEnum</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/GenericFunPtr.html">GenericFunPtr</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/FunPtrInfo.html">FunPtrInfo</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/ClassInfo.html">ClassInfo</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/EnumInfo.html">EnumInfo</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/BinTraits.html">BinTraits</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/TextTraits.html">TextTraits</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/PubTraits.html">PubTraits</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/StructInfo.html">StructInfo</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/AAInfo.html">AAInfo</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/PointerInfo.html">PointerInfo</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/Rtti.html">Rtti</a></td><td></td><td></td></tr></table><h2>Templates</h2><table><tr><td><a href="iz/rtti/isBasicRtType.html">isBasicRtType</a></td><td></td><td></td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

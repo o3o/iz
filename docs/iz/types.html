@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../style.css"/>
+<script src="../highlight.pack.js"></script>
+<title>iz.types</title>
+<base href="../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.types</small>
+</div>
+<div class="sidebar">
+<a href="iz/types.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/types.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li>iz.<a href="iz/classes.html">classes</a></li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li>iz.<a href="iz/enumset.html">enumset</a></li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li>iz.<a href="iz/strings.html">strings</a></li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li><span class=" selected">iz.<a href="iz/types.html">types</a></span>
+</li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><a class="anchor" id="Ptr"></a><div class="symbol"><div class="description"><pre><code>alias Ptr = <a href="http://dlang.org/type.html#basic-data-types">void</a>*
+</code></pre>
+<div class="section"><h2></h2>
+<p>pointer.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="BasicTypes"></a><div class="symbol"><div class="description"><pre><code>alias BasicTypes = AliasSeq!(<a href="http://dlang.org/type.html#basic-data-types">bool</a>, <a href="http://dlang.org/type.html#basic-data-types">byte</a>, <a href="http://dlang.org/type.html#basic-data-types">ubyte</a>, <a href="http://dlang.org/type.html#basic-data-types">short</a>, <a href="http://dlang.org/type.html#basic-data-types">ushort</a>, <a href="http://dlang.org/type.html#basic-data-types">int</a>, <a href="http://dlang.org/type.html#basic-data-types">uint</a>, <a href="http://dlang.org/type.html#basic-data-types">long</a>, <a href="http://dlang.org/type.html#basic-data-types">ulong</a>, <a href="http://dlang.org/type.html#basic-data-types">float</a>, <a href="http://dlang.org/type.html#basic-data-types">double</a>, <a href="http://dlang.org/type.html#basic-data-types">real</a>, <a href="http://dlang.org/type.html#basic-data-types">char</a>, <a href="http://dlang.org/type.html#basic-data-types">wchar</a>, <a href="http://dlang.org/type.html#basic-data-types">dchar</a>)
+</code></pre>
+<div class="section"><h2></h2>
+<ul>
+<li>BasicTypes elements verify isBasicType().
+</li>
+</ul>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="isFixedSize"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/types.html#isFixedSize">isFixedSize</a>(T)()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns true if T is a fixed-length data.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="GenericDelegate"></a><div class="symbol"><div class="description"><pre><code>alias GenericDelegate = <a href="http://dlang.org/type.html#basic-data-types">void</a> delegate()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Common type for all the delagate kinds, when seen as a struct (ptr & funcptr).
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="GenericFunction"></a><div class="symbol"><div class="description"><pre><code>alias GenericFunction = <a href="http://dlang.org/type.html#basic-data-types">void</a> function()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Common type for all the function kinds.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="className"></a><div class="symbol"><div class="description"><pre><code>public string <a href="iz/types.html#className">className</a>(<a href="http://dlang.org/type.html#basic-data-types">bool</a> assumeDemangled = true, T)(T t) 
+if(is(T == class) || is(T == interface))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the dynamic class name of an Object or an interface.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">assumeDemangled</td><td class="paramDoc"><p>Must only be set to false if the class is declared in a unittest.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">t</td><td class="paramDoc"><p>Either an interface or a class instance.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>static interface I {}
+static class A{}
+static class B: I{}
+static class C{}
+assert(<a href="iz/types.html#className">className</a>(new A) == "A");
+assert(<a href="iz/types.html#className">className</a>(new B) == "B");
+assert(<a href="iz/types.html#className">className</a>(cast(Object)new A) == "A");
+assert(<a href="iz/types.html#className">className</a>(cast(Object)new B) == "B");
+assert(<a href="iz/types.html#className">className</a>(cast(I) new B) == "B");
+assert(<a href="iz/types.html#className">className</a>!(false)(new C) == "C");
+
+</code></pre>
+
+</div>
+</div></div><div class="description"><div class="section"><h2></h2>
+<p>Several templates, alias, traits or functions related to types.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>foreach(T; <a href="iz/types.html#BasicTypes">BasicTypes</a>)
+    assert( isBasicType!T, T.stringof);
+
+</code></pre>
+
+</div>
+</div><div class="section members"><h2>Aliases</h2><table><tr><td><a href="iz/types.html#Ptr">Ptr</a></td><td><pre><code><a href="http://dlang.org/type.html#basic-data-types">void</a>*
+</code></pre>
+</td><td></td></tr><tr><td><a href="iz/types.html#BasicTypes">BasicTypes</a></td><td><pre><code>AliasSeq!(<a href="http://dlang.org/type.html#basic-data-types">bool</a>, <a href="http://dlang.org/type.html#basic-data-types">byte</a>, <a href="http://dlang.org/type.html#basic-data-types">ubyte</a>, <a href="http://dlang.org/type.html#basic-data-types">short</a>, <a href="http://dlang.org/type.html#basic-data-types">ushort</a>, <a href="http://dlang.org/type.html#basic-data-types">int</a>, <a href="http://dlang.org/type.html#basic-data-types">uint</a>, <a href="http://dlang.org/type.html#basic-data-types">long</a>, <a href="http://dlang.org/type.html#basic-data-types">ulong</a>, <a href="http://dlang.org/type.html#basic-data-types">float</a>, <a href="http://dlang.org/type.html#basic-data-types">double</a>, <a href="http://dlang.org/type.html#basic-data-types">real</a>, <a href="http://dlang.org/type.html#basic-data-types">char</a>, <a href="http://dlang.org/type.html#basic-data-types">wchar</a>, <a href="http://dlang.org/type.html#basic-data-types">dchar</a>)
+</code></pre>
+</td><td></td></tr><tr><td><a href="iz/types.html#GenericDelegate">GenericDelegate</a></td><td><pre><code><a href="http://dlang.org/type.html#basic-data-types">void</a> delegate()
+</code></pre>
+</td><td></td></tr><tr><td><a href="iz/types.html#GenericFunction">GenericFunction</a></td><td><pre><code><a href="http://dlang.org/type.html#basic-data-types">void</a> function()
+</code></pre>
+</td><td></td></tr></table><h2>Functions</h2><table><tr><td><a href="iz/types.html#isFixedSize">isFixedSize</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/types.html#className">className</a><span class="extrainfo"></span></td><td></td><td></td></tr></table><h2>Templates</h2><table><tr><td><a href="iz/types/ScopedReachability.html">ScopedReachability</a></td><td></td><td></td></tr><tr><td><a href="iz/types/isMultiDimensionalArray.html">isMultiDimensionalArray</a></td><td></td><td>Returns: <p>true if T is a multi dimensional array
+</p>
+</td></tr><tr><td><a href="iz/types/dimensionCount.html">dimensionCount</a></td><td></td><td>Returns: <p>0 iftemplate <code class="d_inlinecode">T</code> is an not a build-in array, otherwise a number
+     at leat equal to 1, according to the array dimenssion count.
+</p>
+</td></tr><tr><td><a href="iz/types/ArrayElementType.html">ArrayElementType</a></td><td></td><td>Returns: <p>T element type.
+</p>
+</td></tr><tr><td><a href="iz/types/isOrderedEnum.html">isOrderedEnum</a></td><td></td><td>Returns: <p>true if T members type is integral and if the delta between each member
+     is one, false otherwise.
+</p>
+</td></tr><tr><td><a href="iz/types/defaultConstructor.html">defaultConstructor</a></td><td></td><td></td></tr><tr><td><a href="iz/types/hasDefaultConstructor.html">hasDefaultConstructor</a></td><td></td><td></td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

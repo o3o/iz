@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../style.css"/>
+<script src="../highlight.pack.js"></script>
+<title>iz.serializer</title>
+<base href="../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.serializer</small>
+</div>
+<div class="sidebar">
+<a href="iz/serializer.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/serializer.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li>iz.<a href="iz/classes.html">classes</a></li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li>iz.<a href="iz/enumset.html">enumset</a></li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li><span class=" selected">iz.<a href="iz/serializer.html">serializer</a></span>
+</li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li>iz.<a href="iz/strings.html">strings</a></li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><a class="anchor" id="isSerializable"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/serializer.html#isSerializable">isSerializable</a>(T)()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Only a sub set of the type representable as a Rtti are serializable.
+This template only evaluates to true if it's the case.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="value2text"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">char</a>[] <a href="iz/serializer.html#value2text">value2text</a>(const <a href="iz/serializer/SerNodeInfo.html">SerNodeInfo</a>* nodeInfo)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Converts the raw data contained in a SerNodeInfo to its string representation.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="text2value"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">ubyte</a>[] <a href="iz/serializer.html#text2value">text2value</a>(
+    <a href="http://dlang.org/type.html#basic-data-types">char</a>[] text, 
+    const <a href="iz/serializer/SerNodeInfo.html">SerNodeInfo</a>* nodeInfo)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Converts the literal representation to a ubyte array according to type.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="nodeInfo2Declarator"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/serializer.html#nodeInfo2Declarator">nodeInfo2Declarator</a>(const <a href="iz/serializer/SerNodeInfo.html">SerNodeInfo</a>* nodeInfo)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Restores the raw value contained in a SerNodeInfo using the associated setter.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="setNodeInfo"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/serializer.html#setNodeInfo">setNodeInfo</a>(T)(
+    <a href="iz/serializer/SerNodeInfo.html">SerNodeInfo</a>* nodeInfo, 
+    <a href="iz/properties/PropDescriptor.html">PropDescriptor</a>!T* descriptor)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Fills an SerNodeInfo according to an PropDescriptor
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="FormatWriter"></a><div class="symbol"><div class="description"><pre><code>alias FormatWriter = <a href="http://dlang.org/type.html#basic-data-types">void</a> function(
+    <a href="iz/serializer/IstNode.html">IstNode</a> istNode, 
+    <a href="iz/streams/Stream.html">Stream</a> stream, 
+    const <a href="iz/serializer/FormatToken.html">FormatToken</a> tok)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Prototype of a function that writes an IstNode representation to a Stream.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="FormatReader"></a><div class="symbol"><div class="description"><pre><code>alias FormatReader = <a href="iz/serializer/FormatToken.html">FormatToken</a> function(
+    <a href="iz/streams/Stream.html">Stream</a> stream, 
+    <a href="iz/serializer/IstNode.html">IstNode</a> istNode)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Prototype of a function that reads an IstNode representation from a Stream.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="defaultFormat"></a><div class="symbol"><div class="description"><pre><code>alias defaultFormat = <a href="iz/serializer/SerializationFormat.html">SerializationFormat</a>.iztxt
+</code></pre>
+<div class="section"><h2></h2>
+<p>The serialization format used when not specified.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="WantDescriptorEvent"></a><div class="symbol"><div class="description"><pre><code>alias WantDescriptorEvent = <a href="http://dlang.org/type.html#basic-data-types">void</a> delegate(
+    <a href="iz/serializer/IstNode.html">IstNode</a> node, 
+    ref <a href="iz/types.html#Ptr">Ptr</a> descriptor, 
+    out <a href="http://dlang.org/type.html#basic-data-types">bool</a> stop)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Prototype of the event triggered when a serializer misses a property descriptor.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">node</td><td class="paramDoc"><p>The information used to determine the descriptor to return.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">descriptor</td><td class="paramDoc"><p>What the serializer want. If set to null then node is not restored.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">stop</td><td class="paramDoc"><p>the callee can set this value to true to stop the restoration
+     process. According to the serialization context, this value can be noop.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="WantAggregateEvent"></a><div class="symbol"><div class="description"><pre><code>alias WantAggregateEvent = <a href="http://dlang.org/type.html#basic-data-types">void</a> delegate(
+    <a href="iz/serializer/IstNode.html">IstNode</a> node, 
+    ref <a href="http://dlang.org/type.html#basic-data-types">void</a>* aggregate, 
+    out <a href="http://dlang.org/type.html#basic-data-types">bool</a> fromRefererence)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Prototype of the event called when a serializer fails to get an aggregate to
+deserialize.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">node</td><td class="paramDoc"><p>The information the callee uses to set the undefined aggregate.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">aggregate</td><td class="paramDoc"><p>The object or a pointer to the struct where the deserialization
+         continues.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">fromReference</td><td class="paramDoc"><p>When set to true, the serializer tries to find the aggregate
+         in the ReferenceMan.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="publisherToFile"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/serializer.html#publisherToFile">publisherToFile</a>(
+    Object pub, 
+    in <a href="http://dlang.org/type.html#basic-data-types">char</a>[] filename, 
+    <a href="iz/serializer/SerializationFormat.html">SerializationFormat</a> format = <a href="iz/serializer.html#defaultFormat">defaultFormat</a>, 
+    <a href="iz/serializer.html#WantAggregateEvent">WantAggregateEvent</a> wae = null, 
+    <a href="iz/serializer.html#WantDescriptorEvent">WantDescriptorEvent</a> wde = null)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Serializes a PropertyPublisher to a file.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>This helper function works in pair with fileToPublisher().
+It is typically used to save configuration files, session backups, etc.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">pub</td><td class="paramDoc"><p>The PropertyPublisher to save.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">filename</td><td class="paramDoc"><p>The target file, always created or overwritten.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">format</td><td class="paramDoc"><p>Optional, the serialization format, by default iztext.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="fileToPublisher"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/serializer.html#fileToPublisher">fileToPublisher</a>(
+    in <a href="http://dlang.org/type.html#basic-data-types">char</a>[] filename, 
+    Object pub, 
+    <a href="iz/serializer/SerializationFormat.html">SerializationFormat</a> format = <a href="iz/serializer.html#defaultFormat">defaultFormat</a>, 
+    <a href="iz/serializer.html#WantAggregateEvent">WantAggregateEvent</a> wae = null, 
+    <a href="iz/serializer.html#WantDescriptorEvent">WantDescriptorEvent</a> wde = null)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Deserializes a file to a PropertyPublisher.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>This helper function works in pair with publisherToFile().
+It is typically used to load configuration files, session backups, etc.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">filename</td><td class="paramDoc"><p>The source file.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">pub</td><td class="paramDoc"><p>The target PropertyPublisher.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">format</td><td class="paramDoc"><p>optional, the serialization format, by default iztext.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><div class="description"><div class="section imports"><h2>Public imports</h2><ul><li><a href="iz/types.html">iz.types</a></li><li><a href="iz/properties.html">iz.properties</a></li><li><a href="iz/referencable.html">iz.referencable</a></li><li><a href="iz/streams.html">iz.streams</a></li>
+</ul>
+
+</div>
+<div class="section"><h2></h2>
+<p>The iz serialization system.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div><div class="section members"><h2>Enums</h2><table><tr><td><a href="iz/serializer/SerializationFormat.html">SerializationFormat</a></td><td></td><td></td></tr><tr><td><a href="iz/serializer/FormatToken.html">FormatToken</a></td><td></td><td></td></tr></table><h2>Aliases</h2><table><tr><td><a href="iz/serializer.html#FormatWriter">FormatWriter</a></td><td><pre><code><a href="http://dlang.org/type.html#basic-data-types">void</a> function(
+    <a href="iz/serializer/IstNode.html">IstNode</a> istNode, 
+    <a href="iz/streams/Stream.html">Stream</a> stream, 
+    const <a href="iz/serializer/FormatToken.html">FormatToken</a> tok)
+</code></pre>
+</td><td></td></tr><tr><td><a href="iz/serializer.html#FormatReader">FormatReader</a></td><td><pre><code><a href="iz/serializer/FormatToken.html">FormatToken</a> function(
+    <a href="iz/streams/Stream.html">Stream</a> stream, 
+    <a href="iz/serializer/IstNode.html">IstNode</a> istNode)
+</code></pre>
+</td><td></td></tr><tr><td><a href="iz/serializer.html#defaultFormat">defaultFormat</a></td><td><pre><code><a href="iz/serializer/SerializationFormat.html">SerializationFormat</a>.iztxt
+</code></pre>
+</td><td></td></tr><tr><td><a href="iz/serializer.html#WantDescriptorEvent">WantDescriptorEvent</a></td><td><pre><code><a href="http://dlang.org/type.html#basic-data-types">void</a> delegate(
+    <a href="iz/serializer/IstNode.html">IstNode</a> node, 
+    ref <a href="iz/types.html#Ptr">Ptr</a> descriptor, 
+    out <a href="http://dlang.org/type.html#basic-data-types">bool</a> stop)
+</code></pre>
+</td><td></td></tr><tr><td><a href="iz/serializer.html#WantAggregateEvent">WantAggregateEvent</a></td><td><pre><code><a href="http://dlang.org/type.html#basic-data-types">void</a> delegate(
+    <a href="iz/serializer/IstNode.html">IstNode</a> node, 
+    ref <a href="http://dlang.org/type.html#basic-data-types">void</a>* aggregate, 
+    out <a href="http://dlang.org/type.html#basic-data-types">bool</a> fromRefererence)
+</code></pre>
+</td><td></td></tr></table><h2>Functions</h2><table><tr><td><a href="iz/serializer.html#isSerializable">isSerializable</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/serializer.html#value2text">value2text</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/serializer.html#text2value">text2value</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/serializer.html#nodeInfo2Declarator">nodeInfo2Declarator</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/serializer.html#setNodeInfo">setNodeInfo</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/serializer.html#publisherToFile">publisherToFile</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/serializer.html#fileToPublisher">fileToPublisher</a><span class="extrainfo"></span></td><td></td><td></td></tr></table><h2>Structs</h2><table><tr><td><a href="iz/serializer/SerNodeInfo.html">SerNodeInfo</a></td><td></td><td></td></tr></table><h2>Classes</h2><table><tr><td><a href="iz/serializer/SerializableReference.html">SerializableReference</a></td><td></td><td></td></tr><tr><td><a href="iz/serializer/IstNode.html">IstNode</a></td><td></td><td></td></tr><tr><td><a href="iz/serializer/Serializer.html">Serializer</a></td><td></td><td></td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

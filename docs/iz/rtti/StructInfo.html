@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../../style.css"/>
+<script src="../../highlight.pack.js"></script>
+<title>StructInfo</title>
+<base href="../../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.<a href=iz/rtti.html>rtti</a>.</small><span class="highlight">StructInfo</span>
+</div>
+<div class="sidebar">
+<a href="iz/rtti.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/rtti.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li>iz.<a href="iz/classes.html">classes</a></li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li>iz.<a href="iz/enumset.html">enumset</a></li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li><span class=" selected">iz.<a href="iz/rtti.html">rtti</a></span>
+</li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li>iz.<a href="iz/strings.html">strings</a></li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><div class="description"><pre><code>public struct StructInfo
+</code></pre>
+<div class="section"><h2></h2>
+<p>Runtime information for the struct.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>public this(
+    string identifier, 
+    <a href="iz/rtti/StructType.html">StructType</a> type)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Constructs the info for a "noname" struct
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>public this(T)(
+    string identifier, 
+    <a href="iz/rtti/StructType.html">StructType</a> type, 
+    T t)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Constructs the info for a specual struct.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="identifier"></a><div class="symbol"><div class="description"><pre><code>public string identifier
+</code></pre>
+<div class="section"><h2></h2>
+<p>Indicates the struct type identifier.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="type"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/rtti/StructType.html">StructType</a> type
+</code></pre>
+<div class="section"><h2></h2>
+<p>Indicates the special struct type.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="structSpecialInfo"></a><div class="symbol"><div class="description"><pre><code>public StructTraits structSpecialInfo
+</code></pre>
+<div class="section"><h2></h2>
+<p>The information for the structure.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="binTraits"></a><div class="symbol"><div class="description"><pre><code>public const(<a href="iz/rtti/BinTraits.html">BinTraits</a>)* <a href="iz/rtti/StructInfo.html#binTraits">binTraits</a>() const
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the struct information when structType is equal to StructType._binary
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="textTraits"></a><div class="symbol"><div class="description"><pre><code>public const(<a href="iz/rtti/TextTraits.html">TextTraits</a>)* <a href="iz/rtti/StructInfo.html#textTraits">textTraits</a>() const
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the struct information when structType is equal to StructType._text
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="pubTraits"></a><div class="symbol"><div class="description"><pre><code>public const(<a href="iz/rtti/PubTraits.html">PubTraits</a>)* <a href="iz/rtti/StructInfo.html#pubTraits">pubTraits</a>() const
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the struct information when structType is equal to StructType._publisher
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><div class="section members"><h2>Variables</h2><table><tr><td><a href="iz/rtti/StructInfo.html#identifier">identifier</a></td><td><pre><code>string
+</code></pre>
+</td><td></td></tr><tr><td><a href="iz/rtti/StructInfo.html#type">type</a></td><td><pre><code><a href="iz/rtti/StructType.html">StructType</a>
+</code></pre>
+</td><td></td></tr><tr><td><a href="iz/rtti/StructInfo.html#structSpecialInfo">structSpecialInfo</a></td><td><pre><code>StructTraits
+</code></pre>
+</td><td></td></tr></table><h2>Functions</h2><table><tr><td><a href="iz/rtti/StructInfo.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/StructInfo.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/StructInfo.html#binTraits">binTraits</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/rtti/StructInfo.html#textTraits">textTraits</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/rtti/StructInfo.html#pubTraits">pubTraits</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span></span></span></td><td></td><td></td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

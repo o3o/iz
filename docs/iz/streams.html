@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../style.css"/>
+<script src="../highlight.pack.js"></script>
+<title>iz.streams</title>
+<base href="../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.streams</small>
+</div>
+<div class="sidebar">
+<a href="iz/streams.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/streams.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li>iz.<a href="iz/classes.html">classes</a></li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li>iz.<a href="iz/enumset.html">enumset</a></li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li><span class=" selected">iz.<a href="iz/streams.html">streams</a></span>
+</li>
+<li>iz.<a href="iz/strings.html">strings</a></li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><a class="anchor" id="cmThere"></a><div class="symbol"><div class="description"><pre><code>public immutable <a href="http://dlang.org/type.html#basic-data-types">int</a> cmThere
+</code></pre>
+<div class="section"><h2></h2>
+<p>FileStream creation mode 'There': opens only if exists.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="cmNotThere"></a><div class="symbol"><div class="description"><pre><code>public immutable <a href="http://dlang.org/type.html#basic-data-types">int</a> cmNotThere
+</code></pre>
+<div class="section"><h2></h2>
+<p>FileStream creation mode 'NotThere': creates only if not exists.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="cmAlways"></a><div class="symbol"><div class="description"><pre><code>public immutable <a href="http://dlang.org/type.html#basic-data-types">int</a> cmAlways
+</code></pre>
+<div class="section"><h2></h2>
+<p>FileStream creation mode 'Always': creates if not exists otherwise open.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="shNone"></a><div class="symbol"><div class="description"><pre><code>public immutable <a href="http://dlang.org/type.html#basic-data-types">int</a> shNone
+</code></pre>
+<div class="section"><h2></h2>
+<p>defines the FileStream share modes.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="shRead"></a><div class="symbol"><div class="description"><pre><code>public immutable <a href="http://dlang.org/type.html#basic-data-types">int</a> shRead
+</code></pre>
+<div class="section"><h2></h2>
+<p>defines the FileStream share modes.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="shWrite"></a><div class="symbol"><div class="description"><pre><code>public immutable <a href="http://dlang.org/type.html#basic-data-types">int</a> shWrite
+</code></pre>
+<div class="section"><h2></h2>
+<p>defines the FileStream share modes.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="shAll"></a><div class="symbol"><div class="description"><pre><code>public immutable <a href="http://dlang.org/type.html#basic-data-types">int</a> shAll
+</code></pre>
+<div class="section"><h2></h2>
+<p>defines the FileStream share modes.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="acRead"></a><div class="symbol"><div class="description"><pre><code>public immutable <a href="http://dlang.org/type.html#basic-data-types">uint</a> acRead
+</code></pre>
+<div class="section"><h2></h2>
+<p>defines the FileStream access modes.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="acWrite"></a><div class="symbol"><div class="description"><pre><code>public immutable <a href="http://dlang.org/type.html#basic-data-types">uint</a> acWrite
+</code></pre>
+<div class="section"><h2></h2>
+<p>defines the FileStream access modes.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="acAll"></a><div class="symbol"><div class="description"><pre><code>public immutable <a href="http://dlang.org/type.html#basic-data-types">uint</a> acAll
+</code></pre>
+<div class="section"><h2></h2>
+<p>defines the FileStream access modes.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="isHandleValid"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/streams.html#isHandleValid">isHandleValid</a>(StreamHandle aHandle) pure @nogc @safe
+</code></pre>
+<div class="section"><h2></h2>
+<p>returns true if aHandle is valid.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="cmToSystem"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">int</a> <a href="iz/streams.html#cmToSystem">cmToSystem</a>(<a href="http://dlang.org/type.html#basic-data-types">int</a> aCreationMode) pure @nogc @safe
+</code></pre>
+<div class="section"><h2></h2>
+<p>translates a cmXX to a platform specific option.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="shNone"></a><div class="symbol"><div class="description"><pre><code>public immutable <a href="http://dlang.org/type.html#basic-data-types">int</a> shNone
+</code></pre>
+<div class="section"><h2></h2>
+<p>share modes. (does not allow execution)
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="acRead"></a><div class="symbol"><div class="description"><pre><code>public immutable <a href="http://dlang.org/type.html#basic-data-types">uint</a> acRead
+</code></pre>
+<div class="section"><h2></h2>
+<p>access modes.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="pdIn"></a><div class="symbol"><div class="description"><pre><code>public immutable <a href="http://dlang.org/type.html#basic-data-types">uint</a> pdIn
+</code></pre>
+<div class="section"><h2></h2>
+<p>pipe direction
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="isHandleValid"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/streams.html#isHandleValid">isHandleValid</a>(StreamHandle aHandle) pure @nogc @safe
+</code></pre>
+<div class="section"><h2></h2>
+<p>returns true if aHandle is valid.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="cmToSystem"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">int</a> <a href="iz/streams.html#cmToSystem">cmToSystem</a>(<a href="http://dlang.org/type.html#basic-data-types">int</a> aCreationMode) pure @nogc @safe
+</code></pre>
+<div class="section"><h2></h2>
+<p>translates a cmXX to a platform specific option.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="genReadWriteVar"></a><div class="symbol"><div class="description"><pre><code>public string <a href="iz/streams.html#genReadWriteVar">genReadWriteVar</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Generates all the typed write() and read() of a Stream implementation.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="streamRange"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/streams.html#streamRange">streamRange</a>(T, ST)(ST st) 
+if(is(ST : <a href="iz/streams/Stream.html">Stream</a>))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Helper designed to construct a new StreamRange allocated on the C heap.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">ST</td><td class="paramDoc"><p>The Stream descendant for which the range will be created.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">T</td><td class="paramDoc"><p>The range element type.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>A pointer to a StreamRange that has to be free manually with <code class="d_inlinecode">destruct()</code>.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="copyStream"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/streams.html#copyStream">copyStream</a>(
+    <a href="iz/streams/Stream.html">Stream</a> source, 
+    <a href="iz/streams/Stream.html">Stream</a> target) @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Copies the content of a Stream to another one.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>The position in the source is preserved.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">source</td><td class="paramDoc"><p>The Stream instance whose content will be copied.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">target</td><td class="paramDoc"><p>The Stream instance whose content will be replaced.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="writeRange"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/streams.html#writeRange">writeRange</a>(R)(
+    <a href="iz/streams/Stream.html">Stream</a> target, 
+    R r) 
+if(isInputRange!R)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Writes an input range to a stream.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>A failure can be verified by testing if the range is empty after the call.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">target</td><td class="paramDoc"><p>A Stream instance.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">r</td><td class="paramDoc"><p>An input range.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="writeArray"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/streams.html#writeArray">writeArray</a>(<a href="http://dlang.org/type.html#basic-data-types">bool</a> WriteLength = true, T)(
+    <a href="iz/streams/Stream.html">Stream</a> str, 
+    auto ref T t) 
+if(isArray!T && !<a href="iz/types/isMultiDimensionalArray.html">isMultiDimensionalArray</a>!T)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Writes an unidimensional array in a stream.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>By default writes the array length as a ulong and then always the array content.
+While writeRange() already allows to write an array, there is no clue about
+its length. Additionally this function is more efficient.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">WriteLength</td><td class="paramDoc"><p>When set to true (the default), the array length is written.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">str</td><td class="paramDoc"><p>The Stream where data are written.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">t</td><td class="paramDoc"><p>The array to write.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="readArray"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/streams.html#readArray">readArray</a>(<a href="http://dlang.org/type.html#basic-data-types">bool</a> ReadLength = true, T)(
+    <a href="iz/streams/Stream.html">Stream</a> str, 
+    auto ref T t) 
+if(isArray!T && !<a href="iz/types/isMultiDimensionalArray.html">isMultiDimensionalArray</a>!T)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Reads an unidimensional array from a stream.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>By default reads the array length as a ulong and then always the array content.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">ReadLength</td><td class="paramDoc"><p>When set to true (the default), the array length is read.
+     Otherwise the data are read according to the current array length.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">str</td><td class="paramDoc"><p>The Stream where data are read.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">t</td><td class="paramDoc"><p>The array to write.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><div class="description"><div class="section"><h2></h2>
+<p>iz streams, standard streams implementation with several extention related
+to D ranges.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div><div class="section members"><h2>Enums</h2><table><tr><td><a href="iz/streams/SeekMode.html">SeekMode</a></td><td></td><td></td></tr></table><h2>Variables</h2><table><tr><td><a href="iz/streams.html#cmThere">cmThere</a></td><td><pre><code><a href="http://dlang.org/type.html#basic-data-types">int</a>
+</code></pre>
+</td><td></td></tr><tr><td><a href="iz/streams.html#cmNotThere">cmNotThere</a></td><td><pre><code><a href="http://dlang.org/type.html#basic-data-types">int</a>
+</code></pre>
+</td><td></td></tr><tr><td><a href="iz/streams.html#cmAlways">cmAlways</a></td><td><pre><code><a href="http://dlang.org/type.html#basic-data-types">int</a>
+</code></pre>
+</td><td></td></tr><tr><td><a href="iz/streams.html#shNone">shNone</a></td><td><pre><code><a href="http://dlang.org/type.html#basic-data-types">int</a>
+</code></pre>
+</td><td></td></tr><tr><td><a href="iz/streams.html#shRead">shRead</a></td><td><pre><code><a href="http://dlang.org/type.html#basic-data-types">int</a>
+</code></pre>
+</td><td></td></tr><tr><td><a href="iz/streams.html#shWrite">shWrite</a></td><td><pre><code><a href="http://dlang.org/type.html#basic-data-types">int</a>
+</code></pre>
+</td><td></td></tr><tr><td><a href="iz/streams.html#shAll">shAll</a></td><td><pre><code><a href="http://dlang.org/type.html#basic-data-types">int</a>
+</code></pre>
+</td><td></td></tr><tr><td><a href="iz/streams.html#acRead">acRead</a></td><td><pre><code><a href="http://dlang.org/type.html#basic-data-types">uint</a>
+</code></pre>
+</td><td></td></tr><tr><td><a href="iz/streams.html#acWrite">acWrite</a></td><td><pre><code><a href="http://dlang.org/type.html#basic-data-types">uint</a>
+</code></pre>
+</td><td></td></tr><tr><td><a href="iz/streams.html#acAll">acAll</a></td><td><pre><code><a href="http://dlang.org/type.html#basic-data-types">uint</a>
+</code></pre>
+</td><td></td></tr><tr><td><a href="iz/streams.html#shNone">shNone</a></td><td><pre><code><a href="http://dlang.org/type.html#basic-data-types">int</a>
+</code></pre>
+</td><td></td></tr><tr><td><a href="iz/streams.html#acRead">acRead</a></td><td><pre><code><a href="http://dlang.org/type.html#basic-data-types">uint</a>
+</code></pre>
+</td><td></td></tr><tr><td><a href="iz/streams.html#pdIn">pdIn</a></td><td><pre><code><a href="http://dlang.org/type.html#basic-data-types">uint</a>
+</code></pre>
+</td><td></td></tr></table><h2>Functions</h2><table><tr><td><a href="iz/streams.html#isHandleValid">isHandleValid</a><span class="extrainfo"><span class="method-attribs"><span class="attr-pure">pure</span>, <span class="attr-nogc">@nogc</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/streams.html#cmToSystem">cmToSystem</a><span class="extrainfo"><span class="method-attribs"><span class="attr-pure">pure</span>, <span class="attr-nogc">@nogc</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/streams.html#isHandleValid">isHandleValid</a><span class="extrainfo"><span class="method-attribs"><span class="attr-pure">pure</span>, <span class="attr-nogc">@nogc</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/streams.html#cmToSystem">cmToSystem</a><span class="extrainfo"><span class="method-attribs"><span class="attr-pure">pure</span>, <span class="attr-nogc">@nogc</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/streams.html#genReadWriteVar">genReadWriteVar</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/streams.html#streamRange">streamRange</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td>Returns: <p>A pointer to a StreamRange that has to be free manually with <code class="d_inlinecode">destruct()</code>.
+</p>
+</td></tr><tr><td><a href="iz/streams.html#copyStream">copyStream</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/streams.html#writeRange">writeRange</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/streams.html#writeArray">writeArray</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/streams.html#readArray">readArray</a><span class="extrainfo"></span></td><td></td><td></td></tr></table><h2>Structs</h2><table><tr><td><a href="iz/streams/StreamRange.html">StreamRange</a></td><td></td><td></td></tr></table><h2>Interfaces</h2><table><tr><td><a href="iz/streams/StreamPersist.html">StreamPersist</a></td><td></td><td></td></tr><tr><td><a href="iz/streams/FilePersist8.html">FilePersist8</a></td><td></td><td></td></tr><tr><td><a href="iz/streams/Stream.html">Stream</a></td><td></td><td></td></tr></table><h2>Classes</h2><table><tr><td><a href="iz/streams/SystemStream.html">SystemStream</a></td><td></td><td></td></tr><tr><td><a href="iz/streams/FileStream.html">FileStream</a></td><td></td><td></td></tr><tr><td><a href="iz/streams/MemoryStream.html">MemoryStream</a></td><td></td><td></td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

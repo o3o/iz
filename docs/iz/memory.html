@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../style.css"/>
+<script src="../highlight.pack.js"></script>
+<title>iz.memory</title>
+<base href="../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.memory</small>
+</div>
+<div class="sidebar">
+<a href="iz/memory.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/memory.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li>iz.<a href="iz/classes.html">classes</a></li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li>iz.<a href="iz/enumset.html">enumset</a></li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li><span class=" selected">iz.<a href="iz/memory.html">memory</a></span>
+</li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li>iz.<a href="iz/strings.html">strings</a></li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><a class="anchor" id="getMem"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/types.html#Ptr">Ptr</a> <a href="iz/memory.html#getMem">getMem</a>(size_t size) nothrow @trusted @nogc
+</code></pre>
+<div class="section "><h2>Contracts</h2><pre><code>in
+{
+    assert (<a href="iz/rtti.html#size">size</a>);
+}
+out (result)
+{
+    assert (result, "Out of memory");
+}
+</code></pre>
+
+</div>
+<div class="section"><h2></h2>
+<p>Like malloc() but for @safe context.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="reallocMem"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/types.html#Ptr">Ptr</a> <a href="iz/memory.html#reallocMem">reallocMem</a>(
+    ref <a href="iz/types.html#Ptr">Ptr</a> src, 
+    size_t newSize) nothrow @trusted @nogc
+</code></pre>
+<div class="section "><h2>Contracts</h2><pre><code>in
+{
+    assert (newSize);
+    assert (src);
+}
+</code></pre>
+
+</div>
+<div class="section"><h2></h2>
+<p>Like realloc() but for @safe context.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="moveMem"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/types.html#Ptr">Ptr</a> <a href="iz/memory.html#moveMem">moveMem</a>(
+    <a href="iz/types.html#Ptr">Ptr</a> dst, 
+    <a href="iz/types.html#Ptr">Ptr</a> src, 
+    size_t count) nothrow @trusted @nogc
+</code></pre>
+<div class="section "><h2>Contracts</h2><pre><code>in
+{
+    if (count)
+    {
+        assert (dst);
+        assert (src);
+    }
+}
+</code></pre>
+
+</div>
+<div class="section"><h2></h2>
+<p>Like memmove() but for @safe context.
+dst and src can overlap.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">dst</td><td class="paramDoc"><p>The data source.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">src</td><td class="paramDoc"><p>The data destination.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">count</td><td class="paramDoc"><p>The count of byte to meove from src to dst.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>the pointer to the destination, (same as dst).
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="copyMem"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/types.html#Ptr">Ptr</a> <a href="iz/memory.html#copyMem">copyMem</a>(
+    <a href="iz/types.html#Ptr">Ptr</a> dst, 
+    <a href="iz/types.html#Ptr">Ptr</a> src, 
+    size_t count) nothrow @trusted @nogc
+</code></pre>
+<div class="section "><h2>Contracts</h2><pre><code>in
+{
+    if (count)
+    {
+        assert (dst);
+        assert (src);
+        assert (dst + count <= src || dst >= src + count);
+    }
+}
+</code></pre>
+
+</div>
+<div class="section"><h2></h2>
+<p>Like memmove() but for @safe context.
+dst and src can't overlap.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">dst</td><td class="paramDoc"><p>The data source.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">src</td><td class="paramDoc"><p>The data destination.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">count</td><td class="paramDoc"><p>The count of byte to meove from src to dst.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>the pointer to the destination, (same as dst).
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="freeMem"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/memory.html#freeMem">freeMem</a>(T)(auto ref T src) nothrow @trusted @nogc 
+if(isPointer!T && isBasicType!(pointerTarget!T))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Frees a manually allocated pointer to a basic type.
+Like free() but for @safe context.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">src</td><td class="paramDoc"><p>The pointer to free.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="construct"></a><div class="symbol"><div class="description"><pre><code>public CT <a href="iz/memory.html#construct">construct</a>(CT, A...)(A a) @trusted 
+if(is(CT == class) && !isAbstractClass!CT)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns a new, GC-free, class instance.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">CT</td><td class="paramDoc"><p>A class type.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">a</td><td class="paramDoc"><p>Variadic parameters passed to the constructor.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="construct"></a><div class="symbol"><div class="description"><pre><code>public Object <a href="iz/memory.html#construct">construct</a>(TypeInfo_Class tic) @trusted
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns a new, GC-free, class instance.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>This overload is designed to create factories and like the default
+Object.factory method, it only calls, if possible, the default constructor.
+The factory() function implemented in this iz.memory is based on this
+construct() overload.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">tic</td><td class="paramDoc"><p>The TypeInfo_Class of the Object to create.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="construct"></a><div class="symbol"><div class="description"><pre><code>public ST* <a href="iz/memory.html#construct">construct</a>(ST, A...)(A a) @trusted 
+if(is(ST == struct) || is(ST == union))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns a new, GC-free, pointer to a struct.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">ST</td><td class="paramDoc"><p>A struct type.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">a</td><td class="paramDoc"><p>Variadic parameters passed to the constructor.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="destruct"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/memory.html#destruct">destruct</a>(T)(auto ref T* instance)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Destructs a struct or a union that's been previously constructed
+with <code class="d_inlinecode">construct()</code>.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>The function calls the destructor and, when passed as reference,
+set the the instance to null.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">T</td><td class="paramDoc"><p>A union or a struct type, likely to be infered.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">instance</td><td class="paramDoc"><p>A <code class="d_inlinecode">T</code> instance.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="destruct"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/memory.html#destruct">destruct</a>(<a href="http://dlang.org/type.html#basic-data-types">bool</a> assumeNoCtor = false, T)(auto ref T instance) 
+if(is(T == class) && T.stringof != Object.stringof)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Destructs a class that's been previously constructed with <code class="d_inlinecode">construct()</code>.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>The function calls the destructor and, when passed as reference,
+set the the instance to null.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">assumeNoCtor</td><td class="paramDoc"><p>When no __ctor is found this avoids a to search one
+     in the sub classes.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">T</td><td class="paramDoc"><p>A class type, likely to be infered.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">instance</td><td class="paramDoc"><p>A <code class="d_inlinecode">T</code> instance.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="destruct"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/memory.html#destruct">destruct</a>(T)(auto ref T instance) 
+if(is(T == class) && T.stringof == Object.stringof)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Destructs a class that's been previously constructed with <code class="d_inlinecode">construct()</code>.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>This overload is never @nogc. It should be used for classes that are downcasted
+to a base type, where a __ctor is not yet implemented.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">T</td><td class="paramDoc"><p>A class type, likely to be infered.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">instance</td><td class="paramDoc"><p>A <code class="d_inlinecode">T</code> instance.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="destruct"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/memory.html#destruct">destruct</a>(T)(auto ref T instance) 
+if(is(T == interface))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Destructs an interface implemented in an Object that's been previously
+constructed with <code class="d_inlinecode">construct()</code>.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>This overload is never @nogc.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">T</td><td class="paramDoc"><p>A class type, likely to be infered.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">instance</td><td class="paramDoc"><p>A <code class="d_inlinecode">T</code> instance.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="newPtr"></a><div class="symbol"><div class="description"><pre><code>public T* <a href="iz/memory.html#newPtr">newPtr</a>(T, <a href="http://dlang.org/type.html#basic-data-types">bool</a> preFill = false)() 
+if(isBasicType!T)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns a pointer to a new, GC-free, basic variable.
+Any variable allocated using this function must be manually freed with freeMem.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">T</td><td class="paramDoc"><p>The type of the pointer to return.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">preFill</td><td class="paramDoc"><p>Optional, boolean indicating if the result has to be initialized.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="destructEach"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/memory.html#destructEach">destructEach</a>(Objs...)(auto ref Objs objs) 
+if(Objs.length > 1)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Frees and invalidates a list of classes instances or struct pointers.
+<code class="d_inlinecode">destruct()</code> is called for each item.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">objs</td><td class="paramDoc"><p>Variadic list of Object instances.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="registerFactoryClass"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/memory.html#registerFactoryClass">registerFactoryClass</a>(T)(string name = "") 
+if(is(T == class) && !isAbstractClass!T)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Register a class type that can be created dynamically, using its name.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>Class registration should only be done in module constructors. This allow
+the registration to be thread safe since module constructors are executed
+in the main thread.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">T</td><td class="paramDoc"><p>A class.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">name</td><td class="paramDoc"><p>The name used to register the class.
+     By default the <pre style="display:inline;" class="d_inline_code">T.stringof</pre> is used.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="registerFactoryClasses"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/memory.html#registerFactoryClasses">registerFactoryClasses</a>(A...)()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Calls registerClass() for each template argument.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="factory"></a><div class="symbol"><div class="description"><pre><code>public Object <a href="iz/memory.html#factory">factory</a>(string className)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Constructs a class instance using a gc-free factory.
+The usage is similar to Object.factory() except that by default
+registered classes don't take the module in account.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">className</td><td class="paramDoc"><p>the class name, as registered in registerFactoryClass().
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Throws</h2>
+<p>An Exception if the class is not registered.
+</p>
+
+
+</div>
+</div></div><div class="description"><div class="section"><h2></h2>
+<p>Memory managment utilities.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div><div class="section members"><h2>Enums</h2><table><tr><td><a href="iz/memory/NoGc.html">NoGc</a></td><td></td><td></td></tr><tr><td><a href="iz/memory/TellRangeAdded.html">TellRangeAdded</a></td><td></td><td></td></tr><tr><td><a href="iz/memory/NoInit.html">NoInit</a></td><td></td><td></td></tr></table><h2>Functions</h2><table><tr><td><a href="iz/memory.html#getMem">getMem</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-trusted">@trusted</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#reallocMem">reallocMem</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-trusted">@trusted</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#moveMem">moveMem</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-trusted">@trusted</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td>Returns: <p>the pointer to the destination, (same as dst).
+</p>
+</td></tr><tr><td><a href="iz/memory.html#copyMem">copyMem</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-trusted">@trusted</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td>Returns: <p>the pointer to the destination, (same as dst).
+</p>
+</td></tr><tr><td><a href="iz/memory.html#freeMem">freeMem</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-trusted">@trusted</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#construct">construct</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#construct">construct</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#construct">construct</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#destruct">destruct</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#destruct">destruct</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#destruct">destruct</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#destruct">destruct</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#newPtr">newPtr</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#destructEach">destructEach</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#registerFactoryClass">registerFactoryClass</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#registerFactoryClasses">registerFactoryClasses</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#factory">factory</a><span class="extrainfo"></span></td><td></td><td></td></tr></table><h2>Templates</h2><table><tr><td><a href="iz/memory/MustAddGcRange.html">MustAddGcRange</a></td><td></td><td></td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>
