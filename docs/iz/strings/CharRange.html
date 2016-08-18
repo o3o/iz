@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../../style.css"/>
+<script src="../../highlight.pack.js"></script>
+<title>CharRange</title>
+<base href="../../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.<a href=iz/strings.html>strings</a>.</small><span class="highlight">CharRange</span>
+</div>
+<div class="sidebar">
+<a href="iz/strings.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/strings.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li>iz.<a href="iz/classes.html">classes</a></li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li>iz.<a href="iz/enumset.html">enumset</a></li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li><span class=" selected">iz.<a href="iz/strings.html">strings</a></span>
+</li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><div class="description"><pre><code>public struct CharRange
+</code></pre>
+<div class="section"><h2></h2>
+<p>CharRange is an helper struct that allows to test
+if a char is within a full range of characters.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>auto cs1 = <a href="iz/strings/CharRange.html">CharRange</a>("ajslkdfjlz");
+assert(cs1.<a href="iz/strings/CharRange.html#min">min</a> == 'a');
+assert(cs1.<a href="iz/strings/CharRange.html#max">max</a> == 'z');
+assert('b' in cs1);
+
+auto cs2 = <a href="iz/strings/CharRange.html">CharRange</a>('f', 'a');
+assert(cs2.<a href="iz/strings/CharRange.html#min">min</a> == 'a');
+assert(cs2.<a href="iz/strings/CharRange.html#max">max</a> == 'f');
+assert('b' in cs2);
+assert('g' !in cs2);
+assert(cs2.<a href="iz/strings/CharRange.html#toString">toString</a> == "abcdef", cs2.<a href="iz/strings/CharRange.html#toString">toString</a>);
+
+auto cs3 = <a href="iz/strings/CharRange.html">CharRange</a>(65, 70);
+assert(cs3.<a href="iz/strings/CharRange.html#min">min</a> == 65);
+assert(cs3.<a href="iz/strings/CharRange.html#max">max</a> == 70);
+assert(66 in cs3);
+assert(71 !in cs3);
+
+</code></pre>
+
+</div>
+</div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>public this(S)(S s) pure @safe 
+if(isSomeString!S)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Constructs the char range using a string that contains the range bounds.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">s</td><td class="paramDoc"><p>A string. It neither has to be sorted nor to contain the full range.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>public this(C)(
+    C cmin, 
+    C cmax) pure @safe 
+if(isSomeChar!C || isImplicitlyConvertible!(C, <a href="http://dlang.org/type.html#basic-data-types">dchar</a>))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Constructs the char range using the two chars passed as argument.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+</table>
+</div>
+<div class="section"><h2>cmin</h2>
+<p>The lower character in the range.
+     cmax
+</p>
+
+
+</div>
+<div class="section"><h2>cmax</h2>
+<p>The upper (inclusive) character in the range.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="min"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">dchar</a> <a href="iz/strings/CharRange.html#min">min</a>() pure nothrow @safe @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the lower char in the range.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="max"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">dchar</a> <a href="iz/strings/CharRange.html#max">max</a>() pure nothrow @safe @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the upper char in the range.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="opBinaryRight"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/strings/CharRange.html#opBinaryRight">opBinaryRight</a>(string op = "in", C)(C c) const pure nothrow @safe @nogc 
+if(op == "in")
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns true if a character is within the range.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">c</td><td class="paramDoc"><p>A character or any value convertible to a dchar.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="toString"></a><div class="symbol"><div class="description"><pre><code>public string <a href="iz/strings/CharRange.html#toString">toString</a>() const pure @safe
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the range representation, as a string.
+This function fails if the range is not within the 0x0 .. 0x80 range.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/strings/CharRange.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/strings/CharRange.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/strings/CharRange.html#min">min</a><span class="extrainfo"><span class="method-attribs"><span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/strings/CharRange.html#max">max</a><span class="extrainfo"><span class="method-attribs"><span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/strings/CharRange.html#opBinaryRight">opBinaryRight</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/strings/CharRange.html#toString">toString</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-pure">pure</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

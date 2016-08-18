@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../../style.css"/>
+<script src="../../highlight.pack.js"></script>
+<title>Published2dArray</title>
+<base href="../../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.<a href=iz/classes.html>classes</a>.</small><span class="highlight">Published2dArray</span>
+</div>
+<div class="sidebar">
+<a href="iz/classes.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/classes.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li><span class=" selected">iz.<a href="iz/classes.html">classes</a></span>
+</li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li>iz.<a href="iz/enumset.html">enumset</a></li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li>iz.<a href="iz/strings.html">strings</a></li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><div class="description"><pre><code>public final class Published2dArray(T) : <a href="iz/properties/PropertyPublisher.html">PropertyPublisher</a>
+if(<a href="iz/rtti/isBasicRtType.html">isBasicRtType</a>!T)
+</code></pre>
+<div class="section"><h2></h2>
+<p>The Published2dArray class template allows to serialize 2-dimensional arrays.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>A Serializer is not able to directly handle them but this class
+does the task automatically by merging the array and storing an additional
+property for the dimensions.
+This class template can only be instantiated if <i>T</i> is a basic type.
+(see iz.types.BasicTypes).
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">T</td><td class="paramDoc"><p>The array element type.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>alias Publisher = <a href="iz/classes/Published2dArray.html">Published2dArray</a>!uint;
+Publisher pub = <a href="iz/memory.html#construct">construct</a>!Publisher;
+
+auto array = [[0u,1u],[2u,3u,4u],[5u,6u,7u,8u]];
+pub.<a href="iz/classes/Published2dArray.html#fromArray">fromArray</a>(array);
+version (none) <a href="iz/serializer.html#publisherToFile">publisherToFile</a>(pub, "backup.txt");
+version (none) <a href="iz/serializer.html#fileToPublisher">fileToPublisher</a>("backup.txt", pub);
+pub.<a href="iz/classes/Published2dArray.html#toArray">toArray</a>(array);
+assert(array == [[0u,1u],[2u,3u,4u],[5u,6u,7u,8u]]);
+
+</code></pre>
+
+</div>
+</div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>protected this()
+</code></pre>
+</div></div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>protected this(T[][]* array)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Constructs a new instance and sets a reference to the source array.
+Using this constructor, <code class="d_inlinecode">toArray()</code> and <code class="d_inlinecode">fromArray()</code> don't need
+to be called manually.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">array</td><td class="paramDoc"><p>A pointer to the array that will be stored and restored.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="fromArray"></a><div class="symbol"><div class="description"><pre><code>protected <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/classes/Published2dArray.html#fromArray">fromArray</a>(ref T[][] array)
+</code></pre>
+<div class="section "><h2>Contracts</h2><pre><code>out
+{
+    import std.algorithm.iteration : reduce;
+    assert (_dimensions.reduce!( (
+    a, 
+    b) => a + b) <= uint.max);
+}
+</code></pre>
+
+</div>
+<div class="section"><h2></h2>
+<p>Copies the content of the array to the internal container.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>Typically called before serializing and if the instance is created
+using the default constructor.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">array</td><td class="paramDoc"><p>The array to get.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="toArray"></a><div class="symbol"><div class="description"><pre><code>protected <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/classes/Published2dArray.html#toArray">toArray</a>(ref T[][] array)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Resets then fills the array using the internal data.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>Typically called after serializing and if the instance is created
+using the default constructor.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">array</td><td class="paramDoc"><p>The array to set.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/classes/Published2dArray.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/classes/Published2dArray.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/classes/Published2dArray.html#fromArray">fromArray</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Published2dArray.html#toArray">toArray</a><span class="extrainfo"></span></td><td></td><td></td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

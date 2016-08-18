@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../../style.css"/>
+<script src="../../highlight.pack.js"></script>
+<title>Process</title>
+<base href="../../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.<a href=iz/classes.html>classes</a>.</small><span class="highlight">Process</span>
+</div>
+<div class="sidebar">
+<a href="iz/classes.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/classes.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li><span class=" selected">iz.<a href="iz/classes.html">classes</a></span>
+</li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li>iz.<a href="iz/enumset.html">enumset</a></li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li>iz.<a href="iz/strings.html">strings</a></li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><div class="description"><pre><code>public class Process : <a href="iz/properties/PropertyPublisher.html">PropertyPublisher</a>
+</code></pre>
+<div class="section"><h2></h2>
+<p>Process encapsulates several useful methods of std.process
+to make a serializable, synchronous process.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code><a href="iz/classes/Process.html">Process</a> prc = <a href="iz/memory.html#construct">construct</a>!<a href="iz/classes/Process.html">Process</a>;
+scope(exit) prc.<a href="iz/memory.html#destruct">destruct</a>;
+
+prc.<a href="iz/classes/Process.html#executable">executable</a> = "echo";
+prc.<a href="iz/classes/Process.html#parameters">parameters</a> = "123";
+prc.<a href="iz/classes/Process.html#usePipes">usePipes</a> = true;
+prc.<a href="iz/classes/Process.html#execute">execute</a>;
+assert(prc.<a href="iz/classes/Process.html#output">output</a>.readln == "123\n");
+
+</code></pre>
+
+</div>
+</div><a class="anchor" id="internalExec"></a><div class="symbol"><div class="description"><pre><code>private final <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/classes/Process.html#internalExec">internalExec</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>default, non blocking, execute
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>private this()
+</code></pre>
+</div></div><a class="anchor" id="execute"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/classes/Process.html#execute">execute</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Executes the process and returns when it terminates.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="executeAndWrite"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/classes/Process.html#executeAndWrite">executeAndWrite</a>(T)(auto ref T t)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Executes then writes and finally closes the input stream.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>This is useful for processes that directly expects
+an input after being launched.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="executeAndPipeFile"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/classes/Process.html#executeAndPipeFile">executeAndPipeFile</a>(const(<a href="http://dlang.org/type.html#basic-data-types">char</a>[]) filename)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Executes, fills the input stream with a file and finally
+closes the input.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="terminate"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/classes/Process.html#terminate">terminate</a>(<a href="http://dlang.org/type.html#basic-data-types">int</a> status = 0)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Forces the process termination.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">status</td><td class="paramDoc"><p>the exit status.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="usePipes"></a><div class="symbol"><div class="description"><pre><code>private @<a href="iz/properties/Set.html">Set</a> <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/classes/Process.html#usePipes">usePipes</a>(<a href="http://dlang.org/type.html#basic-data-types">bool</a> value)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets or gets if the process streams are redirected.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="usePipes"></a><div class="symbol"><div class="description"><pre><code>private @<a href="iz/properties/Get.html">Get</a> <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/classes/Process.html#usePipes">usePipes</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets or gets if the process streams are redirected.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="errorToOutput"></a><div class="symbol"><div class="description"><pre><code>private @<a href="iz/properties/Set.html">Set</a> <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/classes/Process.html#errorToOutput">errorToOutput</a>(<a href="http://dlang.org/type.html#basic-data-types">bool</a> value)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets or gets if the error stream is redirected to the output stream.
+Only applied if usePipes is set to true.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="errorToOutput"></a><div class="symbol"><div class="description"><pre><code>private @<a href="iz/properties/Get.html">Get</a> <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/classes/Process.html#errorToOutput">errorToOutput</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets or gets if the error stream is redirected to the output stream.
+Only applied if usePipes is set to true.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="newEnvironment"></a><div class="symbol"><div class="description"><pre><code>private @<a href="iz/properties/Set.html">Set</a> <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/classes/Process.html#newEnvironment">newEnvironment</a>(<a href="http://dlang.org/type.html#basic-data-types">bool</a> value)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets or gets if the value passed in environment fully replaces
+the default environment.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="newEnvironment"></a><div class="symbol"><div class="description"><pre><code>private @<a href="iz/properties/Get.html">Get</a> <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/classes/Process.html#newEnvironment">newEnvironment</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets or gets if the value passed in environment fully replaces
+the default environment.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="executable"></a><div class="symbol"><div class="description"><pre><code>private @<a href="iz/properties/Set.html">Set</a> <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/classes/Process.html#executable">executable</a>(const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] value)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets or gets the process executable.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="executable"></a><div class="symbol"><div class="description"><pre><code>private @<a href="iz/properties/Get.html">Get</a> const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] <a href="iz/classes/Process.html#executable">executable</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets or gets the process executable.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="workingDirectory"></a><div class="symbol"><div class="description"><pre><code>private @<a href="iz/properties/Set.html">Set</a> <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/classes/Process.html#workingDirectory">workingDirectory</a>(const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] value)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets or gets the process working directory.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="workingDirectory"></a><div class="symbol"><div class="description"><pre><code>private @<a href="iz/properties/Get.html">Get</a> const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] <a href="iz/classes/Process.html#workingDirectory">workingDirectory</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets or gets the process working directory.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="environmentAA"></a><div class="symbol"><div class="description"><pre><code>private string[string] <a href="iz/classes/Process.html#environmentAA">environmentAA</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>The environment, as an associative array.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="environment"></a><div class="symbol"><div class="description"><pre><code>private @<a href="iz/properties/Set.html">Set</a> <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/classes/Process.html#environment">environment</a>(const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] value)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets or gets the environment.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>The value returned is changes according to <pre style="display:inline;" class="d_inline_code">newEnvironment</pre> property.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">value</td><td class="paramDoc"><p>a string containing the environment variables,
+     each group separated by the system's pathSeparator and in a group,
+     the name separated of its value(s) by the equal symbol.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="environment"></a><div class="symbol"><div class="description"><pre><code>private @<a href="iz/properties/Get.html">Get</a> const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] <a href="iz/classes/Process.html#environment">environment</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets or gets the environment.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>The value returned is changes according to <pre style="display:inline;" class="d_inline_code">newEnvironment</pre> property.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">value</td><td class="paramDoc"><p>a string containing the environment variables,
+     each group separated by the system's pathSeparator and in a group,
+     the name separated of its value(s) by the equal symbol.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="fullEnvironment"></a><div class="symbol"><div class="description"><pre><code>private string <a href="iz/classes/Process.html#fullEnvironment">fullEnvironment</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the full environment.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>When newEnvironment is set to true, the same value as environement
+is returned.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="parameters"></a><div class="symbol"><div class="description"><pre><code>private <a href="iz/classes/Process.html#parameters">parameters</a>(string value)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets or gets the parameters for this process.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">value</td><td class="paramDoc"><p>a string containing the parameters, separated by ascii white
+     characters.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="parameters"></a><div class="symbol"><div class="description"><pre><code>private @<a href="iz/properties/Get.html">Get</a> string <a href="iz/classes/Process.html#parameters">parameters</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets or gets the parameters for this process.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">value</td><td class="paramDoc"><p>a string containing the parameters, separated by ascii white
+     characters.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="waitFor"></a><div class="symbol"><div class="description"><pre><code>private final <a href="http://dlang.org/type.html#basic-data-types">int</a> <a href="iz/classes/Process.html#waitFor">waitFor</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Waits for the process and only returns when it terminates.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="terminated"></a><div class="symbol"><div class="description"><pre><code>private final <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/classes/Process.html#terminated">terminated</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Indicates wether the process is terminated.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="exitStatus"></a><div class="symbol"><div class="description"><pre><code>private final <a href="http://dlang.org/type.html#basic-data-types">int</a> <a href="iz/classes/Process.html#exitStatus">exitStatus</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Indicates the process exit status.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>Only reliable when terminated is true.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="input"></a><div class="symbol"><div class="description"><pre><code>private final File <a href="iz/classes/Process.html#input">input</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>The process input stream.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Returns</h2>
+<p>std.stdio.stdin when usePipes is set to false, otherwise another
+     stream.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="output"></a><div class="symbol"><div class="description"><pre><code>private final File <a href="iz/classes/Process.html#output">output</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>The process output stream.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Returns</h2>
+<p>std.stdio.stdout when usePipes is set to false, otherwise another
+     stream.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="error"></a><div class="symbol"><div class="description"><pre><code>private final File <a href="iz/classes/Process.html#error">error</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>The process error stream.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Returns</h2>
+<p>std.stdio.stderr when usePipes is set to false, otherwise another
+     stream, the same as output if errorToOutput is set to true.
+</p>
+
+
+</div>
+</div></div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/classes/Process.html#internalExec">internalExec</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Process.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/classes/Process.html#execute">execute</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Process.html#executeAndWrite">executeAndWrite</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Process.html#executeAndPipeFile">executeAndPipeFile</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Process.html#terminate">terminate</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Process.html#usePipes">usePipes</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Process.html#usePipes">usePipes</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Process.html#errorToOutput">errorToOutput</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Process.html#errorToOutput">errorToOutput</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Process.html#newEnvironment">newEnvironment</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Process.html#newEnvironment">newEnvironment</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Process.html#executable">executable</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Process.html#executable">executable</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Process.html#workingDirectory">workingDirectory</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Process.html#workingDirectory">workingDirectory</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Process.html#environmentAA">environmentAA</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Process.html#environment">environment</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Process.html#environment">environment</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Process.html#fullEnvironment">fullEnvironment</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Process.html#parameters">parameters</a><span class="extrainfo"><span class="stor-classes"><span class="attr-ahrefizpropertiesSethtmlSeta">@<a href="iz/properties/Set.html">Set</a></span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Process.html#parameters">parameters</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Process.html#waitFor">waitFor</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Process.html#terminated">terminated</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Process.html#exitStatus">exitStatus</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Process.html#input">input</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>std.stdio.stdin when usePipes is set to false, otherwise another
+     stream.
+</p>
+</td></tr><tr><td><a href="iz/classes/Process.html#output">output</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>std.stdio.stdout when usePipes is set to false, otherwise another
+     stream.
+</p>
+</td></tr><tr><td><a href="iz/classes/Process.html#error">error</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>std.stdio.stderr when usePipes is set to false, otherwise another
+     stream, the same as output if errorToOutput is set to true.
+</p>
+</td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

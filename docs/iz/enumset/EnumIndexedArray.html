@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../../style.css"/>
+<script src="../../highlight.pack.js"></script>
+<title>EnumIndexedArray</title>
+<base href="../../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.<a href=iz/enumset.html>enumset</a>.</small><span class="highlight">EnumIndexedArray</span>
+</div>
+<div class="sidebar">
+<a href="iz/enumset.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/enumset.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li>iz.<a href="iz/classes.html">classes</a></li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li><span class=" selected">iz.<a href="iz/enumset.html">enumset</a></span>
+</li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li>iz.<a href="iz/strings.html">strings</a></li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><div class="description"><pre><code>public struct EnumIndexedArray(E, T, <a href="http://dlang.org/type.html#basic-data-types">bool</a> staticArray = false)
+if(is(E == enum))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Encapsulates an array of T and uses the rank of the enum members
+E to perform the actions usually done with integer indexes.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+Constraints
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>static assert( <a href="iz/enumset.html#isSetSuitable">isSetSuitable</a>!ubyte );
+static assert( <a href="iz/enumset.html#isSetSuitable">isSetSuitable</a>!ushort );
+static assert( <a href="iz/enumset.html#isSetSuitable">isSetSuitable</a>!uint );
+static assert( <a href="iz/enumset.html#isSetSuitable">isSetSuitable</a>!ulong );
+static assert( !<a href="iz/enumset.html#isSetSuitable">isSetSuitable</a>!byte );
+
+</code></pre>
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+CTFE
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>static assert(<a href="iz/enumset/EnumSet.html">EnumSet</a>!(a8, <a href="iz/enumset.html#Set8">Set8</a>)(a8.a0,a8.a1) == 0b00000011);
+enum set = <a href="iz/enumset/EnumSet.html">EnumSet</a>!(a8, <a href="iz/enumset.html#Set8">Set8</a>)(a8.a0,a8.a1);
+static assert(set == 0b011, set);
+static assert(<a href="iz/enumset/EnumRankInfo.html">EnumRankInfo</a>!a8[0] == a8.a0);
+static assert(<a href="iz/enumset/EnumRankInfo.html">EnumRankInfo</a>!a8[a8.a1] == 1);
+static assert(<a href="iz/enumset/EnumRankInfo.html">EnumRankInfo</a>!b0[1] == b0.b1);
+static assert(<a href="iz/enumset/EnumRankInfo.html">EnumRankInfo</a>!b0[b0.b2] == 2);
+
+</code></pre>
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+EnumSet
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>alias bs8 = <a href="iz/enumset/EnumSet.html">EnumSet</a>!(a8, <a href="iz/enumset.html#Set8">Set8</a>);
+bs8 set = bs8(a8.a0,a8.a1,a8.a2,a8.a3,a8.a4,a8.a5,a8.a6,a8.a7);
+assert(set == 0b1111_1111);
+assert(set.all);
+set = set - a8.a0;
+assert(set == 0b1111_1110);
+set = set - a8.a1;
+assert(set == 0b1111_1100);
+set = set - a8.a7;
+assert(set == 0b0111_1100);
+set = 0;
+assert(set.none);
+assert(set == 0b0000_0000);
+set = set + a8.a4;
+assert(set == 0b0001_0000);
+set = set + a8.a5;
+assert(set != 0b0001_0000);
+assert(set.any);
+set = 0;
+assert(set == 0b0000_0000);
+set = set + [a8.a0, a8.a1, a8.a3];
+assert(set == 0b0000_1011);
+set = set - [a8.a1, a8.a3];
+assert(set == 0b0000_001);
+set = set.max;
+set = set - [a8.a5,a8.a6,a8.a7];
+assert(set == [a8.a0,a8.a1,a8.a2,a8.a3,a8.a4]);
+set = [a8.a0,a8.a2,a8.a4];
+assert(set == 0b0001_0101);
+set = [a8.a0,a8.a1];
+assert(set == 0b0000_0011);
+set += [a8.a2,a8.a3];
+assert(set == 0b0000_1111);
+set -= [a8.a0,a8.a1];
+assert(set == 0b0000_1100);
+set = 0;
+set.exclude([a8.a0,a8.a1,a8.a2,a8.a3,a8.a4]);
+assert( set == 0);
+set -= a8.a0;
+assert( set == 0);
+
+bs8 set1 = bs8(a8.a0,a8.a1);
+bs8 set2 = bs8(a8.a1,a8.a2);
+set1 += set2;
+assert( set1 == 0b0000_0111);
+set1 = bs8(a8.a0,a8.a1,a8.a2);
+set2 = bs8(a8.a1,a8.a2,a8.a3);
+set1 -= set2;
+assert( set1 == 0b0000_0001);
+
+set1 = bs8(a8.a0);
+set2 = bs8(a8.a1);
+auto set3 = set1 + set2;
+assert(set3 == 0b0000_0011);
+assert(set1 == 0b0000_0001);
+assert(set2 == 0b0000_0010);
+
+</code></pre>
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+enumSet
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>assert( is(typeof(<a href="iz/enumset.html#enumSet">enumSet</a>!a4) == <a href="iz/enumset/EnumSet.html">EnumSet</a>!(a4,<a href="iz/enumset.html#Set8">Set8</a>)) );
+assert( is(typeof(<a href="iz/enumset.html#enumSet">enumSet</a>!a8) == <a href="iz/enumset/EnumSet.html">EnumSet</a>!(a8,<a href="iz/enumset.html#Set8">Set8</a>)) );
+assert( is(typeof(<a href="iz/enumset.html#enumSet">enumSet</a>!a9) == <a href="iz/enumset/EnumSet.html">EnumSet</a>!(a9,<a href="iz/enumset.html#Set16">Set16</a>))) ;
+assert( is(typeof(<a href="iz/enumset.html#enumSet">enumSet</a>!a16) == <a href="iz/enumset/EnumSet.html">EnumSet</a>!(a16,<a href="iz/enumset.html#Set16">Set16</a>)) );
+assert( is(typeof(<a href="iz/enumset.html#enumSet">enumSet</a>!a17) == <a href="iz/enumset/EnumSet.html">EnumSet</a>!(a17,<a href="iz/enumset.html#Set32">Set32</a>)) );
+
+</code></pre>
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+EnumProcs
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>enum A {t1=8,t2,t3}
+void At1(){}
+void At2(){}
+void At3(){}
+
+auto ACaller = <a href="iz/enumset/EnumProcs.html">EnumProcs</a>!(A, typeof(&At1))(&At1,&At2,&At3);
+
+int Bt1(int p){return 10 + p;}
+int Bt2(int p){return 20 + p;}
+int Bt3(int p){return 30 + p;}
+auto BCaller = <a href="iz/enumset/EnumProcs.html">EnumProcs</a>!(A, typeof(&Bt1))([&Bt1,&Bt2,&Bt3]);
+assert( BCaller.procs[0]== &Bt1);
+assert( BCaller.procs[1]== &Bt2);
+assert( BCaller.procs[2]== &Bt3);
+assert( BCaller(A.t1, 1) == 11);
+assert( BCaller(A.t2, 2) == 22);
+assert( BCaller(A.t3, 3) == 33);
+assert( BCaller[A.t1](2) == 12);
+assert( BCaller[A.t2](3) == 23);
+assert( BCaller[A.t3](4) == 34);
+
+auto bs = <a href="iz/enumset/EnumSet.html">EnumSet</a>!(A, <a href="iz/enumset.html#Set8">Set8</a>)();
+bs.include(A.t1,A.t3);
+
+auto arr0 = BCaller(bs,8);
+assert(arr0[0] == 18);
+assert(arr0[1] == 0);
+assert(arr0[2] == 38);
+
+bs.include(A.t2);
+auto arr1 = BCaller(bs,[4,5,6]);
+assert(arr1[0] == 14);
+assert(arr1[1] == 25);
+assert(arr1[2] == 36);
+
+int Ct1(int[2] p){return p[0] + p[1];}
+int Ct2(int[2] p){return p[0] * p[1];}
+int Ct3(int[2] p){return p[0] - p[1];}
+auto CCaller = <a href="iz/enumset/EnumProcs.html">EnumProcs</a>!(A, typeof(&Ct1))(&Ct1,&Ct2,&Ct3);
+assert(bs.all);
+auto arr2 = CCaller(bs,[cast(int[2])[2,2],cast(int[2])[3,3],cast(int[2])[9,8]]);
+assert(arr2[0] == 4);
+assert(arr2[1] == 9);
+assert(arr2[2] == 1);
+
+int Dt1(int p, int c, int m){return 1 + p + c + m;}
+int Dt2(int p, int c, int m){return 2 + p + c + m;}
+int Dt3(int p, int c, int m){return 3 + p + c + m;}
+auto DCaller = <a href="iz/enumset/EnumProcs.html">EnumProcs</a>!(A, typeof(&Dt1))(&Dt1,&Dt2,&Dt3);
+assert(bs.all);
+auto arr3 = DCaller(bs,1,2,3);
+assert(arr3[0] == 7);
+assert(arr3[1] == 8);
+assert(arr3[2] == 9);
+
+</code></pre>
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+EnumRankInfo
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>enum E
+{
+    e1 = 0.15468,
+    e2 = 1256UL,
+    e3 = 'A'
+}
+
+alias infs = <a href="iz/enumset/EnumRankInfo.html">EnumRankInfo</a>!E;
+assert(infs.min == 0);
+assert(infs.max == 2);
+assert(infs.count == 3);
+assert(infs[2] == 'A');
+assert(infs[E.e3] == 2);
+
+</code></pre>
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+EnumIndexedArray
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>enum E {e0 = 1.8,e1,e2,e3 = 888.459,e4,e5,e6,e7}
+alias E_Fp_Indexed = <a href="iz/enumset/EnumIndexedArray.html">EnumIndexedArray</a>!(E,float);
+E_Fp_Indexed arr;
+assert(arr.<a href="iz/enumset/EnumIndexedArray.html#length">length</a> == 0);
+arr.<a href="iz/enumset/EnumIndexedArray.html#length">length</a> = <a href="iz/enumset/EnumRankInfo.html">EnumRankInfo</a>!E.count;
+
+foreach(i,memb; EnumMembers!E)
+    arr[memb] = 1.0 + 0.1 * i;
+
+assert(arr[E.e1] == 1.1f);
+assert(arr[E.e0] == 1.0f);
+
+auto slice = arr[E.e2..E.e4];
+assert(slice == [1.2f,1.3f]);
+
+</code></pre>
+
+</div>
+</div><a class="anchor" id="length"></a><div class="symbol"><div class="description"><pre><code>private nothrow @safe @property size_t <a href="iz/enumset/EnumIndexedArray.html#length">length</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the length of the internal container.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="opDollar"></a><div class="symbol"><div class="description"><pre><code>private nothrow @safe size_t <a href="iz/enumset/EnumIndexedArray.html#opDollar">opDollar</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the length of the internal container.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="length"></a><div class="symbol"><div class="description"><pre><code>private <a href="iz/enumset/EnumIndexedArray.html#length">length</a>(size_t aValue)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets the array length using a standard integer value.
+Unless  bounds checking is turned off, the parameter is dynamically
+checked according to E highest rank.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="length"></a><div class="symbol"><div class="description"><pre><code>private <a href="iz/enumset/EnumIndexedArray.html#length">length</a>(E aMember)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets the array length according to the value following aMember rank.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="opIndex"></a><div class="symbol"><div class="description"><pre><code>private nothrow @safe T <a href="iz/enumset/EnumIndexedArray.html#opIndex">opIndex</a>(E aMember)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the value of the slot indexed by aMember rank.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="opIndexAssign"></a><div class="symbol"><div class="description"><pre><code>private nothrow @safe <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/enumset/EnumIndexedArray.html#opIndexAssign">opIndexAssign</a>(
+    T aValue, 
+    E aMember)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets the slot indexed by aMember rank to aValue.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="opSlice"></a><div class="symbol"><div class="description"><pre><code>private nothrow @safe T[] <a href="iz/enumset/EnumIndexedArray.html#opSlice">opSlice</a>(
+    E loMember, 
+    E hiMember)
+</code></pre>
+<div class="section "><h2>Contracts</h2><pre><code>in
+{
+    assert (_infs[loMember] <= _infs[hiMember]);
+}
+</code></pre>
+
+</div>
+<div class="section"><h2></h2>
+<p>Returns a T slice using loMember and hiMember ranks to define the range.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="array"></a><div class="symbol"><div class="description"><pre><code>private nothrow @safe @property ref const(arrayT) <a href="iz/enumset/EnumIndexedArray.html#array">array</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns a reference to the the internal container.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/enumset/EnumIndexedArray.html#length">length</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumIndexedArray.html#opDollar">opDollar</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumIndexedArray.html#length">length</a><span class="extrainfo"><span class="stor-classes"><span class="attr-safe">@safe</span>, <span class="attr-property">@property</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumIndexedArray.html#length">length</a><span class="extrainfo"><span class="stor-classes"><span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-property">@property</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumIndexedArray.html#opIndex">opIndex</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumIndexedArray.html#opIndexAssign">opIndexAssign</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumIndexedArray.html#opSlice">opSlice</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumIndexedArray.html#array">array</a><span class="extrainfo"></span></td><td></td><td></td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

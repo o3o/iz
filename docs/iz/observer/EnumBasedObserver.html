@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../../style.css"/>
+<script src="../../highlight.pack.js"></script>
+<title>EnumBasedObserver</title>
+<base href="../../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.<a href=iz/observer.html>observer</a>.</small><span class="highlight">EnumBasedObserver</span>
+</div>
+<div class="sidebar">
+<a href="iz/observer.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/observer.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li>iz.<a href="iz/classes.html">classes</a></li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li>iz.<a href="iz/enumset.html">enumset</a></li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li><span class=" selected">iz.<a href="iz/observer.html">observer</a></span>
+</li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li>iz.<a href="iz/strings.html">strings</a></li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><div class="description"><pre><code>public interface EnumBasedObserver(E, T...)
+if(is(E == enum))
+</code></pre>
+<div class="section"><h2></h2>
+<p>interface for an observer based on an enum.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">E</td><td class="paramDoc"><p>an enum.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">T</td><td class="paramDoc"><p>variadic type of the parameters an observer monitors.
+</p>
+</td></tr>
+</table>
+</div>
+</div><a class="anchor" id="subjectNotification"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/EnumBasedObserver.html#subjectNotification">subjectNotification</a>(
+    E notification, 
+    T t)
+</code></pre>
+<div class="section"><h2></h2>
+<p>The method called by a subject.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">notification</td><td class="paramDoc"><p>the E member allowing to distinguish the "call reason".
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">t</td><td class="paramDoc"><p>the parameters the observer is interested in.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/observer/EnumBasedObserver.html#subjectNotification">subjectNotification</a><span class="extrainfo"></span></td><td></td><td></td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

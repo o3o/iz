@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../../style.css"/>
+<script src="../../highlight.pack.js"></script>
+<title>IstNode</title>
+<base href="../../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.<a href=iz/serializer.html>serializer</a>.</small><span class="highlight">IstNode</span>
+</div>
+<div class="sidebar">
+<a href="iz/serializer.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/serializer.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li>iz.<a href="iz/classes.html">classes</a></li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li>iz.<a href="iz/enumset.html">enumset</a></li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li><span class=" selected">iz.<a href="iz/serializer.html">serializer</a></span>
+</li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li>iz.<a href="iz/strings.html">strings</a></li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><div class="description"><pre><code>public class IstNode
+</code></pre>
+<div class="section"><h2></h2>
+<p>IST node
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div><a class="anchor" id="addNewChildren"></a><div class="symbol"><div class="description"><pre><code>private <a href="iz/serializer/IstNode.html">IstNode</a> <a href="iz/serializer/IstNode.html#addNewChildren">addNewChildren</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns a new unmanaged IstNode.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="setDescriptor"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/serializer/IstNode.html#setDescriptor">setDescriptor</a>(T)(<a href="iz/properties/PropDescriptor.html">PropDescriptor</a>!T* descriptor)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets the infomations describing the property associated
+to this IST node.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="info"></a><div class="symbol"><div class="description"><pre><code>private <a href="iz/serializer/SerNodeInfo.html">SerNodeInfo</a>* <a href="iz/serializer/IstNode.html#info">info</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns a pointer to the information describing the property
+associated to this IST node.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="parentIdentifiersChain"></a><div class="symbol"><div class="description"><pre><code>private string <a href="iz/serializer/IstNode.html#parentIdentifiersChain">parentIdentifiersChain</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the parents identifier chain.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="identifiersChain"></a><div class="symbol"><div class="description"><pre><code>private string <a href="iz/serializer/IstNode.html#identifiersChain">identifiersChain</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the identifier chain.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="findChild"></a><div class="symbol"><div class="description"><pre><code>private <a href="iz/serializer/IstNode.html">IstNode</a> <a href="iz/serializer/IstNode.html#findChild">findChild</a>(in <a href="http://dlang.org/type.html#basic-data-types">char</a>[] name)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the child node whose info.name matches to name.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/serializer/IstNode.html#addNewChildren">addNewChildren</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/serializer/IstNode.html#setDescriptor">setDescriptor</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/serializer/IstNode.html#info">info</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/serializer/IstNode.html#parentIdentifiersChain">parentIdentifiersChain</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/serializer/IstNode.html#identifiersChain">identifiersChain</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/serializer/IstNode.html#findChild">findChild</a><span class="extrainfo"></span></td><td></td><td></td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

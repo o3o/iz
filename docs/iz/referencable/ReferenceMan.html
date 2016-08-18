@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../../style.css"/>
+<script src="../../highlight.pack.js"></script>
+<title>ReferenceMan</title>
+<base href="../../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.<a href=iz/referencable.html>referencable</a>.</small><span class="highlight">ReferenceMan</span>
+</div>
+<div class="sidebar">
+<a href="iz/referencable.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/referencable.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li>iz.<a href="iz/classes.html">classes</a></li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li>iz.<a href="iz/enumset.html">enumset</a></li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li><span class=" selected">iz.<a href="iz/referencable.html">referencable</a></span>
+</li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li>iz.<a href="iz/strings.html">strings</a></li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><div class="description"><pre><code>public static struct ReferenceMan
+</code></pre>
+<div class="section"><h2></h2>
+<p>The Referencable manager associates variables of a particular type to
+an unique identifier.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>This manager is mostly used by iz.classes and iz.serializer.
+For example, in a setting file, it allows to store the unique identifier
+associated to a class instance, rather than storing all its properties, as
+the instance settings may be saved elsewhere.
+It also allow to serialize fat pointers, such as delegates.
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>struct Foo
+{
+    this(bool){adg = &a;}
+    void a(){}
+    void delegate() adg;
+}
+Foo foo = Foo(false);
+Foo bar = Foo(false);
+auto dg1 = foo.adg;
+<a href="iz/referencable/ReferenceMan.html#storeReference">ReferenceMan.storeReference</a>(&foo.adg, "foo.adg");
+assert(<a href="iz/referencable/ReferenceMan.html#isReferenced">ReferenceMan.isReferenced</a>(&foo.adg));
+assert(<a href="iz/referencable/ReferenceMan.html#referenceID">ReferenceMan.referenceID</a>(&foo.adg) == "foo.adg");
+assert(<a href="iz/referencable/ReferenceMan.html#reference">ReferenceMan.reference</a>!(typeof(dg1))("foo.adg") );
+assert(*<a href="iz/referencable/ReferenceMan.html#reference">ReferenceMan.reference</a>!(typeof(dg1))("foo.adg") == foo.adg);
+assert(!<a href="iz/referencable/ReferenceMan.html#isReferenced">ReferenceMan.isReferenced</a>(&bar.adg));
+assert(<a href="iz/referencable/ReferenceMan.html#referenceID">ReferenceMan.referenceID</a>(&bar.adg) == "");
+assert( <a href="iz/referencable/ReferenceMan.html#referenceID">ReferenceMan.referenceID</a>(&dg1) == "foo.adg");
+
+</code></pre>
+
+</div>
+</div><a class="anchor" id="isTypeStored"></a><div class="symbol"><div class="description"><pre><code>private static <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/referencable/ReferenceMan.html#isTypeStored">isTypeStored</a>(RT)()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Indicates if a type is referenced.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">RT</td><td class="paramDoc"><p>The type to test.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>True if the type is referenced otherwise false.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="isReferenced"></a><div class="symbol"><div class="description"><pre><code>private static <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/referencable/ReferenceMan.html#isReferenced">isReferenced</a>(RT)(RT* aReference) 
+if(!isReferenceType!RT)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Indicates if a variable is referenced.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">RT</td><td class="paramDoc"><p>a referencable type. Optional, likely to be infered.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">aReference</td><td class="paramDoc"><p>a pointer to a RT.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>True if the variable is referenced otherwise false.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="opBinaryRight"></a><div class="symbol"><div class="description"><pre><code>private static <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/referencable/ReferenceMan.html#opBinaryRight">opBinaryRight</a>(string op, RT)(RT* aReference) 
+if(!isReferenceType!RT && op == "in")
+</code></pre>
+<div class="section"><h2></h2>
+<p>Support for the in operator.
+Evaluates to true if the variable is referenced otherwise false.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="reset"></a><div class="symbol"><div class="description"><pre><code>private static <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/referencable/ReferenceMan.html#reset">reset</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Empties the references and the types.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="storeType"></a><div class="symbol"><div class="description"><pre><code>private static <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/referencable/ReferenceMan.html#storeType">storeType</a>(RT)()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Stores a type. This is a convenience function since
+storeReference() automatically stores a type when needed.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">RT</td><td class="paramDoc"><p>A type to reference.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="getIDProposal"></a><div class="symbol"><div class="description"><pre><code>private static string <a href="iz/referencable/ReferenceMan.html#getIDProposal">getIDProposal</a>(RT)(RT* aReference)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Proposes an unique ID for a reference. This is a convenience function
+that will not return the same values for each software session.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">RT</td><td class="paramDoc"><p>A referencable type. Optional, likely to be infered.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">aReference</td><td class="paramDoc"><p>A pointer to a RT.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>The unique string used to identify the reference.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="storeReference"></a><div class="symbol"><div class="description"><pre><code>private static <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/referencable/ReferenceMan.html#storeReference">storeReference</a>(RT)(
+    RT* aReference, 
+    in <a href="http://dlang.org/type.html#basic-data-types">char</a>[] anID) 
+if(!isReferenceType!RT)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Tries to store a reference.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">RT</td><td class="paramDoc"><p>the type of the reference.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">aReference</td><td class="paramDoc"><p>a pointer to a RT. Optional, likely to be infered.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">anID</td><td class="paramDoc"><p>the unique identifier for this reference.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>true if the reference is added otherwise false.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="storeReference"></a><div class="symbol"><div class="description"><pre><code>private static <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/referencable/ReferenceMan.html#storeReference">storeReference</a>(RT)(
+    RT aReference, 
+    in <a href="http://dlang.org/type.html#basic-data-types">char</a>[] anID) 
+if(isReferenceType!RT)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Tries to store a reference.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">RT</td><td class="paramDoc"><p>the type of the reference.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">aReference</td><td class="paramDoc"><p>a pointer to a RT. Optional, likely to be infered.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">anID</td><td class="paramDoc"><p>the unique identifier for this reference.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>true if the reference is added otherwise false.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="removeReferences"></a><div class="symbol"><div class="description"><pre><code>private static <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/referencable/ReferenceMan.html#removeReferences">removeReferences</a>(RT)()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Removes all the references for a type.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">RT</td><td class="paramDoc"><p>The type of the references to remove.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="clear"></a><div class="symbol"><div class="description"><pre><code>private static <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/referencable/ReferenceMan.html#clear">clear</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Empties the storage.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="removeReference"></a><div class="symbol"><div class="description"><pre><code>private <a href="iz/referencable/ReferenceMan.html#removeReference">removeReference</a>(RT)(in <a href="http://dlang.org/type.html#basic-data-types">char</a>[] anID)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Tries to remove the reference matching to an ID.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">RT</td><td class="paramDoc"><p>The type of the reference to remove.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">anID</td><td class="paramDoc"><p>The string that identifies the reference to remove.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>The reference if it's found otherwise null.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="removeReference"></a><div class="symbol"><div class="description"><pre><code>private static <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/referencable/ReferenceMan.html#removeReference">removeReference</a>(RT)(RT* aReference) 
+if(!isReferenceType!RT)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Removes a reference.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">RT</td><td class="paramDoc"><p>The type of the reference to remove. Optional, likely to be infered.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">aReference</td><td class="paramDoc"><p>The pointer to the RT to be removed.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="removeReference"></a><div class="symbol"><div class="description"><pre><code>private static <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/referencable/ReferenceMan.html#removeReference">removeReference</a>(RT)(RT aReference) 
+if(isReferenceType!RT)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Removes a reference.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">RT</td><td class="paramDoc"><p>The type of the reference to remove. Optional, likely to be infered.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">aReference</td><td class="paramDoc"><p>The pointer to the RT to be removed.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="referenceID"></a><div class="symbol"><div class="description"><pre><code>private static const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] <a href="iz/referencable/ReferenceMan.html#referenceID">referenceID</a>(RT)(RT* aReference) 
+if(!isReferenceType!RT)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Indicates the reference ID of a variable.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">RT</td><td class="paramDoc"><p>The type of the reference. Optional, likely to be infered.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">aReference</td><td class="paramDoc"><p>A pointer to a RT or a RT.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>A non empty string if the variable is referenced.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="referenceID"></a><div class="symbol"><div class="description"><pre><code>private static const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] <a href="iz/referencable/ReferenceMan.html#referenceID">referenceID</a>(RT)(RT aReference) 
+if(isReferenceType!RT)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Indicates the reference ID of a variable.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">RT</td><td class="paramDoc"><p>The type of the reference. Optional, likely to be infered.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">aReference</td><td class="paramDoc"><p>A pointer to a RT or a RT.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>A non empty string if the variable is referenced.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="referenceID"></a><div class="symbol"><div class="description"><pre><code>private static const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] <a href="iz/referencable/ReferenceMan.html#referenceID">referenceID</a>(<a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/sugar.html#dg">dg</a> = false)(
+    in <a href="http://dlang.org/type.html#basic-data-types">char</a>[] type, 
+    <a href="http://dlang.org/type.html#basic-data-types">void</a>* aReference)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Indicates the reference ID of a variable, without using its static type.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">dg</td><td class="paramDoc"><p>indicates if the reference to find points to a delegate.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">type</td><td class="paramDoc"><p>The <pre style="display:inline;" class="d_inline_code">.stringof</pre> of the type of the reference.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">aReference</td><td class="paramDoc"><p>A pointer to a variable
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>A non empty string if the variable is referenced.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="reference"></a><div class="symbol"><div class="description"><pre><code>private static RT* <a href="iz/referencable/ReferenceMan.html#reference">reference</a>(RT)(in <a href="http://dlang.org/type.html#basic-data-types">char</a>[] anID) 
+if(!isReferenceType!RT)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Retrieves a reference.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">RT</td><td class="paramDoc"><p>The type of the reference to retrieve.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">anID</td><td class="paramDoc"><p>The unique identifier of the reference to retrieve.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>Null if the operation fails otherwise a pointer to a RT, or
+     a RT if RT is a reference type.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="reference"></a><div class="symbol"><div class="description"><pre><code>private static <a href="http://dlang.org/type.html#basic-data-types">void</a>* <a href="iz/referencable/ReferenceMan.html#reference">reference</a>(
+    in <a href="http://dlang.org/type.html#basic-data-types">char</a>[] type, 
+    in <a href="http://dlang.org/type.html#basic-data-types">char</a>[] anID)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Retrieves a reference without the static type
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">type</td><td class="paramDoc"><p>A string that represents the type of the reference.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">anID</td><td class="paramDoc"><p>The unique identifier of the reference to retrieve.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>Null if the operation fails otherwise a raw pointer.
+</p>
+
+
+</div>
+</div></div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/referencable/ReferenceMan.html#isTypeStored">isTypeStored</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>True if the type is referenced otherwise false.
+</p>
+</td></tr><tr><td><a href="iz/referencable/ReferenceMan.html#isReferenced">isReferenced</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>True if the variable is referenced otherwise false.
+</p>
+</td></tr><tr><td><a href="iz/referencable/ReferenceMan.html#opBinaryRight">opBinaryRight</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/referencable/ReferenceMan.html#reset">reset</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/referencable/ReferenceMan.html#storeType">storeType</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/referencable/ReferenceMan.html#getIDProposal">getIDProposal</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>The unique string used to identify the reference.
+</p>
+</td></tr><tr><td><a href="iz/referencable/ReferenceMan.html#storeReference">storeReference</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>true if the reference is added otherwise false.
+</p>
+</td></tr><tr><td><a href="iz/referencable/ReferenceMan.html#storeReference">storeReference</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>true if the reference is added otherwise false.
+</p>
+</td></tr><tr><td><a href="iz/referencable/ReferenceMan.html#removeReferences">removeReferences</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/referencable/ReferenceMan.html#clear">clear</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/referencable/ReferenceMan.html#removeReference">removeReference</a><span class="extrainfo"><span class="stor-classes"><span class="attr-static">static</span>, <span class="attr-auto">auto</span></span></span></td><td></td><td>Returns: <p>The reference if it's found otherwise null.
+</p>
+</td></tr><tr><td><a href="iz/referencable/ReferenceMan.html#removeReference">removeReference</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/referencable/ReferenceMan.html#removeReference">removeReference</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/referencable/ReferenceMan.html#referenceID">referenceID</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>A non empty string if the variable is referenced.
+</p>
+</td></tr><tr><td><a href="iz/referencable/ReferenceMan.html#referenceID">referenceID</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>A non empty string if the variable is referenced.
+</p>
+</td></tr><tr><td><a href="iz/referencable/ReferenceMan.html#referenceID">referenceID</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>A non empty string if the variable is referenced.
+</p>
+</td></tr><tr><td><a href="iz/referencable/ReferenceMan.html#reference">reference</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>Null if the operation fails otherwise a pointer to a RT, or
+     a RT if RT is a reference type.
+</p>
+</td></tr><tr><td><a href="iz/referencable/ReferenceMan.html#reference">reference</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>Null if the operation fails otherwise a raw pointer.
+</p>
+</td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

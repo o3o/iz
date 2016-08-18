@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../../style.css"/>
+<script src="../../highlight.pack.js"></script>
+<title>Node</title>
+<base href="../../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.<a href=iz/strings.html>strings</a>.</small><span class="highlight"><a href=iz/strings/SuffixArray.html>SuffixArray</a>.Node</span>
+</div>
+<div class="sidebar">
+<a href="iz/strings.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/strings.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li>iz.<a href="iz/classes.html">classes</a></li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li>iz.<a href="iz/enumset.html">enumset</a></li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li><span class=" selected">iz.<a href="iz/strings.html">strings</a></span>
+</li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><div class="description"><pre><code>private struct Node
+</code></pre>
+<div class="section"><h2></h2>
+<p>A node in the array.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>private this(const <a href="http://dlang.org/type.html#basic-data-types">ubyte</a> index) pure nothrow @safe @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>To be private (emplace)
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="addSuffix"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/strings/SuffixArray.Node.html#addSuffix">addSuffix</a>(const T suffix) nothrow @safe @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Adds a suffix to the prefix represented by this node.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="terminates"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/strings/SuffixArray.Node.html#terminates">terminates</a>() const pure nothrow @safe @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns true if this node represents a full entry.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="opBinaryRight"></a><div class="symbol"><div class="description"><pre><code>private const(Node)* <a href="iz/strings/SuffixArray.Node.html#opBinaryRight">opBinaryRight</a>(string op)(const T suffix) const pure nothrow @safe @nogc 
+if(op == "in")
+</code></pre>
+<div class="section"><h2></h2>
+<p>Finds a full suffix from this node.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="find"></a><div class="symbol"><div class="description"><pre><code>alias find = <a href="iz/strings/SuffixArray.Node.html#opBinaryRight">opBinaryRight</a>!"in"
+</code></pre>
+<div class="section"><h2></h2>
+<p>Aliases to the <pre style="display:inline;" class="d_inline_code"><font color=blue>in</font></pre> operator.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="findPrefix"></a><div class="symbol"><div class="description"><pre><code>private const(Node)* <a href="iz/strings/SuffixArray.Node.html#findPrefix">findPrefix</a>(const T value) const pure nothrow @safe @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Finds a prefix from this node.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="visit"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/strings/SuffixArray.Node.html#visit">visit</a>(alias fun, <a href="http://dlang.org/type.html#basic-data-types">bool</a> descending = false, <a href="http://dlang.org/type.html#basic-data-types">bool</a> childrenFirst = true, A...)(
+    ref <a href="http://dlang.org/type.html#basic-data-types">ubyte</a>[] path, 
+    auto ref A a) const nothrow @safe 
+if(isValidVisitor!fun)
+</code></pre>
+<div class="section"><h2></h2>
+<p>see SuffixArray.visitAll.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="entries"></a><div class="symbol"><div class="description"><pre><code>private T[] <a href="iz/strings/SuffixArray.Node.html#entries">entries</a>() const nothrow @safe
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the terminated entries that begin from this node.
+In the results, an empty value means that this node terminates a word.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><div class="section members"><h2>Aliases</h2><table><tr><td><a href="iz/strings/SuffixArray.Node.html#find">find</a></td><td><pre><code><a href="iz/strings/SuffixArray.Node.html#opBinaryRight">opBinaryRight</a>!"in"
+</code></pre>
+</td><td></td></tr></table><h2>Functions</h2><table><tr><td><a href="iz/strings/SuffixArray.Node.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/strings/SuffixArray.Node.html#addSuffix">addSuffix</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/strings/SuffixArray.Node.html#terminates">terminates</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/strings/SuffixArray.Node.html#opBinaryRight">opBinaryRight</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/strings/SuffixArray.Node.html#findPrefix">findPrefix</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/strings/SuffixArray.Node.html#visit">visit</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/strings/SuffixArray.Node.html#entries">entries</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

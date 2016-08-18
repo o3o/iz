@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../../style.css"/>
+<script src="../../highlight.pack.js"></script>
+<title>PublishedObjectArray</title>
+<base href="../../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.<a href=iz/classes.html>classes</a>.</small><span class="highlight">PublishedObjectArray</span>
+</div>
+<div class="sidebar">
+<a href="iz/classes.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/classes.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li><span class=" selected">iz.<a href="iz/classes.html">classes</a></span>
+</li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li>iz.<a href="iz/enumset.html">enumset</a></li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li>iz.<a href="iz/strings.html">strings</a></li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><div class="description"><pre><code>public class PublishedObjectArray(ItemClass, string aaKey = "") : <a href="iz/properties/PropertyPublisher.html">PropertyPublisher</a>
+if(is(ItemClass : <a href="iz/properties/PropertyPublisher.html">PropertyPublisher</a>))
+</code></pre>
+<div class="section"><h2></h2>
+<p>The PublishedObjectArray class template allows to serialize an array of
+PropertyPublisher.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>A Serializer is not able to directly handle object arrays but this class
+does the task automatically by managing the internal list of publications.
+The life-time of the objects is automatically handled by the internal container.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">ItemClass</td><td class="paramDoc"><p>The common items type. It must be a PropertyPublisher descendant.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">aaKey</td><td class="paramDoc"><p>The member of ItemClass used to build an associative array that
+         indexes each item with the value of this member.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>class Item : <a href="iz/properties/PropertyPublisher.html">PropertyPublisher</a>
+{
+    mixin <a href="iz/properties/PropertyPublisherImpl.html">PropertyPublisherImpl</a>;
+    @<a href="iz/properties/SetGet.html">SetGet</a> uint _a, _b, _c;
+    // a default ctor is needed.
+    <a href="iz/classes/PublishedObjectArray.html#this">this</a>(){collectPublications!Item;}
+    <a href="iz/classes/PublishedObjectArray.html#this">this</a>(uint a, uint b, uint c)
+    {
+        _a = a; _b = b; _c = c;
+        collectPublications!Item;
+    }
+}
+
+auto itemArray = <a href="iz/memory.html#construct">construct</a>!(<a href="iz/classes/PublishedObjectArray.html">PublishedObjectArray</a>!Item);
+itemArray.<a href="iz/classes/PublishedObjectArray.html#addItem">addItem</a>(1, 2, 3);
+itemArray.<a href="iz/classes/PublishedObjectArray.html#addItem">addItem</a>(4, 5, 6);
+// serializes the object array to a file
+version(none) <a href="iz/serializer.html#publisherToFile">publisherToFile</a>(itemArray, "backup.txt");
+<a href="iz/memory.html#destruct">destruct</a>(itemArray);
+
+</code></pre>
+
+</div>
+</div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>private this()
+</code></pre>
+</div></div><a class="anchor" id="addItem"></a><div class="symbol"><div class="description"><pre><code>private ItemClass <a href="iz/classes/PublishedObjectArray.html#addItem">addItem</a>(A...)(A a)
+</code></pre>
+<div class="section "><h2>Contracts</h2><pre><code>in
+{
+    assert (_items.length <= uint.max);
+}
+</code></pre>
+
+</div>
+<div class="section"><h2></h2>
+<p>Instantiates and returns a new item.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">a</td><td class="paramDoc"><p>The variadic arguments passed to the item <code class="d_inlinecode">__ctor</code>.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="deleteItem"></a><div class="symbol"><div class="description"><pre><code>private final <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/classes/PublishedObjectArray.html#deleteItem">deleteItem</a>(T)(T t) 
+if(isIntegral!T || is(Unqual!T == ItemClass))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Removes and destroys an item from the internal container.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">t</td><td class="paramDoc"><p>Either the item to delete or its index.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="count"></a><div class="symbol"><div class="description"><pre><code>private @<a href="iz/properties/Get.html">Get</a> final <a href="http://dlang.org/type.html#basic-data-types">uint</a> <a href="iz/classes/PublishedObjectArray.html#count">count</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets or gets the item count.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>Items are automatically created or destroyed when changing this property.
+Note that to change the length of <code class="d_inlinecode">items()</code> is a noop, the only way to
+add and remove items is to use <code class="d_inlinecode">count()</code>, <code class="d_inlinecode">addItem()</code> or <code class="d_inlinecode">deleteItem()</code>.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="count"></a><div class="symbol"><div class="description"><pre><code>private @<a href="iz/properties/Set.html">Set</a> final <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/classes/PublishedObjectArray.html#count">count</a>(<a href="http://dlang.org/type.html#basic-data-types">uint</a> aValue)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets or gets the item count.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>Items are automatically created or destroyed when changing this property.
+Note that to change the length of <code class="d_inlinecode">items()</code> is a noop, the only way to
+add and remove items is to use <code class="d_inlinecode">count()</code>, <code class="d_inlinecode">addItem()</code> or <code class="d_inlinecode">deleteItem()</code>.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="items"></a><div class="symbol"><div class="description"><pre><code>private final ItemClass[] <a href="iz/classes/PublishedObjectArray.html#items">items</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Provides an access to the items.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="clear"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/classes/PublishedObjectArray.html#clear">clear</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Clears the internal container and destroys the items.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="opIndex"></a><div class="symbol"><div class="description"><pre><code>private ItemClass <a href="iz/classes/PublishedObjectArray.html#opIndex">opIndex</a>(size_t i)
+</code></pre>
+<div class="section "><h2>Contracts</h2><pre><code>in
+{
+    assert (i < _items.length);
+}
+</code></pre>
+
+</div>
+<div class="section"><h2></h2>
+<p>Support for accessing an indexed item with <code class="d_inlinecode">[]</code>.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="opApply"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">int</a> <a href="iz/classes/PublishedObjectArray.html#opApply">opApply</a>(<a href="http://dlang.org/type.html#basic-data-types">int</a> delegate(ItemClass) dg)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Support for iterating the items with <code class="d_inlinecode">foreach()</code>.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="opApplyReverse"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">int</a> <a href="iz/classes/PublishedObjectArray.html#opApplyReverse">opApplyReverse</a>(<a href="http://dlang.org/type.html#basic-data-types">int</a> delegate(ItemClass) dg)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Support for iterating the items with <code class="d_inlinecode">foreach_reverse()</code>.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="opSlice"></a><div class="symbol"><div class="description"><pre><code>private ItemClass[] <a href="iz/classes/PublishedObjectArray.html#opSlice">opSlice</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Same as <code class="d_inlinecode">items()</code>.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="opSlice"></a><div class="symbol"><div class="description"><pre><code>private ItemClass[] <a href="iz/classes/PublishedObjectArray.html#opSlice">opSlice</a>(
+    size_t lo, 
+    size_t hi)
+</code></pre>
+<div class="section "><h2>Contracts</h2><pre><code>in
+{
+    assert (lo <= hi);
+    assert (hi < _items.length);
+}
+</code></pre>
+
+</div>
+<div class="section"><h2></h2>
+<p>Same as <code class="d_inlinecode">items()</code> but with bounds.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="opBinaryRight"></a><div class="symbol"><div class="description"><pre><code>private const(ItemClass)* <a href="iz/classes/PublishedObjectArray.html#opBinaryRight">opBinaryRight</a>(string op = "in")(KeyType key) 
+if(op == "in")
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns a pointer to the item whose the member that matches to the
+parameter passed as key during instanciation as the same value as <pre style="display:inline;" class="d_inline_code">key</pre>.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="updateAA"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/classes/PublishedObjectArray.html#updateAA">updateAA</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Updates the associative array that exists when the member passed as key
+during the instanciation is not empty.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/classes/PublishedObjectArray.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/classes/PublishedObjectArray.html#addItem">addItem</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/PublishedObjectArray.html#deleteItem">deleteItem</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/PublishedObjectArray.html#count">count</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/PublishedObjectArray.html#count">count</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/PublishedObjectArray.html#items">items</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/PublishedObjectArray.html#clear">clear</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/PublishedObjectArray.html#opIndex">opIndex</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/PublishedObjectArray.html#opApply">opApply</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/PublishedObjectArray.html#opApplyReverse">opApplyReverse</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/PublishedObjectArray.html#opSlice">opSlice</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/PublishedObjectArray.html#opSlice">opSlice</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/PublishedObjectArray.html#opBinaryRight">opBinaryRight</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/PublishedObjectArray.html#updateAA">updateAA</a><span class="extrainfo"></span></td><td></td><td></td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

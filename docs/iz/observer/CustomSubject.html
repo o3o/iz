@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../../style.css"/>
+<script src="../../highlight.pack.js"></script>
+<title>CustomSubject</title>
+<base href="../../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.<a href=iz/observer.html>observer</a>.</small><span class="highlight">CustomSubject</span>
+</div>
+<div class="sidebar">
+<a href="iz/observer.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/observer.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li>iz.<a href="iz/classes.html">classes</a></li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li>iz.<a href="iz/enumset.html">enumset</a></li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li><span class=" selected">iz.<a href="iz/observer.html">observer</a></span>
+</li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li>iz.<a href="iz/strings.html">strings</a></li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><div class="description"><pre><code>public class CustomSubject(OT) : <a href="iz/observer/Subject.html">Subject</a>
+if(is(OT == interface) || is(OT == class))
+</code></pre>
+<div class="section"><h2></h2>
+<p>CustomSubject handles a list of obsever.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">OT</td><td class="paramDoc"><p>the observer type, either an interface or a class.
+</p>
+</td></tr>
+</table>
+</div>
+</div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>public this()
+</code></pre>
+</div></div><a class="anchor" id="updateObservers"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/CustomSubject.html#updateObservers">updateObservers</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>see the Subject interface.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="acceptObserver"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/observer/CustomSubject.html#acceptObserver">acceptObserver</a>(Object observer)
+</code></pre>
+<div class="section"><h2></h2>
+<p>see the Subject interface.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="addObserver"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/CustomSubject.html#addObserver">addObserver</a>(Object observer)
+</code></pre>
+<div class="section"><h2></h2>
+<p>see the Subject interface.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="addObservers"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/CustomSubject.html#addObservers">addObservers</a>(Objs...)(Objs objs)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Calls addObserver() foreach object passed as argument.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="removeObserver"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/CustomSubject.html#removeObserver">removeObserver</a>(Object observer)
+</code></pre>
+<div class="section"><h2></h2>
+<p>see the Subject interface.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="observers"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/containers/DynamicList.html">DynamicList</a>!OT <a href="iz/observer/CustomSubject.html#observers">observers</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>list of observers
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/observer/CustomSubject.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#updateObservers">updateObservers</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#acceptObserver">acceptObserver</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#addObserver">addObserver</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#addObservers">addObservers</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#removeObserver">removeObserver</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#observers">observers</a><span class="extrainfo"></span></td><td></td><td></td></tr></table>
+</div>
+</div><div class="aggregate-symbol"><div class="description"><pre><code>public class CustomSubject(E, T...) : <a href="iz/observer/Subject.html">Subject</a>
+if(is(E == enum))
+</code></pre>
+<div class="section"><h2></h2>
+<p>CustomSubject handles a list of obsever.
+This version only accept an observer if it's an EnumBasedObserver.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">E</td><td class="paramDoc"><p>an enum.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">T</td><td class="paramDoc"><p>the variadic list of parameter types used in the notification.
+</p>
+</td></tr>
+</table>
+</div>
+</div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>public this()
+</code></pre>
+</div></div><a class="anchor" id="updateObservers"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/CustomSubject.html#updateObservers">updateObservers</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>see the Subject interface.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="acceptObserver"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/observer/CustomSubject.html#acceptObserver">acceptObserver</a>(Object observer)
+</code></pre>
+<div class="section "><h2>Contracts</h2><pre><code>in
+{
+    assert (observer);
+}
+</code></pre>
+
+</div>
+<div class="section"><h2></h2>
+<p>see the Subject interface.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="addObserver"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/CustomSubject.html#addObserver">addObserver</a>(Object observer)
+</code></pre>
+<div class="section "><h2>Contracts</h2><pre><code>in
+{
+    assert (observer);
+}
+</code></pre>
+
+</div>
+<div class="section"><h2></h2>
+<p>see the Subject interface.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="addObservers"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/CustomSubject.html#addObservers">addObservers</a>(Objs...)(Objs objs)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Calls addObserver() foreach object passed as argument.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="removeObserver"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/CustomSubject.html#removeObserver">removeObserver</a>(Object observer)
+</code></pre>
+<div class="section "><h2>Contracts</h2><pre><code>in
+{
+    assert (observer);
+}
+</code></pre>
+
+</div>
+<div class="section"><h2></h2>
+<p>see the Subject interface.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="observers"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/containers/DynamicList.html">DynamicList</a>!ObserverType <a href="iz/observer/CustomSubject.html#observers">observers</a>()
+</code></pre>
+</div></div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/observer/CustomSubject.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#updateObservers">updateObservers</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#acceptObserver">acceptObserver</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#addObserver">addObserver</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#addObservers">addObservers</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#removeObserver">removeObserver</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#observers">observers</a><span class="extrainfo"></span></td><td></td><td></td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

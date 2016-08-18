@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../../style.css"/>
+<script src="../../highlight.pack.js"></script>
+<title>EnumSet</title>
+<base href="../../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.<a href=iz/enumset.html>enumset</a>.</small><span class="highlight">EnumSet</span>
+</div>
+<div class="sidebar">
+<a href="iz/enumset.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/enumset.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li>iz.<a href="iz/classes.html">classes</a></li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li><span class=" selected">iz.<a href="iz/enumset.html">enumset</a></span>
+</li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li>iz.<a href="iz/strings.html">strings</a></li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><div class="description"><pre><code>public struct EnumSet(E, S)
+if(<a href="iz/enumset.html#enumFitsInSet">enumFitsInSet</a>!(E, S))
+</code></pre>
+<div class="section"><h2></h2>
+<p>An EnumSet allows to create a bit field using the members of an enum.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>It's designed similarly to the Pascal built-in sets (the "Set Of" construct).
+It's also related to the phobos type EnumFlag, except that it has no constraint
+related to the enum member values since it's based on the enum members rank.
+It's efficient as function parameter since the size of an EnumSet is
+equal to the size of its container (so from 1 to 8 bytes). Since manipulating
+an EnumSet set is mostly about making bitwise operations an EnumSet is completly
+safe. Another notable characteristic is that an EnumSet is ordered, so if a
+range is implemented to allow the usage of std.algorithm.searching functions
+it's always more simple and efficient to use the "in" operator.
+There are two ways to use an EnumSet:
+</p>
+<ul>
+<li>using the C-like operators, "+" and "-" to add or remove members, "^" and "&" to get the difference and the intersection.
+</li>
+<li>using the Pascal-like intrinsics (here some functions): include(), exclude() and the 'in' operator.
+</li>
+</ul>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">S</td><td class="paramDoc"><p>A Set8, Set16, Set32 or Set64. It must be wide enough to contain all the enum members.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">E</td><td class="paramDoc"><p>An enum, which must have at least one members.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Example</h2>
+
+
+</div>
+<div class="section"><h2>Examples</h2>
+<p><pre class="d_code"><font color=blue>enum</font> Employee {jhon, steve, sophia, douglas, clarice, mitch}
+<font color=blue>alias</font> Team = EnumSet!(Employee, Set8);
+<font color=blue>auto</font> team1 = Team(Employee.jhon, Employee.sophia, Employee.douglas);
+<font color=blue>auto</font> team2 = Team(Employee.jhon, Employee.clarice, Employee.mitch);
+<font color=blue>if</font> (Employee.sophia <font color=blue>in</font> team1) writeln(<font color=red>"Sophia works in team1"</font>);
+Team overzealous = team1.intersection(team2);
+<font color=blue>if</font> (overzealous != 0)
+{
+    writeln(overzealous, <font color=red>" work(s) too much !"</font>);
+    team1 -= overzealous;
+    <font color=blue>assert</font>(team1 == [Employee.sophia, Employee.douglas]);
+}
+<font color=blue>if</font> (team1.memberCount != team2.memberCount)
+    writeln(<font color=red>"teams are not well balanced !"</font>);</pre>
+</p>
+
+
+</div>
+</div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>private this(Stuff...)(Stuff stuff)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Initializes the set with some stuff.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">stuff</td><td class="paramDoc"><p>either some E member(s), an E input range, an E array
+or a string representation.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="asBitString"></a><div class="symbol"><div class="description"><pre><code>private string <a href="iz/enumset/EnumSet.html#asBitString">asBitString</a>() const nothrow @safe
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the string representation of the set as a binary representation.
+Note that the result is preffixed with "0b", as a binary litteral.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="toString"></a><div class="symbol"><div class="description"><pre><code>private string <a href="iz/enumset/EnumSet.html#toString">toString</a>() const @safe
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the string representation of the set.
+The format is the same as the one used in this() and fromString(),
+similar to an array litteral.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="fromString"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/enumset/EnumSet.html#fromString">fromString</a>(string str) nothrow @trusted
+</code></pre>
+<div class="section"><h2></h2>
+<p>Defines the set with a string representation.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">str</td><td class="paramDoc"><p>a string representing one or several E members. It must have the
+form that's similar to an array litteral. Binary litterals are not handled
+by this function.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="opAssign"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/enumset/EnumSet.html#opAssign">opAssign</a>(S rhs) nothrow @safe @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Support for the assignment operator.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">rhs</td><td class="paramDoc"><p>a setXX, an array of E members, an InputRange of E
+or an EnumSet with the same type.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="opAssign"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/enumset/EnumSet.html#opAssign">opAssign</a>(E[] rhs) nothrow @safe
+</code></pre>
+<div class="section"><h2></h2>
+<p>Support for the assignment operator.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">rhs</td><td class="paramDoc"><p>a setXX, an array of E members, an InputRange of E
+or an EnumSet with the same type.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="opAssign"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/enumset/EnumSet.html#opAssign">opAssign</a>(EnumSetType rhs) nothrow @safe @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Support for the assignment operator.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">rhs</td><td class="paramDoc"><p>a setXX, an array of E members, an InputRange of E
+or an EnumSet with the same type.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="opAssign"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/enumset/EnumSet.html#opAssign">opAssign</a>(R)(R rhs) nothrow 
+if(!(isArray!R) && isInputRange!R && is(ElementType!R == E))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Support for the assignment operator.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">rhs</td><td class="paramDoc"><p>a setXX, an array of E members, an InputRange of E
+or an EnumSet with the same type.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="opIndex"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/enumset/EnumSet.html#opIndex">opIndex</a>(I)(I index) const nothrow
+</code></pre>
+<div class="section"><h2></h2>
+<p>Support for the array syntax.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">index</td><td class="paramDoc"><p>either an unsigned integer or an E member.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="opBinary"></a><div class="symbol"><div class="description"><pre><code>private EnumSetType <a href="iz/enumset/EnumSet.html#opBinary">opBinary</a>(string op)(E rhs) nothrow @safe
+</code></pre>
+<div class="section"><h2></h2>
+<p>Support for "+" and "-" operators.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">rhs</td><td class="paramDoc"><p>either an E member, an E array or another EnumSet (or its container)
+with the same type.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="opBinary"></a><div class="symbol"><div class="description"><pre><code>private EnumSetType <a href="iz/enumset/EnumSet.html#opBinary">opBinary</a>(string op)(E[] rhs) nothrow @safe
+</code></pre>
+<div class="section"><h2></h2>
+<p>Support for "+" and "-" operators.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">rhs</td><td class="paramDoc"><p>either an E member, an E array or another EnumSet (or its container)
+with the same type.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="opBinary"></a><div class="symbol"><div class="description"><pre><code>private EnumSetType <a href="iz/enumset/EnumSet.html#opBinary">opBinary</a>(string op)(EnumSetType rhs) nothrow @safe @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Support for "+" and "-" operators.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">rhs</td><td class="paramDoc"><p>either an E member, an E array or another EnumSet (or its container)
+with the same type.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="opBinary"></a><div class="symbol"><div class="description"><pre><code>private EnumSetType <a href="iz/enumset/EnumSet.html#opBinary">opBinary</a>(string op)(SetType rhs) nothrow @safe @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Support for "+" and "-" operators.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">rhs</td><td class="paramDoc"><p>either an E member, an E array or another EnumSet (or its container)
+with the same type.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="opOpAssign"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/enumset/EnumSet.html#opOpAssign">opOpAssign</a>(string op)(E[] rhs) nothrow @safe
+</code></pre>
+<div class="section"><h2></h2>
+<p>Support for "+=" and "-=" operators.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">rhs</td><td class="paramDoc"><p>either some E member(s), an E array or an EnumSet with the same type.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="opOpAssign"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/enumset/EnumSet.html#opOpAssign">opOpAssign</a>(string op, E...)(E rhs) nothrow
+</code></pre>
+<div class="section"><h2></h2>
+<p>Support for "+=" and "-=" operators.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">rhs</td><td class="paramDoc"><p>either some E member(s), an E array or an EnumSet with the same type.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="opOpAssign"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/enumset/EnumSet.html#opOpAssign">opOpAssign</a>(string op)(EnumSetType rhs) nothrow @safe @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Support for "+=" and "-=" operators.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">rhs</td><td class="paramDoc"><p>either some E member(s), an E array or an EnumSet with the same type.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="toHash"></a><div class="symbol"><div class="description"><pre><code>private size_t <a href="iz/enumset/EnumSet.html#toHash">toHash</a>() const nothrow @safe
+</code></pre>
+<div class="section"><h2></h2>
+<p>Support for built-in AA.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="opEquals"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/enumset/EnumSet.html#opEquals">opEquals</a>(T)(T rhs) const nothrow
+</code></pre>
+<div class="section"><h2></h2>
+<p>Support for comparison "=" and "!=" operators.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="opEquals"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/enumset/EnumSet.html#opEquals">opEquals</a>(ref const EnumSetType rhs) const nothrow @safe @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Support for built-in AA.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="opSlice"></a><div class="symbol"><div class="description"><pre><code>private Range <a href="iz/enumset/EnumSet.html#opSlice">opSlice</a>() const nothrow @safe
+</code></pre>
+<div class="section"><h2></h2>
+<p>see range()
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="opIn_r"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/enumset/EnumSet.html#opIn_r">opIn_r</a>(T)(T rhs) const nothrow @safe
+</code></pre>
+<div class="section"><h2></h2>
+<ul>
+<li>Support for the in operator.
+<ul>
+<li>Indicates if the right hand side is included in the set.
+</li>
+<li>Params:
+</li>
+<li>rhs = either an E member or a set (or its container) with the same type,
+</li>
+<li>in the last case, calling opIn_r is equivalent to test for greater or equal.
+</li>
+</ul>
+</li>
+</ul>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="difference"></a><div class="symbol"><div class="description"><pre><code>private EnumSetType <a href="iz/enumset/EnumSet.html#difference">difference</a>(R)(R rhs) const nothrow @safe 
+if(is(R == EnumSetType) || is(R == SetType))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns a set representing the difference between this set and the argument.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">rhs</td><td class="paramDoc"><p>either a set with the same type or a set container with the same size.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="intersection"></a><div class="symbol"><div class="description"><pre><code>private EnumSetType <a href="iz/enumset/EnumSet.html#intersection">intersection</a>(R)(R rhs) const nothrow @safe 
+if(is(R == EnumSetType) || is(R == SetType))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns a set representing the intersection between this set and the argument.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">rhs</td><td class="paramDoc"><p>either a set with the same type or a set container with the same size.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="include"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/enumset/EnumSet.html#include">include</a>(E...)(E someMembers) nothrow @safe
+</code></pre>
+<div class="section"><h2></h2>
+<p>Includes someMembers in the set.
+This is the primitive used for to the operator "+".
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">someMembers</td><td class="paramDoc"><p>a list of E members or an array of E members
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="include"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/enumset/EnumSet.html#include">include</a>(E[] someMembers) nothrow @safe
+</code></pre>
+<div class="section"><h2></h2>
+<p>Includes someMembers in the set.
+This is the primitive used for to the operator "+".
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">someMembers</td><td class="paramDoc"><p>a list of E members or an array of E members
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="exclude"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/enumset/EnumSet.html#exclude">exclude</a>(E...)(E someMembers) nothrow @safe
+</code></pre>
+<div class="section"><h2></h2>
+<p>Excludes someMembers from the set.
+This is the primitive used for to the operator "-".
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">someMembers</td><td class="paramDoc"><p>a list of E members or an array of E members.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="exclude"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/enumset/EnumSet.html#exclude">exclude</a>(E[] someMembers) nothrow @safe
+</code></pre>
+<div class="section"><h2></h2>
+<p>Excludes someMembers from the set.
+This is the primitive used for to the operator "-".
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">someMembers</td><td class="paramDoc"><p>a list of E members or an array of E members.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="isIncluded"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/enumset/EnumSet.html#isIncluded">isIncluded</a>(E aMember) const nothrow @safe
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns true if aMember is in the set.
+This is the primitive used for to the operator "in".
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">aMember</td><td class="paramDoc"><p>an  E member.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="range"></a><div class="symbol"><div class="description"><pre><code>private Range <a href="iz/enumset/EnumSet.html#range">range</a>() const nothrow @safe
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns a range allowing to iterate for each member included in the set.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="none"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/enumset/EnumSet.html#none">none</a>() const nothrow @safe @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns true if the set is empty.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="any"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/enumset/EnumSet.html#any">any</a>() const nothrow @safe @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns true if at least one member is included.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="all"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/enumset/EnumSet.html#all">all</a>() const nothrow @safe @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns true if all the members are included.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="max"></a><div class="symbol"><div class="description"><pre><code>private static const(S) <a href="iz/enumset/EnumSet.html#max">max</a>() nothrow @safe @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the maximal value the set can have.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="rankInfo"></a><div class="symbol"><div class="description"><pre><code>private static ref const(<a href="iz/enumset/EnumRankInfo.html">EnumRankInfo</a>!E) <a href="iz/enumset/EnumSet.html#rankInfo">rankInfo</a>() nothrow @safe @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns a lookup table that can be used to retrieve the rank of a member.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="memberCount"></a><div class="symbol"><div class="description"><pre><code>private static const(S) <a href="iz/enumset/EnumSet.html#memberCount">memberCount</a>() nothrow @safe @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the enum count
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="container"></a><div class="symbol"><div class="description"><pre><code>private ref const(SetType) <a href="iz/enumset/EnumSet.html#container">container</a>() nothrow @safe @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the enum count
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="loadFromText"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/enumset/EnumSet.html#loadFromText">loadFromText</a>(const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] value)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Implements the iz.rtti "text struct" traits to allow the deserialization.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="saveToText"></a><div class="symbol"><div class="description"><pre><code>private const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] <a href="iz/enumset/EnumSet.html#saveToText">saveToText</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Implements the iz.rtti "text struct" traits to allow the serialization.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/enumset/EnumSet.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#asBitString">asBitString</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#toString">toString</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#fromString">fromString</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-trusted">@trusted</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#opAssign">opAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#opAssign">opAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#opAssign">opAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#opAssign">opAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#opIndex">opIndex</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-nothrow">nothrow</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#opBinary">opBinary</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#opBinary">opBinary</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#opBinary">opBinary</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#opBinary">opBinary</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#opOpAssign">opOpAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#opOpAssign">opOpAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#opOpAssign">opOpAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#toHash">toHash</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#opEquals">opEquals</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-nothrow">nothrow</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#opEquals">opEquals</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#opSlice">opSlice</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#opIn_r">opIn_r</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#difference">difference</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#intersection">intersection</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#include">include</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#include">include</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#exclude">exclude</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#exclude">exclude</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#isIncluded">isIncluded</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#range">range</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#none">none</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#any">any</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#all">all</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#max">max</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#rankInfo">rankInfo</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#memberCount">memberCount</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#container">container</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#loadFromText">loadFromText</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumSet.html#saveToText">saveToText</a><span class="extrainfo"></span></td><td></td><td></td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

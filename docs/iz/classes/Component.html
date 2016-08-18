@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../../style.css"/>
+<script src="../../highlight.pack.js"></script>
+<title>Component</title>
+<base href="../../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.<a href=iz/classes.html>classes</a>.</small><span class="highlight">Component</span>
+</div>
+<div class="sidebar">
+<a href="iz/classes.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/classes.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li><span class=" selected">iz.<a href="iz/classes.html">classes</a></span>
+</li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li>iz.<a href="iz/enumset.html">enumset</a></li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li>iz.<a href="iz/strings.html">strings</a></li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><div class="description"><pre><code>public class Component : <a href="iz/properties/PropertyPublisher.html">PropertyPublisher</a>
+</code></pre>
+<div class="section"><h2></h2>
+<p>Component is a high-level class that proposes an automatic memory
+managment model based on ownership. It also verifies the requirements to
+make its instances referencable and serializable.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Ownership</h2>
+<p>A Component can be created with iz.memory.construct. As constructor parameter
+another Component can be specified. It's in charge for freeing this "owned"
+instance. Components that's not owned have to be freed manually. A reference
+to an owned object can be escaped. To be notified of its destruction, it's
+possible to observe the component or its owner by adding an observer to the
+componentSubject.
+</p>
+
+
+</div>
+<div class="section"><h2>Referencable</h2>
+<p>Each Component instance that's properly named is automatically registered
+in the ReferenceMan, as a void reference. This allows some powerfull features
+such as the Object property editor or the Serializer to inspect, store, retrieve
+a Component between two sessions.
+</p>
+
+
+</div>
+<div class="section"><h2>Serializable</h2>
+<p>A Component implements the PropertyPublisher interface. Each field annotated
+with @SetGet and each setter/getter pair annotated with @Set and @Get
+is automatically published and is usable by a PropertyBinder, by a Serializer
+or by any other system based on the PropDescriptor system.
+</p>
+
+
+</div>
+</div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>private this()
+</code></pre>
+</div></div><a class="anchor" id="create"></a><div class="symbol"><div class="description"><pre><code>private static C <a href="iz/classes/Component.html#create">create</a>(C = typeof(<a href="iz/classes/Component.html#this">this</a>))(<a href="iz/classes/Component.html">Component</a> owner) 
+if(is(C : <a href="iz/classes/Component.html">Component</a>))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Constructs a new instance whose life-time will be managed.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">owner</td><td class="paramDoc"><p>The Component that owns the new instance.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="owner"></a><div class="symbol"><div class="description"><pre><code>private final const(<a href="iz/classes/Component.html">Component</a>) <a href="iz/classes/Component.html#owner">owner</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns this instance onwer.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="componentSubject"></a><div class="symbol"><div class="description"><pre><code>private final ComponentSubject <a href="iz/classes/Component.html#componentSubject">componentSubject</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the subject allowing ComponentObservers to observe this instance.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="nameAvailable"></a><div class="symbol"><div class="description"><pre><code>private final <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/classes/Component.html#nameAvailable">nameAvailable</a>(in <a href="http://dlang.org/type.html#basic-data-types">char</a>[] value)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns true if a string is available as an unique Component name.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="getUniqueName"></a><div class="symbol"><div class="description"><pre><code>private final <a href="http://dlang.org/type.html#basic-data-types">char</a>[] <a href="iz/classes/Component.html#getUniqueName">getUniqueName</a>(in <a href="http://dlang.org/type.html#basic-data-types">char</a>[] base)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Suggests an unique Component name according to base.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="name"></a><div class="symbol"><div class="description"><pre><code>private <a href="iz/classes/Component.html#name">name</a>(const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] value)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Defines the name of this Component.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>The name must be an unique value in the owner Component tree.
+This value is a published property.
+This value is stored as an ID in the ReferenceMan with the void type.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="name"></a><div class="symbol"><div class="description"><pre><code>private final @<a href="iz/properties/Get.html">Get</a> const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] <a href="iz/classes/Component.html#name">name</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Defines the name of this Component.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>The name must be an unique value in the owner Component tree.
+This value is a published property.
+This value is stored as an ID in the ReferenceMan with the void type.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="qualifiedName"></a><div class="symbol"><div class="description"><pre><code>private final const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] <a href="iz/classes/Component.html#qualifiedName">qualifiedName</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the fully qualified name of this component in the owner
+Component tree.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/classes/Component.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/classes/Component.html#create">create</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Component.html#owner">owner</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Component.html#componentSubject">componentSubject</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Component.html#nameAvailable">nameAvailable</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Component.html#getUniqueName">getUniqueName</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Component.html#name">name</a><span class="extrainfo"><span class="stor-classes"><span class="attr-final">final</span>, <span class="attr-ahrefizpropertiesSethtmlSeta">@<a href="iz/properties/Set.html">Set</a></span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Component.html#name">name</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/Component.html#qualifiedName">qualifiedName</a><span class="extrainfo"></span></td><td></td><td></td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

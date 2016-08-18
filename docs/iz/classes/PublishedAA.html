@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../../style.css"/>
+<script src="../../highlight.pack.js"></script>
+<title>PublishedAA</title>
+<base href="../../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.<a href=iz/classes.html>classes</a>.</small><span class="highlight">PublishedAA</span>
+</div>
+<div class="sidebar">
+<a href="iz/classes.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/classes.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li><span class=" selected">iz.<a href="iz/classes.html">classes</a></span>
+</li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li>iz.<a href="iz/enumset.html">enumset</a></li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li>iz.<a href="iz/strings.html">strings</a></li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><div class="description"><pre><code>public final class PublishedAA(AA) : <a href="iz/properties/PropertyPublisher.html">PropertyPublisher</a>
+if(isAssociativeArray!AA && <a href="iz/serializer.html#isSerializable">isSerializable</a>!(KeyType!AA) && <a href="iz/serializer.html#isSerializable">isSerializable</a>!(ValueType!AA))
+</code></pre>
+<div class="section"><h2></h2>
+<p>The PublishedAA class template allows to serialize an associative array.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>A Serializer is not able to directly handle <i>AA</i>s but this class
+does the task automatically by splitting keys and values in two arrays.
+This class template can only be instantiated if the <i>AA</i> key and value
+type is basic (see iz.rtti.BasicRtTypes).
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">AA</td><td class="paramDoc"><p>The type of the associative array.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>uint[char] aa = ['c' : 0u, 'x' : 12u];
+auto serializableAA = <a href="iz/memory.html#construct">construct</a>!(<a href="iz/classes/PublishedAA.html">PublishedAA</a>!(uint[char]));
+serializableAA.<a href="iz/classes/PublishedAA.html#fromAA">fromAA</a>(aa);
+aa = aa.init;
+version(none) <a href="iz/serializer.html#publisherToFile">publisherToFile</a>(serializableAA, "backup.txt");
+version(none) <a href="iz/serializer.html#fileToPublisher">fileToPublisher</a>("backup.txt", serializableAA);
+serializableAA.<a href="iz/classes/PublishedAA.html#toAA">toAA</a>(aa);
+assert(aa == ['c' : 0u, 'x' : 12u]);
+
+</code></pre>
+
+</div>
+</div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>protected this()
+</code></pre>
+</div></div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>protected this(AA* aa)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Constructs a new instance and sets a reference to the source <i>AA</i>.
+Using this constructor, <code class="d_inlinecode">toAA()</code> and <code class="d_inlinecode">fromAA()</code> don't need
+to be called manually.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">aa</td><td class="paramDoc"><p>A pointer to the associative array that will be stored and restored.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="fromAA"></a><div class="symbol"><div class="description"><pre><code>protected <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/classes/PublishedAA.html#fromAA">fromAA</a>(ref AA aa)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Copies the content of an associative array to the internal containers.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>Typically called before serializing and if the instance is created
+using the default constructor.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">aa</td><td class="paramDoc"><p>The associative array to get.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="toAA"></a><div class="symbol"><div class="description"><pre><code>protected <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/classes/PublishedAA.html#toAA">toAA</a>(ref AA aa)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Resets then fills an associative array using the internal containers.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>Typically called after serializing and if the instance is created
+using the default constructor.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">aa</td><td class="paramDoc"><p>The associative array to set.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/classes/PublishedAA.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/classes/PublishedAA.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/classes/PublishedAA.html#fromAA">fromAA</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/PublishedAA.html#toAA">toAA</a><span class="extrainfo"></span></td><td></td><td></td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

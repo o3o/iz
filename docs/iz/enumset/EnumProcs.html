@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../../style.css"/>
+<script src="../../highlight.pack.js"></script>
+<title>EnumProcs</title>
+<base href="../../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.<a href=iz/enumset.html>enumset</a>.</small><span class="highlight">EnumProcs</span>
+</div>
+<div class="sidebar">
+<a href="iz/enumset.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/enumset.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li>iz.<a href="iz/classes.html">classes</a></li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li><span class=" selected">iz.<a href="iz/enumset.html">enumset</a></span>
+</li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li>iz.<a href="iz/strings.html">strings</a></li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><div class="description"><pre><code>public struct EnumProcs(E, T)
+if(<a href="iz/enumset.html#isCallableFromEnum">isCallableFromEnum</a>!(T, E))
+</code></pre>
+<div class="section"><h2></h2>
+<p>CallTable based on an enum. It can be compared to an associative array of type E[T].
+Additionally an EnumSet can be used to fire a burst of call.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">E</td><td class="paramDoc"><p>an enum.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">T</td><td class="paramDoc"><p>a callable type.
+</p>
+</td></tr>
+</table>
+</div>
+</div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>private this(A...)(A a) nothrow
+</code></pre>
+<div class="section "><h2>Contracts</h2><pre><code>in
+{
+static assert (a.length == <a href="iz/enumset.html#enumMemberCount">enumMemberCount</a>!E);
+    
+    foreach (callable; a)
+
+    static assert (is(A[0] == T));
+}
+</code></pre>
+
+</div>
+<div class="section"><h2></h2>
+<p>Constructs an EnumProcs with a set of T.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">a</td><td class="paramDoc"><p>a list of T.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>private this(T[] someItems) nothrow
+</code></pre>
+<div class="section "><h2>Contracts</h2><pre><code>in
+{
+    assert (someItems.length == <a href="iz/enumset.html#enumMemberCount">enumMemberCount</a>!E);
+    assert (is(typeof(someItems[0]) == T));
+}
+</code></pre>
+
+</div>
+<div class="section"><h2></h2>
+<p>Constructs an EnumProcs with an array of T.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">someItems</td><td class="paramDoc"><p>an array of T.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="opIndex"></a><div class="symbol"><div class="description"><pre><code>private const(T) <a href="iz/enumset/EnumProcs.html#opIndex">opIndex</a>(E aMember) nothrow
+</code></pre>
+<div class="section"><h2></h2>
+<p>opIndex allows a more explicit call syntax than opCall.myStuffs<a href="params">E.member</a>.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="opCall"></a><div class="symbol"><div class="description"><pre><code>private retT <a href="iz/enumset/EnumProcs.html#opCall">opCall</a>(CallParams...)(
+    E selector, 
+    CallParams prms)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Calls the function matching to selector rank.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">selector</td><td class="paramDoc"><p>an E member.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">prms</td><td class="paramDoc"><p>arguments for calling the function.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>a value of type ReturnType!T.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="opCall"></a><div class="symbol"><div class="description"><pre><code>private retT[] <a href="iz/enumset/EnumProcs.html#opCall">opCall</a>(BS, CallParams...)(
+    BS selectors, 
+    CallParams prms) 
+if((is(BS == <a href="iz/enumset/EnumSet.html">EnumSet</a>!(E, <a href="iz/enumset.html#Set8">Set8</a>))) || (is(BS == <a href="iz/enumset/EnumSet.html">EnumSet</a>!(E, <a href="iz/enumset.html#Set16">Set16</a>))) || (is(BS == <a href="iz/enumset/EnumSet.html">EnumSet</a>!(E, <a href="iz/enumset.html#Set32">Set32</a>))) || (is(BS == <a href="iz/enumset/EnumSet.html">EnumSet</a>!(E, <a href="iz/enumset.html#Set64">Set64</a>))) || (is(BS == <a href="iz/enumset/EnumSet.html">EnumSet</a>!(E, BigestSet))))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Calls the functions matching to a set of selectors.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">selectors</td><td class="paramDoc"><p>a set of E.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">prms</td><td class="paramDoc"><p>common or selector-sepcific arguments for calling the functions.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>an array representing the result of each selector, by rank.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="procs"></a><div class="symbol"><div class="description"><pre><code>private ref T[procLen] <a href="iz/enumset/EnumProcs.html#procs">procs</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the array of callable for additional containers operations.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/enumset/EnumProcs.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumProcs.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumProcs.html#opIndex">opIndex</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumProcs.html#opCall">opCall</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>a value of type ReturnType!T.
+</p>
+</td></tr><tr><td><a href="iz/enumset/EnumProcs.html#opCall">opCall</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>an array representing the result of each selector, by rank.
+</p>
+</td></tr><tr><td><a href="iz/enumset/EnumProcs.html#procs">procs</a><span class="extrainfo"></span></td><td></td><td></td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

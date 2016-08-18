@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../../style.css"/>
+<script src="../../highlight.pack.js"></script>
+<title>MustAddGcRange</title>
+<base href="../../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.<a href=iz/memory.html>memory</a>.</small><span class="highlight">MustAddGcRange</span>
+</div>
+<div class="sidebar">
+<a href="iz/memory.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/memory.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li>iz.<a href="iz/classes.html">classes</a></li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li>iz.<a href="iz/enumset.html">enumset</a></li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li><span class=" selected">iz.<a href="iz/memory.html">memory</a></span>
+</li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li>iz.<a href="iz/strings.html">strings</a></li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><div class="description"><pre><code>public template MustAddGcRange(T = <a href="http://dlang.org/type.html#basic-data-types">void</a>)
+if(is(T == struct) || is(T == union) || is(T == class))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Indicates if an aggregate contains members that might be
+collected by the garbage collector. This is used in <pre style="display:inline;" class="d_inline_code">construct</pre>
+to determine if the content of a manually allocated aggregate must
+be declared to the GC.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>// 'a' will be managed with expand/Shrink
+class Foo{@<a href="iz/memory/NoGc.html">NoGc</a> int[] a; @<a href="iz/memory/NoGc.html">NoGc</a> void* b;}
+static assert(!<a href="iz/memory/MustAddGcRange.html">MustAddGcRange</a>!Foo);
+// 'a' will be managed with '.length' so druntime.
+class Bar{int[] a; @<a href="iz/memory/NoGc.html">NoGc</a> void* b;}
+// b's annotation is canceled by a type.
+static assert(<a href="iz/memory/MustAddGcRange.html">MustAddGcRange</a>!Bar);
+// Baz base is <a href="iz/sugar.html#not">not</a> @<a href="iz/memory/NoGc.html">NoGc</a>
+class Baz: Bar{@<a href="iz/memory/NoGc.html">NoGc</a> void* c;}
+static assert(<a href="iz/memory/MustAddGcRange.html">MustAddGcRange</a>!Baz);
+
+</code></pre>
+
+</div>
+</div></div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

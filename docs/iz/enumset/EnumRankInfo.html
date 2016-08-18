@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../../style.css"/>
+<script src="../../highlight.pack.js"></script>
+<title>EnumRankInfo</title>
+<base href="../../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.<a href=iz/enumset.html>enumset</a>.</small><span class="highlight">EnumRankInfo</span>
+</div>
+<div class="sidebar">
+<a href="iz/enumset.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/enumset.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li>iz.<a href="iz/classes.html">classes</a></li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li><span class=" selected">iz.<a href="iz/enumset.html">enumset</a></span>
+</li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li>iz.<a href="iz/strings.html">strings</a></li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><div class="description"><pre><code>public struct EnumRankInfo(E)
+if(is(E == enum))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Provides the information about the rank of the members of an enum.
+The properties are all static and can be retrieved from a template alias.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">E</td><td class="paramDoc"><p>an enum.
+</p>
+</td></tr>
+</table>
+</div>
+</div><a class="anchor" id="max"></a><div class="symbol"><div class="description"><pre><code>private static size_t <a href="iz/enumset/EnumRankInfo.html#max">max</a>() nothrow @safe @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the rank of the last member.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="count"></a><div class="symbol"><div class="description"><pre><code>private static size_t <a href="iz/enumset/EnumRankInfo.html#count">count</a>() nothrow @safe @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the member count. It's always equal to max + 1.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="min"></a><div class="symbol"><div class="description"><pre><code>private auto min
+</code></pre>
+<div class="section"><h2></h2>
+<p>Always returns 0.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="opIndex"></a><div class="symbol"><div class="description"><pre><code>private static size_t <a href="iz/enumset/EnumRankInfo.html#opIndex">opIndex</a>(E aMember) nothrow @safe
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the rank of aMember.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="opIndex"></a><div class="symbol"><div class="description"><pre><code>private static E <a href="iz/enumset/EnumRankInfo.html#opIndex">opIndex</a>(size_t aRank) nothrow @safe @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the member at aRank.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><div class="section members"><h2>Variables</h2><table><tr><td><a href="iz/enumset/EnumRankInfo.html#min">min</a></td><td><pre><code>auto
+</code></pre>
+</td><td></td></tr></table><h2>Functions</h2><table><tr><td><a href="iz/enumset/EnumRankInfo.html#max">max</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumRankInfo.html#count">count</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumRankInfo.html#opIndex">opIndex</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/enumset/EnumRankInfo.html#opIndex">opIndex</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

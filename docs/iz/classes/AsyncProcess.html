@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../../style.css"/>
+<script src="../../highlight.pack.js"></script>
+<title>AsyncProcess</title>
+<base href="../../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.<a href=iz/classes.html>classes</a>.</small><span class="highlight">AsyncProcess</span>
+</div>
+<div class="sidebar">
+<a href="iz/classes.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/classes.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li><span class=" selected">iz.<a href="iz/classes.html">classes</a></span>
+</li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li>iz.<a href="iz/enumset.html">enumset</a></li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li>iz.<a href="iz/strings.html">strings</a></li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><div class="description"><pre><code>public class AsyncProcess : <a href="iz/classes/Process.html">Process</a>
+</code></pre>
+<div class="section"><h2></h2>
+<p>AsyncProcess is a non blocking process that exposes two assignable
+events allowing to be notified when the process output has changed
+or when the process has terminated.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>This class relies on an internal ThreadTimer that could not work in all
+the contexts (for example in a X window).
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>import std.process: environment;
+if (environment.get("TRAVIS") == "true")
+    return;
+
+import std.file: write, exists, tempDir, getcwd, remove;
+import std.path: dirSeparator;
+
+auto code =
+q{
+    import std.stdio;
+    import core.thread;
+    void main()
+    {
+        write("hello world");
+        stdout.flush;
+        Thread.sleep(dur!"msecs"(15));
+        Thread.sleep(dur!"msecs"(15));
+    }
+};
+
+version(Windows) enum exeExt = ".exe"; else enum exeExt = "";
+version(Windows) enum objExt = ".obj"; else enum objExt = ".o";
+
+string fname = getcwd ~ dirSeparator ~ "TempSource";
+string srcName = fname ~ ".d";
+string exeName = fname ~ exeExt;
+string objName = fname ~ objExt;
+scope(exit)
+{
+    remove(srcName);
+    remove(exeName);
+    remove(objName);
+}
+
+write(srcName, code);
+
+// compiles code with dmd
+<a href="iz/classes/Process.html">Process</a> dmdProc = <a href="iz/memory.html#construct">construct</a>!<a href="iz/classes/Process.html">Process</a>;
+dmdProc.executable = "dmd";
+dmdProc.parameters = srcName;
+dmdProc.<a href="iz/classes/AsyncProcess.html#execute">execute</a>;
+assert(dmdProc.terminated);
+assert(dmdProc.exitStatus == 0);
+assert(exeName.exists);
+
+// aggregate to catch the events
+struct Catcher
+{
+    bool ter;
+    bool flg;
+    void bufferAvailable(Object notifier)
+    {
+        flg = true;
+        assert((cast(<a href="iz/classes/AsyncProcess.html">AsyncProcess</a>) notifier).output.readln == "hello world");
+    }
+    void terminate(Object notifier)
+    {
+        ter = true;
+    }
+}
+Catcher catcher;
+
+// run produced program
+<a href="iz/classes/AsyncProcess.html">AsyncProcess</a> runProc = <a href="iz/memory.html#construct">construct</a>!<a href="iz/classes/AsyncProcess.html">AsyncProcess</a>;
+runProc.executable = exeName;
+runProc.usePipes = true;
+runProc.<a href="iz/classes/AsyncProcess.html#onOutputBuffer">onOutputBuffer</a> = &catcher.bufferAvailable;
+runProc.<a href="iz/classes/AsyncProcess.html#onTerminate">onTerminate</a> = &catcher.terminate;
+assert(runProc.<a href="iz/classes/AsyncProcess.html#onOutputBuffer">onOutputBuffer</a>);
+assert(runProc.<a href="iz/classes/AsyncProcess.html#onTerminate">onTerminate</a>);
+runProc.<a href="iz/classes/AsyncProcess.html#execute">execute</a>;
+while (!catcher.ter) {}
+assert(runProc.terminated);
+assert(runProc.exitStatus == 0);
+assert(catcher.ter);
+assert(catcher.flg);
+
+<a href="iz/memory.html#destructEach">destructEach</a>(runProc, dmdProc);
+
+</code></pre>
+
+</div>
+</div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>private this()
+</code></pre>
+</div></div><a class="anchor" id="execute"></a><div class="symbol"><div class="description"><pre><code>private override <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/classes/AsyncProcess.html#execute">execute</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Executes and returns immediatly.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>The process termination can be detected with the terminated property
+or with the onTerminate event.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="readOutput"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/classes/AsyncProcess.html#readOutput">readOutput</a>(T)(ref T[] t)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Reads from the output buffer
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>Convenience function that can be called in the two async events.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">t</td><td class="paramDoc"><p>An array to overwrite. Its size defines the max amount of data
+     to read.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>A bool that indicates if something has been read.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="onTerminate"></a><div class="symbol"><div class="description"><pre><code>private @<a href="iz/properties/Set.html">Set</a> <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/classes/AsyncProcess.html#onTerminate">onTerminate</a>(<a href="http://dlang.org/type.html#basic-data-types">void</a> delegate(Object) value)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets or gets the event called when the process terminates.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="onTerminate"></a><div class="symbol"><div class="description"><pre><code>private @<a href="iz/properties/Get.html">Get</a> <a href="http://dlang.org/type.html#basic-data-types">void</a> delegate(Object) <a href="iz/classes/AsyncProcess.html#onTerminate">onTerminate</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets or gets the event called when the process terminates.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="onOutputBuffer"></a><div class="symbol"><div class="description"><pre><code>private @<a href="iz/properties/Set.html">Set</a> <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/classes/AsyncProcess.html#onOutputBuffer">onOutputBuffer</a>(<a href="http://dlang.org/type.html#basic-data-types">void</a> delegate(Object) value)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets or gets the event called when the process has availalbe output.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="onOutputBuffer"></a><div class="symbol"><div class="description"><pre><code>private @<a href="iz/properties/Get.html">Get</a> <a href="http://dlang.org/type.html#basic-data-types">void</a> delegate(Object) <a href="iz/classes/AsyncProcess.html#onOutputBuffer">onOutputBuffer</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets or gets the event called when the process has availalbe output.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/classes/AsyncProcess.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/classes/AsyncProcess.html#execute">execute</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/AsyncProcess.html#readOutput">readOutput</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>A bool that indicates if something has been read.
+</p>
+</td></tr><tr><td><a href="iz/classes/AsyncProcess.html#onTerminate">onTerminate</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/AsyncProcess.html#onTerminate">onTerminate</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/AsyncProcess.html#onOutputBuffer">onOutputBuffer</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/classes/AsyncProcess.html#onOutputBuffer">onOutputBuffer</a><span class="extrainfo"></span></td><td></td><td></td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

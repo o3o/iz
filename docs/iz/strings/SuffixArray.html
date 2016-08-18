@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../../style.css"/>
+<script src="../../highlight.pack.js"></script>
+<title>SuffixArray</title>
+<base href="../../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.<a href=iz/strings.html>strings</a>.</small><span class="highlight">SuffixArray</span>
+</div>
+<div class="sidebar">
+<a href="iz/strings.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/strings.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li>iz.<a href="iz/classes.html">classes</a></li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li>iz.<a href="iz/enumset.html">enumset</a></li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li><span class=" selected">iz.<a href="iz/strings.html">strings</a></span>
+</li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><div class="description"><pre><code>public struct SuffixArray(T)
+if((ElementEncodingType!T).sizeof == 1)
+</code></pre>
+<div class="section"><h2></h2>
+<p>The suffix array is a data structure that can be used to test quickly
+the presence of a value in a list. It's also adapted to get completion
+proposals for a prefix.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>The performance gain over a canFind() is excellent (98%). The gain over the
+built-in associative array is slight (3%) and the gain over EMSI hash map is
+good (40%). Despite of its speed, it always wastes a lot of memory because
+each byte in an entry is represented by an array of 256 pointers.
+For example count 800 MB for /usr/share/dict/words (300K words) on X86_64.
+This implementation only works with arrays of character made of single byte
+units (char[], string, const(char)[], etc) but is compatible with multi byte
+characters.
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>string[] source = ["Cairo", "Calcutta", "Calgary", "Cali", "Campinas",
+    "Cape Town", "Caracas", "Casablanca", "Changchun", "Changde"];
+
+auto cities = <a href="iz/strings/SuffixArray.html">SuffixArray</a>!string(source);
+
+// test for presence
+assert("Cairo" in cities);
+assert("Calcutta" in cities);
+assert("Calgary" in cities);
+assert("Chicago" !in cities);
+assert("" !in cities);
+
+// get completion list
+auto pre = cities.<a href="iz/strings/SuffixArray.html#findPrefix">findPrefix</a>("Cal");
+assert(pre);
+assert(!pre.terminates);
+assert(pre.entries == ["Calcutta"[3..$], "Calgary"[3..$], "Cali"[3..$]]);
+
+// sorting
+auto desc = cities.<a href="iz/strings/SuffixArray.html#sort">sort</a>(true);
+import std.algorithm.sorting;
+assert(desc == <a href="iz/strings/SuffixArray.html#sort">sort</a>!"a > b"(source).array);
+auto asc = cities.<a href="iz/strings/SuffixArray.html#sort">sort</a>(false);
+assert(asc == <a href="iz/strings/SuffixArray.html#sort">sort</a>!"a < b"(source).array);
+
+// adds from a prefix
+auto ch = cast(cities.<a href="iz/strings/SuffixArray.Node.html">Node</a>*) cities.<a href="iz/strings/SuffixArray.html#findPrefix">findPrefix</a>("Ch");
+assert(ch);
+ch.addSuffix("icago");
+assert("Chicago" in cities);
+
+// memory usage
+size_t count;
+foreach(s; source) foreach(i; 0..s.length)
+    ++count;
+// actual usage is more close to count * 256 * size_t.sizeof
+assert(cities.<a href="iz/strings/SuffixArray.html#memoryUsage">memoryUsage</a> >= count);
+
+// clearing is global
+cities.<a href="iz/strings/SuffixArray.html#clear">clear</a>;
+assert("Cairo" !in cities);
+assert("Calcutta" !in cities);
+
+</code></pre>
+
+</div>
+</div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>private this(E)(E entries) nothrow @safe @nogc 
+if(isInputRange!E && isImplicitlyConvertible!(ElementType!E, T))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Constructs the array from a range of elements.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="clear"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/strings/SuffixArray.html#clear">clear</a>() @safe @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Empties the array.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="opBinaryRight"></a><div class="symbol"><div class="description"><pre><code>private const(<a href="iz/strings/SuffixArray.Node.html">Node</a>)* <a href="iz/strings/SuffixArray.html#opBinaryRight">opBinaryRight</a>(string op)(const T value) const pure nothrow @safe @nogc 
+if(op == "in")
+</code></pre>
+<div class="section"><h2></h2>
+<p>Determines wether a full value is in the array.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">value</td><td class="paramDoc"><p>The value to search for.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>Null if value is not in the array otherwise a pointer to
+     the node that terminates the path to value.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="find"></a><div class="symbol"><div class="description"><pre><code>alias find = <a href="iz/strings/SuffixArray.html#opBinaryRight">opBinaryRight</a>!"in"
+</code></pre>
+<div class="section"><h2></h2>
+<p>Determines wether a full value is in the array.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">value</td><td class="paramDoc"><p>The value to search for.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>Null if value is not in the array otherwise a pointer to
+     the node that terminates the path to value.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="findPrefix"></a><div class="symbol"><div class="description"><pre><code>private const(<a href="iz/strings/SuffixArray.Node.html">Node</a>)* <a href="iz/strings/SuffixArray.html#findPrefix">findPrefix</a>(const T value) const pure nothrow @safe @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Determines wether an entry starts with value.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">value</td><td class="paramDoc"><p>The prefix to search for.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>Null if value is not in the array otherwise a pointer to
+     the node that gives the entries starting with value.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="Fun"></a><div class="symbol"><div class="description"><pre><code>alias Fun = <a href="http://dlang.org/type.html#basic-data-types">void</a> function(
+    const(<a href="iz/strings/SuffixArray.Node.html">Node</a>)* node, 
+    ref const <a href="http://dlang.org/type.html#basic-data-types">ubyte</a>[] path, 
+    A a)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Prototype for the function passed in visitAll and Node.visit.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">node</td><td class="paramDoc"><p>The node that's visited.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">path</td><td class="paramDoc"><p>The path that leads to the node. It also represents the value.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">a</td><td class="paramDoc"><p>The variadic parameters, i.e the callback "user parameters".
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="visitAll"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/strings/SuffixArray.html#visitAll">visitAll</a>(alias fun, <a href="http://dlang.org/type.html#basic-data-types">bool</a> descending = false, <a href="http://dlang.org/type.html#basic-data-types">bool</a> childrenFirst = true, A...)(auto ref A a) const nothrow @safe 
+if(<a href="iz/strings/SuffixArray.isValidVisitor.html">isValidVisitor</a>!fun)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Visits all the nodes with a function.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">fun</td><td class="paramDoc"><p>See the Fun prototype.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">descending</td><td class="paramDoc"><p>Indicates if the visit starts from the end.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">childrenFirst</td><td class="paramDoc"><p>Indicates if the children are visited before their parent.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">a</td><td class="paramDoc"><p>The variadic parameters passed to fun.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="sort"></a><div class="symbol"><div class="description"><pre><code>private T[] <a href="iz/strings/SuffixArray.html#sort">sort</a>(<a href="http://dlang.org/type.html#basic-data-types">bool</a> descending = false) nothrow @safe
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sorts the entries.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>While sorting can be easily done with suffix trees this is much slower
+than a classic quick sort. Also note that sorting is not unicode aware
+which means that unless the entries are made of ASCII chars, the results
+will be different from std.algorithm sort().
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">descending</td><td class="paramDoc"><p>Defines the sorting direction.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>An array of entries.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="memoryUsage"></a><div class="symbol"><div class="description"><pre><code>private size_t <a href="iz/strings/SuffixArray.html#memoryUsage">memoryUsage</a>() const nothrow @safe
+</code></pre>
+<div class="section"><h2></h2>
+<p>Indicates the amount of memory used by the array.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><div class="section members"><h2>Aliases</h2><table><tr><td><a href="iz/strings/SuffixArray.html#find">find</a></td><td><pre><code><a href="iz/strings/SuffixArray.html#opBinaryRight">opBinaryRight</a>!"in"
+</code></pre>
+</td><td>Returns: <p>Null if value is not in the array otherwise a pointer to
+     the node that terminates the path to value.
+</p>
+</td></tr><tr><td><a href="iz/strings/SuffixArray.html#Fun">Fun</a></td><td><pre><code><a href="http://dlang.org/type.html#basic-data-types">void</a> function(
+    const(<a href="iz/strings/SuffixArray.Node.html">Node</a>)* node, 
+    ref const <a href="http://dlang.org/type.html#basic-data-types">ubyte</a>[] path, 
+    A a)
+</code></pre>
+</td><td></td></tr></table><h2>Functions</h2><table><tr><td><a href="iz/strings/SuffixArray.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/strings/SuffixArray.html#clear">clear</a><span class="extrainfo"><span class="method-attribs"><span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/strings/SuffixArray.html#opBinaryRight">opBinaryRight</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td>Returns: <p>Null if value is not in the array otherwise a pointer to
+     the node that terminates the path to value.
+</p>
+</td></tr><tr><td><a href="iz/strings/SuffixArray.html#findPrefix">findPrefix</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td>Returns: <p>Null if value is not in the array otherwise a pointer to
+     the node that gives the entries starting with value.
+</p>
+</td></tr><tr><td><a href="iz/strings/SuffixArray.html#visitAll">visitAll</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/strings/SuffixArray.html#sort">sort</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td>Returns: <p>An array of entries.
+</p>
+</td></tr><tr><td><a href="iz/strings/SuffixArray.html#memoryUsage">memoryUsage</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr></table><h2>Structs</h2><table><tr><td><a href="iz/strings/SuffixArray.Node.html">Node</a></td><td></td><td></td></tr></table><h2>Templates</h2><table><tr><td><a href="iz/strings/SuffixArray.isValidVisitor.html">isValidVisitor</a></td><td></td><td></td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>
