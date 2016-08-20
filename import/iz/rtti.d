@@ -582,8 +582,13 @@ if (B.length < 2)
     }
     else static if (is(T == class) || is(T==Stream))
     {
-        static if(!is(T==Stream))
-            enum ctor = cast(Object function()) defaultConstructor!T;
+        static if(!is(T == Stream))
+        {
+            static if (hasDefaultConstructor!T)
+                enum ctor = cast(Object function()) defaultConstructor!T;
+            else
+                enum ctor = cast(Object function()) null;
+        }
         else
             enum ctor = cast(Object function()) null;
         auto init = typeid(T).initializer[];

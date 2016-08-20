@@ -258,26 +258,18 @@ unittest
 }
 
 /**
- * Returns a pointer to a class default constructor.
+ * Returns a pointer to the default constructor of a class
  */
-template defaultConstructor(C)
-if(is(C==class))
+auto defaultConstructor(C)()
+if (is(C == class))
 {
-    C function() get()
+    alias CtorT = C function();
+    static if (__traits(hasMember, C, "__ctor"))
+    foreach(overload; __traits(getOverloads, C, "__ctor"))
     {
-        C function() result;
-        static if (__traits(hasMember, C, "__ctor"))
-        foreach(overload; __traits(getOverloads, C, "__ctor"))
-        {
-            static if (is(typeof(overload) == typeof(*result)))
-            {
-                result = &overload;
-                break;
-            }
-        }
-        return result;
+        static if (is(Unqual!(ReturnType!overload) == C) && !Parameters!overload.length)
+            return &overload;
     }
-    enum defaultConstructor = get;
 }
 
 /**
@@ -286,13 +278,13 @@ if(is(C==class))
 template hasDefaultConstructor(C)
 if(is(C==class))
 {
-    enum hasDefaultConstructor = defaultConstructor!C !is null;
+    enum hasDefaultConstructor = !is(typeof(defaultConstructor!C()) == void);
 }
 ///
 unittest
 {
     class A{}
-    class B{this(){}}
+    class B{this() const {}}
     class C{this(int a){}}
     class D{this(){} this(int a){}}
 
