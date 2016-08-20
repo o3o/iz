@@ -210,6 +210,9 @@ unittest
 /**
  * Indicates wether an enum is ordered.
  *
+ * An enum is considered as ordered if its members can index an array,
+ * optionally with a starting offset.
+ *
  * Params:
  *      T = enum to be tested.
  *
@@ -222,8 +225,7 @@ if (is(T == enum))
 {
     static if (!isIntegral!(OriginalType!T))
     {
-        enum f = false;
-        alias isOrderedEnum = f;
+        enum isOrderedEnum = false;
     }
     else
     {
@@ -238,7 +240,7 @@ if (is(T == enum))
             }
             return true;
         }
-        alias isOrderedEnum = checker;
+        enum isOrderedEnum = checker;
     }
 }
 ///
@@ -248,13 +250,11 @@ unittest
     static assert(isOrderedEnum!A);
     enum B: ubyte {a = 2,z,e,r}
     static assert(isOrderedEnum!B);
-    assert(isOrderedEnum!B); //!\ forces coverage /!\
 
     enum C: float {a,z,e,r}
     static assert(!isOrderedEnum!C);
     enum D: uint {a,z = 8,e,r}
     static assert(!isOrderedEnum!D);
-    assert(!isOrderedEnum!D); //!\ forces coverage /!\
 }
 
 /**
