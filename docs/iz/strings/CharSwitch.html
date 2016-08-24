@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../../style.css"/>
+<script src="../../highlight.pack.js"></script>
+<title>CharSwitch</title>
+<base href="../../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.<a href=iz/strings.html>strings</a>.</small><span class="highlight">CharSwitch</span>
+</div>
+<div class="sidebar">
+<a href="iz/strings.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/strings.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li>iz.<a href="iz/classes.html">classes</a></li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li>iz.<a href="iz/enumset.html">enumset</a></li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li><span class=" selected">iz.<a href="iz/strings.html">strings</a></span>
+</li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><div class="description"><pre><code>public struct CharSwitch(A...)
+if(A.length)
+</code></pre>
+<div class="section"><h2></h2>
+<p>The CharSwitch structure allows to define static sets of character.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>Unlike CharMap it's more adapted to sets made of unicode characters
+because the characters are tested with a switch table that's generated at
+compile-time rather than reading, with an indirection, a sparse array of booleans.
+The structure uniquely implements the <pre style="display:inline;" class="d_inline_code"><font color=blue>in</font></pre> operator.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">A</td><td class="paramDoc"><p>Variadic parameters made of literal characters, integer numbers or
+     character ranges literals, such as <pre style="display:inline;" class="d_inline_code"><font color=red>"[0..9]"</font></pre> or <pre style="display:inline;" class="d_inline_code"><font color=red>"[a..z]"</font></pre>.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>// syntax example for a character range
+static immutable <a href="iz/strings/CharSwitch.html">CharSwitch</a>!("[0..9]") digits;
+assert('0' in digits);
+assert('e' !in digits);
+
+// many ranges are accepted
+static immutable <a href="iz/strings/CharSwitch.html">CharSwitch</a>!("[0..9]", "[a..F]", "[a..f]") hexdgs;
+assert('0' in hexdgs);
+assert('e' in hexdgs);
+assert('G' !in hexdgs);
+
+// ranges <a href="iz/sugar.html#and">and</a> chars can be mixed
+static immutable <a href="iz/strings/CharSwitch.html">CharSwitch</a>!('à','é','è','ç',"[a..z]","[a..Z]",'ù') frenchchars;
+assert('ß' !in frenchchars);
+assert('é' in frenchchars);
+
+</code></pre>
+
+</div>
+</div></div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

@@ -677,6 +677,7 @@ var items = [
 {"iz.strings.CharMap.opBinaryRight" : "iz/strings/CharMap.html#opBinaryRight"},
 {"iz.strings.hexChars" : "iz/strings.html#hexChars"},
 {"iz.strings.whiteChars" : "iz/strings.html#whiteChars"},
+{"iz.strings.CharSwitch" : "iz/strings/CharSwitch.html"},
 {"iz.strings.nullTerminated" : "iz/strings.html#nullTerminated"},
 {"iz.strings.isCharTester" : "iz/strings/isCharTester.html"},
 {"iz.strings.nextWord" : "iz/strings.html#nextWord"},
@@ -784,7 +785,7 @@ var items = [
 {"iz.types.dimensionCount" : "iz/types/dimensionCount.html"},
 {"iz.types.ArrayElementType" : "iz/types/ArrayElementType.html"},
 {"iz.types.isOrderedEnum" : "iz/types/isOrderedEnum.html"},
-{"iz.types.defaultConstructor" : "iz/types/defaultConstructor.html"},
+{"iz.types.defaultConstructor" : "iz/types.html#defaultConstructor"},
 {"iz.types.hasDefaultConstructor" : "iz/types/hasDefaultConstructor.html"},
 {"iz" : "iz.html"},
 ];

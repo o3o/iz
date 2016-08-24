@@ -256,6 +256,117 @@ immutable CharMap hexChars = CharMap['a'..'f', 'A'..'F', '0'..'9'];
 /// A CharMap that includes the white characters.
 immutable CharMap whiteChars = CharMap['\t'..'\r', ' '];
 
+
+/**
+ * The CharSwitch structure allows to define static sets of character.
+ *
+ * Unlike CharMap it's more adapted to sets made of unicode characters
+ * because the characters are tested with a switch table that's generated at
+ * compile-time rather than reading, with an indirection, a sparse array of booleans.
+ *
+ * The structure uniquely implements the `in` operator.
+ *
+ * Params:
+ *      A = Variadic parameters made of literal characters, integer numbers or
+ *      character ranges literals, such as `"[0..9]"` or `"[a..z]"`.
+ */
+struct CharSwitch(A...)
+if (A.length)
+{
+
+    import std.conv: to;
+    import std.range: iota;
+    import std.meta: aliasSeqOf;
+
+    private alias case_ = (uint T) =>  "\tcase " ~ to!string(T) ~ ": return true;\n";
+
+    // generate cases for single chars: 'a', 'é', 57, ...
+    private static string character(V)(V value)
+    if (isSomeChar!V || isIntegral!V)
+    {
+        return case_(value);
+    }
+
+    // generate cases for char ranges: "[a..g]", '[0..9]', ...
+    private static string range(string value)
+    {
+        enum err = "invalid character range format, the format must respect [<lo>..<hi>]";
+        assert(walkLength(value) == 6, err);
+        assert(value.front == '[', err);
+        value.popFront;
+        dchar min = value.front;
+        value.popFront;
+        assert(value.front == '.', err);
+        value.popFront;
+        assert(value.front == '.', err);
+        value.popFront;
+        dchar max = value.front;
+        value.popFront;
+        assert(value.front == ']', err);
+
+        string result;
+        foreach(i; iota(min, max))
+        {
+            result ~= character(i);
+        }
+        return result;
+    }
+
+    private static string makeOpIn(A...)()
+    {
+        string result = "static bool opIn_r(dchar value) \n{\n\tswitch(value)\n\t{\n\tdefault: return false;\n ";
+
+        foreach(i; aliasSeqOf!(iota(0, A.length)))
+        {
+            alias T = typeof(A[i]);
+            static if (isSomeChar!T)
+            {
+                result ~= character(A[i]);
+            }
+            else static if (isIntegral!T)
+            {
+                static if (A[i] < dchar.max)
+                    result ~= character(A[i]);
+                else
+                    static assert(0, "integral value exceeds dchar.max");
+            }
+            else static if (is(T == string))
+            {
+                result ~= range(A[i]);
+            }
+            else
+                static assert(0, "invalid argument type: " ~ T.stringof);
+        }
+
+        result ~= "\t}\n};";
+
+        return result;
+    }
+
+    mixin(makeOpIn!A);
+
+}
+///
+unittest
+{
+    // syntax example for a character range
+    static immutable CharSwitch!("[0..9]") digits;
+    assert('0' in digits);
+    assert('e' !in digits);
+
+    // many ranges are accepted
+    static immutable CharSwitch!("[0..9]", "[a..F]", "[a..f]") hexdgs;
+    assert('0' in hexdgs);
+    assert('e' in hexdgs);
+    assert('G' !in hexdgs);
+
+    // ranges and chars can be mixed
+    static immutable CharSwitch!('à','é','è','ç',"[a..z]","[a..Z]",'ù') frenchchars;
+    assert('ß' !in frenchchars);
+    assert('é' in frenchchars);
+}
+
+
 /**
  * Returns an input range that processes directly a null terminated C string,
  * without fully converting it to a phobos string.

@@ -152,6 +152,19 @@ assert(<a href="iz/types.html#className">className</a>!(false)(new C) == "C");
 </code></pre>
 
 </div>
+</div></div><a class="anchor" id="defaultConstructor"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/types.html#defaultConstructor">defaultConstructor</a>(C)() 
+if(is(C == class))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns a pointer to the default constructor of a class
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
 </div></div><div class="description"><div class="section"><h2></h2>
 <p>Several templates, alias, traits or functions related to types.
 </p>
@@ -185,7 +198,7 @@ assert(<a href="iz/types.html#className">className</a>!(false)(new C) == "C");
 </code></pre>
 </td><td></td></tr><tr><td><a href="iz/types.html#GenericFunction">GenericFunction</a></td><td><pre><code><a href="http://dlang.org/type.html#basic-data-types">void</a> function()
 </code></pre>
-</td><td></td></tr></table><h2>Functions</h2><table><tr><td><a href="iz/types.html#isFixedSize">isFixedSize</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/types.html#className">className</a><span class="extrainfo"></span></td><td></td><td></td></tr></table><h2>Templates</h2><table><tr><td><a href="iz/types/ScopedReachability.html">ScopedReachability</a></td><td></td><td></td></tr><tr><td><a href="iz/types/isMultiDimensionalArray.html">isMultiDimensionalArray</a></td><td></td><td>Returns: <p>true if T is a multi dimensional array
+</td><td></td></tr></table><h2>Functions</h2><table><tr><td><a href="iz/types.html#isFixedSize">isFixedSize</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/types.html#className">className</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/types.html#defaultConstructor">defaultConstructor</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr></table><h2>Templates</h2><table><tr><td><a href="iz/types/ScopedReachability.html">ScopedReachability</a></td><td></td><td></td></tr><tr><td><a href="iz/types/isMultiDimensionalArray.html">isMultiDimensionalArray</a></td><td></td><td>Returns: <p>true if T is a multi dimensional array
 </p>
 </td></tr><tr><td><a href="iz/types/dimensionCount.html">dimensionCount</a></td><td></td><td>Returns: <p>0 iftemplate <code class="d_inlinecode">T</code> is an not a build-in array, otherwise a number
      at leat equal to 1, according to the array dimenssion count.
@@ -195,7 +208,7 @@ assert(<a href="iz/types.html#className">className</a>!(false)(new C) == "C");
 </td></tr><tr><td><a href="iz/types/isOrderedEnum.html">isOrderedEnum</a></td><td></td><td>Returns: <p>true if T members type is integral and if the delta between each member
      is one, false otherwise.
 </p>
-</td></tr><tr><td><a href="iz/types/defaultConstructor.html">defaultConstructor</a></td><td></td><td></td></tr><tr><td><a href="iz/types/hasDefaultConstructor.html">hasDefaultConstructor</a></td><td></td><td></td></tr></table>
+</td></tr><tr><td><a href="iz/types/hasDefaultConstructor.html">hasDefaultConstructor</a></td><td></td><td></td></tr></table>
 </div>
 </div><script>hljs.initHighlightingOnLoad();</script>
 
