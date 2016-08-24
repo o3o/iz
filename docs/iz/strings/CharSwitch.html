@@ -80,18 +80,18 @@ The structure uniquely implements the <pre style="display:inline;" class="d_inli
 
 </div>
 <pre><code>// syntax example for a character range
-static immutable <a href="iz/strings/CharSwitch.html">CharSwitch</a>!("[0..9]") digits;
+alias digits = static immutable <a href="iz/strings/CharSwitch.html">CharSwitch</a>!("[0..9]") ;
 assert('0' in digits);
 assert('e' !in digits);
 
 // many ranges are accepted
-static immutable <a href="iz/strings/CharSwitch.html">CharSwitch</a>!("[0..9]", "[a..F]", "[a..f]") hexdgs;
+alias hexdgs = static immutable <a href="iz/strings/CharSwitch.html">CharSwitch</a>!("[0..9]", "[a..F]", "[a..f]");
 assert('0' in hexdgs);
 assert('e' in hexdgs);
 assert('G' !in hexdgs);
 
 // ranges <a href="iz/sugar.html#and">and</a> chars can be mixed
-static immutable <a href="iz/strings/CharSwitch.html">CharSwitch</a>!('à','é','è','ç',"[a..z]","[a..Z]",'ù') frenchchars;
+alias frenchchars = static immutable <a href="iz/strings/CharSwitch.html">CharSwitch</a>!('à','é','è','ç',"[a..z]","[a..Z]",'ù');
 assert('ß' !in frenchchars);
 assert('é' in frenchchars);
 

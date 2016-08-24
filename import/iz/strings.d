@@ -350,18 +350,18 @@ if (A.length)
 unittest
 {
     // syntax example for a character range
-    static immutable CharSwitch!("[0..9]") digits;
+    alias digits = static immutable CharSwitch!("[0..9]") ;
     assert('0' in digits);
     assert('e' !in digits);
 
     // many ranges are accepted
-    static immutable CharSwitch!("[0..9]", "[a..F]", "[a..f]") hexdgs;
+    alias hexdgs = static immutable CharSwitch!("[0..9]", "[a..F]", "[a..f]");
     assert('0' in hexdgs);
     assert('e' in hexdgs);
     assert('G' !in hexdgs);
 
     // ranges and chars can be mixed
-    static immutable CharSwitch!('à','é','è','ç',"[a..z]","[a..Z]",'ù') frenchchars;
+    alias frenchchars = static immutable CharSwitch!('à','é','è','ç',"[a..z]","[a..Z]",'ù');
     assert('ß' !in frenchchars);
     assert('é' in frenchchars);
 }
