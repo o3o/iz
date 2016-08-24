@@ -278,17 +278,17 @@ if (A.length)
     import std.range: iota;
     import std.meta: aliasSeqOf;
 
-    private alias case_ = (uint T) =>  "\tcase " ~ to!string(T) ~ ": return true;\n";
+    private alias case_ = (uint v) => "\tcase " ~ to!string(v) ~ ": return true;\n";
 
-    // generate cases for single chars: 'a', 'é', 57, ...
-    private static string character(V)(V value)
+    // CTFE: generates cases for single chars: 'a', 'é', 57, ...
+    private static string caseForChar(V)(V value)
     if (isSomeChar!V || isIntegral!V)
     {
         return case_(value);
     }
 
-    // generate cases for char ranges: "[a..g]", '[0..9]', ...
-    private static string range(string value)
+    // CTFE: generates cases for char ranges: "[a..g]", '[0..9]', ...
+    private static string casesForRange(string value) @safe pure
     {
         enum err = "invalid character range format, the format must respect [<lo>..<hi>]";
         assert(walkLength(value) == 6, err);
@@ -307,32 +307,34 @@ if (A.length)
         string result;
         foreach(i; iota(min, max))
         {
-            result ~= character(i);
+            result ~= caseForChar(i);
         }
         return result;
     }
 
+    // CTFE: makes the switch
     private static string makeOpIn(A...)()
     {
-        string result = "static bool opIn_r(dchar value) \n{\n\tswitch(value)\n\t{\n\tdefault: return false;\n ";
+        string result = "static bool opIn_r(dchar value) @safe @nogc pure nothrow"
+            ~ "\n{\n\tswitch(value)\n\t{\n\tdefault: return false;\n ";
 
         foreach(i; aliasSeqOf!(iota(0, A.length)))
         {
             alias T = typeof(A[i]);
             static if (isSomeChar!T)
             {
-                result ~= character(A[i]);
+                result ~= caseForChar(A[i]);
             }
             else static if (isIntegral!T)
             {
                 static if (A[i] < dchar.max)
-                    result ~= character(A[i]);
+                    result ~= caseForChar(A[i]);
                 else
                     static assert(0, "integral value exceeds dchar.max");
             }
             else static if (is(T == string))
             {
-                result ~= range(A[i]);
+                result ~= casesForRange(A[i]);
             }
             else
                 static assert(0, "invalid argument type: " ~ T.stringof);
@@ -347,7 +349,7 @@ if (A.length)
 
 }
 ///
-unittest
+@nogc @safe pure unittest
 {
     // syntax example for a character range
     alias digits = static immutable CharSwitch!("[0..9]") ;
@@ -361,7 +363,7 @@ unittest
     assert('G' !in hexdgs);
 
     // ranges and chars can be mixed
-    alias frenchchars = static immutable CharSwitch!('à','é','è','ç',"[a..z]","[a..Z]",'ù');
+    alias frenchchars = static immutable CharSwitch!('à','é','è','ç',"[a..z]","[A..Z]",'ù');
     assert('ß' !in frenchchars);
     assert('é' in frenchchars);
 }
