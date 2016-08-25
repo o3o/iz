@@ -294,3 +294,48 @@ unittest
     static assert( hasDefaultConstructor!D);
 }
 
+/**
+ * Indicates wether an aggregate can be used with the `in` operator.
+ *
+ * Params:
+ *      T = The aggregate or an associative array type.
+ *      A = The type of the `in` left hand side argument.
+ */
+template hasInOperator(T, A)
+{
+    static if (isAssociativeArray!T && is(KeyType!T == A))
+        enum hasInOperator = true;
+    else static if (is(T == class) || is(T == struct))
+    {
+        A a;
+        static if (is(typeof(a in T)))
+            enum hasInOperator = true;
+        else
+        {
+            static if (is(typeof(a in new T)))
+                enum hasInOperator = true;
+            else
+                enum hasInOperator = false;
+        }
+    }
+    else
+        enum hasInOperator = false;
+}
+///
+unittest
+{
+    alias AA = int[string];
+    static assert(hasInOperator!(AA, string));
+    static assert(!hasInOperator!(AA, int));
+
+    struct Tester1 {static bool opIn_r(int){return true;}}
+    static assert(hasInOperator!(Tester1, int));
+
+    struct Tester2 {bool opIn_r(int){return true;}}
+    static assert(hasInOperator!(Tester2, int));
+    static assert(!hasInOperator!(Tester2, string));
+
+    struct Nothing {}
+    static assert(!hasInOperator!(Nothing, int));
+}
+
