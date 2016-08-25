@@ -6,7 +6,7 @@ module iz.strings;
 import
     std.range, std.traits, std.algorithm.searching;
 import
-    iz.sugar;
+    iz.sugar, iz.types;
 
 version(unittest) import std.stdio;
 
@@ -122,10 +122,10 @@ pure @safe unittest
     assert(71 !in cs3);
 }
 
-/// a CharRange that verify characters for decimal numbers.
-static immutable CharRange decimalChars = CharRange('0', '9');
-/// a CharRange that verify characters for octal numbers.
-static immutable CharRange octalChars = CharRange('0', '7');
+/// a CharSwitch that verify characters for decimal numbers.
+static immutable CharSwitch!("[0..9]") decimalChars;
+/// a CharSwitch that verify characters for octal numbers.
+static immutable CharSwitch!("[0..7]") octalChars;
 
 /**
  * CharMap is an helper struct that allows to test
@@ -251,10 +251,10 @@ pure @safe unittest
     assert('\t' in cm);
 }
 
-/// A CharMap that includes the hexadecimal characters.
-immutable CharMap hexChars = CharMap['a'..'f', 'A'..'F', '0'..'9'];
-/// A CharMap that includes the white characters.
-immutable CharMap whiteChars = CharMap['\t'..'\r', ' '];
+/// A CharSwitch that includes the hexadecimal characters.
+static immutable CharSwitch!("[a..f]", "[A..F]", "[0..9]") hexChars;
+/// A CharSwitch that includes the white characters.
+static immutable CharSwitch!("[\t..\r]", ' ') whiteChars;
 
 
 /**
@@ -291,23 +291,62 @@ if (A.length)
     private static string casesForRange(string value) @safe pure
     {
         enum err = "invalid character range format, the format must respect [<lo>..<hi>]";
-        assert(walkLength(value) == 6, err);
+        assert(!value.empty, err);
         assert(value.front == '[', err);
         value.popFront;
+
+        size_t i = 1;
         dchar min = value.front;
+        if (min == '\\')
+        {
+            while (true)
+            {
+                if (value.empty || value.front == '.')
+                    break;
+
+                value.popFront;
+                ++i;
+            }
+            min = value[1..i].to!dchar;
+        }
+
+        assert(!value.empty, err);
         value.popFront;
+        assert(!value.empty, err);
         assert(value.front == '.', err);
         value.popFront;
+        assert(!value.empty, err);
         assert(value.front == '.', err);
         value.popFront;
+
         dchar max = value.front;
+        if (max == '\\')
+        {
+            ++++i;
+            const lo = i;
+            while (true)
+            {
+                if (value.empty || value.front == '.')
+                    break;
+
+                value.popFront;
+                ++i;
+            }
+            max = value[lo..i].to!dchar;
+        }
+
+        assert(min < max, "invalid character range: " ~ min.to!string ~ " > " ~ max.to!string);
+        assert(!value.empty, err);
         value.popFront;
         assert(value.front == ']', err);
+        assert(!value.empty, err);
+        value.popFront;
+        assert(value.empty, err);
 
         string result;
-        foreach(i; iota(min, max))
+        foreach(c; iota(min, max + 1))
         {
-            result ~= caseForChar(i);
+            result ~= caseForChar(c);
         }
         return result;
     }
@@ -327,7 +366,7 @@ if (A.length)
             }
             else static if (isIntegral!T)
             {
-                static if (A[i] < dchar.max)
+                static if (dchar.min <= A[i] && A[i] <= dchar.max)
                     result ~= caseForChar(A[i]);
                 else
                     static assert(0, "integral value exceeds dchar.max");
@@ -346,7 +385,6 @@ if (A.length)
     }
 
     mixin(makeOpIn!A);
-
 }
 ///
 @nogc @safe pure unittest
@@ -357,9 +395,10 @@ if (A.length)
     assert('e' !in digits);
 
     // many ranges are accepted
-    alias hexdgs = static immutable CharSwitch!("[0..9]", "[a..F]", "[a..f]");
+    alias hexdgs = static immutable CharSwitch!("[0..9]", "[A..F]", "[a..f]");
     assert('0' in hexdgs);
     assert('e' in hexdgs);
+    assert('f' in hexdgs);
     assert('G' !in hexdgs);
 
     // ranges and chars can be mixed
@@ -532,7 +571,19 @@ template isCharTester(T)
     else static if (isSomeChar!T)
         enum isCharTester = true;
     else
-        enum isCharTester = false;
+    {
+        alias B = TemplateOf!(Unqual!T);
+        static if (is(B!'a' == CharSwitch!'a'))
+            enum isCharTester = true;
+        else
+            enum isCharTester = false;
+    }
+}
+
+unittest
+{
+    alias B = TemplateOf!(Unqual!(typeof(whiteChars)));
+    static assert (is(B!'a' == CharSwitch!'a'));
 }
 
 
@@ -554,7 +605,7 @@ if (isInputRange!Range && isSomeChar!(ElementType!Range) && isCharTester!T)
     CharType!Range[] result;
     dchar current = void;
 
-    static if (is(UT == CharRange) || is(UT == CharMap) || isAssociativeArray!T)
+    static if (hasInOperator!(UT, dchar))
     {
         while (true)
         {
@@ -738,7 +789,7 @@ void skipWord(Range, T, bool until = false)(ref Range range, T charTester)
 if (isInputRange!Range && isSomeChar!(ElementType!Range) && isCharTester!T)
 {
     alias UT = Unqual!T;
-    static if (is(UT == CharRange) || is(UT == CharMap) || isAssociativeArray!T)
+    static if (hasInOperator!(UT, dchar))
     {
         while (true)
         {
