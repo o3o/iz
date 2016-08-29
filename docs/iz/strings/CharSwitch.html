@@ -85,13 +85,14 @@ assert('0' in digits);
 assert('e' !in digits);
 
 // many ranges are accepted
-alias hexdgs = static immutable <a href="iz/strings/CharSwitch.html">CharSwitch</a>!("[0..9]", "[a..F]", "[a..f]");
+alias hexdgs = static immutable <a href="iz/strings/CharSwitch.html">CharSwitch</a>!("[0..9]", "[A..F]", "[a..f]");
 assert('0' in hexdgs);
 assert('e' in hexdgs);
+assert('f' in hexdgs);
 assert('G' !in hexdgs);
 
 // ranges <a href="iz/sugar.html#and">and</a> chars can be mixed
-alias frenchchars = static immutable <a href="iz/strings/CharSwitch.html">CharSwitch</a>!('à','é','è','ç',"[a..z]","[a..Z]",'ù');
+alias frenchchars = static immutable <a href="iz/strings/CharSwitch.html">CharSwitch</a>!('à','é','è','ç',"[a..z]","[A..Z]",'ù');
 assert('ß' !in frenchchars);
 assert('é' in frenchchars);
 

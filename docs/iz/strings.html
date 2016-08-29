@@ -44,10 +44,10 @@
 </ul>
 </div></div>
 <div class="content">
-<div class="aggregate-symbol"><a class="anchor" id="decimalChars"></a><div class="symbol"><div class="description"><pre><code>public static immutable <a href="iz/strings/CharRange.html">CharRange</a> decimalChars
+<div class="aggregate-symbol"><a class="anchor" id="decimalChars"></a><div class="symbol"><div class="description"><pre><code>public static immutable <a href="iz/strings/CharSwitch.html">CharSwitch</a>!("[0..9]") decimalChars
 </code></pre>
 <div class="section"><h2></h2>
-<p>a CharRange that verify characters for decimal numbers.
+<p>a CharSwitch that verify characters for decimal numbers.
 </p>
 
 
@@ -56,10 +56,10 @@
 
 
 </div>
-</div></div><a class="anchor" id="octalChars"></a><div class="symbol"><div class="description"><pre><code>public static immutable <a href="iz/strings/CharRange.html">CharRange</a> octalChars
+</div></div><a class="anchor" id="octalChars"></a><div class="symbol"><div class="description"><pre><code>public static immutable <a href="iz/strings/CharSwitch.html">CharSwitch</a>!("[0..7]") octalChars
 </code></pre>
 <div class="section"><h2></h2>
-<p>a CharRange that verify characters for octal numbers.
+<p>a CharSwitch that verify characters for octal numbers.
 </p>
 
 
@@ -68,10 +68,10 @@
 
 
 </div>
-</div></div><a class="anchor" id="hexChars"></a><div class="symbol"><div class="description"><pre><code>public immutable <a href="iz/strings/CharMap.html">CharMap</a> hexChars
+</div></div><a class="anchor" id="hexChars"></a><div class="symbol"><div class="description"><pre><code>public static immutable <a href="iz/strings/CharSwitch.html">CharSwitch</a>!("[a..f]", "[A..F]", "[0..9]") hexChars
 </code></pre>
 <div class="section"><h2></h2>
-<p>A CharMap that includes the hexadecimal characters.
+<p>A CharSwitch that includes the hexadecimal characters.
 </p>
 
 
@@ -80,10 +80,10 @@
 
 
 </div>
-</div></div><a class="anchor" id="whiteChars"></a><div class="symbol"><div class="description"><pre><code>public immutable <a href="iz/strings/CharMap.html">CharMap</a> whiteChars
+</div></div><a class="anchor" id="whiteChars"></a><div class="symbol"><div class="description"><pre><code>public static immutable <a href="iz/strings/CharSwitch.html">CharSwitch</a>!("[\t..\r]", ' ') whiteChars
 </code></pre>
 <div class="section"><h2></h2>
-<p>A CharMap that includes the white characters.
+<p>A CharSwitch that includes the white characters.
 </p>
 
 
@@ -1071,13 +1071,13 @@ assert(`\`<a href="iz/strings.html#unEscape">.unEscape</a>([]) == `\`);
 
 
 </div>
-</div><div class="section members"><h2>Variables</h2><table><tr><td><a href="iz/strings.html#decimalChars">decimalChars</a></td><td><pre><code><a href="iz/strings/CharRange.html">CharRange</a>
+</div><div class="section members"><h2>Variables</h2><table><tr><td><a href="iz/strings.html#decimalChars">decimalChars</a></td><td><pre><code><a href="iz/strings/CharSwitch.html">CharSwitch</a>!("[0..9]")
 </code></pre>
-</td><td></td></tr><tr><td><a href="iz/strings.html#octalChars">octalChars</a></td><td><pre><code><a href="iz/strings/CharRange.html">CharRange</a>
+</td><td></td></tr><tr><td><a href="iz/strings.html#octalChars">octalChars</a></td><td><pre><code><a href="iz/strings/CharSwitch.html">CharSwitch</a>!("[0..7]")
 </code></pre>
-</td><td></td></tr><tr><td><a href="iz/strings.html#hexChars">hexChars</a></td><td><pre><code><a href="iz/strings/CharMap.html">CharMap</a>
+</td><td></td></tr><tr><td><a href="iz/strings.html#hexChars">hexChars</a></td><td><pre><code><a href="iz/strings/CharSwitch.html">CharSwitch</a>!("[a..f]", "[A..F]", "[0..9]")
 </code></pre>
-</td><td></td></tr><tr><td><a href="iz/strings.html#whiteChars">whiteChars</a></td><td><pre><code><a href="iz/strings/CharMap.html">CharMap</a>
+</td><td></td></tr><tr><td><a href="iz/strings.html#whiteChars">whiteChars</a></td><td><pre><code><a href="iz/strings/CharSwitch.html">CharSwitch</a>!("[\t..\r]", ' ')
 </code></pre>
 </td><td></td></tr></table><h2>Functions</h2><table><tr><td><a href="iz/strings.html#nullTerminated">nullTerminated</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td>Returns: <p>When decoding is enabled, nullTerminated always returns a range of dchar
      otherwise the front type is the same as target type of the pointer passed

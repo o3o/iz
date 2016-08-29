@@ -787,6 +787,7 @@ var items = [
 {"iz.types.isOrderedEnum" : "iz/types/isOrderedEnum.html"},
 {"iz.types.defaultConstructor" : "iz/types.html#defaultConstructor"},
 {"iz.types.hasDefaultConstructor" : "iz/types/hasDefaultConstructor.html"},
+{"iz.types.hasInOperator" : "iz/types/hasInOperator.html"},
 {"iz" : "iz.html"},
 ];
 function search(str) {

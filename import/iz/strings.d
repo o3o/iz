@@ -219,7 +219,7 @@ struct CharMap
     {
         static if (isSomeChar!C || isImplicitlyConvertible!(C, dchar))
         {
-            if (c < _min || c > _max) return false;
+            if (_min > c || c > _max) return false;
             else return _map[c - _min]; 
         }
         else static assert(0, "invalid argument type for CharMap.opIn_r(): " ~ C.stringof);
