@@ -45,7 +45,7 @@
 </div></div>
 <div class="content">
 <div class="aggregate-symbol"><div class="description"><pre><code>public template bitCast(T, S)
-if(T.sizeof == S.sizeof && !is(S == T) && !is(S == class) && !is(T == class) && !is(S == interface) && !is(T == interface))
+if(T.sizeof == S.sizeof && !is(S == T) || isFloatingPoint!S && size_t.sizeof == 8 && !is(S == class) && !is(T == class) && !is(S == interface) && !is(T == interface))
 </code></pre>
 <div class="section"><h2></h2>
 <p>Safely cast a value of a type to another, if both have the same size.
@@ -77,6 +77,23 @@ else
     assert(<a href="iz/sugar/bitCast.html">bitCast</a>!(ubyte[2])(ushort(0x1234)) == [0x12, 0x34]);
 
 </code></pre>
+
+</div>
+</div></div><div class="aggregate-symbol"><div class="description"><pre><code>public template bitCast(T, S)
+if(T.sizeof == S.sizeof && isFloatingPoint!S && size_t.sizeof == 4 && !is(T == class) && !is(T == interface))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Safely cast a value of a type to another, if both have the same size.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>Unlike <pre style="display:inline;" class="d_inline_code">bruteCast</pre>, the same location si not shared between the
+source and the target and no pointer is used.
+This function is inspired by http://www.forwardscattering.org/post/27
+</p>
+
 
 </div>
 </div></div><script>hljs.initHighlightingOnLoad();</script>

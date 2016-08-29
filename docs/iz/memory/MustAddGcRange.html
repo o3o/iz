@@ -76,7 +76,7 @@ static assert(!<a href="iz/memory/MustAddGcRange.html">MustAddGcRange</a>!Foo);
 class Bar{int[] a; @<a href="iz/memory/NoGc.html">NoGc</a> void* b;}
 // b's annotation is canceled by a type.
 static assert(<a href="iz/memory/MustAddGcRange.html">MustAddGcRange</a>!Bar);
-// Baz base is <a href="iz/sugar.html#not">not</a> @<a href="iz/memory/NoGc.html">NoGc</a>
+// Baz base is not @<a href="iz/memory/NoGc.html">NoGc</a>
 class Baz: Bar{@<a href="iz/memory/NoGc.html">NoGc</a> void* c;}
 static assert(<a href="iz/memory/MustAddGcRange.html">MustAddGcRange</a>!Baz);
 

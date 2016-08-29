@@ -942,8 +942,8 @@ if(isInputRange!Range && isSomeChar!(ElementType!Range))
     
     foreach (pair; pairs)
     {
-        assert (pair[0] != '\\', "the backslash should <a href="iz/sugar.html#not">not</a> be set as pair");
-        assert (pair[1] != '\\', "the backslash should <a href="iz/sugar.html#not">not</a> be set as pair");
+        assert (pair[0] != '\\', "the backslash should not be set as pair");
+        assert (pair[1] != '\\', "the backslash should not be set as pair");
     }
 }
 </code></pre>
@@ -1005,8 +1005,8 @@ if(isInputRange!Range && isSomeChar!(ElementType!Range))
     
     foreach (pair; pairs)
     {
-        assert (pair[0] != '\\', "the backslash should <a href="iz/sugar.html#not">not</a> be set as pair");
-        assert (pair[1] != '\\', "the backslash should <a href="iz/sugar.html#not">not</a> be set as pair");
+        assert (pair[0] != '\\', "the backslash should not be set as pair");
+        assert (pair[1] != '\\', "the backslash should not be set as pair");
     }
 }
 </code></pre>

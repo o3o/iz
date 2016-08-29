@@ -142,9 +142,9 @@ class A: <a href="iz/properties/PropertyPublisher.html">PropertyPublisher</a>
     {
         sub1 = <a href="iz/memory.html#construct">construct</a>!B;
         sub2 = <a href="iz/memory.html#construct">construct</a>!B;
-        // sub1 <a href="iz/sugar.html#and">and</a> sub2 are fully serialized because they already exist
+        // sub1 and sub2 are fully serialized because they already exist
         // when the analyzers run, otherwise they would be considered as
-        // reference <a href="iz/sugar.html#and">and</a> their <a href="iz/sugar.html#members">members</a> would <a href="iz/sugar.html#not">not</a> be serialized.
+        // reference and their <a href="iz/sugar.html#members">members</a> would not be serialized.
         collectPublications!A;
     }
     ~<a href="iz/serializer/Serializer.html#this">this</a>(){<a href="iz/memory.html#destructEach">destructEach</a>(sub1, sub2);}
