@@ -1137,6 +1137,7 @@ unittest
 template bitCast(T, S)
 if (T.sizeof == S.sizeof
     && !is(S == T)
+    || isFloatingPoint!S && size_t.sizeof == 8
     && !is(S == class)     && !is(T == class)
     && !is(S == interface) && !is(T == interface))
 {
@@ -1164,5 +1165,24 @@ if (T.sizeof == S.sizeof
         assert(bitCast!(ubyte[2])(ushort(0x1234)) == [0x34, 0x12]);
     else
         assert(bitCast!(ubyte[2])(ushort(0x1234)) == [0x12, 0x34]);
+}
+
+/// ditto
+template bitCast(T, S)
+if (T.sizeof == S.sizeof
+    && isFloatingPoint!S && size_t.sizeof == 4
+    && !is(T == class) && !is(T == interface))
+{
+    auto bitCast(T)(S[1] source...)
+    {
+        // S[1]: prevent the source to be loaded in ST(0)
+        // and any normalization to happen.
+        asm @trusted @nogc pure nothrow
+        {
+            naked;
+            mov EAX, source[0];
+            ret;
+        }
+    }
 }
 
