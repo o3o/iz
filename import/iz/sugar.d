@@ -30,127 +30,6 @@ void reset(T)(ref T t)
     assert(b == "");
 }
 
-
-private bool implicitConvToBool(T)()
-{
-    return (isIntegral!T || is(T==bool) || is(T==void*));
-}
-
-
-/**
- * Boolean not.
- */
-bool not(T)(auto ref T t) @safe @nogc nothrow pure
-if (implicitConvToBool!T)
-{
-    return !t;
-}
-///
-unittest
-{
-    void* ptr = null;
-    assert(not(true) == false);
-    assert(not(false) == true);
-    assert(not(1) == 0);
-    assert(not(0) == 1);
-    assert(not(123456) == 0);
-    assert(not(ptr));
-    assert(1.not == false);
-    assert(((1+2)/3).not == false);
-    assert(0.not );
-    assert(!1.not );
-    assert(0.not.not.not );
-    assert(!0.not.not.not.not );
-}
-
-
-/**
- * Boolean and.
- */
-bool and(T1, T2)(auto ref T1 t1 ,auto ref T2 t2) @safe @nogc nothrow pure
-if (implicitConvToBool!T1 && implicitConvToBool!T2)
-{
-    return t1 && t2;
-}
-///
-unittest
-{
-    assert(true.and(true));
-    assert(!false.and(false));
-    assert((1).and(2).and(3).and(4));
-    assert(!(0).and(1).and(2).and(3));
-}
-
-
-/**
- * Batch $(D and()) a list of variable.
- * $(D bool).
- *
- * Params:
- *      t = the list of argument, each must be implicitly convertible $(D bool).
- *
- * Returns:
- *      true if all variables are true.
- */
-bool and(T...)(auto ref T t) @safe @nogc nothrow pure
-{
-    bool result = cast(bool)t[0];
-    foreach(v; t[1 .. $])
-        result = result && v;
-    return result;
-}
-///
-unittest
-{
-    assert(!and(true,3,false));
-    assert(and(58,true,true));
-}
-
-/**
- * Boolean or.
- */
-bool or(T1, T2)(auto ref T1 t1 ,auto ref T2 t2) @safe @nogc nothrow pure
-if (implicitConvToBool!T1 && implicitConvToBool!T2)
-{
-    return t1 || t2;
-}
-///
-unittest
-{
-    void* ptr = null;
-    assert(true.or(false));
-    assert(!false.or(false));
-    assert((1).or(2).or(3).or(4));
-    assert((0).or(1).or(2).or(3));
-    assert(!(0).or(false).or(ptr));
-}
-
-
-/**
- * Batch $(D or()) a list of variable.
- * $(D bool).
- *
- * Params:
- *      t = the list of argument, each must be implicitly convertible $(D bool).
- *
- * Returns:
- *      true if one argument is true.
- */
-bool or(T...)(auto ref T t) @safe @nogc nothrow pure
-{
-    bool result = cast(bool)t[0];
-    foreach(v; t[1 .. $])
-        result = result || v;
-    return result;
-}
-///
-unittest
-{
-    assert(!or(false,false,false));
-    assert(or(123,false,true));
-}
-
-
 /**
  * Allows forbidden casts.
  *
@@ -167,9 +46,9 @@ auto bruteCast(OT, IT)(auto ref IT it)
     return *cast(OT*) &it;
 }
 ///
-nothrow pure unittest
+nothrow pure @nogc unittest
 {
-    uint[] array = [0u,1u,2u];
+    static immutable array = [0u,1u,2u];
     size_t len;
     //len = cast(uint) array; // not allowed.
     len = bruteCast!uint(array);
@@ -214,7 +93,7 @@ if (    (kind == MaskKind.Byte && index <= T.sizeof)
     return value & _mask;
 }
 ///
-nothrow @safe pure unittest
+nothrow @safe @nogc pure unittest
 {
     // MaskKind.Byte by default.
     static assert(mask!1(0x12345678) == 0x12340078);
@@ -230,7 +109,7 @@ auto maskNibble(size_t index, T)(const T value) nothrow @safe pure
     return mask!(index, MaskKind.Nibble)(value);
 }
 ///
-nothrow @safe pure unittest
+nothrow @safe @nogc pure unittest
 {
     static assert(maskNibble!1(0x12345678) == 0x12345608);
 }
@@ -242,7 +121,7 @@ auto maskBit(size_t index, T)(const T value) nothrow @safe pure
     return mask!(index, MaskKind.Bit)(value);
 }
 ///
-nothrow @safe pure unittest
+nothrow @safe @nogc pure unittest
 {
     static assert(maskBit!1(0b1111) == 0b1101);
 }
@@ -301,7 +180,7 @@ nothrow @safe pure
         return value & (0xFFFFFFFFFFFFFFFF - (1UL << index));
 }
 ///
-nothrow @safe pure unittest
+nothrow @safe @nogc pure unittest
 {
     // MaskKind.Byte by default.
     assert(mask(0x12345678,1) == 0x12340078);
@@ -325,12 +204,12 @@ auto mask(MaskKind kind = MaskKind.Byte, T)(const T value, size_t index) nothrow
 
 
 /// Run-time $(D mask()) partially specialized for nibble-masking.
-auto maskNibble(T)(const T value, size_t index) nothrow @safe pure
+auto maskNibble(T)(const T value, size_t index)
 {
     return mask!(MaskKind.Nibble)(value, index);
 }
 ///
-nothrow @safe pure unittest
+nothrow @safe @nogc pure unittest
 {
     assert(maskNibble(0x12345678,1) == 0x12345608);
 }
@@ -609,7 +488,7 @@ body
     return result;
 }
 ///
-unittest
+@safe unittest
 {
     uint cnt;
     bool test;
