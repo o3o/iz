@@ -45,7 +45,7 @@
 </div></div>
 <div class="content">
 <div class="aggregate-symbol"><div class="description"><pre><code>public template bitCast(T, S)
-if(T.sizeof == S.sizeof && !is(S == T) || isFloatingPoint!S && size_t.sizeof == 8 && !is(S == class) && !is(T == class) && !is(S == interface) && !is(T == interface))
+if(T.sizeof == S.sizeof && !is(S == T) && !(is(S == <a href="http://dlang.org/type.html#basic-data-types">float</a>) & (size_t.sizeof == 4)) && !is(S == class) && !is(T == class) && !is(S == interface) && !is(T == interface))
 </code></pre>
 <div class="section"><h2></h2>
 <p>Safely cast a value of a type to another, if both have the same size.
@@ -80,7 +80,7 @@ else
 
 </div>
 </div></div><div class="aggregate-symbol"><div class="description"><pre><code>public template bitCast(T, S)
-if(T.sizeof == S.sizeof && isFloatingPoint!S && size_t.sizeof == 4 && !is(T == class) && !is(T == interface))
+if(T.sizeof == S.sizeof && is(S == <a href="http://dlang.org/type.html#basic-data-types">float</a>) && !is(T == class) && !is(T == interface))
 </code></pre>
 <div class="section"><h2></h2>
 <p>Safely cast a value of a type to another, if both have the same size.
