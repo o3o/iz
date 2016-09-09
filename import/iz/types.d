@@ -307,12 +307,11 @@ template hasInOperator(T, A)
         enum hasInOperator = true;
     else static if (is(T == class) || is(T == struct))
     {
-        A a;
-        static if (is(typeof(a in T)))
+        static if (is(typeof({A a; auto b = a in T;})))
             enum hasInOperator = true;
         else
         {
-            static if (is(typeof(a in new T)))
+            static if (is(typeof({A a; auto b = a in new T;})))
                 enum hasInOperator = true;
             else
                 enum hasInOperator = false;
@@ -338,4 +337,34 @@ unittest
     struct Nothing {}
     static assert(!hasInOperator!(Nothing, int));
 }
+
+/**
+ * Detects wether T is an instantiated template.
+ */
+enum isTemplateInstance(alias T) = is(typeof({alias xcvb = TemplateArgsOf!(T);}));
+///
+unittest
+{
+    enum a(T) = false;
+    void b(T)(int){}
+    void c()(){}
+    template d(T){}
+    class e(T){T t;}
+    interface I{}
+
+    static assert(isTemplateInstance!(a!int));
+    static assert(isTemplateInstance!(b!int));
+    static assert(isTemplateInstance!(d!int));
+    static assert(isTemplateInstance!(e!int));
+
+    static assert(!isTemplateInstance!(I));
+    static assert(!isTemplateInstance!(int));
+
+    static assert(!isTemplateInstance!(a));
+    static assert(!isTemplateInstance!(b));
+    static assert(!isTemplateInstance!(c));
+}
+
+/// ditto
+enum isTemplateInstance(T) = is(typeof(TemplateOf!T));
 
