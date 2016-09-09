@@ -4,7 +4,7 @@
 module iz.memory;
 
 import
-    std.traits;
+    std.traits, std.meta;
 import
     iz.types;
 version(DigitalMars)
@@ -144,52 +144,69 @@ enum NoInit;
 template MustAddGcRange(T = void)
 if (is(T==struct) || is(T==union) || is(T==class))
 {
-    bool check()
+
+    string check()
     {
-        bool result = false;
         import std.meta: aliasSeqOf;
         import std.range: iota;
+
+        string managedMembers;
+
+        enum addManaged = q{managedMembers ~= " " ~ T.tupleof[i].stringof;};
 
         static if (is(T == class))
         {
             foreach(BT; BaseClassesTuple!T)
             {
-                static if (MustAddGcRange!BT)
-                    result = true;
-                if (result)
-                    return result;
+                string m = MustAddGcRange!BT;
+                if (m.length)
+                    managedMembers ~= " " ~ m;
             }
         }
 
-        foreach(i;  aliasSeqOf!(iota(0, T.tupleof.length)))
+        foreach(i; aliasSeqOf!(iota(0, T.tupleof.length)))
         {
-            alias MT = typeof(T.tupleof[i]);
-            static if (isDynamicArray!MT && !hasUDA!(T.tupleof[i], NoGc))
-                result = true;
-            static if (isPointer!MT && !hasUDA!(T.tupleof[i], NoGc))
-                result = true;
-            static if (is(MT == class) && !hasUDA!(T.tupleof[i], NoGc))
-                result = true;
-            static if (is(MT == struct) && !is(MT == T) && !hasUDA!(T.tupleof[i], NoGc))
-            //TODO-cconstruct, replace with a OpOrEqu once issue 16107 fixed
-                result = result | MustAddGcRange!MT;
-            static if (is(MT == union) && !is(MT == T) && !hasUDA!(T.tupleof[i], NoGc))
-                result = result | MustAddGcRange!MT;
-            if (result)
-                break;
+            static if (!is(typeof(T.tupleof[i])== void))
+            {
+                alias MT = typeof(T.tupleof[i]);
+                static if (isDynamicArray!MT && !hasUDA!(T.tupleof[i], NoGc))
+                    mixin(addManaged);
+                else static if (isPointer!MT && !hasUDA!(T.tupleof[i], NoGc))
+                    mixin(addManaged);
+                else static if (is(MT == class) && (!is(MT : T)) && !hasUDA!(T.tupleof[i], NoGc)
+                    && !(isTemplateInstance!T /*&& staticIndexOf!(MT,TemplateArgsOf!T) > 0*/))
+                {
+                    // failure here when the class is a template and when one of the member
+                    // type is one of the template argument.
+                    //pragma(msg, T.stringof, " ", MT.stringof);
+                    static if (MustAddGcRange!MT)
+                        mixin(addManaged);
+                }
+                else static if (is(MT == struct) && !is(MT == T) && !hasUDA!(T.tupleof[i], NoGc))
+                {
+                    static if (MustAddGcRange!MT)
+                        mixin(addManaged);
+                }
+                else static if (is(MT == union) && !is(MT == T) && !hasUDA!(T.tupleof[i], NoGc))
+                {
+                    static if (MustAddGcRange!MT)
+                        mixin(addManaged);
+                }
+            }
         }
-        return result;
+        return managedMembers;
     }
 
     static if (hasUDA!(T, NoGc))
-        enum MustAddGcRange = false;
+        enum MustAddGcRange = [];
     else
         enum MustAddGcRange = check();
 
     static if (hasUDA!(T, TellRangeAdded))
     {
-        static if (MustAddGcRange)
-            pragma(msg, "a GC range will be added for any new " ~ T.stringof);
+        static if (MustAddGcRange.length)
+            pragma(msg, "a GC range will be added for any new " ~ T.stringof ~
+                ", because of: " ~ MustAddGcRange);
         else
             pragma(msg, "a GC range wont be added for any new " ~ T.stringof);
     }
@@ -309,7 +326,7 @@ void destruct(T)(auto ref T* instance)
     if (!instance)
         return;
     static if (hasElaborateDestructor!T)
-        instance.__dtor;
+        instance.__xdtor;
     freeMem(cast(void*)instance);
     static if ((ParameterStorageClassTuple!destruct)[0] ==
         ParameterStorageClass.ref_) instance = null;
