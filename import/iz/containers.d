@@ -6,7 +6,7 @@ module iz.containers;
 import
     core.exception, core.stdc.string;
 import
-    std.exception, std.string, std.traits, std.conv;
+    std.exception, std.string, std.traits, std.conv, std.range.primitives;
 import
     iz.memory, iz.types, iz.streams;
 
@@ -14,24 +14,20 @@ version(X86_64)
     version(linux) version = Nux64;
 
 /**
- * Parameterized, GC-free array.
+ * Parameterized, GC-free, single dimenssion array.
  *
  * Array(T) implements a single-dimension array of uncollected memory.
  * It internally preallocates the memory to minimize the reallocation fingerprints.
  *
  * Its layout differs from built-in D's dynamic arrays and they cannot be cast as T[]
  * however, most of the slicing operations are possible.
- *
- * TODO:
- * - concatenation.
- * - assign from built-in arrays slices.
  */
 struct Array(T)
 {
     private
     {
         size_t _length;
-        Ptr _elems;
+        @NoGc Ptr _elems;
         uint _granularity;
         size_t _blockCount;
         bool initDone;
@@ -65,40 +61,44 @@ struct Array(T)
             initLazy;
             setLength(_length + 1);
         }
+
         void shrink() @nogc
         {
             setLength(_length - 1);
         }
-        T* rwPtr(size_t index) @nogc
+
+        T* rwPtr(size_t index) pure const nothrow @nogc
         {
             return cast(T*) (_elems + index * T.sizeof);
         }
     }
     public
     {
-        ///
-        this(A...)(A elements) @nogc
-        if (elements.length < ptrdiff_t.max-1)
+        /// Constructs the array with a list of T.
+        this(E...)(E elements) @nogc
+        if (is(Unqual!E == T) || is(T == E))
         {
             initLazy;
             setLength(elements.length);
-            foreach(i, T elem; elements)
-                *rwPtr(i) = elem;
+            foreach(i, element; elements)
+                *rwPtr(i) = cast(T) element;
         }
-        ///
-        this(T[] elements) @nogc
-        {
-            if (elements.length == 0) return;
 
+        /// Constructs the array with a D array of T.
+        this(E)(E[] elements...) @nogc
+        if (is(Unqual!E == T) || is(T == E))
+        {
+            if (elements.length == 0)
+                return;
             initLazy;
             setLength(elements.length);
-
             foreach (i, element; elements)
-                *rwPtr(i) = element;
+                *rwPtr(i) = cast(T) element;
         }
-        static if (__traits(compiles, to!T(string.init)))
+
+        static if (__traits(compiles, to!T(string.init)) && !isSomeChar!T)
         {
-            ///
+            /// Constructs the array with a literal representation.
             this(string representation)
             {
                 initLazy;
@@ -143,18 +143,21 @@ struct Array(T)
                 }
             }
         }
+
         ~this()
         {
             if (_elems)
                 freeMem(_elems);
         }
+
         /**
          * Indicates the memory allocation block-size.
          */
-        uint granurality() @nogc
+        uint granurality() const pure nothrow @safe @nogc
         {
             return _granularity;
         }
+
         /**
          * Sets the memory allocation block-size.
          * value should be set to 16 or 4096 (the default).
@@ -177,6 +180,7 @@ struct Array(T)
             _granularity = value;
             setLength(_length);
         }
+
         /**
          * Indicates how many block the array is made of.
          */
@@ -184,13 +188,15 @@ struct Array(T)
         {
             return _blockCount;
         }
+
         /**
          * Element count.
          */
-        size_t length() @nogc
+        size_t length() const pure nothrow @safe @nogc
         {
             return _length;
         }
+
         /// ditto
         void length(size_t value) @nogc
         {
@@ -198,18 +204,20 @@ struct Array(T)
             initLazy;
             setLength(value);
         }
+
         /**
          * Pointer to the first element.
          * As it's always assigned It cannot be used to determine if the array is empty.
          */
-        Ptr ptr() @nogc
+        Ptr ptr() pure nothrow @nogc
         {
             return _elems;
         }
+
         /**
          * Returns the string representation of the elements.
          */
-        string toString()
+        string toString() const
         {
             if (_length == 0) return "[]";
             string result =  "[";
@@ -219,6 +227,7 @@ struct Array(T)
             }
             return result ~= format("%s]",*rwPtr(_length-1));
         }
+
         /**
          *  Returns a mutable copy of the array.
          */
@@ -229,32 +238,39 @@ struct Array(T)
             moveMem(result._elems, _elems, _length * T.sizeof);
             return result;
         }
+
         /**
          * Class operators
          */
-        bool opEquals(A)(auto ref A array) @nogc
-        if ((is(A == Array!T) || is(A == T[])))
+        bool opEquals(A)(auto ref A array) const pure @nogc @trusted
+        if ((is(Unqual!A == Unqual!(Array!T)) || is(Unqual!(ElementEncodingType!A) == T)))
         {
-            if (_length != array.length) return false;
-            if (_length == 0 && array.length == 0) return true;
-            foreach(immutable i; 0 .. _length)
-            {
-                if (opIndex(i) != array[i]) return false;
-            }
-            return true;
+            if (_length != array.length)
+                return false;
+            else if (_length == 0 && array.length == 0)
+                return true;
+            static if (is(Unqual!A == Unqual!(Array!T)))
+                return _elems[0.._length * T.sizeof] ==
+                  array._elems[0..array._length * T.sizeof];
+            else
+                return _elems[0.._length * T.sizeof] ==
+                  array.ptr[0..array.length];
         }
+
         /// ditto
-        T opIndex(size_t i) @nogc
+        T opIndex(size_t i) const pure @nogc
         {
             return *rwPtr(i);
         }
+
         /// ditto
         void opIndexAssign(T item, size_t i) @nogc
         {
             *rwPtr(i) = item;
         }
+
         /// ditto
-        int opApply(int delegate(ref T) dg)
+        int opApply(scope int delegate(ref T) @nogc dg)
         {
             int result = 0;
             foreach (immutable i; 0 .. _length)
@@ -264,8 +280,9 @@ struct Array(T)
             }
             return result;
         }
+
         /// ditto
-        int opApplyReverse(int delegate(ref T) dg)
+        int opApplyReverse(scope int delegate(ref T) @nogc dg)
         {
             int result = 0;
             foreach_reverse (immutable i; 0 .. _length)
@@ -275,58 +292,70 @@ struct Array(T)
             }
             return result;
         }
+
         /// ditto
-        size_t opDollar() @nogc
+        size_t opDollar() pure nothrow @safe @nogc
         {
             return _length;
         }
+
         /// ditto
-        void opAssign(T[] elements) @nogc
+        void opAssign(E)(E[] elements) @nogc
+        if (is(Unqual!E == T) || is(E == T))
         {
             initLazy;
             setLength(elements.length);
             foreach (i, element; elements)
-                *rwPtr(i) = element;
+                *rwPtr(i) = cast(T) element;
         }
+
         /// ditto
-        void opOpAssign(string op)(T[] someElements) @nogc
+        void opOpAssign(string op, E)(E[] elements) @nogc
+        if (is(Unqual!E == T) || is(E == T))
         {
             static if (op == "~")
             {
                 initLazy;
                 auto old = _length;
-                setLength(_length + someElements.length);
-                moveMem( rwPtr(old), someElements.ptr , T.sizeof * someElements.length);
+                setLength(_length + elements.length);
+                moveMem( rwPtr(old), elements.ptr , T.sizeof * elements.length);
             }
             else assert(0, "operator not implemented");
         }
+
         /// ditto
         void opOpAssign(string op)(T aElement) @nogc
         {
             static if (op == "~")
             {
                 grow;
-                opIndexAssign(aElement,_length-1);
+                opIndexAssign(aElement, _length-1);
             }
             else assert(0, "operator not implemented");
         }
-        /// ditto
-        Array!T opSlice() @nogc
+
+        /// Returns the array as a D slice.
+        T[] opSlice() const pure @nogc
         {
-            Array!T result;
-            result.length = length;
-            moveMem( result.ptr, _elems, T.sizeof * _length);
-            return result;
+            return opSlice!true(0, _length);
         }
-        /// ditto
-        Array!T opSlice(size_t lo, size_t hi) @nogc
+
+        /// Returns a slice of the array as a D slice.
+        T[] opSlice(bool dSlice = true)(size_t lo, size_t hi) const pure @nogc
         {
-            Array!T result;
-            size_t len = hi - lo;
-            result.length = len;
-            moveMem(result.ptr, _elems + lo * T.sizeof, T.sizeof * len);
-            return result;
+            static if (dSlice)
+            {
+                return (cast(T*) _elems)[lo..hi];
+            }
+            else
+            {
+                Array!T result;
+                size_t len = hi - lo;
+                result._elems = _elems + lo * T.sizeof;
+                return result;
+            }
         }
+
         /// ditto
         void opSliceAssign(T value) @nogc
         {
@@ -350,6 +379,7 @@ unittest
     a[1] = 9;
     assert( a[0] == 8);
     assert( a[1] == 9);
+    assert( a[$-1] == 9);
 
     auto b = Array!int(0,1,2,3,4,5,6);
     assert( b.length == 7);
@@ -449,6 +479,13 @@ unittest
     a.length = 10_000_000;
     a[$-1] = a.length-1;
     assert(a[$-1] == a.length-1);
+}
+
+unittest
+{
+    Array!char a = "123456";
+    assert(a.length == 6);
+    assert(a == "123456");
 }
 
 /**
@@ -573,17 +610,22 @@ interface List(T)
      * The value returned is always greater than 0.
      */
     size_t count();
+
+    alias opDollar = count;
 }
+
+deprecated("Use the more accurate 'ContiguousList' name")
+alias StaticList = ContiguousList;
 
 /**
  * An List implementation, fast to be iterated, slow to be reorganized.
  * Encapsulates an Array!T and interfaces it as a List.
  */
-class StaticList(T): List!T
+class ContiguousList(T): List!T
 {
     private
     {
-        Array!T _items;
+        @NoGc Array!T _items;
     }
     protected
     {
@@ -1461,7 +1503,7 @@ unittest
         assert(cList.last == arrayOfC[9]);
     }
 
-    test!(StaticList);
+    test!(ContiguousList);
     test!(DynamicList);
 }
 

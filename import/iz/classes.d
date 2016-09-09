@@ -126,9 +126,9 @@ public:
         if (auto descr = publication!uint(format(_fmtName,index)))
         {
             // find index: a descendant may add descriptors in its this()
-            auto descrIndex = countUntil(_publishedDescriptors, descr);
+            auto descrIndex = _publishedDescriptors[].countUntil(descr);
             assert(descrIndex != -1);
-            _publishedDescriptors = _publishedDescriptors.remove(descrIndex);
+            _publishedDescriptors = _publishedDescriptors[0..descrIndex] ~ _publishedDescriptors[descrIndex+1 .. $];
             destruct(descr);
         }
     }
@@ -343,9 +343,9 @@ unittest
     assert(col.items.count == 0);
 
     ser.streamToPublisher(str, col, SerializationFormat.iztxt);
-    assert(col._publishedDescriptors.count == 4); // 3 + count descr
+    assert(col._publishedDescriptors.length == 4); // 3 + count descr
     col.deleteItem(0);
-    assert(col._publishedDescriptors.count == 3); // 2 + count descr
+    assert(col._publishedDescriptors.length == 3); // 2 + count descr
     assert(col.items.count == 2);
     assert(col[0]._c == 5u);
     assert(col[1]._c == 8u);

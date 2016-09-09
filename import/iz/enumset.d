@@ -804,7 +804,7 @@ public:
     }
 
     /// Returns the enum count
-    ref const(SetType) container() nothrow @safe @nogc
+    ref const(SetType) container() const nothrow @safe @nogc
     {
         return _container;
     }

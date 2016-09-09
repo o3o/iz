@@ -79,7 +79,7 @@ struct PropDescriptor(T)
 
         PropAccess _access;
 
-        string _name;
+        Array!(char) _name;
 
         void cleanup()
         {
@@ -127,6 +127,7 @@ struct PropDescriptor(T)
     {
 
 // constructors ---------------------------------------------------------------+
+
         /**
          * Constructs a property descriptor from a PropSetter and a PropGetter.
          */  
@@ -309,13 +310,13 @@ struct PropDescriptor(T)
         /** 
          * Defines the string used to identify the property
          */
-        @property void name(string value)
+        @property void name(const(char)[] value)
         {
             _name = value;
         }
 
         /// ditto
-        @property string name()
+        @property auto const ref name()
         {
             return _name;
         }
@@ -447,10 +448,11 @@ unittest
         Bar barMov(){return bar;}
     }
 
-    Foo foo = new Foo;
+    Foo foo = construct!Foo;
     assert(&foo.bar == foo.barRef.getThis);
     Bar b = foo.barRef;
     assert(&foo.bar != &b);
+    destruct(foo);
 }
 
 /// designed to annotate a property setter, e.g @Set
@@ -656,8 +658,8 @@ unittest
     static assert(isPropertyPublisher!Foo);
     static assert(isPropertyPublisher!Bar);
     static assert(isPropertyPublisher!Baz);
-    auto baz = new Baz;
-    assert( baz.isPropertyPublisher);
+    //auto baz = new Baz;
+    //assert( baz.isPropertyPublisher);
 }
 
 /**
@@ -683,19 +685,27 @@ mixin template PropertyPublisherImpl()
      * ($D publication()), ($D publicationFromName()) and ($D publicationFromIndex()).
      */
     static if (!__traits(hasMember, typeof(this), "_publishedDescriptors"))
-    protected void*[] _publishedDescriptors;
-
-    /*
-     * Must be called in the aggragate destructor since the descriptors are
-     * allocated using construct.
-     */
-    /*static if (!__traits(hasMember, typeof(this), "destructDescriptors"))
-    protected void destructDescriptors()
     {
-        import iz.memory: destruct;
-        foreach(ptr; _publishedDescriptors)
-            destruct(cast(GenericDescriptor*) ptr);
-    }*/
+        import iz.containers: Array;
+        protected Array!(void*) _publishedDescriptors;
+    }
+
+    //
+    static if (!__traits(hasMember, typeof(this), "destructDescriptors"))
+    {
+        final void destructDescriptors()
+        {
+            import iz.memory: destruct;
+            foreach(ptr; _publishedDescriptors)
+                destruct(cast(GenericDescriptor*) ptr);
+            _publishedDescriptors.length = 0;
+        }
+
+        ~this()
+        {
+            destructDescriptors;
+        }
+    }
 
     static if (!__traits(hasMember, typeof(this), "_declarator"))
     protected Object _declarator;
@@ -748,7 +758,7 @@ mixin template PropertyPublisherImpl()
      * Returns:
      *      Null if the operation fails otherwise a pointer to a PropDescriptor!T.
      */
-    public PropDescriptor!T * publication(T)(string name, bool createIfMissing = false)
+    public PropDescriptor!T* publication(T)(string name, bool createIfMissing = false)
     {
         PropDescriptor!T* descr;
         foreach(immutable i; 0 .. _publishedDescriptors.length)
@@ -762,11 +772,8 @@ mixin template PropertyPublisherImpl()
         }
         if (createIfMissing && !descr)
         {
-            //import iz.memory: construct;
-            //TODO-cproperties: allocate the descriptors with construct
-            //descr = construct!(PropDescriptor!T);
-
-            _publishedDescriptors ~= new PropDescriptor!T;
+            import iz.memory: construct;
+            _publishedDescriptors ~= construct!(PropDescriptor!T);
             (cast(typeof(descr))_publishedDescriptors[$-1]).name = name.idup; // GC eats name otherwise
             descr = cast(typeof(descr)) _publishedDescriptors[$-1];
         }
@@ -854,6 +861,7 @@ mixin template PropertyPublisherImpl()
         import std.algorithm.mutation: remove;
         import std.algorithm.searching: countUntil;
         import std.format: format;
+
         // collect
         mixin ScopedReachability;
         foreach(member; __traits(allMembers, T))
@@ -876,7 +884,7 @@ mixin template PropertyPublisherImpl()
                 version(assert) if (descriptor.setter) assert (
                     // note: rtti unqalifies the type
                     ti is descriptor.rtti,
-                    "setter and getter type mismatch for " ~ descriptor.name);
+                    "setter and getter type mismatch for " ~ descriptor.name[]);
                 descriptor.define(descriptor.setter, dg, member);
                 //
                 static if (is(T : Object)) descriptor.declarator = cast(Object)this;
@@ -905,7 +913,7 @@ mixin template PropertyPublisherImpl()
                 auto dg = &overload;
                 version(assert) if (descriptor.getter) assert (
                     ti == descriptor.rtti,
-                    "setter and getter type mismatch for " ~ descriptor.name);
+                    "setter and getter type mismatch for " ~ descriptor.name[]);
                 descriptor.define(dg, descriptor.getter, member);
                 //
                 enum h = getUDAs!(overload, PropHints);
@@ -919,9 +927,9 @@ mixin template PropertyPublisherImpl()
                 auto descr = publication!size_t(member, false);
                 if (descr)
                 {
-                    auto index = countUntil(_publishedDescriptors, descr);
+                    auto index = _publishedDescriptors[].countUntil(descr);
                     assert(index != -1);
-                    _publishedDescriptors = remove(_publishedDescriptors, index);
+                    _publishedDescriptors = _publishedDescriptors[0..index] ~ _publishedDescriptors[index+1 .. $];
                 }
             }
         }
@@ -934,8 +942,7 @@ mixin template PropertyPublisherImpl()
             if (descr.setter == null || descr.getter == null)
             {
                 flag = true;
-                names ~= descr.name;
-                _publishedDescriptors = _publishedDescriptors.remove(i);
+                names ~= descr.name[];
             }
         }
         if (flag)
@@ -944,7 +951,7 @@ mixin template PropertyPublisherImpl()
                 "Several invalid property descriptors have been removed.\n" ~
                 "The setter or the getter is missing for %s.\n" ~
                 "Tip: check for typo in the function names.";
-            throw new Exception(format(messg, names));
+            throw new Error(format(messg, names));
         }
     }
 }
@@ -1080,14 +1087,15 @@ unittest
     }
 
     // test that a delegate is detected as a field
-    Cat cat = new Cat;
+    Cat cat = construct!Cat;
     assert(cat.publicationCount == 1);
     auto descr = cast(PropDescriptor!uint*) cat.publicationFromIndex(0);
     assert(descr);
     assert(descr.rtti.type == RtType._funptr);
     // test that a plain function is not detected as field
-    Fly fly = new Fly;
+    Fly fly = construct!Fly;
     assert(fly.publicationCount == 0);
+    destructEach(cat, fly);
 }
 
 unittest
@@ -1100,8 +1108,9 @@ unittest
         @Get int delegate() getter;
     }
     // test that delegates as fields are not detected as set/get pairs
-    Bee bee = new Bee;
+    Bee bee = construct!Bee;
     assert(bee.publicationCount == 0);
+    destruct(bee);
 }
 
 unittest
@@ -1121,8 +1130,9 @@ unittest
         @SetGet int _c;
     }
     // test that all props are detected in the inheritence list
-    auto b1 = new B1;
+    auto b1 = construct!B1;
     assert(b1.publicationCount == 3);
+    destruct(b1);
 }
 
 unittest
@@ -1141,10 +1151,11 @@ unittest
         @HideGet override int b(){return super.b();}
     }
     // test that a prop marked with @HideSet/Get is not published anymore
-    auto b0 = new B0;
+    auto b0 = construct!B0;
     assert(b0.publicationCount == 1);
-    auto b1 = new B1;
+    auto b1 = construct!B1;
     assert(b1.publicationCount == 0);
+    destructEach(b0,b1);
 }
 
 unittest
@@ -1191,7 +1202,11 @@ unittest
             @Set void b(string value){}
             @Get int b(){return 0;}
         }
-        try auto b = new Bug;
+        try
+        {
+            auto b = construct!Bug;
+            destruct(b);
+        }
         catch(Error e) test = true;
         assert(test);
     }
@@ -1211,9 +1226,13 @@ unittest
         B _owned2;
         this()
         {
-            _owned1 = new B;
-            _owned2 = new B;
+            _owned1 = construct!B;
+            _owned2 = construct!B;
             collectPublications!A;
+        }
+        ~this()
+        {
+            destructEach(_owned1, _owned2);
         }
         @SetGet uint _a;
         // ownership is set in getFields
@@ -1224,13 +1243,14 @@ unittest
         // ownership is not set because value initially is null
         @SetGet B _notowned;
     }
-    auto a1 = new A;
-    auto a2 = new A;
+    auto a1 = construct!A;
+    auto a2 = construct!A;
     a1._notowned = a2._owned1;
     //
     assert(a1._owned1.declarator is a1);
     assert(a1._owned2.declarator is a1);
     assert(a1._notowned.declarator is a2);
+    destructEach(a1,a2);
 }
 
 unittest
@@ -1248,7 +1268,7 @@ unittest
     }
     bool ouch;
     try auto test = construct!Test;
-    catch(Exception e)ouch = true;
+    catch(Error e)ouch = true;
     assert(ouch);
 }
 
@@ -1298,17 +1318,25 @@ unittest
         mixin PropertyPublisherImpl;
         this()
         {
-            static if (Nested) _full = new Foo!false;
+            static if (Nested)
+                _full = construct!(Foo!false);
             collectPublications!Foo;
+        }
+
+        ~this()
+        {
+            static if (Nested)
+                destruct(_full);
         }
 
         @SetGet Foo!false _asref;
         static if (Nested)
         @SetGet Foo!false _full;
     }
-    auto foo = new Foo!true;
+    auto foo = construct!(Foo!true);
     assert(targetObjectOwnedBy(foo.publication!Object("full"), foo));
     assert(!targetObjectOwnedBy(foo.publication!Object("asref"), foo));
+    destruct(foo);
 }
 
 /**
@@ -1364,14 +1392,24 @@ unittest
             _a0 = construct!A;
             collectPublications!B;
             // _a1 not seen by the scanner so not owned
-            _a1 = new A;
+            _a1 = construct!A;
+        }
+        ~this()
+        {
+            destruct(_a1);
         }
     }
     B b = construct!B;
     // implicitly destructs b._a0.
     destructOwnedPublishers(b);
     destruct(b);
-    // b._a1 still exists.
+}
+
+unittest
+{
+    class A: PropertyPublisher {mixin PropertyPublisherImpl;}
+    A a = construct!A;
+    destruct(a);
 }
 
 //TODO-cproperties: findPublisher overload that can also take a pub struct and return a pointer to a publisher
@@ -1409,7 +1447,7 @@ PropertyPublisher findPublisher(PropertyPublisher pub, string accessChain)
     }
 }
 ///
-unittest
+/*unittest
 {
     class A: PropertyPublisher
     {mixin PropertyPublisherImpl;}
@@ -1420,8 +1458,12 @@ unittest
         @SetGet A _a;
         this()
         {
-            _a = new A;
+            _a = construct!A;
             collectPublications!B;
+        }
+        ~this()
+        {
+            destruct(_a);
         }
     }
 
@@ -1431,17 +1473,22 @@ unittest
         @SetGet B _b;
         this()
         {
-            _b = new B;
+            _b = construct!B;
             collectPublications!C;
+        }
+        ~this()
+        {
+            destruct(_b);
         }
     }
 
-    C c = new C;
+    C c = construct!C;
     assert(c.findPublisher("b") == c._b);
     assert(c.findPublisher("b.a") == c._b._a);
     assert(c.findPublisher("b.a.g") is null);
+    destruct(c);
 }
-
+*/
 /**
  * Returns true if two property descriptors are bindable.
  * To be bindable, the property name must be identical but also their types.
@@ -1547,7 +1594,7 @@ void bindPublications(bool recursive = false, S, T)(auto ref S src, auto ref T t
     foreach(immutable i; 0 .. source.publicationCount())
     {
         srcP = cast(GenericDescriptor*) source.publicationFromIndex(i);
-        trgP = cast(GenericDescriptor*) target.publicationFromName(srcP.name);
+        trgP = cast(GenericDescriptor*) target.publicationFromName(srcP.name[]);
 
         if (!trgP) continue;
         if (srcP.rtti !is trgP.rtti) continue;
@@ -1688,12 +1735,15 @@ unittest
         mixin PropertyPublisherImpl;
         this()
         {
-            static if (Nested) _sub = new Foo!false;
+            static if (Nested)
+                _sub = construct!(Foo!false);
             str = construct!MemoryStream;
             collectPublications!Foo;
         }
         ~this()
         {
+            static if (Nested)
+                destruct(_sub);
             destruct(str);
         }
         @SetGet uint _a;
@@ -1716,8 +1766,8 @@ unittest
         }
     }
 
-    Foo!true source = new Foo!true;
-    Foo!true target = new Foo!true;
+    Foo!true source = construct!(Foo!true);
+    Foo!true target = construct!(Foo!true);
     source._a = 8; source._b = ulong.max; source._c = "123";
     source._d = [[0,1,2,3],[4,5,6,7]];
     source._e = [[[0,1],[2,3]],[[4,5],[6,7]],[[8,9],[10,11]]];
@@ -1744,6 +1794,7 @@ unittest
     assert(target._sub.str.readInt == 1);
     assert(target._sub.str.readInt == 2);
     assert(target._sub.str.readInt == 3);
+    destructEach(source, target);
 }
 
 unittest
