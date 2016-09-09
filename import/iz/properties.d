@@ -690,7 +690,7 @@ mixin template PropertyPublisherImpl()
         protected Array!(void*) _publishedDescriptors;
     }
 
-    //
+    // TODO-cbugfix: stack struct with publications, double free corrupt in template dtor
     static if (!__traits(hasMember, typeof(this), "destructDescriptors"))
     {
         final void destructDescriptors()
@@ -703,7 +703,9 @@ mixin template PropertyPublisherImpl()
 
         ~this()
         {
-            destructDescriptors;
+            // must be called manually for structs.
+            static if (!is(typeof(this) == struct))
+                destructDescriptors;
         }
     }
 

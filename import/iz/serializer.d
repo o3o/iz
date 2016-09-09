@@ -2583,7 +2583,7 @@ version(unittest)
     //----
 
     // test publishing struct
-    /*unittest
+    unittest
     {
         static struct PubStruct
         {
@@ -2602,17 +2602,17 @@ version(unittest)
         MemoryStream str = construct!MemoryStream;
         Serializer ser = construct!Serializer;
         scope(exit) destructEach(str, ser);
-
+        //
         ser.publisherToStream(ps, str);
         ps._cs = ps._cs.init;
         ps._ui = 0;
-
+        //
         str.position = 0;
         ser.streamToPublisher(str, ps);
         assert(ps._cs == "8");
         assert(ps._ui == 8);
     }
-*/
+
     // test text struct
     unittest
     {
@@ -2683,10 +2683,8 @@ version(unittest)
         assert(bsp._bs._value == "content backup");
     }
 
-    //TODO-cGCfreeDescriptors: these tests dont pass anymore
-
     // test nested publishing structs, detected from fields
-    /*unittest
+    unittest
     {
         static struct Child
         {
@@ -2727,9 +2725,9 @@ version(unittest)
         assert(parent._child2._a == 8);
         assert(parent._child2._b == 9);
     }
-*/
+
     // test nested publishing structs, detected from get/set pair
-    /*unittest
+    unittest
     {
         static struct Child
         {
@@ -2765,7 +2763,7 @@ version(unittest)
         assert(parent._child1._a == 8);
         assert(parent._child1._b == 9);
     }
-*/
+
     // PropHints
     unittest
     {
@@ -2794,9 +2792,8 @@ version(unittest)
         ser.publisherToStream(foo, str);
         assert(ser.findNode("i") is null);  // dontGet, so not in IST
 
-        //TODO-cGCfreeDescriptors: these tests dont pass anymore
-        //assert(ser.findNode("root.k") !is null); // _k was equal to 0
-        //assert(ser.findNode("root.j") !is null); // in IST...
+        assert(ser.findNode("root.k") !is null); // _k was equal to 0
+        assert(ser.findNode("root.j") !is null); // in IST...
 
         foo._i = 0;
         foo._j = 0;
