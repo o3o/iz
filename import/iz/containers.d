@@ -74,6 +74,14 @@ struct Array(T)
     }
     public
     {
+        this(this) @nogc
+        {
+            Ptr old = _elems;
+            size_t sz = _length * T.sizeof;
+            _elems = getMem(sz);
+            moveMem(_elems, old, sz);
+        }
+
         /// Constructs the array with a list of T.
         this(E...)(E elements) @nogc
         if (is(Unqual!E == T) || is(T == E))
@@ -88,12 +96,18 @@ struct Array(T)
         this(E)(E[] elements...) @nogc
         if (is(Unqual!E == T) || is(T == E))
         {
+            initLazy;
             if (elements.length == 0)
                 return;
-            initLazy;
             setLength(elements.length);
             foreach (i, element; elements)
                 *rwPtr(i) = cast(T) element;
+        }
+
+        /// Constructs the array from another Array.
+        this(E)(auto ref Array!E value) @nogc
+        {
+            opAssign(value);
         }
 
         static if (__traits(compiles, to!T(string.init)) && !isSomeChar!T)
@@ -148,6 +162,7 @@ struct Array(T)
         {
             if (_elems)
                 freeMem(_elems);
+            _elems = null;
         }
 
         /**
@@ -299,8 +314,16 @@ struct Array(T)
             return _length;
         }
 
+        void opAssign(E)(auto ref Array!E elements) @nogc
+        if (is(Unqual!E == T) || is(E == T))
+        {
+            initLazy;
+            setLength(elements.length);
+            moveMem(_elems, elements._elems, T.sizeof * _length);
+        }
+
         /// ditto
-        void opAssign(E)(E[] elements) @nogc
+        void opAssign(E)(auto ref E[] elements) @nogc
         if (is(Unqual!E == T) || is(E == T))
         {
             initLazy;
@@ -454,23 +477,6 @@ unittest
     assert( g1[1] == 0.123456f);
     assert( g1[2] == 0.123456f);
 
-/*
-    assert( g0[0] ==  floatarr[1]);
-    assert( g0[3] ==  floatarr[4]);
-    float[] g1 = floatarr[1..4];
-    assert( g1[0] ==  floatarr[1]);
-    assert( g1[3] ==  floatarr[4]);
-    Array!float g2 = floatarr[]; // auto g2: conflict between op.overloads
-    assert( g2[0] ==  floatarr[0]);
-    assert( g2[4] ==  floatarr[4]);
-    float[] g3 = floatarr[];
-    assert( g3[0] ==  floatarr[0]);
-    assert( g3[4] ==  floatarr[4]);
-    assert(g3[$-1] == floatarr[$-1]);
-*/
-
-    // concatenation
-
     // huge
     a.length = 10_000_000;
     a[$-1] = a.length-1;
@@ -484,8 +490,9 @@ unittest
 unittest
 {
     Array!char a = "123456";
-    assert(a.length == 6);
-    assert(a == "123456");
+    Array!char b = a;
+    assert(b.length == 6);
+    assert(b == "123456");
 }
 
 /**
