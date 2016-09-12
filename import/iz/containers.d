@@ -104,15 +104,19 @@ struct Array(T)
                 *rwPtr(i) = cast(T) element;
         }
 
-        /// Constructs the array from another Array.
-        this(E)(auto ref Array!E value) @nogc
+        /// Constructs by dispatching to the existing opAssign overloads.
+        this(E)(auto ref E value) @nogc
         {
             opAssign(value);
         }
 
         static if (__traits(compiles, to!T(string.init)) && !isSomeChar!T)
         {
-            /// Constructs the array with a literal representation.
+            /**
+             * Constructs the array with a literal representation.
+             * This constructor is not available when the element type verifies
+             * isSomeChar.
+             */
             this(string representation)
             {
                 initLazy;
@@ -199,7 +203,7 @@ struct Array(T)
         /**
          * Indicates how many block the array is made of.
          */
-        size_t blockCount() @nogc
+        size_t blockCount() const pure nothrow @safe @nogc
         {
             return _blockCount;
         }
@@ -243,10 +247,8 @@ struct Array(T)
             return result ~= format("%s]",*rwPtr(_length-1));
         }
 
-        /**
-         *  Returns a mutable copy of the array.
-         */
-        Array!T dup() @nogc
+        /// Returns a mutable (deep) copy of the array.
+        Array!T dup() const @nogc return
         {
             Array!T result;
             result.length = _length;
@@ -254,9 +256,7 @@ struct Array(T)
             return result;
         }
 
-        /**
-         * Class operators
-         */
+        /// Support for equality tests.
         bool opEquals(A)(auto ref A array) const pure @nogc @trusted
         if ((is(Unqual!A == Unqual!(Array!T)) || is(Unqual!(ElementEncodingType!A) == T)))
         {
@@ -272,19 +272,19 @@ struct Array(T)
                   array.ptr[0..array.length];
         }
 
-        /// ditto
+        /// Support for the array syntax.
         T opIndex(size_t i) const pure @nogc
         {
             return *rwPtr(i);
         }
 
-        /// ditto
+        /// Support for the array syntax.
         void opIndexAssign(T item, size_t i) @nogc
         {
             *rwPtr(i) = item;
         }
 
-        /// ditto
+        /// Support for the foreach operator.
         int opApply(scope int delegate(ref T) @nogc dg)
         {
             int result = 0;
@@ -296,7 +296,7 @@ struct Array(T)
             return result;
         }
 
-        /// ditto
+        /// Support for the foreach_reverse operator.
         int opApplyReverse(scope int delegate(ref T) @nogc dg)
         {
             int result = 0;
@@ -308,12 +308,13 @@ struct Array(T)
             return result;
         }
 
-        /// ditto
+        /// Support for the dollar operator.
         size_t opDollar() pure nothrow @safe @nogc
         {
             return _length;
         }
 
+        /// Assign another Array!T.
         void opAssign(E)(auto ref Array!E elements) @nogc
         if (is(Unqual!E == T) || is(E == T))
         {
@@ -322,7 +323,7 @@ struct Array(T)
             moveMem(_elems, elements._elems, T.sizeof * _length);
         }
 
-        /// ditto
+        /// Assigns a D array.
         void opAssign(E)(auto ref E[] elements) @nogc
         if (is(Unqual!E == T) || is(E == T))
         {
@@ -332,7 +333,21 @@ struct Array(T)
                 *rwPtr(i) = cast(T) element;
         }
 
-        /// ditto
+        /// Assigns an inpunt range.
+        void opAssign(E)(auto ref E elements) @nogc
+        if (isInputRange!E && is(Unqual!(ElementType!E) == T) && !isRandomAccessRange!E)
+        {
+            auto len = walkLength(elements);
+            initLazy;
+            setLength(len);
+            foreach(immutable i; 0..len)
+            {
+                opAssign(elements.front);
+                elements.popFront;
+            }
+        }
+
+        /// Support for the cat operator.
         void opOpAssign(string op, E)(E[] elements) @nogc
         if (is(Unqual!E == T) || is(E == T))
         {
@@ -346,7 +361,7 @@ struct Array(T)
             else assert(0, "operator not implemented");
         }
 
-        /// ditto
+        /// Support for the cat operator.
         void opOpAssign(string op)(T aElement) @nogc
         {
             static if (op == "~")
@@ -357,13 +372,13 @@ struct Array(T)
             else assert(0, "operator not implemented");
         }
 
-        /// Returns the array as a D slice.
+        /// Returns the array as a D slice. This doesnt ducplicate the memory.
         T[] opSlice() const pure @nogc
         {
             return opSlice!true(0, _length);
         }
 
-        /// Returns a slice of the array as a D slice.
+        /// Returns a slice of the array as a D slice. This doesnt ducplicate the memory.
         T[] opSlice(bool dSlice = true)(size_t lo, size_t hi) const pure @nogc
         {
             static if (dSlice)
@@ -379,11 +394,12 @@ struct Array(T)
             }
         }
 
-        /// ditto
+        /// Support for filling the array with a single element.
         void opSliceAssign(T value) @nogc
         {
             opSliceAssign(value, 0, _length);
         }
+
         /// ditto
         void opSliceAssign(T value, size_t lo, size_t hi) @nogc
         {

@@ -57,7 +57,7 @@ body
  * Returns:
  *      the pointer to the destination, (same as dst).
  */
-Ptr moveMem(Ptr dst, Ptr src, size_t count) nothrow @trusted @nogc
+Ptr moveMem(Ptr dst, const Ptr src, size_t count) nothrow @trusted @nogc
 in
 {
     if (count)

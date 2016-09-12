@@ -47,7 +47,7 @@
 <div class="aggregate-symbol"><div class="description"><pre><code>public struct Array(T)
 </code></pre>
 <div class="section"><h2></h2>
-<p>Parameterized, GC-free array.
+<p>Parameterized, GC-free, single dimenssion array.
 </p>
 
 
@@ -61,24 +61,59 @@ however, most of the slicing operations are possible.
 
 
 </div>
-<div class="section"><h2>TODO</h2>
-<ul>
-<li>concatenation.
-</li>
-<li>assign from built-in arrays slices.
-</li>
-</ul>
+</div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>public this(E...)(E elements) @nogc 
+if(is(Unqual!E == T) || is(T == E))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Constructs the array with a list of T.
+</p>
 
 
 </div>
-</div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>public this(A...)(A elements) @nogc 
-if(elements.<a href="iz/containers/Array.html#length">length</a> < ptrdiff_t.max - 1)
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>public this(E)(E[] elements...) @nogc 
+if(is(Unqual!E == T) || is(T == E))
 </code></pre>
-</div></div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>public this(T[] elements) @nogc
+<div class="section"><h2></h2>
+<p>Constructs the array with a D array of T.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>public this(E)(auto ref E value) @nogc
 </code></pre>
+<div class="section"><h2></h2>
+<p>Constructs by dispatching to the existing opAssign overloads.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
 </div></div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>public this(string representation)
 </code></pre>
-</div></div><a class="anchor" id="granurality"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">uint</a> <a href="iz/containers/Array.html#granurality">granurality</a>() @nogc
+<div class="section"><h2></h2>
+<p>Constructs the array with a literal representation.
+This constructor is not available when the element type verifies
+isSomeChar.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="granurality"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">uint</a> <a href="iz/containers/Array.html#granurality">granurality</a>() const pure nothrow @safe @nogc
 </code></pre>
 <div class="section"><h2></h2>
 <p>Indicates the memory allocation block-size.
@@ -103,7 +138,7 @@ value should be set to 16 or 4096 (the default).
 
 
 </div>
-</div></div><a class="anchor" id="blockCount"></a><div class="symbol"><div class="description"><pre><code>public size_t <a href="iz/containers/Array.html#blockCount">blockCount</a>() @nogc
+</div></div><a class="anchor" id="blockCount"></a><div class="symbol"><div class="description"><pre><code>public size_t <a href="iz/containers/Array.html#blockCount">blockCount</a>() const pure nothrow @safe @nogc
 </code></pre>
 <div class="section"><h2></h2>
 <p>Indicates how many block the array is made of.
@@ -115,7 +150,7 @@ value should be set to 16 or 4096 (the default).
 
 
 </div>
-</div></div><a class="anchor" id="length"></a><div class="symbol"><div class="description"><pre><code>public size_t <a href="iz/containers/Array.html#length">length</a>() @nogc
+</div></div><a class="anchor" id="length"></a><div class="symbol"><div class="description"><pre><code>public size_t <a href="iz/containers/Array.html#length">length</a>() const pure nothrow @safe @nogc
 </code></pre>
 <div class="section"><h2></h2>
 <p>Element count.
@@ -139,7 +174,7 @@ value should be set to 16 or 4096 (the default).
 
 
 </div>
-</div></div><a class="anchor" id="ptr"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/types.html#Ptr">Ptr</a> <a href="iz/containers/Array.html#ptr">ptr</a>() @nogc
+</div></div><a class="anchor" id="ptr"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/types.html#Ptr">Ptr</a> <a href="iz/containers/Array.html#ptr">ptr</a>() pure nothrow @nogc
 </code></pre>
 <div class="section"><h2></h2>
 <p>Pointer to the first element.
@@ -152,7 +187,7 @@ As it's always assigned It cannot be used to determine if the array is empty.
 
 
 </div>
-</div></div><a class="anchor" id="toString"></a><div class="symbol"><div class="description"><pre><code>public string <a href="iz/containers/Array.html#toString">toString</a>()
+</div></div><a class="anchor" id="toString"></a><div class="symbol"><div class="description"><pre><code>public string <a href="iz/containers/Array.html#toString">toString</a>() const
 </code></pre>
 <div class="section"><h2></h2>
 <p>Returns the string representation of the elements.
@@ -164,10 +199,10 @@ As it's always assigned It cannot be used to determine if the array is empty.
 
 
 </div>
-</div></div><a class="anchor" id="dup"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/containers/Array.html">Array</a>!T <a href="iz/containers/Array.html#dup">dup</a>() @nogc
+</div></div><a class="anchor" id="dup"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/containers/Array.html">Array</a>!T <a href="iz/containers/Array.html#dup">dup</a>() const @nogc return
 </code></pre>
 <div class="section"><h2></h2>
-<p>Returns a mutable copy of the array.
+<p>Returns a mutable (deep) copy of the array.
 </p>
 
 
@@ -176,11 +211,11 @@ As it's always assigned It cannot be used to determine if the array is empty.
 
 
 </div>
-</div></div><a class="anchor" id="opEquals"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/containers/Array.html#opEquals">opEquals</a>(A)(auto ref A array) @nogc 
-if((is(A == <a href="iz/containers/Array.html">Array</a>!T) || is(A == T[])))
+</div></div><a class="anchor" id="opEquals"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/containers/Array.html#opEquals">opEquals</a>(A)(auto ref A array) const pure @nogc @trusted 
+if((is(Unqual!A == Unqual!(<a href="iz/containers/Array.html">Array</a>!T)) || is(Unqual!(ElementEncodingType!A) == T)))
 </code></pre>
 <div class="section"><h2></h2>
-<p>Class operators
+<p>Support for equality tests.
 </p>
 
 
@@ -189,10 +224,10 @@ if((is(A == <a href="iz/containers/Array.html">Array</a>!T) || is(A == T[])))
 
 
 </div>
-</div></div><a class="anchor" id="opIndex"></a><div class="symbol"><div class="description"><pre><code>public T <a href="iz/containers/Array.html#opIndex">opIndex</a>(size_t i) @nogc
+</div></div><a class="anchor" id="opIndex"></a><div class="symbol"><div class="description"><pre><code>public T <a href="iz/containers/Array.html#opIndex">opIndex</a>(size_t i) const pure @nogc
 </code></pre>
 <div class="section"><h2></h2>
-<p>Class operators
+<p>Support for the array syntax.
 </p>
 
 
@@ -206,7 +241,7 @@ if((is(A == <a href="iz/containers/Array.html">Array</a>!T) || is(A == T[])))
     size_t i) @nogc
 </code></pre>
 <div class="section"><h2></h2>
-<p>Class operators
+<p>Support for the array syntax.
 </p>
 
 
@@ -215,10 +250,10 @@ if((is(A == <a href="iz/containers/Array.html">Array</a>!T) || is(A == T[])))
 
 
 </div>
-</div></div><a class="anchor" id="opApply"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">int</a> <a href="iz/containers/Array.html#opApply">opApply</a>(<a href="http://dlang.org/type.html#basic-data-types">int</a> delegate(ref T) dg)
+</div></div><a class="anchor" id="opApply"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">int</a> <a href="iz/containers/Array.html#opApply">opApply</a>(scope <a href="http://dlang.org/type.html#basic-data-types">int</a> delegate(ref T) @nogc dg)
 </code></pre>
 <div class="section"><h2></h2>
-<p>Class operators
+<p>Support for the foreach operator.
 </p>
 
 
@@ -227,10 +262,10 @@ if((is(A == <a href="iz/containers/Array.html">Array</a>!T) || is(A == T[])))
 
 
 </div>
-</div></div><a class="anchor" id="opApplyReverse"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">int</a> <a href="iz/containers/Array.html#opApplyReverse">opApplyReverse</a>(<a href="http://dlang.org/type.html#basic-data-types">int</a> delegate(ref T) dg)
+</div></div><a class="anchor" id="opApplyReverse"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">int</a> <a href="iz/containers/Array.html#opApplyReverse">opApplyReverse</a>(scope <a href="http://dlang.org/type.html#basic-data-types">int</a> delegate(ref T) @nogc dg)
 </code></pre>
 <div class="section"><h2></h2>
-<p>Class operators
+<p>Support for the foreach_reverse operator.
 </p>
 
 
@@ -239,10 +274,10 @@ if((is(A == <a href="iz/containers/Array.html">Array</a>!T) || is(A == T[])))
 
 
 </div>
-</div></div><a class="anchor" id="opDollar"></a><div class="symbol"><div class="description"><pre><code>public size_t <a href="iz/containers/Array.html#opDollar">opDollar</a>() @nogc
+</div></div><a class="anchor" id="opDollar"></a><div class="symbol"><div class="description"><pre><code>public size_t <a href="iz/containers/Array.html#opDollar">opDollar</a>() pure nothrow @safe @nogc
 </code></pre>
 <div class="section"><h2></h2>
-<p>Class operators
+<p>Support for the dollar operator.
 </p>
 
 
@@ -251,10 +286,11 @@ if((is(A == <a href="iz/containers/Array.html">Array</a>!T) || is(A == T[])))
 
 
 </div>
-</div></div><a class="anchor" id="opAssign"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#opAssign">opAssign</a>(T[] elements) @nogc
+</div></div><a class="anchor" id="opAssign"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#opAssign">opAssign</a>(E)(auto ref <a href="iz/containers/Array.html">Array</a>!E elements) @nogc 
+if(is(Unqual!E == T) || is(E == T))
 </code></pre>
 <div class="section"><h2></h2>
-<p>Class operators
+<p>Assign another Array!T.
 </p>
 
 
@@ -263,10 +299,37 @@ if((is(A == <a href="iz/containers/Array.html">Array</a>!T) || is(A == T[])))
 
 
 </div>
-</div></div><a class="anchor" id="opOpAssign"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#opOpAssign">opOpAssign</a>(string op)(T[] someElements) @nogc
+</div></div><a class="anchor" id="opAssign"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#opAssign">opAssign</a>(E)(auto ref E[] elements) @nogc 
+if(is(Unqual!E == T) || is(E == T))
 </code></pre>
 <div class="section"><h2></h2>
-<p>Class operators
+<p>Assigns a D array.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="opAssign"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#opAssign">opAssign</a>(E)(auto ref E elements) @nogc 
+if(isInputRange!E && is(Unqual!(ElementType!E) == T) && !isRandomAccessRange!E)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Assigns an inpunt range.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="opOpAssign"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#opOpAssign">opOpAssign</a>(string op, E)(E[] elements) @nogc 
+if(is(Unqual!E == T) || is(E == T))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Support for the cat operator.
 </p>
 
 
@@ -278,7 +341,7 @@ if((is(A == <a href="iz/containers/Array.html">Array</a>!T) || is(A == T[])))
 </div></div><a class="anchor" id="opOpAssign"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#opOpAssign">opOpAssign</a>(string op)(T aElement) @nogc
 </code></pre>
 <div class="section"><h2></h2>
-<p>Class operators
+<p>Support for the cat operator.
 </p>
 
 
@@ -287,10 +350,10 @@ if((is(A == <a href="iz/containers/Array.html">Array</a>!T) || is(A == T[])))
 
 
 </div>
-</div></div><a class="anchor" id="opSlice"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/containers/Array.html">Array</a>!T <a href="iz/containers/Array.html#opSlice">opSlice</a>() @nogc
+</div></div><a class="anchor" id="opSlice"></a><div class="symbol"><div class="description"><pre><code>public T[] <a href="iz/containers/Array.html#opSlice">opSlice</a>() const pure @nogc
 </code></pre>
 <div class="section"><h2></h2>
-<p>Class operators
+<p>Returns the array as a D slice. This doesnt ducplicate the memory.
 </p>
 
 
@@ -299,12 +362,12 @@ if((is(A == <a href="iz/containers/Array.html">Array</a>!T) || is(A == T[])))
 
 
 </div>
-</div></div><a class="anchor" id="opSlice"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/containers/Array.html">Array</a>!T <a href="iz/containers/Array.html#opSlice">opSlice</a>(
+</div></div><a class="anchor" id="opSlice"></a><div class="symbol"><div class="description"><pre><code>public T[] <a href="iz/containers/Array.html#opSlice">opSlice</a>(<a href="http://dlang.org/type.html#basic-data-types">bool</a> dSlice = true)(
     size_t lo, 
-    size_t hi) @nogc
+    size_t hi) const pure @nogc
 </code></pre>
 <div class="section"><h2></h2>
-<p>Class operators
+<p>Returns a slice of the array as a D slice. This doesnt ducplicate the memory.
 </p>
 
 
@@ -316,7 +379,7 @@ if((is(A == <a href="iz/containers/Array.html">Array</a>!T) || is(A == T[])))
 </div></div><a class="anchor" id="opSliceAssign"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#opSliceAssign">opSliceAssign</a>(T value) @nogc
 </code></pre>
 <div class="section"><h2></h2>
-<p>Class operators
+<p>Support for filling the array with a single element.
 </p>
 
 
@@ -331,7 +394,7 @@ if((is(A == <a href="iz/containers/Array.html">Array</a>!T) || is(A == T[])))
     size_t hi) @nogc
 </code></pre>
 <div class="section"><h2></h2>
-<p>Class operators
+<p>Support for filling the array with a single element.
 </p>
 
 
@@ -340,7 +403,7 @@ if((is(A == <a href="iz/containers/Array.html">Array</a>!T) || is(A == T[])))
 
 
 </div>
-</div></div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/containers/Array.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#granurality">granurality</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#granularity">granularity</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#blockCount">blockCount</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#length">length</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#length">length</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#ptr">ptr</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#toString">toString</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#dup">dup</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opEquals">opEquals</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opIndex">opIndex</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opIndexAssign">opIndexAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opApply">opApply</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opApplyReverse">opApplyReverse</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opDollar">opDollar</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opAssign">opAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opOpAssign">opOpAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opOpAssign">opOpAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opSlice">opSlice</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opSlice">opSlice</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opSliceAssign">opSliceAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opSliceAssign">opSliceAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr></table>
+</div></div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/containers/Array.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#granurality">granurality</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#granularity">granularity</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#blockCount">blockCount</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#length">length</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#length">length</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#ptr">ptr</a><span class="extrainfo"><span class="method-attribs"><span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#toString">toString</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#dup">dup</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-nogc">@nogc</span>, <span class="attr-return">return</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opEquals">opEquals</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-pure">pure</span>, <span class="attr-nogc">@nogc</span>, <span class="attr-trusted">@trusted</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opIndex">opIndex</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-pure">pure</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opIndexAssign">opIndexAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opApply">opApply</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opApplyReverse">opApplyReverse</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opDollar">opDollar</a><span class="extrainfo"><span class="method-attribs"><span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opAssign">opAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opAssign">opAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opAssign">opAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opOpAssign">opOpAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opOpAssign">opOpAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opSlice">opSlice</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-pure">pure</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opSlice">opSlice</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-pure">pure</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opSliceAssign">opSliceAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opSliceAssign">opSliceAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr></table>
 </div>
 </div><script>hljs.initHighlightingOnLoad();</script>
 

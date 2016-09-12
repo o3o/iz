@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../../style.css"/>
+<script src="../../highlight.pack.js"></script>
+<title>VariableParabol</title>
+<base href="../../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.<a href=iz/math.html>math</a>.</small><span class="highlight">VariableParabol</span>
+</div>
+<div class="sidebar">
+<a href="iz/math.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/math.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li>iz.<a href="iz/classes.html">classes</a></li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li>iz.<a href="iz/enumset.html">enumset</a></li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li><span class=" selected">iz.<a href="iz/math.html">math</a></span>
+</li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li>iz.<a href="iz/strings.html">strings</a></li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><div class="description"><pre><code>public struct VariableParabol
+</code></pre>
+<div class="section"><h2></h2>
+<p>A simple and fast easing function that's also controlable.
+Its name comes from the fact that the plot of f(x) in [0..1] and with a
+control of 3 forms a regular parabolic curve.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>double x = 0;
+double x0 = 120;
+double x1 = 480;
+double h = 200;
+const int numPoints = 1000;
+const double increment = 1.0 / numPoints;
+
+// draw a curve...
+foreach(i; 0..numPoints)
+{
+    double y = <a href="iz/math.html#variableParabol">variableParabol</a>.<a href="iz/math/VariableParabol.html#fx">fx</a>(x, 0.1);
+    // lineTo(x * (480 - 120) + 120, y * h);
+    x += increment;
+}
+import std.math: approxEqual;
+assert(x.approxEqual(1.0));
+
+enum inc = 0.001;
+double <a href="iz/math/VariableParabol.html#control">control</a> = 0;
+foreach(i; 0..1000)
+{
+    auto cy = <a href="iz/math.html#variableParabol">variableParabol</a>.<a href="iz/math/VariableParabol.html#fx">fx</a>(0.5, <a href="iz/math/VariableParabol.html#control">control</a>);
+    // Operation to get the <a href="iz/math/VariableParabol.html#control">control</a> value as function of the cursor
+    assert(<a href="iz/math.html#variableParabol">variableParabol</a>.<a href="iz/math/VariableParabol.html#control">control</a>(cy) == <a href="iz/math/VariableParabol.html#control">control</a>);
+    <a href="iz/math/VariableParabol.html#control">control</a> += 3 / 1000;
+}
+
+assert(<a href="iz/math.html#variableParabol">variableParabol</a>.<a href="iz/math/VariableParabol.html#fx">fx</a>(0.0,3.0) == 0.0);
+assert(<a href="iz/math.html#variableParabol">variableParabol</a>.<a href="iz/math/VariableParabol.html#fx">fx</a>(1.0,3.0) == 1.0);
+assert(<a href="iz/math.html#variableParabol">variableParabol</a>.<a href="iz/math/VariableParabol.html#fx">fx</a>(0.0,2.0) == 0.0);
+assert(<a href="iz/math.html#variableParabol">variableParabol</a>.<a href="iz/math/VariableParabol.html#fx">fx</a>(1.0,2.0) == 1.0);
+
+</code></pre>
+
+</div>
+</div><a class="anchor" id="fx"></a><div class="symbol"><div class="description"><pre><code>public static T <a href="iz/math/VariableParabol.html#fx">fx</a>(<a href="http://dlang.org/type.html#basic-data-types">int</a> NC = 1, T, C)(
+    T x, 
+    C c) 
+if((is(T == <a href="http://dlang.org/type.html#basic-data-types">float</a>) || is(T == <a href="http://dlang.org/type.html#basic-data-types">double</a>)) && (is(C == <a href="http://dlang.org/type.html#basic-data-types">float</a>) || is(C == <a href="http://dlang.org/type.html#basic-data-types">double</a>)))
+</code></pre>
+<div class="section "><h2>Contracts</h2><pre><code>in
+{
+    assert (0 <= x && x <= 1.0);
+    assert (0 <= c && x <= 3.0);
+}
+out (y)
+{
+    assert (0 <= y && y <= 1.0);
+}
+</code></pre>
+
+</div>
+<div class="section"><h2></h2>
+<p>Applies the standard transformation.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">x</td><td class="paramDoc"><p>The X coordinate, between 0.0 and 1.0
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">c</td><td class="paramDoc"><p>The control of the speed, between 0 (similar to InExpo)
+     and 3.0 (similar to OutExpo)
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Return</h2>
+<p>The Y coordinate, a value between 0.0 and 1.0.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="control"></a><div class="symbol"><div class="description"><pre><code>public static Y <a href="iz/math/VariableParabol.html#control">control</a>(<a href="http://dlang.org/type.html#basic-data-types">int</a> N = 0, Y)(Y y) 
+if(is(Y == <a href="http://dlang.org/type.html#basic-data-types">float</a>) || is(Y == <a href="http://dlang.org/type.html#basic-data-types">double</a>))
+</code></pre>
+<div class="section "><h2>Contracts</h2><pre><code>in
+{
+    assert (0 <= y && y <= 1.0);
+}
+out (c)
+{
+    assert (0 <= c && c <= 1.0);
+}
+</code></pre>
+
+</div>
+<div class="section"><h2></h2>
+<p>Retrieves the control point coefficient.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">y</td><td class="paramDoc"><p>the value as obtained by variableParabol(0.5, control).
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Return</h2>
+<p>a value between 0.0 and 3.0.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="controlFx"></a><div class="symbol"><div class="description"><pre><code>public static C <a href="iz/math/VariableParabol.html#controlFx">controlFx</a>(<a href="http://dlang.org/type.html#basic-data-types">int</a> N = 0, C)(C c) 
+if(is(C == <a href="http://dlang.org/type.html#basic-data-types">float</a>) || is(C == <a href="http://dlang.org/type.html#basic-data-types">double</a>))
+</code></pre>
+<div class="section "><h2>Contracts</h2><pre><code>in
+{
+    assert (0 <= c && x <= 3.0);
+}
+out (y)
+{
+    assert (0 <= y && y <= 1.0);
+}
+</code></pre>
+
+</div>
+<div class="section"><h2></h2>
+<p>Computes the Y coordinate of the variableParabol control point.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Return</h2>
+<p>The same as variableParabol(0.5, c) but faster.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="numControls"></a><div class="symbol"><div class="description"><pre><code>public auto numControls
+</code></pre>
+<div class="section"><h2></h2>
+<p>Indicates that VariableParabol uses 1 control point.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="ease"></a><div class="symbol"><div class="description"><pre><code>public static shared <a href="iz/math/VariableParabol.html">VariableParabol</a> ease
+</code></pre>
+<div class="section"><h2></h2>
+<p>Uniform Easing API.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><div class="section members"><h2>Variables</h2><table><tr><td><a href="iz/math/VariableParabol.html#numControls">numControls</a></td><td><pre><code>auto
+</code></pre>
+</td><td></td></tr><tr><td><a href="iz/math/VariableParabol.html#ease">ease</a></td><td><pre><code><a href="iz/math/VariableParabol.html">VariableParabol</a>
+</code></pre>
+</td><td></td></tr></table><h2>Functions</h2><table><tr><td><a href="iz/math/VariableParabol.html#fx">fx</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/math/VariableParabol.html#control">control</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/math/VariableParabol.html#controlFx">controlFx</a><span class="extrainfo"></span></td><td></td><td></td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

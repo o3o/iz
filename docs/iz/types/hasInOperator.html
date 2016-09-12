@@ -92,6 +92,37 @@ static assert(!<a href="iz/types/hasInOperator.html">hasInOperator</a>!(Nothing,
 </code></pre>
 
 </div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>enum a(T) = false;
+void b(T)(int){}
+void c()(){}
+template d(T){}
+class e(T){T t;}
+interface I{}
+
+static assert(isTemplateInstance!(a!int));
+static assert(isTemplateInstance!(b!int));
+static assert(isTemplateInstance!(d!int));
+static assert(isTemplateInstance!(e!int));
+
+static assert(!isTemplateInstance!(I));
+static assert(!isTemplateInstance!(int));
+
+static assert(!isTemplateInstance!(a));
+static assert(!isTemplateInstance!(b));
+static assert(!isTemplateInstance!(c));
+
+</code></pre>
+
+</div>
 </div></div><script>hljs.initHighlightingOnLoad();</script>
 
 </div>
