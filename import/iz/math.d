@@ -583,18 +583,31 @@ struct VariableParabol
     static T fx(int NC = 1, T, C)(T x, C c)
     if ((is(T == float) || is(T == double)) &&
         (is(C == float) || is(C == double)))
-    in
     {
-        assert(0 <= x && x <= 1.0);
-        assert(0 <= c && x <= 3.0);
-    }
-    out (y)
-    {
-        assert(0 <= y && y <= 1.0);
-    }
-    body
-    {
-        return x*x*x - x*x*c + x*c;
+        import iz.logicver;
+        static if (verX86_64 & verDigitalMars)
+            enum PureD = false;
+        else // X86 with FPU, better codegen with LDC, etc
+            enum PureD = true;
+        static if (PureD)
+        {
+            assert(0 <= x && x <= 1.0);
+            assert(0 <= c && x <= 3.0);
+            return x*x*x - x*x*c + x*c;
+        }
+        else asm pure nothrow @nogc @safe
+        {
+            naked;
+            movapd  XMM2, XMM1; // saves x
+            mulsd   XMM2, XMM2; // x²
+            movapd  XMM3, XMM2; // saves x²
+            mulsd   XMM3, XMM1; // x³
+            mulsd   XMM2, XMM0; // cx²
+            subsd   XMM3, XMM2; // x³ - cx²
+            mulsd   XMM0, XMM1; // cx
+            addsd   XMM0, XMM3; // x³ - cx² + cx
+            ret;
+        }
     }
 
     /**
@@ -651,7 +664,7 @@ struct VariableParabol
     static shared VariableParabol ease;
 }
 ///
-unittest
+@nogc pure @safe unittest
 {
     double x = 0;
     double x0 = 120;
