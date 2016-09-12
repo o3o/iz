@@ -559,3 +559,133 @@ unittest
     static assert(Pi!(4,2) == Pi!2);
 }
 
+
+/**
+ * A simple and fast easing function that's also controlable.
+ * Its name comes from the fact that the plot of f(x) in [0..1] and with a
+ * control of 3 forms a regular parabolic curve.
+ */
+struct VariableParabol
+{
+    @disable this(this);
+
+    /**
+     * Applies the standard transformation.
+     *
+     * Params:
+     *      x = The X coordinate, between 0.0 and 1.0
+     *      c = The control of the speed, between 0 (similar to InExpo)
+     *      and 3.0 (similar to OutExpo)
+     *
+     * Return:
+     *      The Y coordinate, a value between 0.0 and 1.0.
+     */
+    static T fx(int NC = 1, T, C)(T x, C c)
+    if ((is(T == float) || is(T == double)) &&
+        (is(C == float) || is(C == double)))
+    in
+    {
+        assert(0 <= x && x <= 1.0);
+        assert(0 <= c && x <= 3.0);
+    }
+    out (y)
+    {
+        assert(0 <= y && y <= 1.0);
+    }
+    body
+    {
+        return x*x*x - x*x*c + x*c;
+    }
+
+    /**
+     * Retrieves the control point coefficient.
+     *
+     * Params:
+     *      y = the value as obtained by variableParabol(0.5, control).
+     *
+     * Return:
+     *      a value between 0.0 and 3.0.
+     */
+    static Y control(int N = 0, Y)(Y y)
+    if (is(Y == float) || is(Y == double))
+    in
+    {
+        assert(0 <= y && y <= 1.0);
+    }
+    out (c)
+    {
+        assert(0 <= c && c <= 1.0);
+    }
+    body
+    {
+        return Y(4) * (y - Y(0.125));
+    }
+
+    /**
+     * Computes the Y coordinate of the variableParabol control point.
+     *
+     * Return:
+     *      The same as variableParabol(0.5, c) but faster.
+     */
+    static C controlFx(int N = 0, C)(C c)
+    if (is(C == float) || is(C == double))
+    in
+    {
+        assert(0 <= c && x <= 3.0);
+    }
+    out (y)
+    {
+        assert(0 <= y && y <= 1.0);
+    }
+    body
+    {
+        return C(0.125) + C(0.25) * c;
+    }
+
+    /**
+     * Indicates that VariableParabol uses 1 control point.
+     */
+    enum numControls = 1;
+
+    /// Uniform Easing API.
+    static shared VariableParabol ease;
+}
+///
+unittest
+{
+    double x = 0;
+    double x0 = 120;
+    double x1 = 480;
+    double h = 200;
+    const int numPoints = 1000;
+    const double increment = 1.0 / numPoints;
+
+    // draw a curve...
+    foreach(i; 0..numPoints)
+    {
+        double y = variableParabol.fx(x, 0.1);
+        // lineTo(x * (480 - 120) + 120, y * h);
+        x += increment;
+    }
+    import std.math: approxEqual;
+    assert(x.approxEqual(1.0));
+
+    enum inc = 0.001;
+    double control = 0;
+    foreach(i; 0..1000)
+    {
+        auto cy = variableParabol.fx(0.5, control);
+        // Operation to get the control value as function of the cursor
+        assert(variableParabol.control(cy) == control);
+        control += 3 / 1000;
+    }
+
+    assert(variableParabol.fx(0.0,3.0) == 0.0);
+    assert(variableParabol.fx(1.0,3.0) == 1.0);
+    assert(variableParabol.fx(0.0,2.0) == 0.0);
+    assert(variableParabol.fx(1.0,2.0) == 1.0);
+}
+
+///
+alias variableParabol = VariableParabol;
+
