@@ -116,49 +116,20 @@ struct Array(T)
              * Constructs the array with a literal representation.
              * This constructor is not available when the element type verifies
              * isSomeChar.
+             *
+             * Throw:
+             *      A ConvException if T is not converitble to string.
              */
-            this(string representation)
+            this(const(char[]) representation)
             {
                 initLazy;
                 setLength(0);
+                T[] arr;
 
-                class RepresentationException: Exception
-                {
-                    this()
-                    {
-                        super("invalid array representation");
-                    }
-                }
+                scope(success)
+                    opAssign(arr);
 
-                auto fmtRep = strip(representation);
-
-                if (((fmtRep[0] != '[') & (fmtRep[$-1] != ']')) | (fmtRep.length < 2))
-                    throw new RepresentationException;
-
-                if (fmtRep == "[]") return;
-
-                size_t i = 1;
-                size_t _from = 1;
-                while(i != fmtRep.length)
-                {
-                    if ((fmtRep[i] ==  ']') | (fmtRep[i] ==  ','))
-                    {
-                        auto valStr = fmtRep[_from..i];
-                        if (valStr == "") throw new RepresentationException;
-                        try
-                        {
-                            T _val = to!T(valStr);
-                            grow;
-                            *rwPtr(_length-1) = _val;
-                        }
-                        catch
-                            throw new RepresentationException;
-
-                        _from = i;
-                        _from++;
-                    }
-                    ++i;
-                }
+                arr = to!(T[])(representation);
             }
         }
 
@@ -183,7 +154,8 @@ struct Array(T)
          */
         void granularity(uint value) @nogc
         {
-            if (_granularity == value) return;
+            if (_granularity == value)
+                return;
             if (value < T.sizeof)
             {
                 value = 16 * T.sizeof;
@@ -246,17 +218,17 @@ struct Array(T)
         }
 
         /**
-         * Returns the string representation of the elements.
+         * Returns the string representation of the array.
+         *
+         * Throw:
+         *      A ConvException if T is not converitble to string.
          */
         string toString() const
         {
-            if (_length == 0) return "[]";
-            string result =  "[";
-            foreach (immutable i; 0 .. _length-1)
-            {
-                result ~= format("%s, ", *rwPtr(i));
-            }
-            return result ~= format("%s]",*rwPtr(_length-1));
+            if (_length == 0)
+                return "[]";
+            else
+                return to!string(opSlice);
         }
 
         /// Returns a mutable (deep) copy of the array.
@@ -321,7 +293,7 @@ struct Array(T)
         }
 
         /// Support for the dollar operator.
-        size_t opDollar() pure nothrow @safe @nogc
+        size_t opDollar() const pure nothrow @safe @nogc
         {
             return _length;
         }
@@ -525,10 +497,23 @@ unittest
 
 unittest
 {
-    static struct S{int i = 1;}
+    int c;
+    // TODO-cArray: destroying struct
+    struct S{int i = 1; /*~this() @nogc {c = 1;}*/}
     Array!S array;
+    assert(array.toString == "[]");
     array.length = 1;
     assert(array[0].i == 1);
+    array.length = 0;
+    //assert(c);
+}
+
+unittest
+{
+    int[] source = [0,1,2];
+    Array!int a = source;
+    assert(a == source);
+    assert(a.dup == source);
 }
 
 private mixin template ListHelpers(T)
@@ -683,6 +668,9 @@ class ContiguousList(T)
 
         /**
          * Adds an item at the end of the list and returns its index.
+         *
+         * Return:
+         *      The last item index.
          */
         ptrdiff_t add(T item)
         {
@@ -692,7 +680,10 @@ class ContiguousList(T)
         }
 
         /**
-         * Adds items at the end of the list and returns the last item index.
+         * Adds items at the end of the list.
+         *
+         * Return:
+         *      The last item index.
          */
         ptrdiff_t add(I)(I items)
         {
@@ -703,12 +694,14 @@ class ContiguousList(T)
         /**
          * Inserts an item at the beginning of the list.
          *
-         * In a Contiguous list, add() should ne preferred over insert().
+         * In a Contiguous list, add() should be preferred over insert().
+         *
+         * Return:
+         *      Always 0.
          */
         ptrdiff_t insert(T item)
         {
             _items.grow;
-            scope(failure) throw listException;
             memmove(_items.ptr + T.sizeof, _items.ptr, (_items.length - 1) * T.sizeof);
             _items[0] = item;
             return 0;
@@ -727,8 +720,10 @@ class ContiguousList(T)
          */
         ptrdiff_t insert(size_t position, T item)
         {
-            if (position == 0) return insert(item);
-            else if (position >= _items.length) return add(item);
+            if (position == 0)
+                return insert(item);
+            else if (position >= _items.length)
+                return add(item);
             else
             {
                 _items.grow;
@@ -755,9 +750,8 @@ class ContiguousList(T)
         }
         body
         {
-            auto i1 = find(item1);
-            auto i2 = find(item2);
-
+            ptrdiff_t i1 = find(item1);
+            ptrdiff_t i2 = find(item2);
             if (i1 != -1 && i2 != -1)
             {
                 _items[i1] = _items[i2];
@@ -841,7 +835,7 @@ class ContiguousList(T)
         /**
          * Returns the items count.
          */
-        size_t count()
+        final size_t count() const pure nothrow @safe
         {
             return _items.opDollar();
         }
@@ -850,10 +844,10 @@ class ContiguousList(T)
          * Returns the internal array.
          *
          * ContiguousList doesn't contain any other hidden field
-         * and the container can be modified without changind the
-         * list state.
+         * and the container can be modified without altering the
+         * state of the list.
          */
-        ref Array!T array()
+        ref Array!T array() nothrow @safe
         {
             return _items;
         }
