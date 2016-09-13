@@ -531,30 +531,11 @@ unittest
     assert(array[0].i == 1);
 }
 
-/**
- * List interface.
- */
-interface List(T)
+private mixin template ListHelpers(T)
 {
-    /// support for the array syntax
-    T opIndex(ptrdiff_t i);
-
-    /// support for the array syntax
-    void opIndexAssign(T item, size_t i);
-
-    /// support for the foreach operator
-    int opApply(int delegate(T) dg);
-
-    /// support for the foreach_reverse operator
-    int opApplyReverse(int delegate(T) dg);
-
-    /**
-     * Allocates, adds to the back, and returns a new item of type T.
-     * Items allocated by this function need to be manually freed before the list destruction.
-     */
     static if(is (T == class))
     {
-        final T addNewItem(A...)(A a)
+        final public T addNewItem(A...)(A a)
         {
             T result = construct!T(a);
             add(result);
@@ -563,7 +544,7 @@ interface List(T)
     }
     else static if(is (T == struct))
     {
-        final T * addNewItem(A...)(A a)
+        final public T * addNewItem(A...)(A a)
         {
             T * result = construct!T(a);
             add(result);
@@ -572,87 +553,13 @@ interface List(T)
     }
     else static if(isPointer!T)
     {
-        final T addNewItem(A...)(A a)
+        final public T addNewItem(A...)(A a)
         {
             T result = newPtr!(PointerTarget!T)(a);
             add(result);
             return result;
         }
     }
-
-    /**
-     * Returns the last item.
-     * The value returned is never null.
-     */
-    T last();
-
-    /**
-     * Returns the first item.
-     * The value returned is never null.
-     */
-    T first();
-
-    /**
-     * Returns the index of anItem if it's found otherwise -1.
-     */
-    ptrdiff_t find(T item);
-
-    /**
-     * Adds an item at the end of list.
-     * Returns 0 when the operation is successful otherwise -1.
-     */
-    ptrdiff_t add(T item);
-
-    /**
-     * Adds someItems at the end of list.
-     * Returns the index of the last item when the operation is successful otherwise -1.
-     */
-    ptrdiff_t add(T[] items);
-
-    /**
-     * Inserts an item at the beginning of the list.
-     * Returns the index of the last item when the operation is successful otherwise -1.
-     */
-    ptrdiff_t insert(T item);
-
-    /**
-     * Inserts anItem before the one standing at position.
-     * If position is greater than count than anItem is added to the end of list.
-     * Returns the index of the last item when the operation is successful otherwise -1.
-     */
-    ptrdiff_t insert(size_t position, T item);
-
-    /**
-     * Exchanges anItem1 and anItem2 positions.
-     */
-    void swapItems(T item1, T item2);
-
-    /**
-     * Permutes the index1-th item with the index2-th item.
-     */
-    void swapIndexes(size_t index1, size_t index2);
-
-    /**
-     * Tries to removes anItem from the list.
-     */
-    bool remove(T item);
-
-    /**
-     * Tries to extract the index-nth item from the list.
-     * Returns the item or null if the removal fails.
-     */
-    T extract(size_t index);
-
-    /**
-     * Removes the items.
-     */
-    void clear();
-
-    /**
-     * Returns the count of linked item.
-     * The value returned is always greater than 0.
-     */
-    size_t count();
 
     alias opDollar = count;
 }
@@ -661,11 +568,13 @@ deprecated("Use the more accurate 'ContiguousList' name")
 alias StaticList = ContiguousList;
 
 /**
- * An List implementation, fast to be iterated, slow to be reorganized.
- * Encapsulates an Array!T and interfaces it as a List.
+ * A list, fast to be iterated, slow to be reorganized.
+ * Encapsulates an Array!T and interfaces it as a list.
  */
-class ContiguousList(T): List!T
+class ContiguousList(T)
 {
+    mixin ListHelpers!T;
+
     private
     {
         @NoGc Array!T _items;
@@ -684,22 +593,26 @@ class ContiguousList(T): List!T
         {
             _items = Array!T(elements);
         }
+
         ~this()
         {
             _items.length = 0;
         }
 
-        T opIndex(ptrdiff_t i)
+        /// Support for the array syntax.
+        ref T opIndex(ptrdiff_t i)
         {
             return _items[i];
         }
 
+        /// Support for the array syntax.
         void opIndexAssign(T item, size_t i)
         {
             _items[i] = item;
         }
 
-        int opApply(int delegate(T) dg)
+        /// Support for the foreach operator.
+        int opApply(scope int delegate(ref T) dg)
         {
             int result = 0;
             foreach(immutable i; 0 .. _items.length)
@@ -710,7 +623,8 @@ class ContiguousList(T): List!T
             return result;
         }
 
-        int opApplyReverse(int delegate(T) dg)
+        /// Support for the foreach_reverse operator.
+        int opApplyReverse(scope int delegate(ref T) dg)
         {
             int result = 0;
             foreach_reverse(immutable i; 0 .. _items.length)
@@ -721,21 +635,38 @@ class ContiguousList(T): List!T
             return result;
         }
 
+        /// Replaces the items with the content of a D T[].
         void opAssign(T[] items)
         {
             _items.opAssign(items);
         }
 
+        /// Replaces the items with the content of an Array!T.
+        void opAssign(Array!T items)
+        {
+            _items.opAssign(items);
+        }
+
+        deprecated("formely implemented for the List interface")
         T last()
         {
             return _items[$-1];
         }
 
+        deprecated("formely implemented for the List interface")
         T first()
         {
             return _items[0];
         }
 
+        /**
+         * Tries to find an item in the list.
+         *
+         * Params:
+         *      item = the item to find.
+         * Return:
+         *      -1 if item is not present otherwise its index.
+         */
         ptrdiff_t find(T item)
         {
             ptrdiff_t result = -1;
@@ -751,8 +682,7 @@ class ContiguousList(T): List!T
         }
 
         /**
-         * Adds an item at the end of the list.
-         * To be preferred in this List implementation.
+         * Adds an item at the end of the list and returns its index.
          */
         ptrdiff_t add(T item)
         {
@@ -761,7 +691,10 @@ class ContiguousList(T): List!T
             return _items.length - 1;
         }
 
-        ptrdiff_t add(T[] items)
+        /**
+         * Adds items at the end of the list and returns the last item index.
+         */
+        ptrdiff_t add(I)(I items)
         {
             _items ~= items;
             return _items.length - 1;
@@ -769,7 +702,8 @@ class ContiguousList(T): List!T
 
         /**
          * Inserts an item at the beginning of the list.
-         * To be avoided in this List implementation.
+         *
+         * In a Contiguous list, add() should ne preferred over insert().
          */
         ptrdiff_t insert(T item)
         {
@@ -781,8 +715,15 @@ class ContiguousList(T): List!T
         }
 
         /**
-         * Inserts an item at the beginning of the list.
-         * To be avoided in this List implementation.
+         * Inserts an item at a given position.
+         *
+         * In a Contiguous list, add() should ne preferred over insert().
+         *
+         * Params:
+         *      position = The position where to insert.
+         *      item = The item to insert.
+         * Return:
+         *      The item index, position if it was valid.
          */
         ptrdiff_t insert(size_t position, T item)
         {
@@ -800,6 +741,13 @@ class ContiguousList(T): List!T
             }
         }
 
+        /**
+         * Exchanges the positions of two items.
+         *
+         * Params:
+         *      item1 = The first item.
+         *      item2 = The second item.
+         */
         void swapItems(T item1, T item2)
         in
         {
@@ -817,6 +765,13 @@ class ContiguousList(T): List!T
             }
         }
 
+        /**
+         * Exchanges the positions of two items.
+         *
+         * Params:
+         *      index1 = The first item index.
+         *      index2 = The second item index.
+         */
         void swapIndexes(size_t index1, size_t index2)
         {
             if (index1 == index2) return;
@@ -827,6 +782,14 @@ class ContiguousList(T): List!T
             _items[index2] = old;
         }
 
+        /**
+         * Removes an item from the list.
+         *
+         * Params:
+         *      item = The item to remove.
+         * Return:
+         *      true if the item wasin the list, false otherwise.
+         */
         bool remove(T item)
         {
             auto i = find(item);
@@ -836,6 +799,14 @@ class ContiguousList(T): List!T
             return result;
         }
 
+        /**
+         * Removes an item from the list.
+         *
+         * Params:
+         *      index = The index of the item to remove.
+         * Return:
+         *      The item that's been removed.
+         */
         T extract(size_t index)
         {
             T result = _items[index];
@@ -859,17 +830,36 @@ class ContiguousList(T): List!T
             return result;
         }
 
+        /**
+         * Empties the list.
+         */
         void clear()
         {
-            _items.setLength(0);
+            _items.length = 0;
         }
 
-        @property size_t count()
+        /**
+         * Returns the items count.
+         */
+        size_t count()
         {
             return _items.opDollar();
         }
+
+        /**
+         * Returns the internal array.
+         *
+         * ContiguousList doesn't contain any other hidden field
+         * and the container can be modified without changind the
+         * list state.
+         */
+        ref Array!T array()
+        {
+            return _items;
+        }
     }
 }
+
 
 /**
  * Payload for the dynamic list.
@@ -1004,24 +994,22 @@ private template dlistPayload(T)
     }
 }
 
+
 /**
  * A List implementation, slow to be iterated, fast to be reorganized.
  * This is a standard doubly linked list, with GC-free heap allocations.
- *
- * While using the array syntax for looping should be avoided, foreach()
- * processes with some acceptable performances.
  */
-class DynamicList(T): List!T
+class DynamicList(T)
 {
+    mixin ListHelpers!T;
+
     private
     {
         size_t _count;
         void* _last;
         void* _first;
         alias payload = dlistPayload!T;
-    }
-    protected
-    {
+
         void* getPayloadFromIx(size_t index) @safe @nogc nothrow
         {
             void* current = _first;
@@ -1057,18 +1045,21 @@ class DynamicList(T): List!T
             clear;
         }
 
+        /// Support for the array syntax.
         T opIndex(ptrdiff_t i) @safe @nogc nothrow
         {
             void* _pld = getPayloadFromIx(i);
             return payload.getData(_pld);
         }
 
+        /// Support for the array syntax.
         void opIndexAssign(T item, size_t i) @safe @nogc nothrow
         {
             void* _pld = getPayloadFromIx(i);
             payload.setData(_pld, item);
         }
 
+        /// Support for the foreach operator.
         int opApply(int delegate(T) dg) @trusted
         {
             int result = 0;
@@ -1082,6 +1073,7 @@ class DynamicList(T): List!T
             return result;
         }
 
+        /// Support for the foreach_reverse operator.
         int opApplyReverse(int delegate(T) dg) @trusted
         {
             int result = 0;
@@ -1095,6 +1087,7 @@ class DynamicList(T): List!T
             return result;
         }
 
+        /// Replaces the items with the content of a D T[].
         void opAssign(T[] elems) @trusted @nogc
         {
             clear;
@@ -1102,16 +1095,26 @@ class DynamicList(T): List!T
                 add(elem);
         }
 
+        /// Returns the first element.
         T last() @safe @nogc nothrow
         {
             return payload.getData(_last);
         }
 
+        /// Returns the last element.
         T first() @safe @nogc nothrow
         {
             return payload.getData(_first);
         }
 
+        /**
+         * Tries to find an item in the list.
+         *
+         * Params:
+         *      item = the item to find.
+         * Return:
+         *      -1 if item is not present otherwise its index.
+         */
         ptrdiff_t find(T item) @trusted
         {
             void* current = _first;
@@ -1126,6 +1129,9 @@ class DynamicList(T): List!T
             return -1;
         }
 
+        /**
+         * Adds an item at the end of the list and returns its index.
+         */
         ptrdiff_t add(T item) @trusted @nogc
         {
             if (!_first)
@@ -1139,6 +1145,9 @@ class DynamicList(T): List!T
             }
         }
 
+        /**
+         * Adds items at the end of the list and returns the last item index.
+         */
         ptrdiff_t add(T[] items) @trusted @nogc
         {
             foreach (item; items)
@@ -1146,6 +1155,9 @@ class DynamicList(T): List!T
             return _count - 1;
         }
 
+        /**
+         * Inserts an item at the beginning of the list.
+         */
         ptrdiff_t insert(T item) @trusted @nogc
         {
             void* _pld = payload.newPld(null, _first, item);
@@ -1156,6 +1168,15 @@ class DynamicList(T): List!T
             return 0;
         }
 
+        /**
+         * Inserts an item at a given position.
+         *
+         * Params:
+         *      position = The position where to insert.
+         *      item = The item to insert.
+         * Return:
+         *      The item index, position if it was valid.
+         */
         ptrdiff_t insert(size_t position, T item) @trusted @nogc
         {
             if (!_first || position == 0)
@@ -1178,6 +1199,13 @@ class DynamicList(T): List!T
             }
         }
 
+        /**
+         * Exchanges the positions of two items.
+         *
+         * Params:
+         *      item1 = The first item.
+         *      item2 = The second item.
+         */
         void swapItems(T item1, T item2) @trusted
         {
             void* _pld1 = getPayloadFromDt(item1);
@@ -1192,6 +1220,13 @@ class DynamicList(T): List!T
             payload.setData(_pld2, _data1);
         }
 
+        /**
+         * Exchanges the positions of two items.
+         *
+         * Params:
+         *      index1 = The first item index.
+         *      index2 = The second item index.
+         */
         void swapIndexes(size_t index1, size_t index2) @trusted
         {
             void* _pld1 = getPayloadFromIx(index1);
@@ -1206,6 +1241,14 @@ class DynamicList(T): List!T
             payload.setData(_pld2, _data1);
         }
 
+        /**
+         * Removes an item from the list.
+         *
+         * Params:
+         *      item = The item to remove.
+         * Return:
+         *      true if the item wasin the list, false otherwise.
+         */
         bool remove(T item) @trusted
         {
             void* _pld = getPayloadFromDt(item);
@@ -1240,6 +1283,14 @@ class DynamicList(T): List!T
             return true;
         }
 
+        /**
+         * Removes an item from the list.
+         *
+         * Params:
+         *      index = The index of the item to remove.
+         * Return:
+         *      The item that's been removed.
+         */
         T extract(size_t index) @trusted
         {
             T result;
@@ -1276,6 +1327,9 @@ class DynamicList(T): List!T
             return result;
         }
 
+        /**
+         * Empties the list.
+         */
         void clear() @trusted @nogc
         {
             void* current = _first;
@@ -1290,6 +1344,9 @@ class DynamicList(T): List!T
             _last = null;
         }
 
+        /**
+         * Returns the items count.
+         */
         size_t count() @trusted @property @nogc
         {
             return _count;

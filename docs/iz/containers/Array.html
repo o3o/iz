@@ -153,7 +153,7 @@ value should be set to 16 or 4096 (the default).
 </div></div><a class="anchor" id="length"></a><div class="symbol"><div class="description"><pre><code>public size_t <a href="iz/containers/Array.html#length">length</a>() const pure nothrow @safe @nogc
 </code></pre>
 <div class="section"><h2></h2>
-<p>Element count.
+<p>Sets or gets the element count.
 </p>
 
 
@@ -165,7 +165,7 @@ value should be set to 16 or 4096 (the default).
 </div></div><a class="anchor" id="length"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#length">length</a>(size_t value) @nogc
 </code></pre>
 <div class="section"><h2></h2>
-<p>Element count.
+<p>Sets or gets the element count.
 </p>
 
 
@@ -224,7 +224,7 @@ if((is(Unqual!A == Unqual!(<a href="iz/containers/Array.html">Array</a>!T)) || i
 
 
 </div>
-</div></div><a class="anchor" id="opIndex"></a><div class="symbol"><div class="description"><pre><code>public T <a href="iz/containers/Array.html#opIndex">opIndex</a>(size_t i) const pure @nogc
+</div></div><a class="anchor" id="opIndex"></a><div class="symbol"><div class="description"><pre><code>public ref T <a href="iz/containers/Array.html#opIndex">opIndex</a>(size_t i) const pure @nogc
 </code></pre>
 <div class="section"><h2></h2>
 <p>Support for the array syntax.

@@ -44,11 +44,11 @@
 </ul>
 </div></div>
 <div class="content">
-<div class="aggregate-symbol"><div class="description"><pre><code>public class ContiguousList(T) : <a href="iz/containers/List.html">List</a>!T
+<div class="aggregate-symbol"><div class="description"><pre><code>public class ContiguousList(T)
 </code></pre>
 <div class="section"><h2></h2>
-<p>An List implementation, fast to be iterated, slow to be reorganized.
-Encapsulates an Array!T and interfaces it as a List.
+<p>A list, fast to be iterated, slow to be reorganized.
+Encapsulates an Array!T and interfaces it as a list.
 </p>
 
 
@@ -59,11 +59,121 @@ Encapsulates an Array!T and interfaces it as a List.
 </div>
 </div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>public this(A...)(A elements)
 </code></pre>
+</div></div><a class="anchor" id="opIndex"></a><div class="symbol"><div class="description"><pre><code>public ref T <a href="iz/containers/ContiguousList.html#opIndex">opIndex</a>(ptrdiff_t i)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Support for the array syntax.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="opIndexAssign"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/ContiguousList.html#opIndexAssign">opIndexAssign</a>(
+    T item, 
+    size_t i)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Support for the array syntax.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="opApply"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">int</a> <a href="iz/containers/ContiguousList.html#opApply">opApply</a>(scope <a href="http://dlang.org/type.html#basic-data-types">int</a> delegate(ref T) dg)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Support for the foreach operator.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="opApplyReverse"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">int</a> <a href="iz/containers/ContiguousList.html#opApplyReverse">opApplyReverse</a>(scope <a href="http://dlang.org/type.html#basic-data-types">int</a> delegate(ref T) dg)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Support for the foreach_reverse operator.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="opAssign"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/ContiguousList.html#opAssign">opAssign</a>(T[] items)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Replaces the items with the content of a D T[].
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="opAssign"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/ContiguousList.html#opAssign">opAssign</a>(<a href="iz/containers/Array.html">Array</a>!T items)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Replaces the items with the content of an Array!T.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="find"></a><div class="symbol"><div class="description"><pre><code>public ptrdiff_t <a href="iz/containers/ContiguousList.html#find">find</a>(T item)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Tries to find an item in the list.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">item</td><td class="paramDoc"><p>the item to find.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Return</h2>
+<p>-1 if item is not present otherwise its index.
+</p>
+
+
+</div>
 </div></div><a class="anchor" id="add"></a><div class="symbol"><div class="description"><pre><code>public ptrdiff_t <a href="iz/containers/ContiguousList.html#add">add</a>(T item)
 </code></pre>
 <div class="section"><h2></h2>
-<p>Adds an item at the end of the list.
-To be preferred in this List implementation.
+<p>Adds an item at the end of the list and returns its index.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="add"></a><div class="symbol"><div class="description"><pre><code>public ptrdiff_t <a href="iz/containers/ContiguousList.html#add">add</a>(I)(I items)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Adds items at the end of the list and returns the last item index.
 </p>
 
 
@@ -76,12 +186,13 @@ To be preferred in this List implementation.
 </code></pre>
 <div class="section"><h2></h2>
 <p>Inserts an item at the beginning of the list.
-To be avoided in this List implementation.
 </p>
 
 
 </div>
 <div class="section"><h2></h2>
+<p>In a Contiguous list, add() should ne preferred over insert().
+</p>
 
 
 </div>
@@ -90,8 +201,46 @@ To be avoided in this List implementation.
     T item)
 </code></pre>
 <div class="section"><h2></h2>
-<p>Inserts an item at the beginning of the list.
-To be avoided in this List implementation.
+<p>Inserts an item at a given position.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>In a Contiguous list, add() should ne preferred over insert().
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">position</td><td class="paramDoc"><p>The position where to insert.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">item</td><td class="paramDoc"><p>The item to insert.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Return</h2>
+<p>The item index, position if it was valid.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="swapItems"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/ContiguousList.html#swapItems">swapItems</a>(
+    T item1, 
+    T item2)
+</code></pre>
+<div class="section "><h2>Contracts</h2><pre><code>in
+{
+    assert (item1 != item2);
+}
+</code></pre>
+
+</div>
+<div class="section"><h2></h2>
+<p>Exchanges the positions of two items.
 </p>
 
 
@@ -100,7 +249,131 @@ To be avoided in this List implementation.
 
 
 </div>
-</div></div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/containers/ContiguousList.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#add">add</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#insert">insert</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#insert">insert</a><span class="extrainfo"></span></td><td></td><td></td></tr></table>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">item1</td><td class="paramDoc"><p>The first item.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">item2</td><td class="paramDoc"><p>The second item.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="swapIndexes"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/ContiguousList.html#swapIndexes">swapIndexes</a>(
+    size_t index1, 
+    size_t index2)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Exchanges the positions of two items.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">index1</td><td class="paramDoc"><p>The first item index.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">index2</td><td class="paramDoc"><p>The second item index.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="remove"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/containers/ContiguousList.html#remove">remove</a>(T item)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Removes an item from the list.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">item</td><td class="paramDoc"><p>The item to remove.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Return</h2>
+<p>true if the item wasin the list, false otherwise.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="extract"></a><div class="symbol"><div class="description"><pre><code>public T <a href="iz/containers/ContiguousList.html#extract">extract</a>(size_t index)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Removes an item from the list.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">index</td><td class="paramDoc"><p>The index of the item to remove.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Return</h2>
+<p>The item that's been removed.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="clear"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/ContiguousList.html#clear">clear</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Empties the list.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="count"></a><div class="symbol"><div class="description"><pre><code>public size_t <a href="iz/containers/ContiguousList.html#count">count</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the items count.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="array"></a><div class="symbol"><div class="description"><pre><code>public ref <a href="iz/containers/Array.html">Array</a>!T <a href="iz/containers/ContiguousList.html#array">array</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the internal array.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>ContiguousList doesn't contain any other hidden field
+and the container can be modified without changind the
+list state.
+</p>
+
+
+</div>
+</div></div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/containers/ContiguousList.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#opIndex">opIndex</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#opIndexAssign">opIndexAssign</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#opApply">opApply</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#opApplyReverse">opApplyReverse</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#opAssign">opAssign</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#opAssign">opAssign</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#find">find</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#add">add</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#add">add</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#insert">insert</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#insert">insert</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#swapItems">swapItems</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#swapIndexes">swapIndexes</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#remove">remove</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#extract">extract</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#clear">clear</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#count">count</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#array">array</a><span class="extrainfo"></span></td><td></td><td></td></tr></table>
 </div>
 </div><script>hljs.initHighlightingOnLoad();</script>
 

@@ -1853,8 +1853,8 @@ class PropertyBinder(T, bool RttiCheck = false)
 
 private:
 
-    DynamicList!(PropDescriptor!T*) _itemsToDestruct;
-    DynamicList!(PropDescriptor!T*) _items;
+    ContiguousList!(PropDescriptor!T*) _itemsToDestruct;
+    ContiguousList!(PropDescriptor!T*) _items;
     PropDescriptor!T *_source;
 
 public:
@@ -1862,8 +1862,8 @@ public:
     ///
     this()
     {
-        _items = construct!(DynamicList!(PropDescriptor!T*));
-        _itemsToDestruct = construct!(DynamicList!(PropDescriptor!T*));
+        _items = construct!(ContiguousList!(PropDescriptor!T*));
+        _itemsToDestruct = construct!(ContiguousList!(PropDescriptor!T*));
     }
 
     ~this()
@@ -1976,7 +1976,7 @@ public:
      * Provides an access to the property descriptors for additional List operations.
      * Note that the items whose life-time is managed should not be modified.
      */
-    @property List!(PropDescriptor!T *) items()
+    @property ContiguousList!(PropDescriptor!T *) items()
     {return _items;}
 }
 

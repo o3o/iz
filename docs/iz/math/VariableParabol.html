@@ -107,18 +107,6 @@ assert(<a href="iz/math.html#variableParabol">variableParabol</a>.<a href="iz/ma
     C c) 
 if((is(T == <a href="http://dlang.org/type.html#basic-data-types">float</a>) || is(T == <a href="http://dlang.org/type.html#basic-data-types">double</a>)) && (is(C == <a href="http://dlang.org/type.html#basic-data-types">float</a>) || is(C == <a href="http://dlang.org/type.html#basic-data-types">double</a>)))
 </code></pre>
-<div class="section "><h2>Contracts</h2><pre><code>in
-{
-    assert (0 <= x && x <= 1.0);
-    assert (0 <= c && x <= 3.0);
-}
-out (y)
-{
-    assert (0 <= y && y <= 1.0);
-}
-</code></pre>
-
-</div>
 <div class="section"><h2></h2>
 <p>Applies the standard transformation.
 </p>
