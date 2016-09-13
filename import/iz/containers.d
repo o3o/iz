@@ -208,9 +208,7 @@ struct Array(T)
             return _blockCount;
         }
 
-        /**
-         * Element count.
-         */
+        /// Sets or gets the element count.
         size_t length() const pure nothrow @safe @nogc
         {
             return _length;
@@ -219,9 +217,23 @@ struct Array(T)
         /// ditto
         void length(size_t value) @nogc
         {
-            if (value == _length) return;
+            if (value == _length)
+                return;
+            size_t oldLen = _length;
+            static if (is(T == struct))
+            {
+                if (value < _length)
+                    foreach(i; value.._length)
+                        destroy(opIndex(i));
+            }
             initLazy;
             setLength(value);
+            static if (is(T == struct))
+            {
+                if (value > oldLen)
+                    foreach(i; oldLen.._length)
+                        emplace(rwPtr(i));
+            }
         }
 
         /**
@@ -273,7 +285,7 @@ struct Array(T)
         }
 
         /// Support for the array syntax.
-        T opIndex(size_t i) const pure @nogc
+        ref T opIndex(size_t i) const pure @nogc
         {
             return *rwPtr(i);
         }
@@ -509,6 +521,14 @@ unittest
     Array!char b = a;
     assert(b.length == 6);
     assert(b == "123456");
+}
+
+unittest
+{
+    static struct S{int i = 1;}
+    Array!S array;
+    array.length = 1;
+    assert(array[0].i == 1);
 }
 
 /**
