@@ -649,7 +649,7 @@ class ContiguousList(T)
          *
          * Params:
          *      item = the item to find.
-         * Return:
+         * Returns:
          *      -1 if item is not present otherwise its index.
          */
         ptrdiff_t find(T item)
@@ -669,7 +669,7 @@ class ContiguousList(T)
         /**
          * Adds an item at the end of the list and returns its index.
          *
-         * Return:
+         * Returns:
          *      The last item index.
          */
         ptrdiff_t add(T item)
@@ -682,7 +682,7 @@ class ContiguousList(T)
         /**
          * Adds items at the end of the list.
          *
-         * Return:
+         * Returns:
          *      The last item index.
          */
         ptrdiff_t add(I)(I items)
@@ -696,7 +696,7 @@ class ContiguousList(T)
          *
          * In a Contiguous list, add() should be preferred over insert().
          *
-         * Return:
+         * Returns:
          *      Always 0.
          */
         ptrdiff_t insert(T item)
@@ -715,7 +715,7 @@ class ContiguousList(T)
          * Params:
          *      position = The position where to insert.
          *      item = The item to insert.
-         * Return:
+         * Returns:
          *      The item index, position if it was valid.
          */
         ptrdiff_t insert(size_t position, T item)
@@ -781,7 +781,7 @@ class ContiguousList(T)
          *
          * Params:
          *      item = The item to remove.
-         * Return:
+         * Returns:
          *      true if the item wasin the list, false otherwise.
          */
         bool remove(T item)
@@ -798,7 +798,7 @@ class ContiguousList(T)
          *
          * Params:
          *      index = The index of the item to remove.
-         * Return:
+         * Returns:
          *      The item that's been removed.
          */
         T extract(size_t index)
@@ -1106,7 +1106,7 @@ class DynamicList(T)
          *
          * Params:
          *      item = the item to find.
-         * Return:
+         * Returns:
          *      -1 if item is not present otherwise its index.
          */
         ptrdiff_t find(T item) @trusted
@@ -1168,7 +1168,7 @@ class DynamicList(T)
          * Params:
          *      position = The position where to insert.
          *      item = The item to insert.
-         * Return:
+         * Returns:
          *      The item index, position if it was valid.
          */
         ptrdiff_t insert(size_t position, T item) @trusted @nogc
@@ -1240,7 +1240,7 @@ class DynamicList(T)
          *
          * Params:
          *      item = The item to remove.
-         * Return:
+         * Returns:
          *      true if the item wasin the list, false otherwise.
          */
         bool remove(T item) @trusted
@@ -1282,7 +1282,7 @@ class DynamicList(T)
          *
          * Params:
          *      index = The index of the item to remove.
-         * Return:
+         * Returns:
          *      The item that's been removed.
          */
         T extract(size_t index) @trusted
