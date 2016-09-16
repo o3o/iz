@@ -610,7 +610,7 @@ struct VariableParabol
      * Returns:
      *      The Y coordinate, a value between 0.0 and 1.0.
      */
-    static double fx(int NC = 1)(double x, double c)
+    static double fx(int NC = 1)(double x, double c) pure @safe @nogc
     {
         import iz.logicver;
         static if (verX86_64 & verDigitalMars)
@@ -647,7 +647,7 @@ struct VariableParabol
      * Returns:
      *      a value between 0.0 and 3.0.
      */
-    static double control(int N = 0)(double y)
+    static double control(int N = 0)(double y) pure @safe @nogc
     in
     {
         assert(0 <= y && y <= 1.0);
@@ -667,7 +667,7 @@ struct VariableParabol
      * Returns:
      *      The same as fx(0.5, c) but faster.
      */
-    static double controlFx(int N = 0)(double c)
+    static double controlFx(int N = 0)(double c) pure @safe @nogc
     in
     {
         assert(0 <= c && c <= 3.0);
@@ -689,7 +689,7 @@ struct VariableParabol
      * Returns:
      *      The control point, validated for fx().
      */
-    static double controlClip(double c)
+    static double controlClip(double c) pure @safe @nogc
     {
         import std.algorithm.comparison: clamp;
         return c.clamp(0.0, 3.0);
@@ -761,7 +761,7 @@ struct VariablePow
      * Returns:
      *      The Y coordinate, a value between 0.0 and 1.0.
      */
-    static double fx(int NC = 1)(double x, double c)
+    static double fx(int NC = 1)(double x, double c) pure @safe @nogc
     in
     {
         assert(0 <= x && x <= 1.0);
@@ -782,7 +782,7 @@ struct VariablePow
      * Returns:
      *      a value between 0.0 and 9.0.
      */
-    static double control(int N = 0)(double y)
+    static double control(int N = 0)(double y) pure @safe @nogc
     in
     {
         assert(0 <= y && y <= 1.0);
@@ -803,7 +803,7 @@ struct VariablePow
      * Returns:
      *      The same as fx(0.5, c).
      */
-    static double controlFx(int N = 0)(double c)
+    static double controlFx(int N = 0)(double c) pure @safe @nogc
     in
     {
         assert(0.05 <= c && c <= 9.0);
@@ -825,7 +825,7 @@ struct VariablePow
      * Returns:
      *      The control point, validated for fx().
      */
-    static double controlClip(double c)
+    static double controlClip(double c) pure @safe @nogc
     {
         import std.algorithm.comparison: clamp;
         return c.clamp(0.05, 9.0);
@@ -861,7 +861,7 @@ struct VariableEllipse
      * Returns:
      *      The Y coordinate, a value between 0.0 and 1.0.
      */
-    static double fx(int NC = 1)(double x, double c)
+    static double fx(int NC = 1)(double x, double c) pure @safe @nogc
     in
     {
         assert(0 <= x && x <= 1.0);
@@ -882,7 +882,7 @@ struct VariableEllipse
      * Returns:
      *      A value between 0.0 and 8.0.
      */
-    static double control(int N = 0)(double y)
+    static double control(int N = 0)(double y) pure @safe @nogc
     in
     {
         assert(0 <= y && y <= 1.0);
@@ -902,7 +902,7 @@ struct VariableEllipse
      * Returns:
      *      The same as fx(0.5, c).
      */
-    static double controlFx(int N = 0)(double c)
+    static double controlFx(int N = 0)(double c) pure @safe @nogc
     in
     {
         assert(0.1 <= c && c <= 8.0);
@@ -924,7 +924,7 @@ struct VariableEllipse
      * Returns:
      *      The control point, validated for fx().
      */
-    static double controlClip(double c)
+    static double controlClip(double c) pure @safe @nogc
     {
         import std.algorithm.comparison: clamp;
         return c.clamp(0.1, 8.0);
