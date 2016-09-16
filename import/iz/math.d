@@ -559,9 +559,39 @@ unittest
     static assert(Pi!(4,2) == Pi!2);
 }
 
+/// Log(0.5) as a double;
+enum logHalf = -0.69314718055994531;
 
 /**
- * A simple and fast easing function that's also controlable.
+ * Retrieves the exponent part on the result of pow().
+ *
+ * Params:
+ *      x = The first pow() argument.
+ *      y = The pow() result.
+ * Returns:
+ *      The exponent N that verifies y = pow(x, N).
+ */
+double logN(double x, double y)
+{
+    import std.math;
+    return log(y) / log(x);
+}
+///
+unittest
+{
+    import std.math;
+    double[] exps = [3, 1.4, 2.2, 0.0001, 0.9999];
+    foreach(e; exps)
+    {
+        double y = pow(0.5, e);
+        double n = logN(0.5, y);
+        assert(n.approxEqual(e));
+    }
+}
+
+/**
+ * A simple and fast parametric easing function.
+ *
  * Its name comes from the fact that the plot of f(x) in [0..1] and with a
  * control of 3 forms a regular parabolic curve.
  */
@@ -577,12 +607,10 @@ struct VariableParabol
      *      c = The control of the speed, between 0 (similar to InExpo)
      *      and 3.0 (similar to OutExpo)
      *
-     * Return:
+     * Returns:
      *      The Y coordinate, a value between 0.0 and 1.0.
      */
-    static T fx(int NC = 1, T, C)(T x, C c)
-    if ((is(T == float) || is(T == double)) &&
-        (is(C == float) || is(C == double)))
+    static double fx(int NC = 1)(double x, double c)
     {
         import iz.logicver;
         static if (verX86_64 & verDigitalMars)
@@ -592,7 +620,7 @@ struct VariableParabol
         static if (PureD)
         {
             assert(0 <= x && x <= 1.0);
-            assert(0 <= c && x <= 3.0);
+            assert(0 <= c && c <= 3.0);
             return x*x*x - x*x*c + x*c;
         }
         else asm pure nothrow @nogc @safe
@@ -614,37 +642,35 @@ struct VariableParabol
      * Retrieves the control point coefficient.
      *
      * Params:
-     *      y = the value as obtained by variableParabol(0.5, control).
+     *      y = The value as obtained by fx(0.5, control).
      *
-     * Return:
+     * Returns:
      *      a value between 0.0 and 3.0.
      */
-    static Y control(int N = 0, Y)(Y y)
-    if (is(Y == float) || is(Y == double))
+    static double control(int N = 0)(double y)
     in
     {
         assert(0 <= y && y <= 1.0);
     }
     out (c)
     {
-        assert(0 <= c && c <= 1.0);
+        assert(0 <= c && c <= 3.0);
     }
     body
     {
-        return Y(4) * (y - Y(0.125));
+        return controlClip(4 * (y - 0.125));
     }
 
     /**
-     * Computes the Y coordinate of the variableParabol control point.
+     * Computes the Y coordinate of the control point.
      *
-     * Return:
-     *      The same as variableParabol(0.5, c) but faster.
+     * Returns:
+     *      The same as fx(0.5, c) but faster.
      */
-    static C controlFx(int N = 0, C)(C c)
-    if (is(C == float) || is(C == double))
+    static double controlFx(int N = 0)(double c)
     in
     {
-        assert(0 <= c && x <= 3.0);
+        assert(0 <= c && c <= 3.0);
     }
     out (y)
     {
@@ -652,11 +678,25 @@ struct VariableParabol
     }
     body
     {
-        return C(0.125) + C(0.25) * c;
+        return 0.125 + 0.25 * c;
     }
 
     /**
-     * Indicates that VariableParabol uses 1 control point.
+     * Clips the control point coefficient.
+     *
+     * Params:
+     *      c = The control point coefficient.
+     * Returns:
+     *      The control point, validated for fx().
+     */
+    static double controlClip(double c)
+    {
+        import std.algorithm.comparison: clamp;
+        return c.clamp(0.0, 3.0);
+    }
+
+    /**
+     * Indicates that 1 control point is used.
      */
     enum numControls = 1;
 
@@ -701,4 +741,204 @@ struct VariableParabol
 
 ///
 alias variableParabol = VariableParabol;
+
+
+/**
+ * Parametric easing function using pow().
+ */
+struct VariablePow
+{
+    @disable this(this);
+
+    /**
+     * Applies the standard transformation.
+     *
+     * Params:
+     *      x = The X coordinate, between 0.0 and 1.0
+     *      c = The control of the speed, between 0 (InExpo)
+     *      and 9.0 (OutExpo)
+     *
+     * Returns:
+     *      The Y coordinate, a value between 0.0 and 1.0.
+     */
+    static double fx(int NC = 1)(double x, double c)
+    in
+    {
+        assert(0 <= x && x <= 1.0);
+        assert(0.05 <= c && c <= 9.0);
+    }
+    body
+    {
+        import std.math: pow;
+        return pow(x, c);
+    }
+
+    /**
+     * Retrieves the control point coefficient.
+     *
+     * Params:
+     *      y = The value as obtained by fx(0.5, control).
+     *
+     * Returns:
+     *      a value between 0.0 and 9.0.
+     */
+    static double control(int N = 0)(double y)
+    in
+    {
+        assert(0 <= y && y <= 1.0);
+    }
+    out (c)
+    {
+        assert(0.05 <= c && c <= 9.0);
+    }
+    body
+    {
+        import std.math: log;
+        return controlClip(log(y) / logHalf);
+    }
+
+    /**
+     * Computes the Y coordinate of the control point.
+     *
+     * Returns:
+     *      The same as fx(0.5, c).
+     */
+    static double controlFx(int N = 0)(double c)
+    in
+    {
+        assert(0.05 <= c && c <= 9.0);
+    }
+    out (y)
+    {
+        assert(0 <= y && y <= 1.0);
+    }
+    body
+    {
+        return fx(0.5, c);
+    }
+
+    /**
+     * Clips the control point coefficient.
+     *
+     * Params:
+     *      c = The control point coefficient.
+     * Returns:
+     *      The control point, validated for fx().
+     */
+    static double controlClip(double c)
+    {
+        import std.algorithm.comparison: clamp;
+        return c.clamp(0.05, 9.0);
+    }
+
+    /**
+     * Indicates that 1 control point is used.
+     */
+    enum numControls = 1;
+
+    /// Uniform Easing API.
+    static shared VariablePow ease;
+}
+
+///
+alias variablePow = VariablePow;
+
+/**
+ * An parametric easing function based on the Supper Ellipse.
+ */
+struct VariableEllipse
+{
+    @disable this(this);
+
+    /**
+     * Applies the standard transformation.
+     *
+     * Params:
+     *      x = The X coordinate, between 0.0 and 1.0
+     *      c = The control of the speed, between 0 (similar to InExpo)
+     *      and 3.0 (similar to OutExpo)
+     *
+     * Returns:
+     *      The Y coordinate, a value between 0.0 and 1.0.
+     */
+    static double fx(int NC = 1)(double x, double c)
+    in
+    {
+        assert(0 <= x && x <= 1.0);
+        assert(0.1 <= c && x <= 8.0);
+    }
+    body
+    {
+        import std.math: pow;
+        return 1.0 - pow(1.0 - pow(x, 2.0/c), c * 0.5);
+    }
+
+    /**
+     * Retrieves the control point coefficient.
+     *
+     * Params:
+     *      y = The value as obtained by fx(0.5, control).
+     *
+     * Returns:
+     *      A value between 0.0 and 8.0.
+     */
+    static double control(int N = 0)(double y)
+    in
+    {
+        assert(0 <= y && y <= 1.0);
+    }
+    out (c)
+    {
+        assert(0.1 <= c && c <= 8.0);
+    }
+    body
+    {
+        return controlClip(variablePow.control(1 - y));
+    }
+
+    /**
+     * Computes the Y coordinate of the control point.
+     *
+     * Returns:
+     *      The same as fx(0.5, c).
+     */
+    static double controlFx(int N = 0)(double c)
+    in
+    {
+        assert(0.1 <= c && c <= 8.0);
+    }
+    out (y)
+    {
+        assert(0 <= y && y <= 1.0);
+    }
+    body
+    {
+        return fx(0.5, c);
+    }
+
+    /**
+     * Clips the control point coefficient.
+     *
+     * Params:
+     *      c = The control point coefficient.
+     * Returns:
+     *      The control point, validated for fx().
+     */
+    static double controlClip(double c)
+    {
+        import std.algorithm.comparison: clamp;
+        return c.clamp(0.1, 8.0);
+    }
+
+    /**
+     * Indicates that 1 control point is used.
+     */
+    enum numControls = 1;
+
+    /// Uniform Easing API.
+    static shared VariableEllipse ease;
+}
+
+///
+alias variableEllipse = VariableEllipse;
 
