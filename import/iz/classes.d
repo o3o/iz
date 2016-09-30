@@ -45,10 +45,11 @@ if (is(T == class))
  *
  * Params:
  *      ItemClass = The common items type. It must be a PropertyPublisher descendant.
+ *      managed = When false, the items lifetime is not managed.
  *      aaKey = The member of ItemClass used to build an associative array that
  *          indexes each item with the value of this member.
  */
-class PublishedObjectArray(ItemClass, string aaKey = ""): PropertyPublisher
+class PublishedObjectArray(ItemClass, bool managed = true, string aaKey = ""): PropertyPublisher
 if (is(ItemClass : PropertyPublisher))
 {
 
@@ -73,7 +74,7 @@ public:
     ///
     this()
     {
-        collectPublications!(PublishedObjectArray!(ItemClass, aaKey));
+        collectPublications!(PublishedObjectArray!(ItemClass, managed, aaKey));
     }
 
     ~this()
@@ -84,7 +85,8 @@ public:
     /**
      * Instantiates and returns a new item.
      * Params:
-     *      a = The variadic arguments passed to the item $(D __ctor).
+     *      a = When managed, the variadic arguments passed to the item $(D __ctor)
+     *      otherwise the item to add.
      */
     ItemClass addItem(A...)(A a)
     in
@@ -93,7 +95,10 @@ public:
     }
     body
     {
-        _items ~= construct!ItemClass(a);
+        static if (managed)
+            _items ~= construct!ItemClass(a);
+        else
+            _items ~= a;
 
         PropDescriptor!Object* descr = construct!(PropDescriptor!Object);
         descr.define(cast(Object*)&_items[$-1], format(_fmtName,_items.length-1), this);
@@ -120,7 +125,8 @@ public:
             return;
 
         auto itm = _items[index];
-        destruct(itm);
+        static if (managed)
+            destruct(itm);
         _items = _items[0..index] ~ _items[index+1..$];
 
         if (auto descr = publication!uint(format(_fmtName,index)))
@@ -138,7 +144,9 @@ public:
      *
      * Items are automatically created or destroyed when changing this property.
      * Note that to change the length of $(D items()) is a noop, the only way to
-     * add and remove items is to use $(D count()), $(D addItem()) or $(D deleteItem()).
+     * add and remove items is to use $(D count()), $(D addItem())
+     * or $(D deleteItem()). When the content is not managed, the setter is not
+     * able to add new items and an  error is raised.
      */
     @Get final uint count()
     {
@@ -151,7 +159,12 @@ public:
         if (_items.length > aValue)
             while (_items.length != aValue) deleteItem(_items.length-1);
         else if (_items.length < aValue)
-            while (_items.length != aValue) addItem;
+        {
+            static if (managed)
+                while (_items.length != aValue) addItem;
+            else
+                assert(0);
+        }
     }
 
     /**
@@ -297,7 +310,7 @@ unittest
         }
     }
 
-    alias ArrType = PublishedObjectArray!(ItemT, "name");
+    alias ArrType = PublishedObjectArray!(ItemT, true, "name");
     ArrType arr = construct!(ArrType);
     arr.addItem("item0", 0);
     arr.addItem("item1", 1);
@@ -355,6 +368,7 @@ unittest
     col.deleteItem(todelete);
     assert(col.items.count == 1);
     col.count = 0;
+    col.clear;
     assert(col.items.count == 0);
 }
 
