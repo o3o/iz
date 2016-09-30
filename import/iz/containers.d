@@ -53,9 +53,7 @@ struct Array(T)
             }
             _length = value;
         }
-    }
-    protected
-    {
+
         void grow() @nogc
         {
             initLazy;
@@ -70,6 +68,33 @@ struct Array(T)
         T* rwPtr(size_t index) pure const nothrow @nogc
         {
             return cast(T*) (_elems + index * T.sizeof);
+        }
+
+        struct Range
+        {
+            private size_t _i;
+            private Array!T* _a;
+            ///
+            this(ref Array!T array, size_t index = 0)
+            {
+                _a = &array;
+                _i = index;
+            }
+            ///
+            ref T front()
+            {
+                return _a.opIndex(_i);
+            }
+            ///
+            void popFront()
+            {
+                ++_i;
+            }
+            ///
+            bool empty()
+            {
+                return _i >= _a._length;
+            }
         }
     }
     public
@@ -269,7 +294,7 @@ struct Array(T)
         }
 
         /// Support for the foreach operator.
-        int opApply(scope int delegate(ref T) @nogc dg)
+        int opApply(scope int delegate(ref T) dg)
         {
             int result = 0;
             foreach (immutable i; 0 .. _length)
@@ -281,7 +306,7 @@ struct Array(T)
         }
 
         /// Support for the foreach_reverse operator.
-        int opApplyReverse(scope int delegate(ref T) @nogc dg)
+        int opApplyReverse(scope int delegate(ref T) dg)
         {
             int result = 0;
             foreach_reverse (immutable i; 0 .. _length)
@@ -389,6 +414,12 @@ struct Array(T)
         {
             foreach(immutable i; lo .. hi)
                 *rwPtr(i) = value;
+        }
+
+        /// Returns an input range with an assignable front.
+        auto range()
+        {
+            return Range(this, 0);
         }
     }
 }
@@ -514,6 +545,14 @@ unittest
     Array!int a = source;
     assert(a == source);
     assert(a.dup == source);
+}
+
+unittest
+{
+    int[] source = [0,1,2,3];
+    Array!int a = source;
+    a = a[0..1] ~ a[2..$];
+    assert(a == [0,2,3]);
 }
 
 private mixin template ListHelpers(T)

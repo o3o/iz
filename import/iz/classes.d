@@ -66,7 +66,7 @@ private:
 protected:
 
     static immutable string _fmtName = "item<%d>";
-    ItemClass[] _items;
+    @NoGc Array!ItemClass _items;
 
 public:
 
@@ -113,15 +113,15 @@ public:
     {
         ptrdiff_t index;
         static if(is(Unqual!T == ItemClass))
-            index = _items.countUntil(t);
+            index = _items.range.countUntil(t);
         else index = cast(ptrdiff_t)t;
 
-        if (_items.count == 0 || index > _items.count-1 || index < 0)
+        if (_items.length == 0 || index > _items.length-1 || index < 0)
             return;
 
         auto itm = _items[index];
         destruct(itm);
-        _items = _items.remove(index);
+        _items = _items[0..index] ~ _items[index+1..$];
 
         if (auto descr = publication!uint(format(_fmtName,index)))
         {
@@ -159,7 +159,7 @@ public:
      */
     final ItemClass[] items()
     {
-        return _items;
+        return _items[];
     }
 
     /**
@@ -167,7 +167,7 @@ public:
      */
     void clear()
     {
-        foreach_reverse(immutable i; 0 .. _items.count)
+        foreach_reverse(immutable i; 0 .. _items.length)
             deleteItem(i);
     }
 
@@ -209,7 +209,7 @@ public:
     /// Same as $(D items()).
     ItemClass[] opSlice()
     {
-        return _items;
+        return _items[];
     }
 
     /// Same as $(D items()) but with bounds.
@@ -321,9 +321,9 @@ unittest
 
     alias ItemCollection = PublishedObjectArray!Item;
 
-    auto col = construct!ItemCollection;
-    auto str = construct!MemoryStream;
-    auto ser = construct!Serializer;
+    ItemCollection col = construct!ItemCollection;
+    MemoryStream str = construct!MemoryStream;
+    Serializer ser = construct!Serializer;
     scope(exit) destructEach(col, ser, str);
 
     Item itm = col.addItem();
@@ -381,8 +381,8 @@ if (isAssociativeArray!AA && isSerializable!(KeyType!AA) &&
 protected:
 
     AA* _source;
-    KeyType!AA[] _keys;
-    ValueType!AA[] _content;
+    Array!(KeyType!AA) _keys;
+    Array!(ValueType!AA) _content;
 
     uint _setCount = 0, _getCount = 0;
 
@@ -407,7 +407,7 @@ protected:
     @Get KeyType!AA[] keys()
     {
         if (_source) doGet;
-        return _keys;
+        return _keys[];
     }
 
     @Set void values(ValueType!AA[] value)
@@ -419,7 +419,7 @@ protected:
     @Get ValueType!AA[] values()
     {
         if (_source) doGet;
-        return _content;
+        return _content[];
     }
 
 public:
@@ -551,8 +551,8 @@ if (isBasicRtType!T)
 
 protected:
 
-    uint[] _dimensions;
-    T[] _content;
+    Array!uint _dimensions;
+    Array!T _content;
     T[][]* _source;
 
     uint _setCount = 0, _getCount = 0;
@@ -572,7 +572,7 @@ protected:
     @Get uint[] dimensions()
     {
         if (_source) doGet;
-        return _dimensions;
+        return _dimensions[];
     }
 
     @Set void dimensions(uint[] value)
@@ -584,7 +584,7 @@ protected:
     @Get T[] content()
     {
         if (_source) doGet;
-        return _content;
+        return _content[];
     }
 
     @Set void content(T[] value)
@@ -655,11 +655,13 @@ public:
         array = array.init;
         array.length = _dimensions.length;
         uint start;
-        foreach(i,len; _dimensions)
+        size_t i;
+        foreach(len; _dimensions)
         {
             array[i].length = len;
             array[i] = _content[start .. start + len];
             start += len;
+            ++i;
         }
     }
 }
@@ -690,7 +692,7 @@ unittest
     uint[][] array = src.dup;
     pub0.fromArray(array);
     assert(pub0._content == [0u,1u,2u,3u,4u,5u,6u,7u,8u]);
-    assert(pub0._dimensions == [2,3,4]);
+    assert(pub0._dimensions == [2u,3u,4u]);
     ser.publisherToStream(pub0, str);
     array = array.init;
     str.position = 0;
@@ -702,7 +704,7 @@ unittest
     Publisher pub1 = construct!Publisher(&array);
     ser.publisherToStream(pub1, str);
     assert(pub1._content == [0u,1u,2u,3u,4u,5u,6u,7u,8u]);
-    assert(pub1._dimensions == [2,3,4]);
+    assert(pub1._dimensions == [2u,3u,4u]);
     array = array.init;
     str.position = 0;
     ser.streamToPublisher(str, pub1);
