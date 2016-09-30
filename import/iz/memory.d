@@ -4,7 +4,7 @@
 module iz.memory;
 
 import
-    std.traits, std.meta;
+    core.exception, std.traits, std.meta;
 import
     iz.types;
 version(DigitalMars)
@@ -20,13 +20,11 @@ in
 {
     assert(size);
 }
-out(result)
-{
-    assert(result, "Out of memory");
-}
 body
 {
     auto result = malloc(size);
+    if (!result)
+        throw construct!OutOfMemoryError;
     return result;
 }
 
@@ -42,7 +40,8 @@ in
 body
 {
     src = realloc(src, newSize);
-    assert(src, "Out of memory");
+    if (!src)
+        throw construct!OutOfMemoryError;
     return src;
 }
 
@@ -94,7 +93,10 @@ in
 }
 body
 {
-    return memcpy(dst, src, count);
+    auto result = memcpy(dst, src, count);
+    if (!result)
+        throw construct!OutOfMemoryError;
+    return result;
 }
 
 /**
