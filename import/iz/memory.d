@@ -107,7 +107,7 @@ body
  *      src = The pointer to free.
  */
 void freeMem(T)(auto ref T src) nothrow @trusted @nogc
-if (isPointer!T && isBasicType!(pointerTarget!T))
+if (isPointer!T && isBasicType!(PointerTarget!T))
 {
     if (src) free(cast(void*)src);
     static if (ParameterStorageClassTuple!freeMem[0] ==
@@ -239,10 +239,10 @@ unittest
 CT construct(CT, A...)(A a) @trusted
 if (is(CT == class) && !isAbstractClass!CT)
 {
-    auto size = typeid(CT).init.length;
+    auto size = typeid(CT).initializer.length;
     auto memory = getMem(size);
     static if (!hasUDA!(CT, NoInit))
-        memory[0 .. size] = typeid(CT).init[];
+        memory[0 .. size] = typeid(CT).initializer[];
     static if (__traits(hasMember, CT, "__ctor"))
         (cast(CT) (memory)).__ctor(a);
     static if (MustAddGcRange!CT)
@@ -268,9 +268,9 @@ Object construct(TypeInfo_Class tic) @trusted
 {
     if (tic.m_flags & 64)
         return null;
-    auto size = tic.init.length;
+    auto size = tic.initializer.length;
     auto memory = getMem(size);
-    memory[0 .. size] = tic.init[];
+    memory[0 .. size] = tic.initializer[];
     Object result = cast(Object) memory;
     if (tic.defaultConstructor)
         tic.defaultConstructor(result);

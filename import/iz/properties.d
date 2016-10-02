@@ -1274,6 +1274,24 @@ unittest
     assert(ouch);
 }
 
+unittest
+{
+    struct A{}
+    class B
+    {
+        mixin PropertyPublisherImpl;
+        A _a;
+        @Get ref A a(){return _a;}
+        @Set void a(A){}
+        this()
+        {
+            collectPublications!B;
+        }
+    }
+    B b = construct!B;
+    destruct(b);
+}
+
 /**
  * Returns true if the target of a PropDescriptor!Object is owned by another
  * object.
