@@ -421,6 +421,9 @@ struct Array(T)
         {
             return Range(this, 0);
         }
+
+        ///
+        alias opSlice this;
     }
 }
 
@@ -495,7 +498,7 @@ unittest
     Array!float g0 = floatarr[1..4];
     assert( g0[0] ==  floatarr[1]);
     assert( g0[2] ==  floatarr[3]);
-    Array!float g1 = floatarr[];
+    Array!float g1 = floatarr;
     assert( g1[0] ==  floatarr[0]);
     assert( g1[4] ==  floatarr[4]);
 

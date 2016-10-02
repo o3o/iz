@@ -525,7 +525,7 @@ body
  */
 template olderSuperCall(C, string method)
 {
-    auto olderSuperCall(A...)(C c, A a)
+    auto olderSuperCall(A...)(C c, A a) @trusted
     if (is(C==class))
     {
         auto dg = &__traits(getMember, c, method);
@@ -1060,7 +1060,7 @@ unittest
  *      A new delegate of type T.
  */
 auto getDelegate(FT)(void* context, FT code)
-if (is(pointerTarget!FT == function))
+if (is(PointerTarget!FT == function))
 {
     import std.array: replace;
     enum type = "alias T = " ~ FT.stringof.replace("function", "delegate") ~ ";";
@@ -1087,7 +1087,7 @@ unittest
  * are compatible with D delegates.
  */
 union Delegate(FT)
-if (is(pointerTarget!FT == function))
+if (is(PointerTarget!FT == function))
 {
     /// Defines the delegate layout as defined in the D ABI
     struct DgMembers

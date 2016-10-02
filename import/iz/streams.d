@@ -134,7 +134,7 @@ version (Posix)
  * Bugs:
  *      https://issues.dlang.org/show_bug.cgi?id=13975
  */
-enum SeekMode
+enum SeekMode: ubyte
 {
     beg = skBeg, /// seek from the beginning.
     cur = skCur, /// seek from the current position.

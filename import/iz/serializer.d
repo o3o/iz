@@ -190,9 +190,9 @@ struct SerNodeInfo
     /// a pointer to a PropDescriptor
     Ptr     descriptor;
     /// the raw value
-    ubyte[] value;
+    Array!ubyte value;
     /// the name of the property
-    string  name;
+    Array!char  name;
     /// the property level in the IST
     uint    level;
     /// indicates if any error occured during processing
@@ -210,7 +210,7 @@ class IstNode
 private:
 
     SerNodeInfo _info;
-    IstNode[string] _cache;
+    IstNode[char[]] _cache;
     bool _cached;
 
     void updateCache()
@@ -220,7 +220,7 @@ private:
         auto thisChain = identifiersChain();
         foreach(IstNode node; children)
         {
-            _cache[thisChain ~ "." ~ node.info.name] = node;
+            _cache[(thisChain ~ "." ~ node.info.name[]).idup] = node;
         }
     }
 
@@ -228,6 +228,8 @@ public:
 
     ~this()
     {
+        _info.name.length = 0;
+        _info.value.length = 0;
         deleteChildren;
     }
 
@@ -272,7 +274,7 @@ public:
         IstNode curr = cast(IstNode) parent;
         while (curr)
         {
-            items ~= curr.info.name;
+            items ~= curr.info.name[];
             curr = cast(IstNode) curr.parent;
         }
         return items.retro.join(".");
@@ -283,8 +285,10 @@ public:
      */
     string identifiersChain()
     {
-        if (!level) return info.name;
-        else return parentIdentifiersChain ~ "." ~ info.name;
+        if (!level)
+            return info.name[].idup;
+        else
+            return parentIdentifiersChain ~ "." ~ info.name[].idup;
     }
 
     /**
@@ -307,7 +311,7 @@ public:
 private __gshared static char[] invalidText = "invalid".dup;
 
 /// Converts the raw data contained in a SerNodeInfo to its string representation.
-char[] value2text(const SerNodeInfo* nodeInfo)
+char[] value2text(SerNodeInfo* nodeInfo)
 {
     char[] v2t_1(T)(){return to!string(*cast(T*)nodeInfo.value.ptr).dup;}
     char[] v2t_2(T)(){return to!string(cast(T[])nodeInfo.value[]).dup;}
@@ -397,7 +401,7 @@ ubyte[] text2value(char[] text, const SerNodeInfo* nodeInfo)
 // Descriptor to node & node to descriptor ------------------------------------+
 
 /// Restores the raw value contained in a SerNodeInfo using the associated setter.
-void nodeInfo2Declarator(const SerNodeInfo* nodeInfo)
+void nodeInfo2Declarator(SerNodeInfo* nodeInfo)
 {
     void toDecl1(T)()  {
         auto descr = cast(PropDescriptor!T *) nodeInfo.descriptor;
@@ -696,7 +700,7 @@ private void writeJSON(IstNode istNode, Stream stream, const FormatToken tok)
     //    
     auto level  = JSONValue(istNode.level);
     auto type   = JSONValue(typeString(istNode.info.rtti));
-    auto name   = JSONValue(istNode.info.name.idup);
+    auto name   = JSONValue(istNode.info.name[].idup);
 
     char[] txt;
     if (tok == FormatToken.objBeg)
@@ -794,7 +798,7 @@ private void writeText(IstNode istNode, Stream stream, const FormatToken tok)
     stream.write(type.ptr, type.length);
     stream.writeChar(' ');
     // name
-    char[] name = istNode.info.name.dup;
+    char[] name = istNode.info.name[];
     stream.write(name.ptr, name.length);
     // name value separators
     char[] name_value = " = \"".dup;
@@ -949,7 +953,7 @@ private void writeBin(IstNode istNode, Stream stream, const FormatToken tok)
     }
     stream.writeUbyte(0x0);
     // namez
-    data = cast(ubyte[]) istNode.info.name;
+    data = cast(ubyte[]) istNode.info.name[];
     stream.write(data.ptr, data.length);
     stream.writeUbyte(0);
     // value length then value
@@ -1528,7 +1532,7 @@ public:
                 IstNode childNode = cast(IstNode) child;
 
                 bool stop;
-                void* gdPtr = target.publicationFromName(childNode.info.name);
+                void* gdPtr = target.publicationFromName(childNode.info.name[]);
                 if (!gdPtr)
                 {
                     restoreFromEvent(childNode, stop);
@@ -1704,15 +1708,16 @@ public:
      * Returns:
      *      A reference to the node that matches to the property or nulll.
      */ 
-    IstNode findNode(bool cache = false)(in char[] descriptorName)
+    IstNode findNode(bool cache = false)(const(char)[] descriptorName)
     {
         if (_rootNode.info.name == descriptorName)
             return _rootNode;
-        IstNode scanNode(IstNode parent, in char[] namePipe)
+
+        IstNode scanNode(IstNode parent, const(char)[] namePipe)
         {
             static if (cache)
             {
-                if (auto r = parent.findChildren(descriptorName))
+                if (auto r = parent.findChild(descriptorName))
                     return r;
                 else foreach(node; parent.children)
                 {
@@ -1866,24 +1871,14 @@ unittest
     Serializer serializer = construct!Serializer;
     A a = construct!A;
     // serializes
-    serializer.publisherToStream(a, stream/*, SerializationFormat.json*/);
-
-
-    /*import std.json;
-    stream.saveToFile("r.txt");
-    JSONValue js = parseJSON(cast(string)stream.ubytes);
-    stream.clear;
-    auto s = toJSON(&js, true);
-    void* p = cast(void*)s.ptr;
-    stream.write(p, s.length);
-    stream.saveToFile("r.txt");*/
+    serializer.publisherToStream(a, stream);
 
     // reset the fields
     a.sub1.reset;
     a.sub2.reset;
     stream.position = 0;
     // deserializes
-    serializer.streamToPublisher(stream, a/*, SerializationFormat.json*/);
+    serializer.streamToPublisher(stream, a);
     // check the restored values
     assert(a.sub1.data1 == 1);
     assert(a.sub2.data1 == 1);
@@ -2254,11 +2249,11 @@ version(unittest)
         {
             immutable string chain = node.parentIdentifiersChain;
             if (chain == "root")
-                matchingDescriptor = a.publicationFromName(node.info.name);
+                matchingDescriptor = a.publicationFromName(node.info.name[]);
             else if (chain == "root.aB1")
-                matchingDescriptor = a._aB1.publicationFromName(node.info.name);
+                matchingDescriptor = a._aB1.publicationFromName(node.info.name[]);
             else if (chain == "root.aB2")
-                matchingDescriptor = a._aB2.publicationFromName(node.info.name);
+                matchingDescriptor = a._aB2.publicationFromName(node.info.name[]);
         }
 
         str.clear;
@@ -2504,7 +2499,7 @@ version(unittest)
 
         ser.onWantAggregate = &objectNotFound;
         ser.publisherToStream(c, str);
-        str.saveToFile(r"test.txt");
+        //str.saveToFile(r"test.txt");
         //
         c.reset;
         str.position = 0;
@@ -2790,7 +2785,7 @@ version(unittest)
         scope(exit) destructEach(foo, ser, str);
 
         ser.publisherToStream(foo, str);
-        assert(ser.findNode("i") is null);  // dontGet, so not in IST
+        assert(ser.findNode("root.i") is null);  // dontGet, so not in IST
 
         assert(ser.findNode("root.k") !is null); // _k was equal to 0
         assert(ser.findNode("root.j") !is null); // in IST...

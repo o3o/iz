@@ -824,7 +824,7 @@ unittest
     assert(rtti.type == RtType._object);
     assert(rtti.classInfo.identifier == "Gaz");
     assert(rtti.classInfo.constructor == &Gaz.__ctor);
-    assert(rtti.classInfo.initialLayout == typeid(Gaz).init);
+    assert(rtti.classInfo.initialLayout == typeid(Gaz).initializer);
 }
 
 unittest
