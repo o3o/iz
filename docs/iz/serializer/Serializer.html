@@ -154,24 +154,14 @@ class A: <a href="iz/properties/PropertyPublisher.html">PropertyPublisher</a>
 <a href="iz/serializer/Serializer.html">Serializer</a> serializer = <a href="iz/memory.html#construct">construct</a>!<a href="iz/serializer/Serializer.html">Serializer</a>;
 A a = <a href="iz/memory.html#construct">construct</a>!A;
 // serializes
-serializer.<a href="iz/serializer/Serializer.html#publisherToStream">publisherToStream</a>(a, stream/*, <a href="iz/serializer/SerializationFormat.html#json">SerializationFormat.json</a>*/);
-
-
-/*import std.json;
-stream.saveToFile("r.txt");
-JSONValue js = parseJSON(cast(string)stream.ubytes);
-stream.clear;
-auto s = toJSON(&js, true);
-void* p = cast(void*)s.ptr;
-stream.write(p, s.length);
-stream.saveToFile("r.txt");*/
+serializer.<a href="iz/serializer/Serializer.html#publisherToStream">publisherToStream</a>(a, stream);
 
 // <a href="iz/sugar.html#reset">reset</a> the fields
 a.sub1.<a href="iz/sugar.html#reset">reset</a>;
 a.sub2.<a href="iz/sugar.html#reset">reset</a>;
 stream.position = 0;
 // deserializes
-serializer.<a href="iz/serializer/Serializer.html#streamToPublisher">streamToPublisher</a>(stream, a/*, <a href="iz/serializer/SerializationFormat.html#json">SerializationFormat.json</a>*/);
+serializer.<a href="iz/serializer/Serializer.html#streamToPublisher">streamToPublisher</a>(stream, a);
 // check the restored values
 assert(a.sub1.data1 == 1);
 assert(a.sub2.data1 == 1);
@@ -432,7 +422,7 @@ This function can also be used to convert from a format to another.
 </td></tr>
 </table>
 </div>
-</div></div><a class="anchor" id="findNode"></a><div class="symbol"><div class="description"><pre><code>private <a href="iz/serializer/IstNode.html">IstNode</a> <a href="iz/serializer/Serializer.html#findNode">findNode</a>(<a href="http://dlang.org/type.html#basic-data-types">bool</a> cache = false)(in <a href="http://dlang.org/type.html#basic-data-types">char</a>[] descriptorName)
+</div></div><a class="anchor" id="findNode"></a><div class="symbol"><div class="description"><pre><code>private <a href="iz/serializer/IstNode.html">IstNode</a> <a href="iz/serializer/Serializer.html#findNode">findNode</a>(<a href="http://dlang.org/type.html#basic-data-types">bool</a> cache = false)(const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] descriptorName)
 </code></pre>
 <div class="section"><h2></h2>
 <p>Finds the tree node matching to a name chain.

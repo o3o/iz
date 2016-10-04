@@ -50,10 +50,6 @@
 {
     assert (<a href="iz/rtti.html#size">size</a>);
 }
-out (result)
-{
-    assert (result, "Out of memory");
-}
 </code></pre>
 
 </div>
@@ -74,7 +70,6 @@ out (result)
 <div class="section "><h2>Contracts</h2><pre><code>in
 {
     assert (newSize);
-    assert (src);
 }
 </code></pre>
 
@@ -183,7 +178,7 @@ dst and src can't overlap.
 
 </div>
 </div></div><a class="anchor" id="freeMem"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/memory.html#freeMem">freeMem</a>(T)(auto ref T src) nothrow @trusted @nogc 
-if(isPointer!T && isBasicType!(pointerTarget!T))
+if(isPointer!T && isBasicType!(PointerTarget!T))
 </code></pre>
 <div class="section"><h2></h2>
 <p>Frees a manually allocated pointer to a basic type.

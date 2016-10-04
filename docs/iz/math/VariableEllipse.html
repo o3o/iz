@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../../style.css"/>
+<script src="../../highlight.pack.js"></script>
+<title>VariableEllipse</title>
+<base href="../../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.<a href=iz/math.html>math</a>.</small><span class="highlight">VariableEllipse</span>
+</div>
+<div class="sidebar">
+<a href="iz/math.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/math.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li>iz.<a href="iz/classes.html">classes</a></li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li>iz.<a href="iz/enumset.html">enumset</a></li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li><span class=" selected">iz.<a href="iz/math.html">math</a></span>
+</li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li>iz.<a href="iz/strings.html">strings</a></li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><div class="description"><pre><code>public struct VariableEllipse
+</code></pre>
+<div class="section"><h2></h2>
+<p>An parametric easing function based on the Supper Ellipse.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div><a class="anchor" id="fx"></a><div class="symbol"><div class="description"><pre><code>public static <a href="http://dlang.org/type.html#basic-data-types">double</a> <a href="iz/math/VariableEllipse.html#fx">fx</a>(<a href="http://dlang.org/type.html#basic-data-types">int</a> NC = 1)(
+    <a href="http://dlang.org/type.html#basic-data-types">double</a> x, 
+    <a href="http://dlang.org/type.html#basic-data-types">double</a> c) pure @safe @nogc
+</code></pre>
+<div class="section "><h2>Contracts</h2><pre><code>in
+{
+    assert (0 <= x && x <= 1.0);
+    assert (0.1 <= c && x <= 8.0);
+}
+</code></pre>
+
+</div>
+<div class="section"><h2></h2>
+<p>Applies the standard transformation.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">x</td><td class="paramDoc"><p>The X coordinate, between 0.0 and 1.0
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">c</td><td class="paramDoc"><p>The control of the speed, between 0 (similar to InExpo)
+     and 3.0 (similar to OutExpo)
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>The Y coordinate, a value between 0.0 and 1.0.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="control"></a><div class="symbol"><div class="description"><pre><code>public static <a href="http://dlang.org/type.html#basic-data-types">double</a> <a href="iz/math/VariableEllipse.html#control">control</a>(<a href="http://dlang.org/type.html#basic-data-types">int</a> N = 0)(<a href="http://dlang.org/type.html#basic-data-types">double</a> y) pure @safe @nogc
+</code></pre>
+<div class="section "><h2>Contracts</h2><pre><code>in
+{
+    assert (0 <= y && y <= 1.0);
+}
+out (c)
+{
+    assert (0.1 <= c && c <= 8.0);
+}
+</code></pre>
+
+</div>
+<div class="section"><h2></h2>
+<p>Retrieves the control point coefficient.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">y</td><td class="paramDoc"><p>The value as obtained by fx(0.5, control).
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>A value between 0.0 and 8.0.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="controlFx"></a><div class="symbol"><div class="description"><pre><code>public static <a href="http://dlang.org/type.html#basic-data-types">double</a> <a href="iz/math/VariableEllipse.html#controlFx">controlFx</a>(<a href="http://dlang.org/type.html#basic-data-types">int</a> N = 0)(<a href="http://dlang.org/type.html#basic-data-types">double</a> c) pure @safe @nogc
+</code></pre>
+<div class="section "><h2>Contracts</h2><pre><code>in
+{
+    assert (0.1 <= c && c <= 8.0);
+}
+out (y)
+{
+    assert (0 <= y && y <= 1.0);
+}
+</code></pre>
+
+</div>
+<div class="section"><h2></h2>
+<p>Computes the Y coordinate of the control point.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Returns</h2>
+<p>The same as fx(0.5, c).
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="controlClip"></a><div class="symbol"><div class="description"><pre><code>public static <a href="http://dlang.org/type.html#basic-data-types">double</a> <a href="iz/math/VariableEllipse.html#controlClip">controlClip</a>(<a href="http://dlang.org/type.html#basic-data-types">double</a> c) pure @safe @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Clips the control point coefficient.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">c</td><td class="paramDoc"><p>The control point coefficient.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>The control point, validated for fx().
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="numControls"></a><div class="symbol"><div class="description"><pre><code>public auto numControls
+</code></pre>
+<div class="section"><h2></h2>
+<p>Indicates that 1 control point is used.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="ease"></a><div class="symbol"><div class="description"><pre><code>public static shared <a href="iz/math/VariableEllipse.html">VariableEllipse</a> ease
+</code></pre>
+<div class="section"><h2></h2>
+<p>Uniform Easing API.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><div class="section members"><h2>Variables</h2><table><tr><td><a href="iz/math/VariableEllipse.html#numControls">numControls</a></td><td><pre><code>auto
+</code></pre>
+</td><td></td></tr><tr><td><a href="iz/math/VariableEllipse.html#ease">ease</a></td><td><pre><code><a href="iz/math/VariableEllipse.html">VariableEllipse</a>
+</code></pre>
+</td><td></td></tr></table><h2>Functions</h2><table><tr><td><a href="iz/math/VariableEllipse.html#fx">fx</a><span class="extrainfo"><span class="method-attribs"><span class="attr-pure">pure</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td>Returns: <p>The Y coordinate, a value between 0.0 and 1.0.
+</p>
+</td></tr><tr><td><a href="iz/math/VariableEllipse.html#control">control</a><span class="extrainfo"><span class="method-attribs"><span class="attr-pure">pure</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td>Returns: <p>A value between 0.0 and 8.0.
+</p>
+</td></tr><tr><td><a href="iz/math/VariableEllipse.html#controlFx">controlFx</a><span class="extrainfo"><span class="method-attribs"><span class="attr-pure">pure</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td>Returns: <p>The same as fx(0.5, c).
+</p>
+</td></tr><tr><td><a href="iz/math/VariableEllipse.html#controlClip">controlClip</a><span class="extrainfo"><span class="method-attribs"><span class="attr-pure">pure</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td>Returns: <p>The control point, validated for fx().
+</p>
+</td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

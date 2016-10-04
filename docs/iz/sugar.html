@@ -971,7 +971,7 @@ assert(atFun());
 </div></div><a class="anchor" id="getDelegate"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/sugar.html#getDelegate">getDelegate</a>(FT)(
     <a href="http://dlang.org/type.html#basic-data-types">void</a>* context, 
     FT code) 
-if(is(pointerTarget!FT == function))
+if(is(PointerTarget!FT == function))
 </code></pre>
 <div class="section"><h2></h2>
 <p>Sets the context and the function of a new delegate.

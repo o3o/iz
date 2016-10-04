@@ -44,7 +44,7 @@
 </ul>
 </div></div>
 <div class="content">
-<div class="aggregate-symbol"><div class="description"><pre><code>public class PublishedObjectArray(ItemClass, string aaKey = "") : <a href="iz/properties/PropertyPublisher.html">PropertyPublisher</a>
+<div class="aggregate-symbol"><div class="description"><pre><code>public class PublishedObjectArray(ItemClass, <a href="http://dlang.org/type.html#basic-data-types">bool</a> managed = true, string aaKey = "") : <a href="iz/properties/PropertyPublisher.html">PropertyPublisher</a>
 if(is(ItemClass : <a href="iz/properties/PropertyPublisher.html">PropertyPublisher</a>))
 </code></pre>
 <div class="section"><h2></h2>
@@ -65,6 +65,9 @@ The life-time of the objects is automatically handled by the internal container.
 <div class="section"><h2>Parameters</h2>
 <table class="params">
 <tr class="param"><td class="paramName">ItemClass</td><td class="paramDoc"><p>The common items type. It must be a PropertyPublisher descendant.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">managed</td><td class="paramDoc"><p>When false, the items lifetime is not managed.
 </p>
 </td></tr>
 <tr class="param"><td class="paramName">aaKey</td><td class="paramDoc"><p>The member of ItemClass used to build an associative array that
@@ -128,7 +131,8 @@ version(none) <a href="iz/serializer.html#publisherToFile">publisherToFile</a>(i
 </div>
 <div class="section"><h2>Parameters</h2>
 <table class="params">
-<tr class="param"><td class="paramName">a</td><td class="paramDoc"><p>The variadic arguments passed to the item <code class="d_inlinecode">__ctor</code>.
+<tr class="param"><td class="paramName">a</td><td class="paramDoc"><p>When managed, the variadic arguments passed to the item <code class="d_inlinecode">__ctor</code>
+     otherwise the item to add.
 </p>
 </td></tr>
 </table>
@@ -164,7 +168,9 @@ if(isIntegral!T || is(Unqual!T == ItemClass))
 <div class="section"><h2></h2>
 <p>Items are automatically created or destroyed when changing this property.
 Note that to change the length of <code class="d_inlinecode">items()</code> is a noop, the only way to
-add and remove items is to use <code class="d_inlinecode">count()</code>, <code class="d_inlinecode">addItem()</code> or <code class="d_inlinecode">deleteItem()</code>.
+add and remove items is to use <code class="d_inlinecode">count()</code>, <code class="d_inlinecode">addItem()</code>
+or <code class="d_inlinecode">deleteItem()</code>. When the content is not managed, the setter is not
+able to add new items and an  error is raised.
 </p>
 
 
@@ -180,7 +186,9 @@ add and remove items is to use <code class="d_inlinecode">count()</code>, <code 
 <div class="section"><h2></h2>
 <p>Items are automatically created or destroyed when changing this property.
 Note that to change the length of <code class="d_inlinecode">items()</code> is a noop, the only way to
-add and remove items is to use <code class="d_inlinecode">count()</code>, <code class="d_inlinecode">addItem()</code> or <code class="d_inlinecode">deleteItem()</code>.
+add and remove items is to use <code class="d_inlinecode">count()</code>, <code class="d_inlinecode">addItem()</code>
+or <code class="d_inlinecode">deleteItem()</code>. When the content is not managed, the setter is not
+able to add new items and an  error is raised.
 </p>
 
 

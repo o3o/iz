@@ -47,14 +47,15 @@
 <div class="aggregate-symbol"><div class="description"><pre><code>public struct VariableParabol
 </code></pre>
 <div class="section"><h2></h2>
-<p>A simple and fast easing function that's also controlable.
-Its name comes from the fact that the plot of f(x) in [0..1] and with a
-control of 3 forms a regular parabolic curve.
+<p>A simple and fast parametric easing function.
 </p>
 
 
 </div>
 <div class="section"><h2></h2>
+<p>Its name comes from the fact that the plot of f(x) in [0..1] and with a
+control of 3 forms a regular parabolic curve.
+</p>
 
 
 </div>
@@ -102,10 +103,9 @@ assert(<a href="iz/math.html#variableParabol">variableParabol</a>.<a href="iz/ma
 </code></pre>
 
 </div>
-</div><a class="anchor" id="fx"></a><div class="symbol"><div class="description"><pre><code>public static T <a href="iz/math/VariableParabol.html#fx">fx</a>(<a href="http://dlang.org/type.html#basic-data-types">int</a> NC = 1, T, C)(
-    T x, 
-    C c) 
-if((is(T == <a href="http://dlang.org/type.html#basic-data-types">float</a>) || is(T == <a href="http://dlang.org/type.html#basic-data-types">double</a>)) && (is(C == <a href="http://dlang.org/type.html#basic-data-types">float</a>) || is(C == <a href="http://dlang.org/type.html#basic-data-types">double</a>)))
+</div><a class="anchor" id="fx"></a><div class="symbol"><div class="description"><pre><code>public static <a href="http://dlang.org/type.html#basic-data-types">double</a> <a href="iz/math/VariableParabol.html#fx">fx</a>(<a href="http://dlang.org/type.html#basic-data-types">int</a> NC = 1)(
+    <a href="http://dlang.org/type.html#basic-data-types">double</a> x, 
+    <a href="http://dlang.org/type.html#basic-data-types">double</a> c) pure @safe @nogc
 </code></pre>
 <div class="section"><h2></h2>
 <p>Applies the standard transformation.
@@ -128,14 +128,13 @@ if((is(T == <a href="http://dlang.org/type.html#basic-data-types">float</a>) || 
 </td></tr>
 </table>
 </div>
-<div class="section"><h2>Return</h2>
+<div class="section"><h2>Returns</h2>
 <p>The Y coordinate, a value between 0.0 and 1.0.
 </p>
 
 
 </div>
-</div></div><a class="anchor" id="control"></a><div class="symbol"><div class="description"><pre><code>public static Y <a href="iz/math/VariableParabol.html#control">control</a>(<a href="http://dlang.org/type.html#basic-data-types">int</a> N = 0, Y)(Y y) 
-if(is(Y == <a href="http://dlang.org/type.html#basic-data-types">float</a>) || is(Y == <a href="http://dlang.org/type.html#basic-data-types">double</a>))
+</div></div><a class="anchor" id="control"></a><div class="symbol"><div class="description"><pre><code>public static <a href="http://dlang.org/type.html#basic-data-types">double</a> <a href="iz/math/VariableParabol.html#control">control</a>(<a href="http://dlang.org/type.html#basic-data-types">int</a> N = 0)(<a href="http://dlang.org/type.html#basic-data-types">double</a> y) pure @safe @nogc
 </code></pre>
 <div class="section "><h2>Contracts</h2><pre><code>in
 {
@@ -143,7 +142,7 @@ if(is(Y == <a href="http://dlang.org/type.html#basic-data-types">float</a>) || i
 }
 out (c)
 {
-    assert (0 <= c && c <= 1.0);
+    assert (0 <= c && c <= 3.0);
 }
 </code></pre>
 
@@ -160,23 +159,22 @@ out (c)
 </div>
 <div class="section"><h2>Parameters</h2>
 <table class="params">
-<tr class="param"><td class="paramName">y</td><td class="paramDoc"><p>the value as obtained by variableParabol(0.5, control).
+<tr class="param"><td class="paramName">y</td><td class="paramDoc"><p>The value as obtained by fx(0.5, control).
 </p>
 </td></tr>
 </table>
 </div>
-<div class="section"><h2>Return</h2>
+<div class="section"><h2>Returns</h2>
 <p>a value between 0.0 and 3.0.
 </p>
 
 
 </div>
-</div></div><a class="anchor" id="controlFx"></a><div class="symbol"><div class="description"><pre><code>public static C <a href="iz/math/VariableParabol.html#controlFx">controlFx</a>(<a href="http://dlang.org/type.html#basic-data-types">int</a> N = 0, C)(C c) 
-if(is(C == <a href="http://dlang.org/type.html#basic-data-types">float</a>) || is(C == <a href="http://dlang.org/type.html#basic-data-types">double</a>))
+</div></div><a class="anchor" id="controlFx"></a><div class="symbol"><div class="description"><pre><code>public static <a href="http://dlang.org/type.html#basic-data-types">double</a> <a href="iz/math/VariableParabol.html#controlFx">controlFx</a>(<a href="http://dlang.org/type.html#basic-data-types">int</a> N = 0)(<a href="http://dlang.org/type.html#basic-data-types">double</a> c) pure @safe @nogc
 </code></pre>
 <div class="section "><h2>Contracts</h2><pre><code>in
 {
-    assert (0 <= c && x <= 3.0);
+    assert (0 <= c && c <= 3.0);
 }
 out (y)
 {
@@ -186,7 +184,7 @@ out (y)
 
 </div>
 <div class="section"><h2></h2>
-<p>Computes the Y coordinate of the variableParabol control point.
+<p>Computes the Y coordinate of the control point.
 </p>
 
 
@@ -195,8 +193,33 @@ out (y)
 
 
 </div>
-<div class="section"><h2>Return</h2>
-<p>The same as variableParabol(0.5, c) but faster.
+<div class="section"><h2>Returns</h2>
+<p>The same as fx(0.5, c) but faster.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="controlClip"></a><div class="symbol"><div class="description"><pre><code>public static <a href="http://dlang.org/type.html#basic-data-types">double</a> <a href="iz/math/VariableParabol.html#controlClip">controlClip</a>(<a href="http://dlang.org/type.html#basic-data-types">double</a> c) pure @safe @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Clips the control point coefficient.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">c</td><td class="paramDoc"><p>The control point coefficient.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>The control point, validated for fx().
 </p>
 
 
@@ -204,7 +227,7 @@ out (y)
 </div></div><a class="anchor" id="numControls"></a><div class="symbol"><div class="description"><pre><code>public auto numControls
 </code></pre>
 <div class="section"><h2></h2>
-<p>Indicates that VariableParabol uses 1 control point.
+<p>Indicates that 1 control point is used.
 </p>
 
 
@@ -229,7 +252,15 @@ out (y)
 </code></pre>
 </td><td></td></tr><tr><td><a href="iz/math/VariableParabol.html#ease">ease</a></td><td><pre><code><a href="iz/math/VariableParabol.html">VariableParabol</a>
 </code></pre>
-</td><td></td></tr></table><h2>Functions</h2><table><tr><td><a href="iz/math/VariableParabol.html#fx">fx</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/math/VariableParabol.html#control">control</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/math/VariableParabol.html#controlFx">controlFx</a><span class="extrainfo"></span></td><td></td><td></td></tr></table>
+</td><td></td></tr></table><h2>Functions</h2><table><tr><td><a href="iz/math/VariableParabol.html#fx">fx</a><span class="extrainfo"><span class="method-attribs"><span class="attr-pure">pure</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td>Returns: <p>The Y coordinate, a value between 0.0 and 1.0.
+</p>
+</td></tr><tr><td><a href="iz/math/VariableParabol.html#control">control</a><span class="extrainfo"><span class="method-attribs"><span class="attr-pure">pure</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td>Returns: <p>a value between 0.0 and 3.0.
+</p>
+</td></tr><tr><td><a href="iz/math/VariableParabol.html#controlFx">controlFx</a><span class="extrainfo"><span class="method-attribs"><span class="attr-pure">pure</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td>Returns: <p>The same as fx(0.5, c) but faster.
+</p>
+</td></tr><tr><td><a href="iz/math/VariableParabol.html#controlClip">controlClip</a><span class="extrainfo"><span class="method-attribs"><span class="attr-pure">pure</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td>Returns: <p>The control point, validated for fx().
+</p>
+</td></tr></table>
 </div>
 </div><script>hljs.initHighlightingOnLoad();</script>
 

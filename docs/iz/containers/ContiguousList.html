@@ -152,7 +152,7 @@ Encapsulates an Array!T and interfaces it as a list.
 </td></tr>
 </table>
 </div>
-<div class="section"><h2>Return</h2>
+<div class="section"><h2>Returns</h2>
 <p>-1 if item is not present otherwise its index.
 </p>
 
@@ -170,15 +170,27 @@ Encapsulates an Array!T and interfaces it as a list.
 
 
 </div>
+<div class="section"><h2>Returns</h2>
+<p>The last item index.
+</p>
+
+
+</div>
 </div></div><a class="anchor" id="add"></a><div class="symbol"><div class="description"><pre><code>public ptrdiff_t <a href="iz/containers/ContiguousList.html#add">add</a>(I)(I items)
 </code></pre>
 <div class="section"><h2></h2>
-<p>Adds items at the end of the list and returns the last item index.
+<p>Adds items at the end of the list.
 </p>
 
 
 </div>
 <div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Returns</h2>
+<p>The last item index.
+</p>
 
 
 </div>
@@ -191,7 +203,13 @@ Encapsulates an Array!T and interfaces it as a list.
 
 </div>
 <div class="section"><h2></h2>
-<p>In a Contiguous list, add() should ne preferred over insert().
+<p>In a Contiguous list, add() should be preferred over insert().
+</p>
+
+
+</div>
+<div class="section"><h2>Returns</h2>
+<p>Always 0.
 </p>
 
 
@@ -222,7 +240,7 @@ Encapsulates an Array!T and interfaces it as a list.
 </td></tr>
 </table>
 </div>
-<div class="section"><h2>Return</h2>
+<div class="section"><h2>Returns</h2>
 <p>The item index, position if it was valid.
 </p>
 
@@ -302,7 +320,7 @@ Encapsulates an Array!T and interfaces it as a list.
 </td></tr>
 </table>
 </div>
-<div class="section"><h2>Return</h2>
+<div class="section"><h2>Returns</h2>
 <p>true if the item wasin the list, false otherwise.
 </p>
 
@@ -327,7 +345,7 @@ Encapsulates an Array!T and interfaces it as a list.
 </td></tr>
 </table>
 </div>
-<div class="section"><h2>Return</h2>
+<div class="section"><h2>Returns</h2>
 <p>The item that's been removed.
 </p>
 
@@ -345,7 +363,7 @@ Encapsulates an Array!T and interfaces it as a list.
 
 
 </div>
-</div></div><a class="anchor" id="count"></a><div class="symbol"><div class="description"><pre><code>public size_t <a href="iz/containers/ContiguousList.html#count">count</a>()
+</div></div><a class="anchor" id="count"></a><div class="symbol"><div class="description"><pre><code>public final size_t <a href="iz/containers/ContiguousList.html#count">count</a>() const pure nothrow @safe
 </code></pre>
 <div class="section"><h2></h2>
 <p>Returns the items count.
@@ -357,7 +375,7 @@ Encapsulates an Array!T and interfaces it as a list.
 
 
 </div>
-</div></div><a class="anchor" id="array"></a><div class="symbol"><div class="description"><pre><code>public ref <a href="iz/containers/Array.html">Array</a>!T <a href="iz/containers/ContiguousList.html#array">array</a>()
+</div></div><a class="anchor" id="array"></a><div class="symbol"><div class="description"><pre><code>public ref <a href="iz/containers/Array.html">Array</a>!T <a href="iz/containers/ContiguousList.html#array">array</a>() nothrow @safe
 </code></pre>
 <div class="section"><h2></h2>
 <p>Returns the internal array.
@@ -367,13 +385,27 @@ Encapsulates an Array!T and interfaces it as a list.
 </div>
 <div class="section"><h2></h2>
 <p>ContiguousList doesn't contain any other hidden field
-and the container can be modified without changind the
-list state.
+and the container can be modified without altering the
+state of the list.
 </p>
 
 
 </div>
-</div></div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/containers/ContiguousList.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#opIndex">opIndex</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#opIndexAssign">opIndexAssign</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#opApply">opApply</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#opApplyReverse">opApplyReverse</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#opAssign">opAssign</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#opAssign">opAssign</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#find">find</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#add">add</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#add">add</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#insert">insert</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#insert">insert</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#swapItems">swapItems</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#swapIndexes">swapIndexes</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#remove">remove</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#extract">extract</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#clear">clear</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#count">count</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#array">array</a><span class="extrainfo"></span></td><td></td><td></td></tr></table>
+</div></div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/containers/ContiguousList.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#opIndex">opIndex</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#opIndexAssign">opIndexAssign</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#opApply">opApply</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#opApplyReverse">opApplyReverse</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#opAssign">opAssign</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#opAssign">opAssign</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#find">find</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>-1 if item is not present otherwise its index.
+</p>
+</td></tr><tr><td><a href="iz/containers/ContiguousList.html#add">add</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>The last item index.
+</p>
+</td></tr><tr><td><a href="iz/containers/ContiguousList.html#add">add</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>The last item index.
+</p>
+</td></tr><tr><td><a href="iz/containers/ContiguousList.html#insert">insert</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>Always 0.
+</p>
+</td></tr><tr><td><a href="iz/containers/ContiguousList.html#insert">insert</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>The item index, position if it was valid.
+</p>
+</td></tr><tr><td><a href="iz/containers/ContiguousList.html#swapItems">swapItems</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#swapIndexes">swapIndexes</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#remove">remove</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>true if the item wasin the list, false otherwise.
+</p>
+</td></tr><tr><td><a href="iz/containers/ContiguousList.html#extract">extract</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>The item that's been removed.
+</p>
+</td></tr><tr><td><a href="iz/containers/ContiguousList.html#clear">clear</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#count">count</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/ContiguousList.html#array">array</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr></table>
 </div>
 </div><script>hljs.initHighlightingOnLoad();</script>
 
