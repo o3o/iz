@@ -935,11 +935,7 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
     public
     {
         ///
-        this() @nogc
-        {
-            _memory = getMem(16);
-            if (!_memory) throwStaticEx!OutOfMemoryError;
-        }
+        this() @nogc {}
 
         /**
          * Constructs a MemoryStream and write the input argument.
@@ -949,9 +945,6 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
          */
         this(A)(A a)
         {
-            _memory = getMem(16);
-            if (!_memory) throwStaticEx!OutOfMemoryError;
-
             import std.traits: isArray;
             static if (isArray!A)
                 write(a.ptr, a.length * (ElementType!A).sizeof);
@@ -1043,9 +1036,8 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
                 clear;
                 return;
             }
-            _memory = reallocMem(_memory, cast(size_t)value);
-            if (!_memory) throwStaticEx!OutOfMemoryError;
-            else _size = cast(size_t)value;
+            _memory = reallocMem(_memory, cast(size_t) value);
+            _size = cast(size_t)value;
         }
 
         /// ditto
@@ -1081,8 +1073,7 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
         /// see the Stream interface.
         void clear() @nogc
         {
-            _memory = reallocMem(_memory, 16);
-            if (!_memory) throwStaticEx!OutOfMemoryError;
+            freeMem(_memory);
             _size = 0;
             _position = 0;
         }

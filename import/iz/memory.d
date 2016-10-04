@@ -35,7 +35,6 @@ Ptr reallocMem(ref Ptr src, size_t newSize) nothrow @trusted @nogc
 in
 {
     assert(newSize);
-    assert(src);
 }
 body
 {
