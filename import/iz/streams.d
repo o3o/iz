@@ -619,18 +619,17 @@ unittest
     destruct(str);
 }
 
-
 /**
  * Decodes an UTF8 line in a Stream.
  *
  * Params:
+ *      keepTerminator = Indicates wether the line ending is included in the result.
  *      str = The Stream to read.
  * Returns:
  *      A dchar input range that represents a line, without its ending char(s).
  */
-auto readUTF8Line(Stream str)
+auto readUTF8Line(bool keepTerminator = false)(Stream str)
 {
-    //TODO-cstreams: add static option like std.stdio KeepTerminator to readUTF8Line.
     struct LineReader
     {
         bool _empty;
@@ -639,18 +638,35 @@ auto readUTF8Line(Stream str)
         size_t _buffLen;
         size_t _buffPos = -1;
 
+        static if (keepTerminator)
+        {
+            bool _nextIsLast;
+        }
+
+        import std.system;
+
+        ///
         dchar front() @safe @nogc pure nothrow
         {
             return _front;
         }
 
+        ///
         bool empty() @safe @nogc pure nothrow
         {
             return _empty;
         }
 
+        ///
         void popFront() @trusted
         {
+            static if (keepTerminator)
+            {
+                _empty = _nextIsLast;
+                if (_empty)
+                    return;
+            }
+
             if (_buffPos != 0)
             {
                 _buffLen = str.read(_buff.ptr, 4);
@@ -665,10 +681,18 @@ auto readUTF8Line(Stream str)
                 {
                 case '\n':
                 {
-                    _empty = true;
-                    str.position = str.position - _buffLen + _buffPos;
-                    if (str.position == str.size)
+                    static if (!keepTerminator)
+                    {
                         _empty = true;
+                        str.position = str.position - _buffLen + _buffPos;
+                        if (str.position == str.size)
+                            _empty = true;
+                    }
+                    else
+                    {
+                        _nextIsLast = true;
+                        str.position = str.position - _buffLen + _buffPos;
+                    }
                     break;
                 }
                 case '\r':
@@ -678,12 +702,13 @@ auto readUTF8Line(Stream str)
                     else
                     {
                         str.position = str.position - _buffLen + _buffPos;
-                        ubyte b = str.readVariable!ubyte;
-                        if (b == '\n')
+                        static if (!keepTerminator)
                         {
-                            _empty = true;
+                            ubyte b = str.readVariable!ubyte;
+                            if (b == '\n')
+                                _empty = true;
+                            else str.position = str.position - 1;
                         }
-                        else str.position = str.position - 1;
                     }
                     break;
                 }
@@ -746,6 +771,22 @@ unittest
     assert(ln2 == "");
     assert(str.position == str.size);
 }
+
+unittest
+{
+    import std.array: array;
+    auto text = "01\r\n23\n45".dup;
+    MemoryStream str = construct!MemoryStream();
+    str.write(text.ptr, text.length);
+    str.position = 0;
+    auto _01 = str.readUTF8Line!(true).array;
+    assert(_01 == "01\r\n");
+    auto _23 = str.readUTF8Line!(true).array;
+    assert(_23 == "23\n");
+    auto _45 = str.readUTF8Line!(true).array;
+    assert(_45 == "45");
+}
+
 
 /**
  * Base Stream for a descendant that uses the operating system API.

@@ -405,7 +405,7 @@ if(isArray!T && !<a href="iz/types/isMultiDimensionalArray.html">isMultiDimensio
 </td></tr>
 </table>
 </div>
-</div></div><a class="anchor" id="readUTF8Line"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/streams.html#readUTF8Line">readUTF8Line</a>(<a href="iz/streams/Stream.html">Stream</a> str)
+</div></div><a class="anchor" id="readUTF8Line"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/streams.html#readUTF8Line">readUTF8Line</a>(<a href="http://dlang.org/type.html#basic-data-types">bool</a> keepTerminator = false)(<a href="iz/streams/Stream.html">Stream</a> str)
 </code></pre>
 <div class="section"><h2></h2>
 <p>Decodes an UTF8 line in a Stream.
@@ -419,6 +419,9 @@ if(isArray!T && !<a href="iz/types/isMultiDimensionalArray.html">isMultiDimensio
 </div>
 <div class="section"><h2>Parameters</h2>
 <table class="params">
+<tr class="param"><td class="paramName">keepTerminator</td><td class="paramDoc"><p>Indicates wether the line ending is included in the result.
+</p>
+</td></tr>
 <tr class="param"><td class="paramName">str</td><td class="paramDoc"><p>The Stream to read.
 </p>
 </td></tr>
