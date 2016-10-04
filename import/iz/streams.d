@@ -330,7 +330,7 @@ if (is(ST : Stream))
 }
 
 /**
- * Input, forward and bidirectional range for an Stream.
+ * Input, forward and bidirectional range for a Stream.
  *
  * Params:
  *      ST = The Stream descendant for which the range will be created.
@@ -1102,9 +1102,9 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
         }
 
         /**
-         * Read-only access to the memory chunk.
+         * Access to the memory chunk.
          */
-        @property final const(Ptr) memory() @nogc
+        final Ptr memory() @nogc
         {
             return _memory;
         }
@@ -1112,7 +1112,7 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
         /**
          * Returns the stream content as a read-only ubyte array.
          */
-        const(ubyte[]) ubytes() const @nogc
+        const(ubyte)[] ubytes() const @nogc
         {
             return cast(ubyte[]) _memory[0 .. _size];
         }
