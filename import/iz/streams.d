@@ -661,14 +661,17 @@ auto readUTF8Line(Stream str)
                 import std.utf: decode;
                 _front = decode(_buff[], _buffPos);
 
-                if (_front == '\n')
+                switch (_front)
+                {
+                case '\n':
                 {
                     _empty = true;
                     str.position = str.position - _buffLen + _buffPos;
                     if (str.position == str.size)
                         _empty = true;
+                    break;
                 }
-                else if (_front == '\r')
+                case '\r':
                 {
                     if (str.position == str.size)
                         _empty = true;
@@ -682,8 +685,10 @@ auto readUTF8Line(Stream str)
                         }
                         else str.position = str.position - 1;
                     }
+                    break;
                 }
-                else str.position = str.position - _buffLen + _buffPos;
+                default: str.position = str.position - _buffLen + _buffPos;
+                }
             }
             else _empty = true;
         }
@@ -722,6 +727,24 @@ unittest
     assert(_01 == "01\r23");
     auto _45 = str.readUTF8Line.array;
     assert(_45 == "é5é");
+}
+
+unittest
+{
+    import std.array: array;
+    auto text = "\n\n\r\n".dup;
+    MemoryStream str = construct!MemoryStream();
+    str.write(text.ptr, text.length);
+    str.position = 0;
+    auto ln0 = str.readUTF8Line.array;
+    assert(ln0 == "");
+    assert(str.position != str.size);
+    auto ln1 = str.readUTF8Line.array;
+    assert(ln1 == "");
+    assert(str.position != str.size);
+    auto ln2 = str.readUTF8Line.array;
+    assert(ln2 == "");
+    assert(str.position == str.size);
 }
 
 /**
@@ -1052,7 +1075,7 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
         {
             import std.traits: isArray;
             static if (isArray!A)
-                write(a.ptr, a.length * (ElementType!A).sizeof);
+                write(a.ptr, a.length * (ElementEncodingType!A).sizeof);
             else static if (isInputRange!A)
                 this.writeRange(a);
             else static if (isFixedSize!A)
