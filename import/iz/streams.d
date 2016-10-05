@@ -626,9 +626,14 @@ unittest
  *      keepTerminator = Indicates wether the line ending is included in the result.
  *      str = The Stream to read.
  * Returns:
- *      A dchar input range that represents a line, without its ending char(s).
+ *      A dchar input range that represents a line.
  */
 auto readUTF8Line(bool keepTerminator = false)(Stream str)
+in
+{
+    assert(str !is null);
+}
+body
 {
     struct LineReader
     {
@@ -787,6 +792,123 @@ unittest
     assert(_45 == "45");
 }
 
+/**
+ * Reads a line in a Stream, without decoding.
+ *
+ * Params:
+ *      keepTerminator = Indicates wether the line ending is included in the result.
+ *      str = The Stream where a line is read.
+ *      assumeANSI = When set to true, multi bytes characters are not detected.
+ * Returns:
+ *      An array of char.
+ */
+const(char)[] readln(bool keepTerminator = false)(Stream str, bool assumeANSI = false)
+in
+{
+    assert(str !is null);
+}
+body
+{
+    char[] result;
+    char[64] buffer;
+    size_t count;
+    size_t strPos;
+    ubyte numSkips;
+    bool checkN;
+    _rd: while (true)
+    {
+        strPos = str.position;
+        count = str.read(buffer.ptr, 64);
+        char c;
+        foreach(immutable i; 0..count)
+        {
+            assert(numSkips <= 5);
+
+            c = buffer[i];
+            switch(c)
+            {
+                case '\n':
+                    if (numSkips == 0)
+                    {
+                        str.position = strPos + i + 1;
+                        static if (keepTerminator)
+                        {
+                            if (checkN)
+                            {
+                                result ~= "\r\n";
+                                checkN = false;
+                            }
+                            else
+                                result ~= "\n";
+                        }
+                        break _rd;
+                    }
+                    else goto default;
+                case '\r':
+                    if (numSkips == 0)
+                    {
+                        checkN = true;
+                        break;
+                    }
+                    else goto default;
+                default:
+                    if (numSkips)
+                        --numSkips;
+                    else
+                    {
+                        if (!assumeANSI && c >= 0x80)
+                        {
+                            ++numSkips;
+                            if ((c & 0b11111100) >= 0b11111100)
+                                numSkips += 4;
+                            else if ((c & 0b11111000) >= 0b11111000)
+                                numSkips += 3;
+                            else if ((c & 0b11110000) >= 0b11110000)
+                                numSkips += 2;
+                            else if ((c & 0b11100000) >= 0b11100000)
+                                numSkips += 1;
+                        }
+                    }
+                    result ~= c;
+            }
+        }
+        if (count != 64)
+            break;
+    }
+    return result;
+}
+///
+unittest
+{
+    auto text = "01\r\n23\n4à\n".dup;
+    MemoryStream str = construct!MemoryStream();
+    str.write(text.ptr, text.length);
+    str.position = 0;
+    auto _01 = str.readln;
+    assert(_01 == "01");
+    auto _23 = str.readln;
+    assert(_23 == "23");
+    auto _45 = str.readln;
+    assert(_45 == "4à");
+    auto term = str.readln;
+    assert(term == "");
+}
+
+unittest
+{
+    auto text = "01\r\n23\n4à\r\n".dup;
+    MemoryStream str = construct!MemoryStream();
+    str.write(text.ptr, text.length);
+    str.position = 0;
+    auto _01 = str.readln!true;
+    assert(_01 == "01\r\n");
+    auto _23 = str.readln!true;
+    assert(_23 == "23\n");
+    auto _45 = str.readln!true;
+    assert(_45 == "4à\r\n");
+    auto term = str.readln!true;
+    assert(term == "");
+}
 
 /**
  * Base Stream for a descendant that uses the operating system API.

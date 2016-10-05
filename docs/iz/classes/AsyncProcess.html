@@ -123,7 +123,7 @@ struct Catcher
     void bufferAvailable(Object notifier)
     {
         flg = true;
-        assert((cast(<a href="iz/classes/AsyncProcess.html">AsyncProcess</a>) notifier).output.readln == "hello world");
+        assert((cast(<a href="iz/classes/AsyncProcess.html">AsyncProcess</a>) notifier).output.<a href="iz/streams.html#readln">readln</a> == "hello world");
     }
     void terminate(Object notifier)
     {

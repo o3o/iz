@@ -661,6 +661,7 @@ var items = [
 {"iz.streams.writeArray" : "iz/streams.html#writeArray"},
 {"iz.streams.readArray" : "iz/streams.html#readArray"},
 {"iz.streams.readUTF8Line" : "iz/streams.html#readUTF8Line"},
+{"iz.streams.readln" : "iz/streams.html#readln"},
 {"iz.streams.SystemStream" : "iz/streams/SystemStream.html"},
 {"iz.streams.SystemStream.read" : "iz/streams/SystemStream.html#read"},
 {"iz.streams.SystemStream.write" : "iz/streams/SystemStream.html#write"},

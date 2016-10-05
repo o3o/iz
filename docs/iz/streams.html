@@ -407,6 +407,13 @@ if(isArray!T && !<a href="iz/types/isMultiDimensionalArray.html">isMultiDimensio
 </div>
 </div></div><a class="anchor" id="readUTF8Line"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/streams.html#readUTF8Line">readUTF8Line</a>(<a href="http://dlang.org/type.html#basic-data-types">bool</a> keepTerminator = false)(<a href="iz/streams/Stream.html">Stream</a> str)
 </code></pre>
+<div class="section "><h2>Contracts</h2><pre><code>in
+{
+    assert (str !is null);
+}
+</code></pre>
+
+</div>
 <div class="section"><h2></h2>
 <p>Decodes an UTF8 line in a Stream.
 </p>
@@ -428,7 +435,7 @@ if(isArray!T && !<a href="iz/types/isMultiDimensionalArray.html">isMultiDimensio
 </table>
 </div>
 <div class="section"><h2>Returns</h2>
-<p>A dchar input range that represents a line, without its ending char(s).
+<p>A dchar input range that represents a line.
 </p>
 
 
@@ -454,6 +461,71 @@ assert(_23 == "23");
 auto _45 = str.<a href="iz/streams.html#readUTF8Line">readUTF8Line</a>.array;
 assert(_45 == "45");
 auto term = str.<a href="iz/streams.html#readUTF8Line">readUTF8Line</a>.array;
+assert(term == "");
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="readln"></a><div class="symbol"><div class="description"><pre><code>public const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] <a href="iz/streams.html#readln">readln</a>(<a href="http://dlang.org/type.html#basic-data-types">bool</a> keepTerminator = false)(
+    <a href="iz/streams/Stream.html">Stream</a> str, 
+    <a href="http://dlang.org/type.html#basic-data-types">bool</a> assumeANSI = false)
+</code></pre>
+<div class="section "><h2>Contracts</h2><pre><code>in
+{
+    assert (str !is null);
+}
+</code></pre>
+
+</div>
+<div class="section"><h2></h2>
+<p>Reads a line in a Stream, without decoding.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">keepTerminator</td><td class="paramDoc"><p>Indicates wether the line ending is included in the result.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">str</td><td class="paramDoc"><p>The Stream where a line is read.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">assumeANSI</td><td class="paramDoc"><p>When set to true, multi bytes characters are not detected.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>An array of char.
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>auto text = "01\r\n23\n4à\n".dup;
+<a href="iz/streams/MemoryStream.html">MemoryStream</a> str = <a href="iz/memory.html#construct">construct</a>!<a href="iz/streams/MemoryStream.html">MemoryStream</a>();
+str.write(text.ptr, text.length);
+str.position = 0;
+auto _01 = str.<a href="iz/streams.html#readln">readln</a>;
+assert(_01 == "01");
+auto _23 = str.<a href="iz/streams.html#readln">readln</a>;
+assert(_23 == "23");
+auto _45 = str.<a href="iz/streams.html#readln">readln</a>;
+assert(_45 == "4à");
+auto term = str.<a href="iz/streams.html#readln">readln</a>;
 assert(term == "");
 
 </code></pre>
@@ -498,7 +570,9 @@ to D ranges.
 </code></pre>
 </td><td></td></tr></table><h2>Functions</h2><table><tr><td><a href="iz/streams.html#isHandleValid">isHandleValid</a><span class="extrainfo"><span class="method-attribs"><span class="attr-pure">pure</span>, <span class="attr-nogc">@nogc</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/streams.html#cmToSystem">cmToSystem</a><span class="extrainfo"><span class="method-attribs"><span class="attr-pure">pure</span>, <span class="attr-nogc">@nogc</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/streams.html#isHandleValid">isHandleValid</a><span class="extrainfo"><span class="method-attribs"><span class="attr-pure">pure</span>, <span class="attr-nogc">@nogc</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/streams.html#cmToSystem">cmToSystem</a><span class="extrainfo"><span class="method-attribs"><span class="attr-pure">pure</span>, <span class="attr-nogc">@nogc</span>, <span class="attr-safe">@safe</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/streams.html#genReadWriteVar">genReadWriteVar</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/streams.html#streamRange">streamRange</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td>Returns: <p>A pointer to a StreamRange that has to be free manually with <code class="d_inlinecode">destruct()</code>.
 </p>
-</td></tr><tr><td><a href="iz/streams.html#copyStream">copyStream</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/streams.html#writeRange">writeRange</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/streams.html#writeArray">writeArray</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/streams.html#readArray">readArray</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/streams.html#readUTF8Line">readUTF8Line</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td>Returns: <p>A dchar input range that represents a line, without its ending char(s).
+</td></tr><tr><td><a href="iz/streams.html#copyStream">copyStream</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/streams.html#writeRange">writeRange</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/streams.html#writeArray">writeArray</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/streams.html#readArray">readArray</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/streams.html#readUTF8Line">readUTF8Line</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td>Returns: <p>A dchar input range that represents a line.
+</p>
+</td></tr><tr><td><a href="iz/streams.html#readln">readln</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>An array of char.
 </p>
 </td></tr></table><h2>Structs</h2><table><tr><td><a href="iz/streams/StreamRange.html">StreamRange</a></td><td></td><td></td></tr></table><h2>Interfaces</h2><table><tr><td><a href="iz/streams/StreamPersist.html">StreamPersist</a></td><td></td><td></td></tr><tr><td><a href="iz/streams/FilePersist8.html">FilePersist8</a></td><td></td><td></td></tr><tr><td><a href="iz/streams/Stream.html">Stream</a></td><td></td><td></td></tr></table><h2>Classes</h2><table><tr><td><a href="iz/streams/SystemStream.html">SystemStream</a></td><td></td><td></td></tr><tr><td><a href="iz/streams/FileStream.html">FileStream</a></td><td></td><td></td></tr><tr><td><a href="iz/streams/MemoryStream.html">MemoryStream</a></td><td></td><td></td></tr></table>
 </div>
