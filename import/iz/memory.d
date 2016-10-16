@@ -108,9 +108,11 @@ body
 void freeMem(T)(auto ref T src) nothrow @trusted @nogc
 if (isPointer!T && isBasicType!(PointerTarget!T))
 {
-    if (src) free(cast(void*)src);
-    static if (ParameterStorageClassTuple!freeMem[0] ==
-        ParameterStorageClass.ref_) src = null;
+    if (src)
+    {
+        free(cast(void*)src);
+        src = null;
+    }
 }
 
 /**
@@ -142,7 +144,7 @@ enum NoInit;
  * to determine if the content of a manually allocated aggregate must
  * be declared to the GC.
  */
-template MustAddGcRange(T = void)
+template MustAddGcRange(T)
 if (is(T==struct) || is(T==union) || is(T==class))
 {
 
