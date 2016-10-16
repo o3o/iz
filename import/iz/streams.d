@@ -79,7 +79,7 @@ version (Windows)
     }
 
 }
-version (Posix)
+else version (Posix)
 {
     import core.sys.posix.fcntl, core.sys.posix.unistd;
     import core.sys.posix.stdio;
@@ -223,7 +223,7 @@ interface Stream
      * Returns:
      *      the count of bytes that's been written.
      */
-    @nogc size_t write(Ptr buffer, size_t count);
+    @nogc size_t write(const Ptr buffer, size_t count);
 
     /**
      * Writes a typed value.
@@ -587,13 +587,13 @@ if (isArray!T && !isMultiDimensionalArray!T)
  *      ReadLength = When set to true (the default), the array length is read.
  *      Otherwise the data are read according to the current array length.
  *      str = The Stream where data are read.
- *      t = The array to write.
+ *      t = The array to read.
  */
-void readArray(bool ReadLength = true, T)(Stream str, auto ref T t)
+void readArray(bool ReadLength = true, T)(Stream str, ref T t)
 if (isArray!T && !isMultiDimensionalArray!T)
 {
     static if (ReadLength)
-        t.length = cast(uint)str.readUlong;
+        t.length = cast(uint) str.readUlong;
     str.read(t.ptr, t.length * typeof(T.init[0]).sizeof);
 }
 
@@ -647,8 +647,6 @@ body
         {
             bool _nextIsLast;
         }
-
-        import std.system;
 
         ///
         dchar front() @safe @nogc pure nothrow
@@ -709,7 +707,7 @@ body
                         str.position = str.position - _buffLen + _buffPos;
                         static if (!keepTerminator)
                         {
-                            ubyte b = str.readVariable!ubyte;
+                            const ubyte b = str.readVariable!ubyte;
                             if (b == '\n')
                                 _empty = true;
                             else str.position = str.position - 1;
@@ -918,7 +916,7 @@ unittest
  *      str = The target Stream.
  *      value = Any D array. Its size and its type determine how many bytes to write.
  */
-void write(Stream str, void[] value)
+void write(Stream str, const(void)[] value) @nogc
 in
 {
     assert(str);
@@ -930,10 +928,11 @@ body
     str.write(value.ptr, value.length);
 }
 ///
-unittest
+@nogc unittest
 {
+    static immutable uint[] a = [0u,1u];
     MemoryStream str = construct!MemoryStream;
-    write(str, [0u,1u]);
+    write(str, a);
     assert(str.size == 8);
     destruct(str);
 }
@@ -945,7 +944,7 @@ unittest
  *      str = The source Stream.
  *      value = Any D array. Its size and its type determine how many bytes to read.
  */
-void read(Stream str, void[] value)
+void read(Stream str, void[] value) @nogc
 in
 {
     assert(str);
@@ -957,14 +956,14 @@ body
     str.read(value.ptr, value.length);
 }
 ///
-unittest
+@nogc unittest
 {
-    MemoryStream str = construct!MemoryStream([7u,8u]);
-    uint[] arr = new uint[](2);
-    read(str, arr);
-    assert(arr.length == 2);
-    assert(arr[0] == 7);
-    assert(arr[1] == 8);
+    static uint[] b = [0,0];
+    static immutable uint[] a = [7u,8u];
+    MemoryStream str = construct!MemoryStream(a);
+    read(str, b);
+    assert(b[0] == 7);
+    assert(b[1] == 8);
     destruct(str);
 }
 
@@ -1000,7 +999,7 @@ abstract class SystemStream: Stream, StreamPersist
         }
 
         /// see the Stream interface.
-        size_t write(Ptr buffer, size_t count) @nogc
+        size_t write(const Ptr buffer, size_t count) @nogc
         {
             if (!_handle.isHandleValid) return 0;
             version(Windows)
@@ -1045,8 +1044,8 @@ abstract class SystemStream: Stream, StreamPersist
         {
             if (!_handle.isHandleValid) return 0;
 
-            long saved = seek(0L, SeekMode.cur);
-            long result = seek(0L, SeekMode.end);
+            const long saved = seek(0L, SeekMode.cur);
+            const long result = seek(0L, SeekMode.end);
             seek(saved, SeekMode.beg);
             return result;
         }
@@ -1326,7 +1325,7 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
         }
 
         /// see the Stream interface.
-        size_t write(Ptr buffer, size_t count) @nogc
+        size_t write(const Ptr buffer, size_t count) @nogc
         {
             if (_position + count > _size) size(_position + count);
             moveMem(_memory + _position, buffer, count);
@@ -1358,7 +1357,7 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
         /// ditto
         int seek(int offset, SeekMode mode) @nogc
         {
-            long longOffs = offset;
+            const long longOffs = offset;
             return cast(int) seek(longOffs, mode);
         }
 
@@ -1588,7 +1587,7 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
                 scope(exit) core.sys.posix.unistd.close(hdl);
                 size(core.sys.posix.unistd.lseek64(hdl, 0, SEEK_END));
                 core.sys.posix.unistd.lseek64(hdl, 0, SEEK_SET);
-                auto numRead = core.sys.posix.unistd.read(hdl, _memory, _size);
+                const size_t numRead = core.sys.posix.unistd.read(hdl, _memory, _size);
                 position = 0;
 
                 if (numRead != _size)
