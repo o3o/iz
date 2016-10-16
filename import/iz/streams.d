@@ -910,6 +910,64 @@ unittest
     assert(term == "");
 }
 
+
+/**
+ * Writes any D array, or a D style chunck in a Stream.
+ *
+ * Params:
+ *      str = The target Stream.
+ *      value = Any D array. Its size and its type determine how many bytes to write.
+ */
+void write(Stream str, void[] value)
+in
+{
+    assert(str);
+    assert(value.length);
+    assert(value.ptr);
+}
+body
+{
+    str.write(value.ptr, value.length);
+}
+///
+unittest
+{
+    MemoryStream str = construct!MemoryStream;
+    write(str, [0u,1u]);
+    assert(str.size == 8);
+    destruct(str);
+}
+
+/**
+ * Reads any D array, or a D style chunck from a Stream.
+ *
+ * Params:
+ *      str = The source Stream.
+ *      value = Any D array. Its size and its type determine how many bytes to read.
+ */
+void read(Stream str, void[] value)
+in
+{
+    assert(str);
+    assert(value.length);
+    assert(value.ptr);
+}
+body
+{
+    str.read(value.ptr, value.length);
+}
+///
+unittest
+{
+    MemoryStream str = construct!MemoryStream([7u,8u]);
+    uint[] arr = new uint[](2);
+    read(str, arr);
+    assert(arr.length == 2);
+    assert(arr[0] == 7);
+    assert(arr[1] == 8);
+    destruct(str);
+}
+
 /**
  * Base Stream for a descendant that uses the operating system API.
  *
