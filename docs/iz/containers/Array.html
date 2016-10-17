@@ -63,103 +63,18 @@ however, most of the slicing operations are possible.
 </div>
 <div class="section "><h2>Example</h2>
 <div class="section"><h2></h2>
-
+Allows to use the array as a D built-in array.
 
 </div>
 <div class="section"><h2></h2>
 
 
 </div>
-<pre><code>// init-index
-<a href="iz/containers/Array.html">Array</a>!size_t a;
-a.<a href="iz/containers/Array.html#length">length</a> = 2;
-a[0] = 8;
-a[1] = 9;
-assert( a[0] == 8);
-assert( a[1] == 9);
-assert( a[$-1] == 9);
-
-auto b = <a href="iz/containers/Array.html">Array</a>!int(0,1,2,3,4,5,6);
-assert( b.<a href="iz/containers/Array.html#length">length</a> == 7);
-assert( b[$-1] == 6);
-
-auto floatarr = <a href="iz/containers/Array.html">Array</a>!float ([0.0f, 0.1f, 0.2f, 0.3f, 0.4f]);
-assert( floatarr.<a href="iz/containers/Array.html#length">length</a> == 5);
-assert( floatarr[0] == 0.0f);
-assert( floatarr[1] == 0.1f);
-assert( floatarr[2] == 0.2f);
-assert( floatarr[3] == 0.3f);
-assert( floatarr[4] == 0.4f);
-
-// copy-cons
-a = <a href="iz/containers/Array.html">Array</a>!size_t("[]");
-assert(a.<a href="iz/containers/Array.html#length">length</a> == 0);
-assertThrown(a = <a href="iz/containers/Array.html">Array</a>!size_t("["));
-assertThrown(a = <a href="iz/containers/Array.html">Array</a>!size_t("]"));
-assertThrown(a = <a href="iz/containers/Array.html">Array</a>!size_t("[,]"));
-assertThrown(a = <a href="iz/containers/Array.html">Array</a>!size_t("[,"));
-assertThrown(a = <a href="iz/containers/Array.html">Array</a>!size_t("[0,1,]"));
-assertThrown(a = <a href="iz/containers/Array.html">Array</a>!size_t("[,0,1]"));
-assertThrown(a = <a href="iz/containers/Array.html">Array</a>!size_t("[0,1.874f]"));
-a = <a href="iz/containers/Array.html">Array</a>!size_t("[10,11,12,13]");
-assert(a.<a href="iz/containers/Array.html#length">length</a> == 4);
-assert(a.<a href="iz/containers/Array.html#toString">toString</a> == "[10, 11, 12, 13]");
-
-// loops
-int i;
-foreach(float aflt; floatarr)
-{
-    float v = i * 0.1f;
-    assert( aflt == v);
-    i++;
-}
-foreach_reverse(float aflt; floatarr)
-{
-    i--;
-    float v = i * 0.1f;
-    assert( aflt == v);
-}
-
-// <a href="iz/containers/Array.html#opEquals">opEquals</a>
-auto nativeArr = [111u, 222u, 333u, 444u, 555u];
-auto arrcpy1 = <a href="iz/containers/Array.html">Array</a>!uint(111u, 222u, 333u, 444u, 555u);
-auto arrcpy2 = <a href="iz/containers/Array.html">Array</a>!uint(111u, 222u, 333u, 444u, 555u);
-assert( arrcpy1 == nativeArr );
-assert( arrcpy2 == nativeArr );
-assert( arrcpy1 == arrcpy2 );
-arrcpy2[0] = 0;
-assert( arrcpy1 != arrcpy2 );
-arrcpy1.<a href="iz/containers/Array.html#length">length</a> = 3;
-assert( nativeArr != arrcpy1 );
-arrcpy1.<a href="iz/containers/Array.html#length">length</a> = 0;
-arrcpy2.<a href="iz/containers/Array.html#length">length</a> = 0;
-assert( arrcpy1 == arrcpy2 );
-
-// <a href="iz/containers/Array.html#opSlice">opSlice</a>
-<a href="iz/containers/Array.html">Array</a>!float g0 = floatarr[1..4];
-assert( g0[0] ==  floatarr[1]);
-assert( g0[2] ==  floatarr[3]);
-<a href="iz/containers/Array.html">Array</a>!float g1 = floatarr;
-assert( g1[0] ==  floatarr[0]);
-assert( g1[4] ==  floatarr[4]);
-
-// <a href="iz/containers/Array.html#opSliceAssign">opSliceAssign</a>
-g1[] = 0.123456f;
-assert( g1[0] == 0.123456f);
-assert( g1[3] == 0.123456f);
-g1[0..1] = 0.654321f;
-assert( g1[0] == 0.654321f);
-assert( g1[1] == 0.123456f);
-assert( g1[2] == 0.123456f);
-
-// huge
-a.<a href="iz/containers/Array.html#length">length</a> = 10_000_000;
-a[$-1] = a.<a href="iz/containers/Array.html#length">length</a>-1;
-assert(a[a.<a href="iz/containers/Array.html#length">length</a>-1] == a.<a href="iz/containers/Array.html#length">length</a>-1);
-a.<a href="iz/containers/Array.html#length">length</a> = 10;
-a.<a href="iz/containers/Array.html#length">length</a> = 10_000_000;
-a[$-1] = a.<a href="iz/containers/Array.html#length">length</a>-1;
-assert(a[$-1] == a.<a href="iz/containers/Array.html#length">length</a>-1);
+<pre><code>
+alias Key = string;
+alias A = <a href="iz/containers/Array.html">Array</a>!int;
+A[Key] x;
+//x["a"] = [0];
 
 </code></pre>
 
@@ -202,10 +117,10 @@ if(is(Unqual!E == T) || is(T == E))
 
 
 </div>
-</div></div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>public this(const(<a href="http://dlang.org/type.html#basic-data-types">char</a>[]) representation)
+</div></div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>public this(const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] value)
 </code></pre>
 <div class="section"><h2></h2>
-<p>Constructs the array with a literal representation.
+<p>Constructs the array from a literal array representation.
 This constructor is not available when the element type verifies
 isSomeChar.
 </p>
@@ -215,6 +130,13 @@ isSomeChar.
 <div class="section"><h2></h2>
 
 
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">value</td><td class="paramDoc"><p>An array literal.
+</p>
+</td></tr>
+</table>
 </div>
 <div class="section"><h2>Throw</h2>
 <p>A ConvException if T is not converitble to string.
@@ -314,10 +236,47 @@ As it's always assigned It cannot be used to determine if the array is empty.
 
 
 </div>
+</div></div><a class="anchor" id="fromString"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#fromString">fromString</a>(C = <a href="http://dlang.org/type.html#basic-data-types">char</a>)(const(C)[] value)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets the array from a literal representation.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">value</td><td class="paramDoc"><p>An array literal.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Throw</h2>
+<p>A ConvException if T is not converitble to string.
+</p>
+
+
+</div>
 </div></div><a class="anchor" id="dup"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/containers/Array.html">Array</a>!T <a href="iz/containers/Array.html#dup">dup</a>() const @nogc return
 </code></pre>
 <div class="section"><h2></h2>
 <p>Returns a mutable (deep) copy of the array.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="toHash"></a><div class="symbol"><div class="description"><pre><code>public size_t <a href="iz/containers/Array.html#toHash">toHash</a>() const nothrow @trusted
+</code></pre>
+<div class="section"><h2></h2>
+<p>SUpport for associative arrays.
 </p>
 
 
@@ -468,7 +427,7 @@ if(is(Unqual!E == T) || is(E == T))
 </div></div><a class="anchor" id="opSlice"></a><div class="symbol"><div class="description"><pre><code>public T[] <a href="iz/containers/Array.html#opSlice">opSlice</a>() const pure @nogc
 </code></pre>
 <div class="section"><h2></h2>
-<p>Returns the array as a D slice. This doesnt ducplicate the memory.
+<p>Returns the array as a D slice. This doesnt duplicate the memory.
 </p>
 
 
@@ -530,7 +489,7 @@ if(is(Unqual!E == T) || is(E == T))
 
 
 </div>
-</div></div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/containers/Array.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#granurality">granurality</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#granularity">granularity</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#blockCount">blockCount</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#length">length</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#length">length</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#ptr">ptr</a><span class="extrainfo"><span class="method-attribs"><span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#toString">toString</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#dup">dup</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-nogc">@nogc</span>, <span class="attr-return">return</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opEquals">opEquals</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-pure">pure</span>, <span class="attr-nogc">@nogc</span>, <span class="attr-trusted">@trusted</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opIndex">opIndex</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-pure">pure</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opIndexAssign">opIndexAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opApply">opApply</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opApplyReverse">opApplyReverse</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opDollar">opDollar</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opAssign">opAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opAssign">opAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opAssign">opAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opOpAssign">opOpAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opOpAssign">opOpAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opSlice">opSlice</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-pure">pure</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opSlice">opSlice</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-pure">pure</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opSliceAssign">opSliceAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opSliceAssign">opSliceAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#range">range</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr></table>
+</div></div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/containers/Array.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#granurality">granurality</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#granularity">granularity</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#blockCount">blockCount</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#length">length</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#length">length</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#ptr">ptr</a><span class="extrainfo"><span class="method-attribs"><span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#toString">toString</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#fromString">fromString</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#dup">dup</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-nogc">@nogc</span>, <span class="attr-return">return</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#toHash">toHash</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-trusted">@trusted</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opEquals">opEquals</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-pure">pure</span>, <span class="attr-nogc">@nogc</span>, <span class="attr-trusted">@trusted</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opIndex">opIndex</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-pure">pure</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opIndexAssign">opIndexAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opApply">opApply</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opApplyReverse">opApplyReverse</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opDollar">opDollar</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opAssign">opAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opAssign">opAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opAssign">opAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opOpAssign">opOpAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opOpAssign">opOpAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opSlice">opSlice</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-pure">pure</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opSlice">opSlice</a><span class="extrainfo"><span class="method-attribs"><span class="attr-const">const</span>, <span class="attr-pure">pure</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opSliceAssign">opSliceAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#opSliceAssign">opSliceAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/Array.html#range">range</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr></table>
 </div>
 </div><script>hljs.initHighlightingOnLoad();</script>
 

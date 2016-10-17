@@ -111,22 +111,14 @@ struct Array(T)
         this(E...)(E elements) @nogc
         if (is(Unqual!E == T) || is(T == E))
         {
-            initLazy;
-            setLength(elements.length);
-            foreach(i, element; elements)
-                *rwPtr(i) = cast(T) element;
+            opAssign(elements);
         }
 
         /// Constructs the array with a D array of T.
         this(E)(E[] elements...) @nogc
         if (is(Unqual!E == T) || is(T == E))
         {
-            initLazy;
-            if (elements.length == 0)
-                return;
-            setLength(elements.length);
-            foreach (i, element; elements)
-                *rwPtr(i) = cast(T) element;
+            opAssign(elements);
         }
 
         /// Constructs by dispatching to the existing opAssign overloads.
@@ -135,26 +127,21 @@ struct Array(T)
             opAssign(value);
         }
 
-        static if (__traits(compiles, to!T(string.init)) && !isSomeChar!T)
+        static if (__traits(compiles, to!T("")) && !isSomeChar!(Unqual!T))
         {
             /**
-             * Constructs the array with a literal representation.
+             * Constructs the array from a literal array representation.
              * This constructor is not available when the element type verifies
              * isSomeChar.
              *
+             * Params:
+             *      value = An array literal.
              * Throw:
              *      A ConvException if T is not converitble to string.
              */
-            this(const(char[]) representation)
+            this(const(char)[] value)
             {
-                initLazy;
-                setLength(0);
-                T[] arr;
-
-                scope(success)
-                    opAssign(arr);
-
-                arr = to!(T[])(representation);
+                fromString(value);
             }
         }
 
@@ -256,6 +243,31 @@ struct Array(T)
                 return to!string(opSlice);
         }
 
+        /**
+         * Sets the array from a literal representation.
+         *
+         * Params:
+         *      value = An array literal.
+         * Throw:
+         *      A ConvException if T is not converitble to string.
+         */
+        void fromString(C = char)(const(C)[] value)
+        {
+            static if (__traits(compiles, to!T("")))
+            {
+                initLazy;
+                setLength(0);
+                T[] arr;
+
+                scope(success)
+                    opAssign(arr);
+
+                arr = to!(T[])(value);
+            }
+            else static assert(false, "don't know how to convert a string to a "
+                ~ T.stringof);
+        }
+
         /// Returns a mutable (deep) copy of the array.
         Array!T dup() const @nogc return
         {
@@ -263,6 +275,12 @@ struct Array(T)
             result.length = _length;
             moveMem(result._elems, _elems, _length * T.sizeof);
             return result;
+        }
+
+        /// SUpport for associative arrays.
+        size_t toHash() const nothrow @trusted
+        {
+            return opSlice().hashOf;
         }
 
         /// Support for equality tests.
@@ -381,7 +399,7 @@ struct Array(T)
             else assert(0, "operator not implemented");
         }
 
-        /// Returns the array as a D slice. This doesnt ducplicate the memory.
+        /// Returns the array as a D slice. This doesnt duplicate the memory.
         T[] opSlice() const pure @nogc
         {
             return opSlice!true(0, _length);
@@ -422,9 +440,18 @@ struct Array(T)
             return Range(this, 0);
         }
 
-        ///
+        /// Allows to use the array as a D built-in array.
         alias opSlice this;
     }
+}
+
+unittest
+{
+
+    alias Key = string;
+    alias A = Array!int;
+    A[Key] x;
+    //x["a"] = [0];
 }
 
 unittest

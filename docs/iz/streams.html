@@ -376,7 +376,7 @@ its length. Additionally this function is more efficient.
 </div>
 </div></div><a class="anchor" id="readArray"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/streams.html#readArray">readArray</a>(<a href="http://dlang.org/type.html#basic-data-types">bool</a> ReadLength = true, T)(
     <a href="iz/streams/Stream.html">Stream</a> str, 
-    auto ref T t) 
+    ref T t) 
 if(isArray!T && !<a href="iz/types/isMultiDimensionalArray.html">isMultiDimensionalArray</a>!T)
 </code></pre>
 <div class="section"><h2></h2>
@@ -400,7 +400,7 @@ if(isArray!T && !<a href="iz/types/isMultiDimensionalArray.html">isMultiDimensio
 <tr class="param"><td class="paramName">str</td><td class="paramDoc"><p>The Stream where data are read.
 </p>
 </td></tr>
-<tr class="param"><td class="paramName">t</td><td class="paramDoc"><p>The array to write.
+<tr class="param"><td class="paramName">t</td><td class="paramDoc"><p>The array to read.
 </p>
 </td></tr>
 </table>
@@ -452,7 +452,7 @@ if(isArray!T && !<a href="iz/types/isMultiDimensionalArray.html">isMultiDimensio
 <pre><code>import std.array: array;
 auto text = "01\r\n23\n45\n".dup;
 <a href="iz/streams/MemoryStream.html">MemoryStream</a> str = <a href="iz/memory.html#construct">construct</a>!<a href="iz/streams/MemoryStream.html">MemoryStream</a>();
-str.write(text.ptr, text.length);
+str.<a href="iz/streams.html#write">write</a>(text.ptr, text.length);
 str.position = 0;
 auto _01 = str.<a href="iz/streams.html#readUTF8Line">readUTF8Line</a>.array;
 assert(_01 == "01");
@@ -517,7 +517,7 @@ assert(term == "");
 </div>
 <pre><code>auto text = "01\r\n23\n4à\n".dup;
 <a href="iz/streams/MemoryStream.html">MemoryStream</a> str = <a href="iz/memory.html#construct">construct</a>!<a href="iz/streams/MemoryStream.html">MemoryStream</a>();
-str.write(text.ptr, text.length);
+str.<a href="iz/streams.html#write">write</a>(text.ptr, text.length);
 str.position = 0;
 auto _01 = str.<a href="iz/streams.html#readln">readln</a>;
 assert(_01 == "01");
@@ -527,6 +527,110 @@ auto _45 = str.<a href="iz/streams.html#readln">readln</a>;
 assert(_45 == "4à");
 auto term = str.<a href="iz/streams.html#readln">readln</a>;
 assert(term == "");
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="write"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/streams.html#write">write</a>(
+    <a href="iz/streams/Stream.html">Stream</a> str, 
+    const(<a href="http://dlang.org/type.html#basic-data-types">void</a>)[] value) @nogc
+</code></pre>
+<div class="section "><h2>Contracts</h2><pre><code>in
+{
+    assert (str);
+    assert (value.length);
+    assert (value.ptr);
+}
+</code></pre>
+
+</div>
+<div class="section"><h2></h2>
+<p>Writes any D array, or a D style chunck in a Stream.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">str</td><td class="paramDoc"><p>The target Stream.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">value</td><td class="paramDoc"><p>Any D array. Its size and its type determine how many bytes to write.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>static immutable uint[] a = [0u,1u];
+<a href="iz/streams/MemoryStream.html">MemoryStream</a> str = <a href="iz/memory.html#construct">construct</a>!<a href="iz/streams/MemoryStream.html">MemoryStream</a>;
+<a href="iz/streams.html#write">write</a>(str, a);
+assert(str.<a href="iz/rtti.html#size">size</a> == 8);
+<a href="iz/memory.html#destruct">destruct</a>(str);
+
+</code></pre>
+
+</div>
+</div></div><a class="anchor" id="read"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/streams.html#read">read</a>(
+    <a href="iz/streams/Stream.html">Stream</a> str, 
+    <a href="http://dlang.org/type.html#basic-data-types">void</a>[] value) @nogc
+</code></pre>
+<div class="section "><h2>Contracts</h2><pre><code>in
+{
+    assert (str);
+    assert (value.length);
+    assert (value.ptr);
+}
+</code></pre>
+
+</div>
+<div class="section"><h2></h2>
+<p>Reads any D array, or a D style chunck from a Stream.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">str</td><td class="paramDoc"><p>The source Stream.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">value</td><td class="paramDoc"><p>Any D array. Its size and its type determine how many bytes to read.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>static uint[] b = [0,0];
+static immutable uint[] a = [7u,8u];
+<a href="iz/streams/MemoryStream.html">MemoryStream</a> str = <a href="iz/memory.html#construct">construct</a>!<a href="iz/streams/MemoryStream.html">MemoryStream</a>(a);
+<a href="iz/streams.html#read">read</a>(str, b);
+assert(b[0] == 7);
+assert(b[1] == 8);
+<a href="iz/memory.html#destruct">destruct</a>(str);
 
 </code></pre>
 
@@ -574,7 +678,7 @@ to D ranges.
 </p>
 </td></tr><tr><td><a href="iz/streams.html#readln">readln</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>An array of char.
 </p>
-</td></tr></table><h2>Structs</h2><table><tr><td><a href="iz/streams/StreamRange.html">StreamRange</a></td><td></td><td></td></tr></table><h2>Interfaces</h2><table><tr><td><a href="iz/streams/StreamPersist.html">StreamPersist</a></td><td></td><td></td></tr><tr><td><a href="iz/streams/FilePersist8.html">FilePersist8</a></td><td></td><td></td></tr><tr><td><a href="iz/streams/Stream.html">Stream</a></td><td></td><td></td></tr></table><h2>Classes</h2><table><tr><td><a href="iz/streams/SystemStream.html">SystemStream</a></td><td></td><td></td></tr><tr><td><a href="iz/streams/FileStream.html">FileStream</a></td><td></td><td></td></tr><tr><td><a href="iz/streams/MemoryStream.html">MemoryStream</a></td><td></td><td></td></tr></table>
+</td></tr><tr><td><a href="iz/streams.html#write">write</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/streams.html#read">read</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr></table><h2>Structs</h2><table><tr><td><a href="iz/streams/StreamRange.html">StreamRange</a></td><td></td><td></td></tr></table><h2>Interfaces</h2><table><tr><td><a href="iz/streams/StreamPersist.html">StreamPersist</a></td><td></td><td></td></tr><tr><td><a href="iz/streams/FilePersist8.html">FilePersist8</a></td><td></td><td></td></tr><tr><td><a href="iz/streams/Stream.html">Stream</a></td><td></td><td></td></tr></table><h2>Classes</h2><table><tr><td><a href="iz/streams/SystemStream.html">SystemStream</a></td><td></td><td></td></tr><tr><td><a href="iz/streams/FileStream.html">FileStream</a></td><td></td><td></td></tr><tr><td><a href="iz/streams/MemoryStream.html">MemoryStream</a></td><td></td><td></td></tr></table>
 </div>
 </div><script>hljs.initHighlightingOnLoad();</script>
 

@@ -74,7 +74,7 @@ the contexts (for example in a X window).
 if (environment.get("TRAVIS") == "true")
     return;
 
-import std.file: write, exists, tempDir, getcwd, remove;
+import std.file: <a href="iz/streams.html#write">write</a>, exists, tempDir, getcwd, remove;
 import std.path: dirSeparator;
 
 auto code =
@@ -83,7 +83,7 @@ q{
     import core.thread;
     void main()
     {
-        write("hello world");
+        <a href="iz/streams.html#write">write</a>("hello world");
         stdout.flush;
         Thread.sleep(dur!"msecs"(15));
         Thread.sleep(dur!"msecs"(15));
@@ -104,7 +104,7 @@ scope(exit)
     remove(objName);
 }
 
-write(srcName, code);
+<a href="iz/streams.html#write">write</a>(srcName, code);
 
 // compiles code with dmd
 <a href="iz/classes/Process.html">Process</a> dmdProc = <a href="iz/memory.html#construct">construct</a>!<a href="iz/classes/Process.html">Process</a>;
