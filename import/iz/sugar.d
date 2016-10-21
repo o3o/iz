@@ -4,7 +4,10 @@
 module iz.sugar;
 
 import
-    std.traits, std.typetuple, std.functional, std.range.primitives;
+    std.traits, std.meta, std.typecons, std.functional;
+import
+    std.range.primitives: isInputRange, ElementType, ElementEncodingType,
+        isBidirectionalRange;
 
 version(unittest) import std.stdio;
 
@@ -573,6 +576,7 @@ void popWhile(alias pred, Range)(ref Range range)
 if (isInputRange!Range && is(typeof(unaryFun!pred)) && isImplicitlyConvertible!
     (typeof(unaryFun!pred((ElementType!Range).init)), bool))
 {
+    import std.range.primitives: front, empty, popFront;
     alias f = unaryFun!pred;
     while (!range.empty)
     {
@@ -639,6 +643,7 @@ void popBackWhile(alias pred, Range)(ref Range range)
 if (isBidirectionalRange!Range && is(typeof(unaryFun!pred)) && isImplicitlyConvertible!
     (typeof(unaryFun!pred((ElementType!Range).init)), bool))
 {
+    import std.range.primitives: back, empty, popBack;
     alias f = unaryFun!pred;
     while (!range.empty)
     {
@@ -707,6 +712,7 @@ pure @safe unittest
 auto flipFlop(R1, R2)(auto ref R1 flip, auto ref R2 flop)
 if (isInputRange!R1 && isInputRange!R2 && is(ElementType!R1 == ElementType!R2))
 {
+    import std.range.primitives: front, empty, popFront;
     struct FlipFlop
     {
         private bool _takeFlop;
@@ -765,7 +771,7 @@ if (isInputRange!Range && is(typeof(unaryFun!pred)) && isImplicitlyConvertible!
     (typeof(unaryFun!pred((ElementType!Range).init)), bool))
 {
     alias f = unaryFun!pred;
-
+    import std.range.primitives: front, empty, popFront;
     struct Taker
     {
         ///
@@ -812,7 +818,7 @@ if (isBidirectionalRange!Range && is(typeof(unaryFun!pred)) && isImplicitlyConve
     (typeof(unaryFun!pred((ElementType!Range).init)), bool))
 {
     alias f = unaryFun!pred;
-
+    import std.range.primitives: back, empty, popBack;
     struct Taker
     {
         ///
@@ -861,6 +867,8 @@ size_t mutatedCount(Range)(Range range)
 if (isInputRange!Range && is(typeof((ElementType!Range).init))
     && isMutable!(ElementType!Range) && !isNarrowString!Range)
 {
+    import std.range.primitives: front, empty, popFront;
+
     size_t result = 0;
     const(ElementType!Range) noone = (ElementType!Range).init;
     while (!range.empty)
@@ -1181,6 +1189,107 @@ if (T.sizeof == S.sizeof && is(S == float)
             naked;
             ret;
         }
+    }
+}
+
+enum IdMode
+{
+    depth,
+    breadth
+}
+
+/**
+ * Iterates a tree-like structure that exposes an input range interface and calls
+ * each element with a function.
+ *
+ * Params:
+ *      Fun = The function called for each element. When its return type is bool,
+ *          and if it returns true, the iterations are stopped.
+ *      mode = The iteration mode (breadth-first or depth-first).
+ *      range = The root element.
+ *      a = The variadic parameters passed to Fun (after the element).
+ * Returns:
+ *      True if the iterations have stopped, false otherwise.
+ */
+bool deepIterate(alias Fun, IdMode mode = IdMode.breadth, Range, A...)(Range range, auto ref A a)
+if (isInputRange!Range && isInputRange!(ElementType!Range))
+{
+    static if (is(ReturnType!Fun))
+    {
+        alias R = ReturnType!Fun;
+        enum funIsPred = is(R == bool);
+    }
+    else enum funIsPred = false;
+
+    bool result;
+
+    enum callWithFront =
+    q{
+        static if (funIsPred)
+            result = Fun(range, a);
+        else
+            Fun(range, a);
+        if (result)
+            return true;
+    };
+
+    static if (!__traits(hasMember, range, "front"))
+    {
+        import std.range.primitives: front, empty, popFront;
+    }
+
+    static if (mode == IdMode.breadth)
+        mixin(callWithFront);
+
+    while (!range.empty)
+    {
+        result = deepIterate!(Fun, mode, Range, A)(range.front, a);
+        if (result)
+            break;
+        range.popFront;
+    }
+
+    static if (mode == IdMode.depth)
+        mixin(callWithFront);
+
+    return result;
+}
+///
+unittest
+{
+    // creates a tree
+    Item root = new Item;
+    root.populate;
+    root[0].populate;
+    root[1].populate;
+
+    int cnt, a;
+
+    // count the population
+    deepIterate!((e) => ++cnt)(root);
+    assert(cnt == 7);
+
+    // previous content is consumed
+    root.populate;
+    root[0].populate;
+    root[1].populate;
+
+    // the delegate result is used to stop the iteration
+    deepIterate!((Item e, ref int p){++p; --cnt; return cnt == 4;})(root, a);
+    assert(cnt == 4);
+    assert(a == 3);
+}
+
+version(unittest) private class Item
+{
+    alias children this;
+    Item[] children;
+    void populate()
+    {
+        children.length = 2;
+        children[0] = new Item;
+        children[1] = new Item;
+        assert(children.length == 2);
     }
 }
 

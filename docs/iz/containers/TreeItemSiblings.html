@@ -57,7 +57,8 @@ iterate over the siblings of a TreeItem.
 
 
 </div>
-</div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>private this(T t)
+</div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>private this(TT)(auto ref TT t) 
+if(is(TT == T))
 </code></pre>
 <div class="section"><h2></h2>
 <p>See <code class="d_inlinecode">initialize()</code>.
@@ -69,7 +70,8 @@ iterate over the siblings of a TreeItem.
 
 
 </div>
-</div></div><a class="anchor" id="initialize"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/TreeItemSiblings.html#initialize">initialize</a>(T t)
+</div></div><a class="anchor" id="initialize"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/TreeItemSiblings.html#initialize">initialize</a>(TT)(auto ref TT t) 
+if(is(TT == T))
 </code></pre>
 <div class="section"><h2></h2>
 <p>Initializes the range from one of the siblings.

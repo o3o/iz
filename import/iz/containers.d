@@ -1685,19 +1685,21 @@ private:
 public:
 
     /// See $(D initialize()).
-    this(T t)
+    this(TT)(auto ref TT t)
+    if (is(TT == T))
     {
         initialize(t);
     }
 
     /// Initializes the range from a parent.
-    void initialize(T t)
+    void initialize(TT)(auto ref TT t)
+    if (is(TT == T))
     {
         _front = t.firstChild;
     }
 
     ///
-    T front()
+    ref T front()
     {
         return _front;
     }
@@ -1774,13 +1776,15 @@ private:
 public:
 
     /// See $(D initialize()).
-    this(T t)
+    this(TT)(auto ref TT t)
+    if (is(TT == T))
     {
         initialize(t);
     }
 
     /// Initializes the range from one of the siblings.
-    void initialize(T t)
+    void initialize(TT)(auto ref TT t)
+    if (is(TT == T))
     {
         if (t.parent)
             _front = t.parent.firstChild;
@@ -1861,6 +1865,10 @@ public:
         }
     }
 }
+
+//TODO-cbugfix: TreeItemChildren with while-empty-front-popFront seems to loop to infinite.
+// seen in iz.sugar.deepIterate unittest.
+
 
 /**
  * The TreeItem mixin turns its implementer into a tree item.

@@ -1061,6 +1061,79 @@ assert(atFun());
 
 
 </div>
+</div></div><a class="anchor" id="deepIterate"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/sugar.html#deepIterate">deepIterate</a>(alias Fun, IdMode mode = IdMode.breadth, Range, A...)(
+    Range range, 
+    auto ref A a) 
+if(isInputRange!Range && isInputRange!(ElementType!Range))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Iterates a tree-like structure that exposes an input range interface and calls
+each element with a function.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">Fun</td><td class="paramDoc"><p>The function called for each element. When its return type is bool,
+         and if it returns true, the iterations are stopped.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">mode</td><td class="paramDoc"><p>The iteration mode (breadth-first or depth-first).
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">range</td><td class="paramDoc"><p>The root element.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">a</td><td class="paramDoc"><p>The variadic parameters passed to Fun (after the element).
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>True if the iterations have stopped, false otherwise.
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>// creates a tree
+Item root = new Item;
+root.populate;
+root[0].populate;
+root[1].populate;
+
+int cnt, a;
+
+// count the population
+<a href="iz/sugar.html#deepIterate">deepIterate</a>!((e) => ++cnt)(root);
+assert(cnt == 7);
+
+// previous content is consumed
+root.populate;
+root[0].populate;
+root[1].populate;
+
+// the delegate result is used to stop the iteration
+<a href="iz/sugar.html#deepIterate">deepIterate</a>!((Item e, ref int p){++p; --cnt; return cnt == 4;})(root, a);
+assert(cnt == 4);
+assert(a == 3);
+
+</code></pre>
+
+</div>
 </div></div><div class="description"><div class="section"><h2></h2>
 <p>Several trivial functions and structures
 </p>
@@ -1090,7 +1163,9 @@ assert(atFun());
 </p>
 </td></tr><tr><td><a href="iz/sugar.html#throwStaticEx">throwStaticEx</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/sugar.html#throwStaticEx">throwStaticEx</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/sugar.html#setDelegate">setDelegate</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/sugar.html#getDelegate">getDelegate</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td>Returns: <p>A new delegate of type T.
 </p>
-</td></tr><tr><td><a href="iz/sugar.html#opCall">opCall</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr></table><h2>Structs</h2><table><tr><td><a href="iz/sugar/ArrayRange.html">ArrayRange</a></td><td></td><td></td></tr><tr><td><a href="iz/sugar/DgMembers.html">DgMembers</a></td><td></td><td></td></tr></table><h2>Templates</h2><table><tr><td><a href="iz/sugar/olderSuperCall.html">olderSuperCall</a></td><td></td><td></td></tr><tr><td><a href="iz/sugar/bitCast.html">bitCast</a></td><td></td><td></td></tr><tr><td><a href="iz/sugar/bitCast.html">bitCast</a></td><td></td><td></td></tr></table>
+</td></tr><tr><td><a href="iz/sugar.html#opCall">opCall</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/sugar.html#deepIterate">deepIterate</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>True if the iterations have stopped, false otherwise.
+</p>
+</td></tr></table><h2>Structs</h2><table><tr><td><a href="iz/sugar/ArrayRange.html">ArrayRange</a></td><td></td><td></td></tr><tr><td><a href="iz/sugar/DgMembers.html">DgMembers</a></td><td></td><td></td></tr></table><h2>Templates</h2><table><tr><td><a href="iz/sugar/olderSuperCall.html">olderSuperCall</a></td><td></td><td></td></tr><tr><td><a href="iz/sugar/bitCast.html">bitCast</a></td><td></td><td></td></tr><tr><td><a href="iz/sugar/bitCast.html">bitCast</a></td><td></td><td></td></tr></table>
 </div>
 </div><script>hljs.initHighlightingOnLoad();</script>
 
