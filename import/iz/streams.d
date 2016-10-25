@@ -856,15 +856,17 @@ body
                     {
                         if (!assumeANSI && c >= 0x80)
                         {
-                            ++numSkips;
-                            if ((c & 0b11111100) >= 0b11111100)
-                                numSkips += 4;
-                            else if ((c & 0b11111000) >= 0b11111000)
-                                numSkips += 3;
-                            else if ((c & 0b11110000) >= 0b11110000)
-                                numSkips += 2;
-                            else if ((c & 0b11100000) >= 0b11100000)
-                                numSkips += 1;
+                            switch (0xF0 & c)
+                            {
+			                    case 0xE0:
+				                    numSkips += 2;
+				                    break;
+			                    case 0xF0:
+				                    numSkips += 3;
+				                    break;
+			                    default:
+				                    numSkips += 1;
+                            }
                         }
                     }
                     result ~= c;
@@ -906,6 +908,15 @@ unittest
     assert(_45 == "4à\r\n");
     auto term = str.readln!true;
     assert(term == "");
+
+    text = "こんにちは\nは".dup;
+    str.clear;
+    str.write(text.ptr, text.length);
+    str.position = 0;
+    auto _1 = str.readln;
+    assert(_1 == "こんにちは");
+    auto _2 = str.readln;
+    assert(_2 == "は");
 }
 
 
