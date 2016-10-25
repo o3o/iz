@@ -1866,10 +1866,6 @@ public:
     }
 }
 
-//TODO-cbugfix: TreeItemChildren with while-empty-front-popFront seems to loop to infinite.
-// seen in iz.sugar.deepIterate unittest.
-
-
 /**
  * The TreeItem mixin turns its implementer into a tree item.
  */

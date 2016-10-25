@@ -1192,6 +1192,7 @@ if (T.sizeof == S.sizeof && is(S == float)
     }
 }
 
+/// Deep iteration mode
 enum IdMode
 {
     depth,
@@ -1205,15 +1206,33 @@ enum IdMode
  * Params:
  *      Fun = The function called for each element. When its return type is bool,
  *          and if it returns true, the iterations are stopped.
+ *      member = The name of the member that gives the real Range.
  *      mode = The iteration mode (breadth-first or depth-first).
  *      range = The root element.
  *      a = The variadic parameters passed to Fun (after the element).
  * Returns:
  *      True if the iterations have stopped, false otherwise.
  */
-bool deepIterate(alias Fun, IdMode mode = IdMode.breadth, Range, A...)(Range range, auto ref A a)
-if (isInputRange!Range && isInputRange!(ElementType!Range))
+bool deepIterate(alias Fun, string member = "", IdMode mode = IdMode.breadth,
+    Range, A...)(Range range, auto ref A a)
 {
+    static if (!member.length)
+    {
+        alias Rng = Range;
+        alias M = void;
+    }
+    else
+    {
+        mixin("alias M = typeof(Range." ~ member ~ ");");
+        static assert(__traits(hasMember, Range, member),
+            "invalid Range member, Range has no member named '" ~ member ~ "'");
+    }
+    enum callable = isCallable!M;
+    static if (callable)
+        alias Rng = ReturnType!M;
+    static assert(isInputRange!Rng && is(ElementType!Rng == Range),
+        "invalid deepIterate Range");
+
     static if (is(ReturnType!Fun))
     {
         alias R = ReturnType!Fun;
@@ -1241,12 +1260,19 @@ if (isInputRange!Range && isInputRange!(ElementType!Range))
     static if (mode == IdMode.breadth)
         mixin(callWithFront);
 
-    while (!range.empty)
+    static if (!member.length)
+        alias items = range;
+    else static if (callable)
+        mixin("auto items = range." ~ member ~ ";");
+    else
+        mixin("alias items = range." ~ member ~ ";");
+
+    while (!items.empty)
     {
-        result = deepIterate!(Fun, mode, Range, A)(range.front, a);
+        result = deepIterate!(Fun, member, mode, Range, A)(items.front, a);
         if (result)
             break;
-        range.popFront;
+        items.popFront;
     }
 
     static if (mode == IdMode.depth)
@@ -1291,5 +1317,24 @@ version(unittest) private class Item
         children[1] = new Item;
         assert(children.length == 2);
     }
+}
+
+unittest
+{
+    import iz.containers: ObjectTreeItem;
+    import iz.memory: construct, destruct;
+    ObjectTreeItem root = construct!ObjectTreeItem;
+    ObjectTreeItem c1 = root.addNewChild!ObjectTreeItem;
+    ObjectTreeItem c2 = root.addNewChild!ObjectTreeItem;
+    ObjectTreeItem c1c1 = c1.addNewChild!ObjectTreeItem;
+    ObjectTreeItem c1c2 = c1.addNewChild!ObjectTreeItem;
+    ObjectTreeItem c2c1 = c2.addNewChild!ObjectTreeItem;
+    ObjectTreeItem c2c2 = c2.addNewChild!ObjectTreeItem;
+
+    int cnt, a;
+    deepIterate!((e) => ++cnt, "children")(root);
+    assert(cnt == 7);
+
+    destruct(root);
 }
 
