@@ -59,7 +59,7 @@ template selectTestWithUda(alias T)
  */
 bool runTestBattery(T, bool stopOnFailure = true)(T t)
 {
-    import std.stdio: writeln, stderr;
+    import std.stdio: writeln, stderr, stdout;
     import core.exception: AssertError;
 
     bool result = true;
@@ -85,10 +85,10 @@ bool runTestBattery(T, bool stopOnFailure = true)(T t)
                     continue;
             }
             writeln("test ", i, ": passed");
+            stdout.flush;
         }
     }
     else static assert(0, T.stringof ~ " not handled by " ~ __FUNCTION__);
-
     return result;
 }
 
