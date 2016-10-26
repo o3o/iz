@@ -57,7 +57,6 @@ if (is(ItemClass : PropertyPublisher))
 
 private:
 
-    size_t _firstItemsDescrIndex;
     static if (isAAKeyValid!(ItemClass, aaKey))
     {
         alias KeyType = typeof(__traits(getMember, ItemClass, aaKey));
@@ -808,7 +807,7 @@ private:
 
 protected:
 
-    char[] _name;
+    Array!char _name;
 
 public:
 
@@ -896,11 +895,11 @@ public:
      * This value is a published property.
      * This value is stored as an ID in the ReferenceMan with the void type.
      */
-    final @Set name(const(char)[] value)
+    final @Set void name(const(char)[] value)
     {
         if (_name == value) return;
         ReferenceMan.removeReference(this);
-        if (nameAvailable(value)) _name = value.dup;
+        if (nameAvailable(value)) _name = value;
         else _name = getUniqueName(value);
         ReferenceMan.storeReference(this, qualifiedName);
     }
@@ -1334,7 +1333,7 @@ public:
      *      value = a string containing the parameters, separated by ascii white
      *      characters.
      */
-    @Set parameters(string value)
+    @Set void parameters(string value)
     {
         _parameters.length = 0;
         foreach(p; value.byWord)

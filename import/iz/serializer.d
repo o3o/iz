@@ -2308,7 +2308,7 @@ version(unittest)
                 }
                 // struct can only be serialized using a representation
                 // whose type is iteself serializable
-                @Set set(ubyte value){_set = value;}
+                @Set void set(ubyte value){_set = value;}
                 @Get ubyte set(){return _set.container;}
         }
 
@@ -2554,7 +2554,7 @@ version(unittest)
             return ReferenceMan.referenceID!void(cast(void*)target);
         }
 
-        @Set objectReference(const(char[]) value)
+        @Set void objectReference(const(char[]) value)
         {
             // ID -> Reference -> assign the variable
             target = cast(Object) ReferenceMan.reference!void(value);

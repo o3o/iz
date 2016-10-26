@@ -605,7 +605,7 @@ unittest
             }
             ~this() {destruct(_opaque);}
 
-            @Set opaque(Stream stream)
+            @Set void opaque(Stream stream)
             {
                 _opaque.loadFromStream(stream);
             }
