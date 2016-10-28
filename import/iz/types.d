@@ -370,14 +370,39 @@ enum isTemplateInstance(T) = is(typeof(TemplateOf!T));
 
 
 /**
+ * Indicates wether something is a value known at compile time.
+ *
+ * Params:
+ *      V = The value to test.
+ *      T = Optional, the expected value type.
+ */
+template isCompileTime(alias V, T...)
+if (T.length < 2)
+{
+    enum isKnown = is(typeof((){enum v = V;}));
+    static if (!T.length)
+        enum isCompileTime = isKnown;
+    else
+        enum isCompileTime = isKnown && is(typeof(V) == T[0]);
+}
+///
+unittest
+{
+    string a;
+    enum b = "0";
+    enum c = 0;
+    static assert(!isCompileTime!a);
+    static assert(isCompileTime!b);
+    static assert(isCompileTime!c);
+    static assert(isCompileTime!(b,string));
+    static assert(isCompileTime!(c,int));
+    static assert(!isCompileTime!(c,char));
+}
+
+/**
  * Indicates wether something is a string literal.
  */
-template isStringLiteral(alias V)
-{
-    enum isCompileTime = is(typeof((){enum a = V;}));
-    enum isString = is(typeof(V) == string);
-    enum isStringLiteral = isCompileTime && isString;
-}
+enum isStringLiteral(alias V) = isCompileTime!(V, string);
 
 /// ditto
 template isStringLiteral(V){enum isStringLiteral = false;}
