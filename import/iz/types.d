@@ -368,3 +368,29 @@ unittest
 /// ditto
 enum isTemplateInstance(T) = is(typeof(TemplateOf!T));
 
+
+/**
+ * Indicates wether something is a string literal.
+ */
+template isStringLiteral(alias V)
+{
+    enum isCompileTime = is(typeof((){enum a = V;}));
+    enum isString = is(typeof(V) == string);
+    enum isStringLiteral = isCompileTime && isString;
+}
+
+/// ditto
+template isStringLiteral(V){enum isStringLiteral = false;}
+
+///
+unittest
+{
+    string a;
+    enum b = "0";
+    enum c = 0;
+    static assert(!isStringLiteral!a);
+    static assert(isStringLiteral!b);
+    static assert(!isStringLiteral!c);
+    static assert(!isStringLiteral!int);
+}
+
