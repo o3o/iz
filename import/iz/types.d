@@ -5,8 +5,6 @@ module iz.types;
 
 import
     std.traits, std.meta;
-import
-    iz.streams;
 
 version(unittest) import std.stdio;
 
@@ -152,8 +150,8 @@ unittest
  *      T = type to be tested
  *
  * Returns:
- *      0 iftemplate $(D T) is an not a build-in array, otherwise a number
- *      at leat equal to 1, according to the array dimenssion count.
+ *      0 if $(D T) is an not a build-in array, otherwise a number
+ *      at least equal to 1, according to the array dimension count.
  */
 template dimensionCount(T)
 {
@@ -211,7 +209,7 @@ unittest
  * Indicates wether an enum is ordered.
  *
  * An enum is considered as ordered if its members can index an array,
- * optionally with a starting offset.
+ * optionally with a start offset.
  *
  * Params:
  *      T = enum to be tested.
@@ -376,14 +374,14 @@ enum isTemplateInstance(T) = is(typeof(TemplateOf!T));
  *      V = The value to test.
  *      T = Optional, the expected value type.
  */
-template isCompileTime(alias V, T...)
-if (T.length < 2)
+template isCompileTimeValue(alias V, T...)
+if (T.length == 0 || (T.length == 1 && is(T[0])))
 {
     enum isKnown = is(typeof((){enum v = V;}));
     static if (!T.length)
-        enum isCompileTime = isKnown;
+        enum isCompileTimeValue = isKnown;
     else
-        enum isCompileTime = isKnown && is(typeof(V) == T[0]);
+        enum isCompileTimeValue = isKnown && is(typeof(V) == T[0]);
 }
 ///
 unittest
@@ -391,18 +389,26 @@ unittest
     string a;
     enum b = "0";
     enum c = 0;
-    static assert(!isCompileTime!a);
-    static assert(isCompileTime!b);
-    static assert(isCompileTime!c);
-    static assert(isCompileTime!(b,string));
-    static assert(isCompileTime!(c,int));
-    static assert(!isCompileTime!(c,char));
+    static assert(!isCompileTimeValue!a);
+    static assert(isCompileTimeValue!b);
+    static assert(isCompileTimeValue!c);
+    static assert(isCompileTimeValue!(b,string));
+    static assert(isCompileTimeValue!(c,int));
+    static assert(!isCompileTimeValue!(c,char));
+    static assert(!isCompileTimeValue!(char));
+}
+
+/// ditto
+template isCompileTimeValue(V, T...)
+if (T.length == 0 || (T.length == 1 && is(T[0])))
+{
+    enum isCompileTimeValue = false;
 }
 
 /**
  * Indicates wether something is a string literal.
  */
-enum isStringLiteral(alias V) = isCompileTime!(V, string);
+enum isStringLiteral(alias V) = isCompileTimeValue!(V, string);
 
 /// ditto
 template isStringLiteral(V){enum isStringLiteral = false;}
