@@ -339,7 +339,10 @@ unittest
 /**
  * Detects wether T is an instantiated template.
  */
-enum isTemplateInstance(alias T) = is(typeof({alias xcvb = TemplateArgsOf!(T);}));
+template isTemplateInstance(alias T : Base!Args, alias Base, Args...)
+{
+    enum isTemplateInstance = is(typeof(T));
+}
 ///
 unittest
 {
@@ -364,8 +367,101 @@ unittest
 }
 
 /// ditto
-enum isTemplateInstance(T) = is(typeof(TemplateOf!T));
+template isTemplateInstance(T : Base!Args, alias Base, Args...)
+{
+    enum isTemplateInstance = is(T);
+}
 
+/// ditto
+template isTemplateInstance(T)
+{
+    enum isTemplateInstance = false;
+}
+
+/// ditto
+template isTemplateInstance(alias T)
+{
+    enum isTemplateInstance = false;
+}
+
+/**
+ * Decomposes the chain of the templates and arguments used to create the alias
+ * passed as argument.
+ *
+ * Params:
+ *      T = An alias.
+ *      TemplateAndArgsOf = used internally only.
+ *
+ * Returns:
+ *      An AliasSeq formed by a chain of templates and arguments.
+ */
+template NestedTemplateAndArgsOf(alias T, TemplateAndArgsOf...)
+{
+    static if (isTemplateInstance!(AliasSeq!(__traits(parent, T))[0]))
+        alias PT = AliasSeq!(__traits(parent, T));
+    else
+        alias PT = void;
+
+    static if (!is(PT == void))
+    {
+        alias NestedTemplateAndArgsOf = AliasSeq!(NestedTemplateAndArgsOf!
+            (__traits(parent, T)), TemplateOf!T, TemplateArgsOf!T
+        );
+    }
+    else static if (isTemplateInstance!T)
+    {
+        alias NestedTemplateAndArgsOf = AliasSeq!(TemplateOf!T, TemplateArgsOf!T,
+            TemplateAndArgsOf);
+    }
+    else alias NestedTemplateAndArgsOf = void;
+}
+///
+unittest
+{
+    template A(As...)
+    {
+        template B(Bs...){int a;}
+    }
+    alias AB0 = A!(1,2).B!(3,4,5);
+    alias SQ0 = NestedTemplateAndArgsOf!AB0;
+    static assert(__traits(isSame, SQ0[0], A));
+    static assert(__traits(isSame, SQ0[1], 1));
+    static assert(__traits(isSame, SQ0[2], 2));
+    static assert(__traits(isSame, SQ0[3], A!(1,2).B));
+    static assert(__traits(isSame, SQ0[4], 3));
+    static assert(__traits(isSame, SQ0[5], 4));
+    static assert(__traits(isSame, SQ0[6], 5));
+
+    template C(T)
+    {
+        template D(T)
+        {
+            template E(T) {}
+        }
+    }
+    alias CDE0 = C!int.D!int.E!int;
+    alias SQ1 = NestedTemplateAndArgsOf!CDE0;
+    static assert(__traits(isSame, SQ1[0], C));
+    static assert(is(SQ1[1] == int));
+    static assert(__traits(isSame, SQ1[2], C!int.D));
+    static assert(is(SQ1[3] == int));
+    static assert(__traits(isSame, SQ1[4], C!int.D!int.E));
+    static assert(is(SQ1[5] == int));
+
+    alias B = NestedTemplateAndArgsOf!int;
+    static assert(is(B == void));
+}
+
+/// ditto
+template NestedTemplateAndArgsOf(T)
+{
+    static if (__traits(isTemplate, T))
+    {
+        alias TT = TemplateOf!T;
+        alias NestedTemplateAndArgsOf = NestedTemplateAndArgsOf!TT;
+    }
+    else alias NestedTemplateAndArgsOf = void;
+}
 
 /**
  * Indicates wether something is a value known at compile time.
