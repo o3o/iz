@@ -1154,6 +1154,7 @@ private:
 
     WantAggregateEvent _onWantAggregate;
     WantDescriptorEvent _onWantDescriptor;
+    void delegate(void*) _onFinishAggregate;
 
     SerializationFormat _format;
     
@@ -1615,6 +1616,8 @@ public:
         {
             if (auto pub = cast(PropertyPublisher) root)
                 restoreFrom(_rootNode, pub);
+            if (_onFinishAggregate)
+                _onFinishAggregate(&root);
         }
         else static if (is(R == struct))
         {
@@ -1622,6 +1625,8 @@ public:
             if (rtti.structInfo.type != StructType._publisher)
                 return;
             restoreFrom(_rootNode, root);
+            if (_onFinishAggregate)
+                _onFinishAggregate(&root);
         }
     }
 
@@ -1836,6 +1841,12 @@ public:
 
     /// ditto
     @property void onWantAggregate(WantAggregateEvent value){_onWantAggregate = value;}
+
+    /// Event called when the serializer finishes to destream an aggregate.
+    @property void onFinishAggregate(void delegate(void*) value){_onFinishAggregate = value;}
+
+    /// ditto
+    @property void delegate(void*) onFinishAggregate(){return _onFinishAggregate;}
 
 //------------------------------------------------------------------------------
 
