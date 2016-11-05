@@ -115,6 +115,13 @@ static assert(is(SQ1[5] == int));
 alias B = <a href="iz/types/NestedTemplateAndArgsOf.html">NestedTemplateAndArgsOf</a>!int;
 static assert(is(B == void));
 
+template G(Gs...)
+{
+    struct G {}
+}
+
+alias GI = G!1;
+
 </code></pre>
 
 </div>

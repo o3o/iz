@@ -381,7 +381,81 @@ template isTemplateInstance(T)
 /// ditto
 template isTemplateInstance(alias T)
 {
-    enum isTemplateInstance = false;
+    enum isTemplateInstance = isTemplateInstance!(typeof(T));
+}
+
+template TemplateBase(T : Base!Args, alias Base, Args...)
+if (is(T == class) || is(T == interface) || is(T == struct) || is(T == union))
+{
+    alias TemplateBase = Base;
+}
+
+unittest
+{
+    class A(T){}
+    template B(T){class R{}}
+    //pragma(msg, TemplateBase!(A!int).stringof);
+    alias F = B!int.R;
+    //pragma(msg, (TemplateBase!F).stringof);
+}
+
+/**
+ * Indicates wether a type or a variable type is an eponymous template.
+ */
+template isEponymousTemplate(T)
+{
+    static if (is(T == class) || is(T == interface) || is(T == struct) || is(T == union))
+    {
+        enum p = __traits(parent, T).stringof == T.stringof;
+        enum isEponymousTemplate = p && isTemplateInstance!T;
+    }
+    else
+        enum isEponymousTemplate = false;
+}
+///
+unittest
+{
+    class A(T){}
+    struct B(T){}
+    static assert(isEponymousTemplate!(A!int));
+    static assert(isEponymousTemplate!(B!int));
+    static assert(!isEponymousTemplate!int);
+    template C(T)
+    {
+        class C{}
+    }
+    static assert(isEponymousTemplate!(C!int));
+}
+
+unittest
+{
+    template A(T)
+    {
+        class A{}
+    }
+    static assert(isEponymousTemplate!(A!int));
+
+    template B(T)
+    {
+        class A{}
+    }
+    static assert(!isEponymousTemplate!(B!int.A));
+
+    class C(T){}
+    static assert(!isEponymousTemplate!int);
+
+    A!int a;
+    static assert(isEponymousTemplate!a);
+}
+
+
+/// ditto
+template isEponymousTemplate(alias T)
+{
+    static if (is(typeof(T)))
+        enum isEponymousTemplate = isEponymousTemplate!(typeof(T));
+    else
+        enum isEponymousTemplate = false;
 }
 
 /**
@@ -450,6 +524,15 @@ unittest
 
     alias B = NestedTemplateAndArgsOf!int;
     static assert(is(B == void));
+
+    template G(Gs...)
+    {
+        struct G {}
+    }
+
+    alias GI = G!int;
+
+    //pragma(msg, NestedTemplateAndArgsOf!(G!int).stringof);
 }
 
 /// ditto
@@ -458,6 +541,11 @@ template NestedTemplateAndArgsOf(T)
     static if (__traits(isTemplate, T))
     {
         alias TT = TemplateOf!T;
+        alias NestedTemplateAndArgsOf = NestedTemplateAndArgsOf!TT;
+    }
+    else static if (isEponymousTemplate!T)
+    {
+        alias TT = TemplateBase!T;
         alias NestedTemplateAndArgsOf = NestedTemplateAndArgsOf!TT;
     }
     else alias NestedTemplateAndArgsOf = void;

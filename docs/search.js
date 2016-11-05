@@ -842,6 +842,8 @@ var items = [
 {"iz.types.isTemplateInstance" : "iz/types/isTemplateInstance.html"},
 {"iz.types.isTemplateInstance" : "iz/types/isTemplateInstance.html"},
 {"iz.types.isTemplateInstance" : "iz/types/isTemplateInstance.html"},
+{"iz.types.isEponymousTemplate" : "iz/types/isEponymousTemplate.html"},
+{"iz.types.isEponymousTemplate" : "iz/types/isEponymousTemplate.html"},
 {"iz.types.NestedTemplateAndArgsOf" : "iz/types/NestedTemplateAndArgsOf.html"},
 {"iz.types.NestedTemplateAndArgsOf" : "iz/types/NestedTemplateAndArgsOf.html"},
 {"iz.types.isSpecializedType" : "iz/types/isSpecializedType.html"},
