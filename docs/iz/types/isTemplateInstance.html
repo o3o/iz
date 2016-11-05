@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <link rel="stylesheet" type="text/css" href="../../style.css"/>
 <script src="../../highlight.pack.js"></script>
-<title>hasInOperator</title>
+<title>isTemplateInstance</title>
 <base href="../../"/>
 <script src="search.js"></script>
 <script src="show_hide.js"></script>
@@ -14,7 +14,7 @@
 <div class="breadcrumbs">
 <table id="results"></table>
 <a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
-<small>iz.<a href=iz/types.html>types</a>.</small><span class="highlight">hasInOperator</span>
+<small>iz.<a href=iz/types.html>types</a>.</small><span class="highlight">isTemplateInstance</span>
 </div>
 <div class="sidebar">
 <a href="iz/types.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
@@ -44,10 +44,10 @@
 </ul>
 </div></div>
 <div class="content">
-<div class="aggregate-symbol"><div class="description"><pre><code>public template hasInOperator(T, A)
+<div class="aggregate-symbol"><div class="description"><pre><code>public template isTemplateInstance(alias T : Base!Args, alias Base, Args...)
 </code></pre>
 <div class="section"><h2></h2>
-<p>Indicates wether an aggregate can be used with the <pre style="display:inline;" class="d_inline_code"><font color=blue>in</font></pre> operator.
+<p>Detects wether T is an instantiated template.
 </p>
 
 
@@ -55,16 +55,6 @@
 <div class="section"><h2></h2>
 
 
-</div>
-<div class="section"><h2>Parameters</h2>
-<table class="params">
-<tr class="param"><td class="paramName">T</td><td class="paramDoc"><p>The aggregate or an associative array type.
-</p>
-</td></tr>
-<tr class="param"><td class="paramName">A</td><td class="paramDoc"><p>The type of the <pre style="display:inline;" class="d_inline_code"><font color=blue>in</font></pre> left hand side argument.
-</p>
-</td></tr>
-</table>
 </div>
 <div class="section "><h2>Example</h2>
 <div class="section"><h2></h2>
@@ -75,21 +65,62 @@
 
 
 </div>
-<pre><code>alias AA = int[string];
-static assert(<a href="iz/types/hasInOperator.html">hasInOperator</a>!(AA, string));
-static assert(!<a href="iz/types/hasInOperator.html">hasInOperator</a>!(AA, int));
+<pre><code>enum a(T) = false;
+void b(T)(int){}
+void c()(){}
+template d(T){}
+class e(T){T t;}
+interface I{}
 
-struct Tester1 {static bool opIn_r(int){return true;}}
-static assert(<a href="iz/types/hasInOperator.html">hasInOperator</a>!(Tester1, int));
+static assert(<a href="iz/types/isTemplateInstance.html">isTemplateInstance</a>!(a!int));
+static assert(<a href="iz/types/isTemplateInstance.html">isTemplateInstance</a>!(b!int));
+static assert(<a href="iz/types/isTemplateInstance.html">isTemplateInstance</a>!(d!int));
+static assert(<a href="iz/types/isTemplateInstance.html">isTemplateInstance</a>!(e!int));
 
-struct Tester2 {bool opIn_r(int){return true;}}
-static assert(<a href="iz/types/hasInOperator.html">hasInOperator</a>!(Tester2, int));
-static assert(!<a href="iz/types/hasInOperator.html">hasInOperator</a>!(Tester2, string));
+static assert(!<a href="iz/types/isTemplateInstance.html">isTemplateInstance</a>!(I));
+static assert(!<a href="iz/types/isTemplateInstance.html">isTemplateInstance</a>!(int));
 
-struct Nothing {}
-static assert(!<a href="iz/types/hasInOperator.html">hasInOperator</a>!(Nothing, int));
+static assert(!<a href="iz/types/isTemplateInstance.html">isTemplateInstance</a>!(a));
+static assert(!<a href="iz/types/isTemplateInstance.html">isTemplateInstance</a>!(b));
+static assert(!<a href="iz/types/isTemplateInstance.html">isTemplateInstance</a>!(c));
 
 </code></pre>
+
+</div>
+</div></div><div class="aggregate-symbol"><div class="description"><pre><code>public template isTemplateInstance(T : Base!Args, alias Base, Args...)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Detects wether T is an instantiated template.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><div class="aggregate-symbol"><div class="description"><pre><code>public template isTemplateInstance(T)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Detects wether T is an instantiated template.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><div class="aggregate-symbol"><div class="description"><pre><code>public template isTemplateInstance(alias T)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Detects wether T is an instantiated template.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
 
 </div>
 </div></div><script>hljs.initHighlightingOnLoad();</script>

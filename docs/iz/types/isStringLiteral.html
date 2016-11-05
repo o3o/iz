@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <link rel="stylesheet" type="text/css" href="../../style.css"/>
 <script src="../../highlight.pack.js"></script>
-<title>hasInOperator</title>
+<title>isStringLiteral</title>
 <base href="../../"/>
 <script src="search.js"></script>
 <script src="show_hide.js"></script>
@@ -14,7 +14,7 @@
 <div class="breadcrumbs">
 <table id="results"></table>
 <a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
-<small>iz.<a href=iz/types.html>types</a>.</small><span class="highlight">hasInOperator</span>
+<small>iz.<a href=iz/types.html>types</a>.</small><span class="highlight">isStringLiteral</span>
 </div>
 <div class="sidebar">
 <a href="iz/types.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
@@ -44,10 +44,10 @@
 </ul>
 </div></div>
 <div class="content">
-<div class="aggregate-symbol"><div class="description"><pre><code>public template hasInOperator(T, A)
+<div class="aggregate-symbol"><div class="description"><pre><code>public template isStringLiteral(V)
 </code></pre>
 <div class="section"><h2></h2>
-<p>Indicates wether an aggregate can be used with the <pre style="display:inline;" class="d_inline_code"><font color=blue>in</font></pre> operator.
+<p>Indicates wether something is a value known at compile time.
 </p>
 
 
@@ -58,10 +58,10 @@
 </div>
 <div class="section"><h2>Parameters</h2>
 <table class="params">
-<tr class="param"><td class="paramName">T</td><td class="paramDoc"><p>The aggregate or an associative array type.
+<tr class="param"><td class="paramName">V</td><td class="paramDoc"><p>The value to test.
 </p>
 </td></tr>
-<tr class="param"><td class="paramName">A</td><td class="paramDoc"><p>The type of the <pre style="display:inline;" class="d_inline_code"><font color=blue>in</font></pre> left hand side argument.
+<tr class="param"><td class="paramName">T</td><td class="paramDoc"><p>Optional, the expected value type.
 </p>
 </td></tr>
 </table>
@@ -75,19 +75,13 @@
 
 
 </div>
-<pre><code>alias AA = int[string];
-static assert(<a href="iz/types/hasInOperator.html">hasInOperator</a>!(AA, string));
-static assert(!<a href="iz/types/hasInOperator.html">hasInOperator</a>!(AA, int));
-
-struct Tester1 {static bool opIn_r(int){return true;}}
-static assert(<a href="iz/types/hasInOperator.html">hasInOperator</a>!(Tester1, int));
-
-struct Tester2 {bool opIn_r(int){return true;}}
-static assert(<a href="iz/types/hasInOperator.html">hasInOperator</a>!(Tester2, int));
-static assert(!<a href="iz/types/hasInOperator.html">hasInOperator</a>!(Tester2, string));
-
-struct Nothing {}
-static assert(!<a href="iz/types/hasInOperator.html">hasInOperator</a>!(Nothing, int));
+<pre><code>string a;
+enum b = "0";
+enum c = 0;
+static assert(!<a href="iz/types/isStringLiteral.html">isStringLiteral</a>!a);
+static assert(<a href="iz/types/isStringLiteral.html">isStringLiteral</a>!b);
+static assert(!<a href="iz/types/isStringLiteral.html">isStringLiteral</a>!c);
+static assert(!<a href="iz/types/isStringLiteral.html">isStringLiteral</a>!int);
 
 </code></pre>
 

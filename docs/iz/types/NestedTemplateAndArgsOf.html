@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../../style.css"/>
+<script src="../../highlight.pack.js"></script>
+<title>NestedTemplateAndArgsOf</title>
+<base href="../../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.<a href=iz/types.html>types</a>.</small><span class="highlight">NestedTemplateAndArgsOf</span>
+</div>
+<div class="sidebar">
+<a href="iz/types.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/types.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li>iz.<a href="iz/classes.html">classes</a></li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li>iz.<a href="iz/enumset.html">enumset</a></li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li>iz.<a href="iz/strings.html">strings</a></li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li><span class=" selected">iz.<a href="iz/types.html">types</a></span>
+</li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><div class="description"><pre><code>public template NestedTemplateAndArgsOf(alias T, TemplateAndArgsOf...)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Decomposes the chain of the templates and arguments used to create the alias
+passed as argument.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">T</td><td class="paramDoc"><p>An alias.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">TemplateAndArgsOf</td><td class="paramDoc"><p>used internally only.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>An AliasSeq formed by a chain of templates and arguments.
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>template A(As...)
+{
+    template B(Bs...){int a;}
+}
+alias AB0 = A!(1,2).B!(3,4,5);
+alias SQ0 = <a href="iz/types/NestedTemplateAndArgsOf.html">NestedTemplateAndArgsOf</a>!AB0;
+static assert(__traits(isSame, SQ0[0], A));
+static assert(__traits(isSame, SQ0[1], 1));
+static assert(__traits(isSame, SQ0[2], 2));
+static assert(__traits(isSame, SQ0[3], A!(1,2).B));
+static assert(__traits(isSame, SQ0[4], 3));
+static assert(__traits(isSame, SQ0[5], 4));
+static assert(__traits(isSame, SQ0[6], 5));
+
+template C(T)
+{
+    template D(T)
+    {
+        template E(T) {}
+    }
+}
+alias CDE0 = C!int.D!int.E!int;
+alias SQ1 = <a href="iz/types/NestedTemplateAndArgsOf.html">NestedTemplateAndArgsOf</a>!CDE0;
+static assert(__traits(isSame, SQ1[0], C));
+static assert(is(SQ1[1] == int));
+static assert(__traits(isSame, SQ1[2], C!int.D));
+static assert(is(SQ1[3] == int));
+static assert(__traits(isSame, SQ1[4], C!int.D!int.E));
+static assert(is(SQ1[5] == int));
+
+alias B = <a href="iz/types/NestedTemplateAndArgsOf.html">NestedTemplateAndArgsOf</a>!int;
+static assert(is(B == void));
+
+</code></pre>
+
+</div>
+</div></div><div class="aggregate-symbol"><div class="description"><pre><code>public template NestedTemplateAndArgsOf(T)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Decomposes the chain of the templates and arguments used to create the alias
+passed as argument.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">T</td><td class="paramDoc"><p>An alias.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">TemplateAndArgsOf</td><td class="paramDoc"><p>used internally only.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>An AliasSeq formed by a chain of templates and arguments.
+</p>
+
+
+</div>
+</div></div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

@@ -464,6 +464,40 @@ template NestedTemplateAndArgsOf(T)
 }
 
 /**
+ * Indicates wether something is a specialized type.
+ *
+ * Returns:
+ * If the input argument is a type or a variable declaration for a type that's
+ * an complete specialization of a template then true is returned. In all the
+ * other cases (build-in types, non templatized aggregates or aliases to
+ * partially specialized templates, false.
+ */
+template isSpecializedType(T)
+{
+    enum isSpecializedType = isTemplateInstance!T && is(T);
+}
+///
+unittest
+{
+    class A(T){}
+    static assert(isSpecializedType!(A!int));
+    class B(T,TT){}
+    alias PartialB(T) = B!int;
+    static assert(!isSpecializedType!PartialB);
+    static assert(isSpecializedType!(B!(int,void)));
+    static assert(!isSpecializedType!int);
+}
+
+/// ditto
+template isSpecializedType(alias T)
+{
+    static if (is(typeof(T)))
+        enum isSpecializedType = isSpecializedType!(typeof(T));
+    else
+        enum isSpecializedType = false;
+}
+
+/**
  * Indicates wether something is a value known at compile time.
  *
  * Params:
