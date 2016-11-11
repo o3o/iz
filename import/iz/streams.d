@@ -810,7 +810,7 @@ body
     char[] result;
     char[64] buffer;
     size_t count;
-    size_t strPos;
+    long strPos;
     ubyte numSkips;
     bool checkN;
     _rd: while (true)
