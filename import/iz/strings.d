@@ -476,14 +476,14 @@ if (isPointer!C && isSomeChar!(PointerTarget!(C)))
 pure @safe unittest
 {
     auto text = "ab cd\0";
-    auto cString = nullTerminated(text.ptr);
+    auto cString = nullTerminated(&text[0]);
     assert(nextWord(cString) == "ab");
     auto saved = nullTerminated(cString.save);
     assert(nextWord(cString) == "cd");
     assert(nextWord(saved) == "cd");
     assert(cString.empty);
     auto wtext = "ab cd\0"w;
-    auto cWideString = nullTerminated(wtext.ptr);
+    auto cWideString = nullTerminated(&wtext[0]);
     assert(nextWord(cWideString) == "ab"w);
     assert(nextWord(cWideString) == "cd"w);
     assert(cWideString.empty);
@@ -492,7 +492,7 @@ pure @safe unittest
 pure @safe unittest
 {
     auto text = "été\0";
-    auto cString = nullTerminated!true(text.ptr);
+    auto cString = nullTerminated!true(&text[0]);
     assert(cString.front == 'é');
     cString.popFront;
     assert(cString.front == 't');
@@ -505,7 +505,7 @@ pure @safe unittest
 pure @safe unittest
 {
     auto text = "été\0"w;
-    auto cString = nullTerminated!true(text.ptr);
+    auto cString = nullTerminated!true(&text[0]);
     assert(cString.front == 'é');
     cString.popFront;
     assert(cString.front == 't');
@@ -519,7 +519,7 @@ pure @safe unittest
 {
     auto text = "été\0"d;
     {
-        auto cString = nullTerminated!true(text.ptr);
+        auto cString = nullTerminated!true(&text[0]);
         assert(cString.front == 'é');
         cString.popFront;
         assert(cString.front == 't');
@@ -529,7 +529,7 @@ pure @safe unittest
         assert(cString.empty);
     }
     {
-        auto cString = nullTerminated!false(text.ptr);
+        auto cString = nullTerminated!false(&text[0]);
         assert(cString.front == 'é');
         cString.popFront;
         assert(cString.front == 't');
