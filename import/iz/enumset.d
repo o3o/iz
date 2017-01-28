@@ -1019,8 +1019,8 @@ private:
     else
     {
         alias arrayT = T[];
-        arrayT _array;
     }
+    arrayT _array;
     static immutable EnumRankInfo!E _infs;
 
 public:
@@ -1482,6 +1482,17 @@ version(unittest)
 
         auto slice = arr[E.e2..E.e4];
         assert(slice == [1.2f,1.3f]);
+    }
+
+    unittest
+    {
+        enum E {e0, e1}
+        alias Arr = EnumIndexedArray!(E, int, true);
+        Arr a;
+        a[E.e0] = 4;
+        a[E.e1] = 5;
+        assert(a[E.e0] == 4);
+        assert(a[E.e1] == 5);
     }
 }
 
