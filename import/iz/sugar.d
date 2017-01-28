@@ -513,58 +513,6 @@ body
 }
 
 /**
- * Allows to call a super method that's not in the nearest ancestor.
- * In other words, this bypasses one or several call(s) to super.
- *
- * Params:
- *      C = The ancestor class containing the target method.
- *      method = A string that identifies the method to call.
- *      c = An instance of a C subclass.
- *      a = The parameters passed to the method.
- *
- * Bugs:
- *      Does not work for private and protected methods, see
- *      https://issues.dlang.org/show_bug.cgi?id=15371
- */
-template olderSuperCall(C, string method)
-{
-    auto olderSuperCall(A...)(C c, A a) @trusted
-    if (is(C==class))
-    {
-        auto dg = &__traits(getMember, c, method);
-        dg.funcptr = &__traits(getMember, C, method);
-        return dg(a);
-    }
-}
-///
-pure @safe unittest
-{
-    class A {string fun() pure @safe {return "a";}}
-    class AA: A {override string fun() pure @safe {return "a" ~ super.fun;}}
-    class AAA: AA {override string fun() pure @safe {return "a" ~ super.fun;}}
-    class AAAA: AAA
-    {
-        string test1() pure @safe
-        {
-            return olderSuperCall!(A, "fun")(this);
-        }
-        string test2() pure @safe
-        {
-            return olderSuperCall!(AA, "fun")(this);
-        }
-        override string fun() pure @safe
-        {
-            // super.super.fun()
-            return olderSuperCall!(AA, "fun")(this);
-        }
-    }
-    auto a = new AAAA;
-    assert(a.test1 == "a");
-    assert(a.test2 == "aa");
-    assert(a.fun == "aa");
-}
-
-/**
  * Pops an input range while a predicate is true.
  * Consumes the input argument.
  *
