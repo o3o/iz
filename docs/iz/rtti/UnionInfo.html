@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <link rel="stylesheet" type="text/css" href="../../style.css"/>
 <script src="../../highlight.pack.js"></script>
-<title>AAInfo</title>
+<title>UnionInfo</title>
 <base href="../../"/>
 <script src="search.js"></script>
 <script src="show_hide.js"></script>
@@ -14,7 +14,7 @@
 <div class="breadcrumbs">
 <table id="results"></table>
 <a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
-<small>iz.<a href=iz/rtti.html>rtti</a>.</small><span class="highlight">AAInfo</span>
+<small>iz.<a href=iz/rtti.html>rtti</a>.</small><span class="highlight">UnionInfo</span>
 </div>
 <div class="sidebar">
 <a href="iz/rtti.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
@@ -44,10 +44,10 @@
 </ul>
 </div></div>
 <div class="content">
-<div class="aggregate-symbol"><div class="description"><pre><code>public struct AAInfo
+<div class="aggregate-symbol"><div class="description"><pre><code>public struct UnionInfo
 </code></pre>
 <div class="section"><h2></h2>
-<p>Runtime information for the associative arrays
+<p>Runtime information for the unions.
 </p>
 
 
@@ -56,10 +56,10 @@
 
 
 </div>
-</div><a class="anchor" id="keyType"></a><div class="symbol"><div class="description"><pre><code>public const(<a href="iz/rtti/Rtti.html">Rtti</a>)* keyType
+</div><a class="anchor" id="identifier"></a><div class="symbol"><div class="description"><pre><code>public string identifier
 </code></pre>
 <div class="section"><h2></h2>
-<p>A pointer to the Rtti of the keys.
+<p>Indicates the union type identifier.
 </p>
 
 
@@ -68,10 +68,10 @@
 
 
 </div>
-</div></div><a class="anchor" id="valueType"></a><div class="symbol"><div class="description"><pre><code>public const(<a href="iz/rtti/Rtti.html">Rtti</a>)* valueType
+</div></div><a class="anchor" id="membersType"></a><div class="symbol"><div class="description"><pre><code>public const(<a href="iz/rtti/Rtti.html">Rtti</a>)*[] membersType
 </code></pre>
 <div class="section"><h2></h2>
-<p>A pointer to the Rtti of the values.
+<p>An array with the Rtti of each member
 </p>
 
 
@@ -80,9 +80,9 @@
 
 
 </div>
-</div></div><div class="section members"><h2>Variables</h2><table><tr><td><a href="iz/rtti/AAInfo.html#keyType">keyType</a></td><td><pre><code>const(<a href="iz/rtti/Rtti.html">Rtti</a>)*
+</div></div><div class="section members"><h2>Variables</h2><table><tr><td><a href="iz/rtti/UnionInfo.html#identifier">identifier</a></td><td><pre><code>string
 </code></pre>
-</td><td></td></tr><tr><td><a href="iz/rtti/AAInfo.html#valueType">valueType</a></td><td><pre><code>const(<a href="iz/rtti/Rtti.html">Rtti</a>)*
+</td><td></td></tr><tr><td><a href="iz/rtti/UnionInfo.html#membersType">membersType</a></td><td><pre><code>const(<a href="iz/rtti/Rtti.html">Rtti</a>)*[]
 </code></pre>
 </td><td></td></tr></table>
 </div>

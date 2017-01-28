@@ -319,7 +319,7 @@ char[] value2text(SerNodeInfo* nodeInfo)
     //
     with (RtType) final switch(nodeInfo.rtti.type)
     {
-        case _invalid, _aa, _pointer: return invalidText;
+        case _invalid, _aa, _pointer, _union: return invalidText;
         case _bool:     return v2t!bool;
         case _ubyte:    return v2t!ubyte;
         case _byte:     return v2t!byte;
@@ -369,7 +369,7 @@ ubyte[] text2value(char[] text, const SerNodeInfo* nodeInfo)
     //    
     with(RtType) final switch(nodeInfo.rtti.type)
     {
-        case _invalid, _aa, _pointer: return cast(ubyte[])invalidText;
+        case _invalid, _aa, _pointer, _union: return cast(ubyte[])invalidText;
         case _bool:     return t2v!bool;
         case _ubyte:    return t2v!ubyte;
         case _byte:     return t2v!byte;
@@ -417,7 +417,7 @@ void nodeInfo2Declarator(SerNodeInfo* nodeInfo)
     //
     with (RtType) final switch(nodeInfo.rtti.type)
     {
-        case _invalid, _aa, _pointer:  break;
+        case _invalid, _aa, _pointer, _union:  break;
         case _bool:     toDecl!bool; break;
         case _byte:     toDecl!byte; break;
         case _ubyte:    toDecl!ubyte; break;
@@ -1315,7 +1315,7 @@ private:
             }
             with(RtType) final switch(rtti.type)
             {
-                case _invalid, _aa, _pointer: assert(0);
+                case _invalid, _aa, _pointer, _union: assert(0);
                 case _bool:   addValueProp!bool; break;
                 case _byte:   addValueProp!byte; break;
                 case _ubyte:  addValueProp!ubyte; break;

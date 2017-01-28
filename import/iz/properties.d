@@ -1705,7 +1705,7 @@ void bindPublications(bool recursive = false, S, T)(auto ref S src, auto ref T t
 
         with(RtType) final switch (srcP.rtti.type)
         {
-            case _invalid:  break;
+            case _invalid: case _union: break;
             case _aa:       setAA; break;
             case _bool:     setBasicType!bool; break;
             case _ubyte:    setBasicType!ubyte; break;

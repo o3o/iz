@@ -36,7 +36,7 @@ enum RtType: ubyte
     _bool, _byte, _ubyte, _short, _ushort, _int, _uint, _long, _ulong,
     _float, _double, _real,
     _char, _wchar, _dchar,
-    _object, _struct,
+    _object, _struct, _union,
     _enum,
     _funptr,
     _stream,
@@ -62,7 +62,7 @@ private static immutable RtTypeArr =
     RtType._int, RtType._uint, RtType._long, RtType._ulong,
     RtType._float, RtType._double, RtType._real,
     RtType._char, RtType._wchar, RtType._dchar,
-    RtType._object, RtType._struct,
+    RtType._object, RtType._struct, RtType._union,
     RtType._enum,
     RtType._funptr,
     RtType._stream,
@@ -72,6 +72,8 @@ private static immutable RtTypeArr =
 
 /// used as a wildcard to represent any struct.
 package struct GenericStruct {}
+/// used as a wildcard to represent any union.
+package struct GenericUnion {}
 /// used as a wildcard to represent any enum.
 package struct GenericEnum {int value; alias value this;}
 /// not reall used...
@@ -82,7 +84,8 @@ package alias GenericRtTypes = AliasSeq!(
     bool, byte, ubyte, short, ushort, int, uint, long, ulong,
     float, double, real,
     char, wchar, dchar,
-    Object, GenericStruct, GenericEnum,
+    Object, GenericStruct, GenericUnion,
+    GenericEnum,
     GenericFunPtr,
     Stream,
 );
@@ -114,7 +117,7 @@ ubyte size(RtType type)
 {
     with(RtType) final switch (type)
     {
-        case _invalid, _object, _struct, _funptr, _stream, _enum, _aa, _pointer:
+        case _invalid, _object, _struct, _funptr, _stream, _enum, _aa, _pointer, _union:
             return 0;
         case _bool, _byte, _ubyte, _char:
             return 1;
@@ -185,6 +188,7 @@ string typeString(T)(T t)
             case _enum:     return "enum";
             case _funptr:   return "funptr";
             case _stream:   return "Stream";
+            case _union:    return "union";
         }
     }
     else static if (is(T == const(Rtti)*))
@@ -329,7 +333,7 @@ private union StructTraits
 }
 
 /**
- * Runtime information for the struct.
+ * Runtime information for the structs.
  */
 struct StructInfo
 {
@@ -340,7 +344,7 @@ struct StructInfo
         this.type = type;
     }
 
-    /// Constructs the info for a specual struct.
+    /// Constructs the info for a special struct.
     this(T)(string identifier, StructType type, T t)
     {
         this.identifier = identifier;
@@ -383,7 +387,25 @@ struct StructInfo
 }
 
 /**
- * Runtime information for the associative array
+ * Runtime information for the unions.
+ */
+struct UnionInfo
+{
+    this(A...)(string identifier, const(Rtti)*[] members)
+    {
+        membersType = members;
+        this.identifier = identifier;
+    }
+
+    /// Indicates the union type identifier.
+    string identifier;
+
+    /// An array with the Rtti of each member
+    const(Rtti)*[] membersType;
+}
+
+/**
+ * Runtime information for the associative arrays
  */
 struct AAInfo
 {
@@ -410,7 +432,12 @@ private union Infos
     StructInfo structInfo;
     AAInfo aaInfo;
     PointerInfo pointerInfo;
+    UnionInfo unionInfo;
 }
+
+
+pragma(msg, StructInfo.sizeof);
+pragma(msg, StructTraits.sizeof);
 
 /**
  * Runtime type information
@@ -435,6 +462,8 @@ struct Rtti
             infos.aaInfo = t;
         else static if (is(T == PointerInfo))
             infos.pointerInfo = t;
+        else static if (is(T == UnionInfo))
+            infos.unionInfo = t;
         else static assert(0, "last argument of Rtti ctor must be an Info");
     }
 
@@ -501,6 +530,12 @@ struct Rtti
     const(PointerInfo)* pointerInfo() const
     {
         return &infos.pointerInfo;
+    }
+
+    /// Returns the information valid when type is equal to RtT._pointer.
+    const(UnionInfo)* unionInfo() const
+    {
+        return &infos.unionInfo;
     }
 }
 
@@ -652,6 +687,15 @@ if (B.length < 2)
     else static if (is(T == struct))
     {
         const Rtti result = Rtti(RtType._struct, dim, typeCtors, StructInfo(T.stringof, StructType._none));
+    }
+    else static if (is(T == union))
+    {
+        const(Rtti)*[] members;
+        foreach(member; __traits(allMembers, T))
+        {
+            members ~= getRtti!(typeof(__traits(getMember, T, member)));
+        }
+        const Rtti result = Rtti(RtType._union, dim, typeCtors, UnionInfo(T.stringof, members));
     }
     else static if (isAssociativeArray!T)
     {
@@ -957,5 +1001,16 @@ unittest
     assert(piti.type == RtType._pointer);
     assert(piti.pointerInfo.type is getRtti!(int*));
     assert(piti.pointerInfo.type.pointerInfo.type is getRtti!(int));
+}
+
+unittest
+{
+    union U {int i; void* a;} U u;
+    const(Rtti)* uti = getRtti(u);
+    assert(uti.type == RtType._union);
+    assert(uti.unionInfo.identifier == "U");
+    assert(uti.unionInfo.membersType.length == 2);
+    assert(uti.unionInfo.membersType[0] is getRtti!int);
+    assert(uti.unionInfo.membersType[1] is getRtti!(void*));
 }
 
