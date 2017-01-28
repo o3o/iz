@@ -120,7 +120,9 @@ template G(Gs...)
     struct G {}
 }
 
-alias GI = G!1;
+alias GI = G!int;
+
+//pragma(msg, <a href="iz/types/NestedTemplateAndArgsOf.html">NestedTemplateAndArgsOf</a>!(G!int).stringof);
 
 </code></pre>
 

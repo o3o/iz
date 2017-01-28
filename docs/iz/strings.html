@@ -135,14 +135,14 @@ without fully converting it to a phobos string.
 
 </div>
 <pre><code>auto text = "ab cd\0";
-auto cString = <a href="iz/strings.html#nullTerminated">nullTerminated</a>(text.ptr);
+auto cString = <a href="iz/strings.html#nullTerminated">nullTerminated</a>(&text[0]);
 assert(<a href="iz/strings.html#nextWord">nextWord</a>(cString) == "ab");
 auto saved = <a href="iz/strings.html#nullTerminated">nullTerminated</a>(cString.save);
 assert(<a href="iz/strings.html#nextWord">nextWord</a>(cString) == "cd");
 assert(<a href="iz/strings.html#nextWord">nextWord</a>(saved) == "cd");
 assert(cString.empty);
 auto wtext = "ab cd\0"w;
-auto cWideString = <a href="iz/strings.html#nullTerminated">nullTerminated</a>(wtext.ptr);
+auto cWideString = <a href="iz/strings.html#nullTerminated">nullTerminated</a>(&wtext[0]);
 assert(<a href="iz/strings.html#nextWord">nextWord</a>(cWideString) == "ab"w);
 assert(<a href="iz/strings.html#nextWord">nextWord</a>(cWideString) == "cd"w);
 assert(cWideString.empty);

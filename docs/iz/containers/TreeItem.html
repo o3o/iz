@@ -59,7 +59,7 @@
 </div><a class="anchor" id="self"></a><div class="symbol"><div class="description"><pre><code>private @trusted @nogc nothrow TreeItemType <a href="iz/containers/TreeItem.html#self">self</a>()
 </code></pre>
 <div class="section"><h2></h2>
-<p>Returns <code class="d_inlinecode">this</code> when mixed in a class or <code class="d_inlinecode">&this</code> in a struct.
+<p>Returns <code class="d_inline_code">this</code> when mixed in a class or <code class="d_inline_code">&this</code> in a struct.
 </p>
 
 
@@ -148,7 +148,7 @@ if(is(IT : TreeItemType))
 <div class="section"><h2></h2>
 <p>Constructs, adds to the back then returns a new sibling.
 This method should be prefered over addChild and insertChild
-if <code class="d_inlinecode">deleteChildren()</code> is used.
+if <code class="d_inline_code">deleteChildren()</code> is used.
 </p>
 
 
@@ -405,7 +405,7 @@ if(is(IT : TreeItemType))
 <div class="section"><h2></h2>
 <p>Constructs, adds to the back then returns a new child.
 This method should be prefered over addChild and insertChild
-if <code class="d_inlinecode">deleteChildren()</code> is used.
+if <code class="d_inline_code">deleteChildren()</code> is used.
 </p>
 
 
@@ -595,8 +595,8 @@ After the call, the links to the items siblings are also reset to null.
 
 </div>
 <div class="section"><h2></h2>
-<p>This method should be used in pair with <code class="d_inlinecode">addNewChild()</code> and
-<code class="d_inlinecode">addNewSiblings()</code>. If <code class="d_inlinecode">add()</code> or <code class="d_inlinecode">insert()</code> have been used to
+<p>This method should be used in pair with <code class="d_inline_code">addNewChild()</code> and
+<code class="d_inline_code">addNewSiblings()</code>. If <code class="d_inline_code">add()</code> or <code class="d_inline_code">insert()</code> have been used to
 build the tree then initial references will be dangling.
 </p>
 
@@ -606,7 +606,7 @@ build the tree then initial references will be dangling.
 </code></pre>
 <div class="section"><h2></h2>
 <p>Converts the node to a string.
-This is used to represent the whole tree in <code class="d_inlinecode">saveToStream()</code>.
+This is used to represent the whole tree in <code class="d_inline_code">saveToStream()</code>.
 </p>
 
 
@@ -635,7 +635,7 @@ This is used to represent the whole tree in <code class="d_inlinecode">saveToStr
 </p>
 </td></tr>
 <tr class="param"><td class="paramName">itemToText</td><td class="paramDoc"><p>A custom function to render the items. When not specified,
-     <code class="d_inlinecode">itemToTextNative()</code> is used.
+     <code class="d_inline_code">itemToTextNative()</code> is used.
 </p>
 </td></tr>
 </table>

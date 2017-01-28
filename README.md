@@ -3,7 +3,7 @@ iz
 
 Introduction
 ------------
-iz is a general purpose library for the D programming language. 
+iz is a general purpose library for the D programming language.
 It includes [streams, containers, serialization, property binder](http://bbasile.github.io/iz/) and more.
 
 Setup

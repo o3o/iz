@@ -165,6 +165,50 @@ if(is(C == class))
 
 
 </div>
+</div></div><a class="anchor" id="isStringLiteral"></a><div class="symbol"><div class="description"><pre><code>public auto isStringLiteral
+</code></pre>
+<div class="section"><h2></h2>
+<p>Indicates wether something is a string literal.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="isStringLiteral"></a><div class="symbol"><div class="description"><pre><code>public template isStringLiteral(V)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Indicates wether something is a string literal.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>string a;
+enum b = "0";
+enum c = 0;
+static assert(!<a href="iz/types.html#isStringLiteral">isStringLiteral</a>!a);
+static assert(<a href="iz/types.html#isStringLiteral">isStringLiteral</a>!b);
+static assert(!<a href="iz/types.html#isStringLiteral">isStringLiteral</a>!c);
+static assert(!<a href="iz/types.html#isStringLiteral">isStringLiteral</a>!int);
+
+</code></pre>
+
+</div>
 </div></div><div class="description"><div class="section"><h2></h2>
 <p>Several templates, alias, traits or functions related to types.
 </p>
@@ -198,9 +242,11 @@ if(is(C == class))
 </code></pre>
 </td><td></td></tr><tr><td><a href="iz/types.html#GenericFunction">GenericFunction</a></td><td><pre><code><a href="http://dlang.org/type.html#basic-data-types">void</a> function()
 </code></pre>
+</td><td></td></tr></table><h2>Variables</h2><table><tr><td><a href="iz/types.html#isStringLiteral">isStringLiteral</a></td><td><pre><code>auto
+</code></pre>
 </td><td></td></tr></table><h2>Functions</h2><table><tr><td><a href="iz/types.html#isFixedSize">isFixedSize</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/types.html#className">className</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/types.html#defaultConstructor">defaultConstructor</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr></table><h2>Templates</h2><table><tr><td><a href="iz/types/ScopedReachability.html">ScopedReachability</a></td><td></td><td></td></tr><tr><td><a href="iz/types/isMultiDimensionalArray.html">isMultiDimensionalArray</a></td><td></td><td>Returns: <p>true if T is a multi dimensional array
 </p>
-</td></tr><tr><td><a href="iz/types/dimensionCount.html">dimensionCount</a></td><td></td><td>Returns: <p>0 if <code class="d_inlinecode">T</code> is an not a build-in array, otherwise a number
+</td></tr><tr><td><a href="iz/types/dimensionCount.html">dimensionCount</a></td><td></td><td>Returns: <p>0 if <code class="d_inline_code">T</code> is an not a build-in array, otherwise a number
      at least equal to 1, according to the array dimension count.
 </p>
 </td></tr><tr><td><a href="iz/types/ArrayElementType.html">ArrayElementType</a></td><td></td><td>Returns: <p>T element type.
@@ -222,7 +268,7 @@ an complete specialization of a template then true is returned. In all the
 other cases (build-in types, non templatized aggregates or aliases to
 partially specialized templates, false.
 </p>
-</td></tr><tr><td><a href="iz/types/isCompileTimeValue.html">isCompileTimeValue</a></td><td></td><td></td></tr><tr><td><a href="iz/types/isCompileTimeValue.html">isCompileTimeValue</a></td><td></td><td></td></tr><tr><td><a href="iz/types/isStringLiteral.html">isStringLiteral</a></td><td></td><td></td></tr></table>
+</td></tr><tr><td><a href="iz/types/isCompileTimeValue.html">isCompileTimeValue</a></td><td></td><td></td></tr><tr><td><a href="iz/types/isCompileTimeValue.html">isCompileTimeValue</a></td><td></td><td></td></tr><tr><td><a href="iz/types.html#isStringLiteral">isStringLiteral</a></td><td></td><td></td></tr></table>
 </div>
 </div><script>hljs.initHighlightingOnLoad();</script>
 

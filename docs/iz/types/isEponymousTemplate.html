@@ -47,8 +47,7 @@
 <div class="aggregate-symbol"><div class="description"><pre><code>public template isEponymousTemplate(T)
 </code></pre>
 <div class="section"><h2></h2>
-<p>Indicates wether a type or a variable type comes from a eponymous template
-specialization
+<p>Indicates wether a type or a variable type is an eponymous template.
 </p>
 
 
@@ -57,11 +56,33 @@ specialization
 
 
 </div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>class A(T){}
+struct B(T){}
+static assert(<a href="iz/types/isEponymousTemplate.html">isEponymousTemplate</a>!(A!int));
+static assert(<a href="iz/types/isEponymousTemplate.html">isEponymousTemplate</a>!(B!int));
+static assert(!<a href="iz/types/isEponymousTemplate.html">isEponymousTemplate</a>!int);
+template C(T)
+{
+    class C{}
+}
+static assert(<a href="iz/types/isEponymousTemplate.html">isEponymousTemplate</a>!(C!int));
+
+</code></pre>
+
+</div>
 </div></div><div class="aggregate-symbol"><div class="description"><pre><code>public template isEponymousTemplate(alias T)
 </code></pre>
 <div class="section"><h2></h2>
-<p>Indicates wether a type or a variable type comes from a eponymous template
-specialization
+<p>Indicates wether a type or a variable type is an eponymous template.
 </p>
 
 

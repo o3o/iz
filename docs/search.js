@@ -800,7 +800,6 @@ var items = [
 {"iz.sugar.ArrayRange.array" : "iz/sugar/ArrayRange.html#array"},
 {"iz.sugar.ArrayRange.save" : "iz/sugar/ArrayRange.html#save"},
 {"iz.sugar.pickAndCall" : "iz/sugar.html#pickAndCall"},
-{"iz.sugar.olderSuperCall" : "iz/sugar/olderSuperCall.html"},
 {"iz.sugar.popWhile" : "iz/sugar.html#popWhile"},
 {"iz.sugar.dropWhile" : "iz/sugar.html#dropWhile"},
 {"iz.sugar.popBackWhile" : "iz/sugar.html#popBackWhile"},
@@ -850,7 +849,8 @@ var items = [
 {"iz.types.isSpecializedType" : "iz/types/isSpecializedType.html"},
 {"iz.types.isCompileTimeValue" : "iz/types/isCompileTimeValue.html"},
 {"iz.types.isCompileTimeValue" : "iz/types/isCompileTimeValue.html"},
-{"iz.types.isStringLiteral" : "iz/types/isStringLiteral.html"},
+{"iz.types.isStringLiteral" : "iz/types.html#isStringLiteral"},
+{"iz.types.isStringLiteral" : "iz/types.html#isStringLiteral"},
 {"iz" : "iz.html"},
 ];
 function search(str) {

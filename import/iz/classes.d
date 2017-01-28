@@ -31,7 +31,10 @@ if (is(T == class))
         }
         return result;
     }
-    enum isAAKeyValid = check();
+    static if (field.length)
+        enum isAAKeyValid = check();
+    else
+        enum isAAKeyValid = false;
 }
 
 /**
