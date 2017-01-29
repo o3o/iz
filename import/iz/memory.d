@@ -38,6 +38,7 @@ in
 }
 body
 {
+    Ptr old = src;
     src = realloc(src, newSize);
     if (!src)
         throw construct!OutOfMemoryError;
@@ -366,6 +367,21 @@ void destruct(T)(auto ref T* instance)
     freeMem(cast(void*)instance);
     static if ((ParameterStorageClassTuple!destruct)[0] ==
         ParameterStorageClass.ref_) instance = null;
+}
+
+/**
+ * Destructs a struct or a union that's allocated within another
+ * aggregate that's not GC-managed.
+ *
+ * Params:
+ *      T = A union or a struct type, likely to be infered.
+ *      instance = A $(D T) instance.
+ */
+void destruct(T)(ref T instance)
+if (is(T == struct) || is(T==union))
+{
+    static if (hasElaborateDestructor!T)
+        instance.__xdtor;
 }
 
 /**

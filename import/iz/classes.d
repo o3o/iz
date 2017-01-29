@@ -82,6 +82,7 @@ public:
     ~this()
     {
         clear;
+        destructDescriptors;
     }
 
     /**
@@ -460,6 +461,11 @@ public:
         collectPublications!(PublishedAA!AA);
     }
 
+    ~this()
+    {
+        destructDescriptors;
+    }
+
     /**
      * Copies the content of an associative array to the internal containers.
      *
@@ -629,6 +635,11 @@ public:
     {
         _source = array;
         collectPublications!(Published2dArray!T);
+    }
+
+    ~this()
+    {
+        destructDescriptors;
     }
 
     /**
@@ -855,6 +866,7 @@ public:
         //
         destruct(_compSubj);
         destruct(_owned);
+        destructDescriptors;
     }
 
     /// Returns this instance onwer.
@@ -983,6 +995,11 @@ public:
     this()
     {
         collectPublications!BaseTimer;
+    }
+
+    ~this()
+    {
+        destructDescriptors;
     }
 
     /// Starts the timer.
@@ -1160,6 +1177,11 @@ public:
     this()
     {
         collectPublications!Process;
+    }
+
+    ~this()
+    {
+        destructDescriptors;
     }
 
     /**

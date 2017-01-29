@@ -658,8 +658,8 @@ unittest
     static assert(isPropertyPublisher!Foo);
     static assert(isPropertyPublisher!Bar);
     static assert(isPropertyPublisher!Baz);
-    //auto baz = new Baz;
-    //assert( baz.isPropertyPublisher);
+    auto baz = new Baz;
+    assert( baz.isPropertyPublisher);
 }
 
 /**
@@ -697,8 +697,8 @@ mixin template PropertyPublisherImpl()
         {
             import iz.memory: destruct;
             foreach(ptr; _publishedDescriptors)
-                destruct(cast(GenericDescriptor*) ptr);
-            _publishedDescriptors.length = 0;
+                if (ptr) destruct(cast(GenericDescriptor*) ptr);
+            destruct(_publishedDescriptors);
         }
 
         ~this()
@@ -1758,13 +1758,15 @@ unittest
             static if (Nested)
                 _sub = construct!(Foo!false);
             str = construct!MemoryStream;
-            collectPublications!Foo;
+            collectPublications!(Foo!Nested);
         }
         ~this()
         {
-            static if (Nested)
-                destruct(_sub);
+            // TODO-cbugfix: nested prop publisher bug after binding
+            //static if (Nested)
+            //    destruct(_sub);
             destruct(str);
+            destructDescriptors;
         }
         @SetGet uint _a;
         @SetGet ulong _b;
