@@ -172,7 +172,7 @@ if (is(T==struct) || is(T==union) || is(T==class))
             static if (!is(typeof(T.tupleof[i])== void))
             {
                 alias MT = typeof(T.tupleof[i]);
-                static if (isDynamicArray!MT && !hasUDA!(T.tupleof[i], NoGc))
+                static if (isArray!MT && !hasUDA!(T.tupleof[i], NoGc) && hasManagedDimension!MT)
                     mixin(addManaged);
                 else static if (isPointer!MT && !hasUDA!(T.tupleof[i], NoGc))
                     mixin(addManaged);
@@ -228,6 +228,39 @@ unittest
     // Baz base is not @NoGc
     class Baz: Bar{@NoGc void* c;}
     static assert(MustAddGcRange!Baz);
+}
+
+package template hasManagedDimension(T)
+{
+    import std.range: ElementType;
+    static if (isDynamicArray!T)
+        enum hasManagedDimension = true;
+    else static if (isStaticArray!T)
+        enum hasManagedDimension = hasManagedDimension!(ElementType!T);
+    else
+        enum hasManagedDimension = false;
+}
+
+unittest
+{
+    alias A0 = int[];
+    static assert(hasManagedDimension!A0);
+    alias A1 = int[2][];
+    static assert(hasManagedDimension!A1);
+    alias A2 = int[][2];
+    static assert(hasManagedDimension!A2);
+    alias A3 = int[3][2];
+    static assert(!hasManagedDimension!A3);
+    alias A4 = int[][3][2];
+    static assert(hasManagedDimension!A4);
+}
+
+unittest
+{
+    class Foo{int[][2][4] a;}
+    static assert(MustAddGcRange!Foo);
+    class Bar{@NoGc int[][2][4] a;}
+    static assert(!MustAddGcRange!Bar);
 }
 
 /**

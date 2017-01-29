@@ -435,10 +435,6 @@ private union Infos
     UnionInfo unionInfo;
 }
 
-
-pragma(msg, StructInfo.sizeof);
-pragma(msg, StructTraits.sizeof);
-
 /**
  * Runtime type information
  */
