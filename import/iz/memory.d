@@ -389,9 +389,9 @@ if (is(T == class) && T.stringof != Object.stringof)
         {
             static if (__traits(hasMember, T, "__dtor"))
                 instance.__dtor;
+            freeMem(cast(void*)instance);
             static if ((ParameterStorageClassTuple!destruct)[0] ==
                 ParameterStorageClass.ref_) instance = null;
-            freeMem(cast(void*)instance);
         }
         else // dtor might be in an ancestor
         {
