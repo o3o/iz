@@ -393,8 +393,8 @@ if (is(T == struct) || is(T==union))
  * Object.
  *
  * Params:
- *      assumeNoCtor = When no __ctor is found this avoids a to search one
- *      in the sub classes.
+ *      assumeNoCtor = When no __ctor is found this avoids to search one
+ *      in the base classes.
  *      T = A class type (most derived), likely to be infered.
  *      instance = A $(D T) instance.
  */
@@ -433,11 +433,11 @@ if (is(T == class) && T.stringof == Object.stringof)
 {
     if (instance)
     {
+        void* dtorPtr;
         TypeInfo_Class tic = cast(TypeInfo_Class) typeid(instance);
-
-        void* dtorPtr = tic.destructor;
-        while (tic.base)
+        while (tic)
         {
+            dtorPtr = tic.destructor;
             if (dtorPtr)
             {
                 void delegate() dtor;
@@ -446,7 +446,6 @@ if (is(T == class) && T.stringof == Object.stringof)
                 dtor();
             }
             tic = tic.base;
-            dtorPtr = tic.destructor;
         }
         freeMem(cast(void*)instance);
         instance = null;
