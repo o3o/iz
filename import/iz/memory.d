@@ -362,11 +362,10 @@ void destruct(T)(auto ref T* instance)
 {
     if (!instance)
         return;
-    static if (hasElaborateDestructor!T)
+    static if (__traits(hasMember, T, "__xdtor"))
         instance.__xdtor;
-    freeMem(cast(void*)instance);
-    static if ((ParameterStorageClassTuple!destruct)[0] ==
-        ParameterStorageClass.ref_) instance = null;
+    freeMem(cast(void*) instance);
+    instance = null;
 }
 
 /**
@@ -380,20 +379,23 @@ void destruct(T)(auto ref T* instance)
 void destruct(T)(ref T instance)
 if (is(T == struct) || is(T==union))
 {
-    static if (hasElaborateDestructor!T)
+    static if (__traits(hasMember, T, "__xdtor"))
         instance.__xdtor;
 }
 
 /**
- * Destructs a class that's been previously constructed with $(D construct()).
+ * Destructs a class that's been previously constructed with $(D construct())
+ * and when the static type is known.
  *
  * The function calls the destructor and, when passed as reference,
  * set the the instance to null.
+ * When the static type is not known, destruct must be called after a cast to
+ * Object.
  *
  * Params:
  *      assumeNoCtor = When no __ctor is found this avoids a to search one
  *      in the sub classes.
- *      T = A class type, likely to be infered.
+ *      T = A class type (most derived), likely to be infered.
  *      instance = A $(D T) instance.
  */
 void destruct(bool assumeNoCtor = false, T)(auto ref T instance)
@@ -401,13 +403,12 @@ if (is(T == class) && T.stringof != Object.stringof)
 {
     if (instance)
     {
-        static if (__traits(hasMember, T, "__dtor") || assumeNoCtor)
+        static if (__traits(hasMember, T, "__xdtor") || assumeNoCtor)
         {
-            static if (__traits(hasMember, T, "__dtor"))
-                instance.__dtor;
+            static if (__traits(hasMember, T, "__xdtor"))
+                instance.__xdtor;
             freeMem(cast(void*)instance);
-            static if ((ParameterStorageClassTuple!destruct)[0] ==
-                ParameterStorageClass.ref_) instance = null;
+            instance = null;
         }
         else // dtor might be in an ancestor
         {
@@ -417,41 +418,38 @@ if (is(T == class) && T.stringof != Object.stringof)
 }
 
 /**
- * Destructs a class that's been previously constructed with $(D construct()).
+ * Destructs a class that's been previously constructed with $(D construct()) and
+ * when the static type is not known.
  *
- * This overload is never @nogc. It should be used for classes that are downcasted
- * to a base type, where a __ctor is not yet implemented.
+ * This overload is only selected when the instance is casted as Object.
+ * It should be used when there no guarantee that the instance type is the most
+ * derived. This overload is never @nogc.
  *
  * Params:
- *      T = A class type, likely to be infered.
- *      instance = A $(D T) instance.
+ *      instance = A class instance casted to Object.
  */
 void destruct(T)(auto ref T instance)
 if (is(T == class) && T.stringof == Object.stringof)
 {
-    // the content of this overload can't be in the previous because when the
-    // static type is not known (e.g after cast from interface to Object) dispose()
-    // can't be @nogc since the dtor is a delegate determined at runtime.
     if (instance)
     {
         TypeInfo_Class tic = cast(TypeInfo_Class) typeid(instance);
 
         void* dtorPtr = tic.destructor;
-        while (!dtorPtr && tic.base)
+        while (tic.base)
         {
+            if (dtorPtr)
+            {
+                void delegate() dtor;
+                dtor.funcptr = cast(void function()) dtorPtr;
+                dtor.ptr = cast(void*) instance;
+                dtor();
+            }
             tic = tic.base;
             dtorPtr = tic.destructor;
         }
-        if (dtorPtr)
-        {
-            void delegate() dtor;
-            dtor.funcptr = cast(void function()) dtorPtr;
-            dtor.ptr = cast(void*) instance;
-            dtor();
-        }
         freeMem(cast(void*)instance);
-        static if ((ParameterStorageClassTuple!destruct)[0] ==
-            ParameterStorageClass.ref_) instance = null;
+        instance = null;
     }
 }
 
@@ -494,8 +492,7 @@ if (is(T == interface))
                 ~ __PRETTY_FUNCTION__);
         }
         destruct(cast(Object) instance);
-        static if ((ParameterStorageClassTuple!destruct)[0] ==
-            ParameterStorageClass.ref_) instance = null;
+        instance = null;
     }
 }
 
@@ -775,5 +772,24 @@ unittest
     @NoInit static class Bar {uint a = 1;}
     Bar bar = construct!Bar;
     assert(bar.a != 1);
+}
+
+unittest
+{
+    static int i;
+
+    static class Base
+    {
+        ~this(){i += 2;}
+    }
+
+    static class Derived: Base
+    {
+        ~this(){i += 3;}
+    }
+
+    Base b = construct!Derived;
+    destruct(cast(Object)b);
+    assert(i == 5);
 }
 

@@ -1320,7 +1320,7 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
 
         ~this() @nogc
         {
-            if (_freeFlag)
+            if (_freeFlag && _memory)
                 freeMem(_memory);
         }
 

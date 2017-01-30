@@ -2553,7 +2553,7 @@ public:
             current._parent = null;
             current._nextSibling = null;
             current._prevSibling = null;
-            static if (is(TreeItemType == interface))
+            static if (is(TreeItemType == interface) || is(TreeItemType == class))
                 destruct(cast(Object) current);
             else
                 destruct(current);
