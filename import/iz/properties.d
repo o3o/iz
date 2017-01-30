@@ -184,6 +184,11 @@ struct PropDescriptor(T)
         {
             define(aData, aName);
         }
+
+        ~this()
+        {
+            destruct(_name);
+        }
 // ---- 
 // define all the members -----------------------------------------------------+
 
@@ -1763,10 +1768,9 @@ unittest
         ~this()
         {
             // TODO-cbugfix: nested prop publisher bug after binding
-            //static if (Nested)
+            //static if (Nested) if (_sub)
             //    destruct(_sub);
             destruct(str);
-            destructDescriptors;
         }
         @SetGet uint _a;
         @SetGet ulong _b;

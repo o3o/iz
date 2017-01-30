@@ -366,7 +366,7 @@ ubyte[] text2value(char[] text, const SerNodeInfo* nodeInfo)
     ubyte[] t2v(T)(){
         if (!nodeInfo.rtti.dimension) return t2v_1!T; else return t2v_2!T;
     }
-    //    
+    //
     with(RtType) final switch(nodeInfo.rtti.type)
     {
         case _invalid, _aa, _pointer, _union: return cast(ubyte[])invalidText;
@@ -697,7 +697,7 @@ private void writeJSON(IstNode istNode, Stream stream, const FormatToken tok)
             return;
         default:
     }
-    //    
+    //
     auto level  = JSONValue(istNode.level);
     auto type   = JSONValue(typeString(istNode.info.rtti));
     auto name   = JSONValue(istNode.info.name[].idup);
@@ -718,7 +718,7 @@ private void writeJSON(IstNode istNode, Stream stream, const FormatToken tok)
 
 
     //
-    stream.write(txt.ptr, txt.length);   
+    stream.write(txt.ptr, txt.length);
 }
 
 private FormatToken readJSON(Stream stream, IstNode istNode)
@@ -737,7 +737,7 @@ private FormatToken readJSON(Stream stream, IstNode istNode)
         stream.read(&c, 1);
         if (c == '\\')
             continue;
-        if (c == '"') 
+        if (c == '"')
             skip = !skip;
         if (!skip)
         {
@@ -745,7 +745,7 @@ private FormatToken readJSON(Stream stream, IstNode istNode)
             cnt -= (c == '}');
         }
         if (cnt == 0)
-            break;   
+            break;
     }
     stream.position = stored;
     char[] cache;
@@ -753,19 +753,19 @@ private FormatToken readJSON(Stream stream, IstNode istNode)
     stream.read(cache.ptr, cache.length);
     //
     const JSONValue prop = parseJSON(cache);
-        
+
     const(JSONValue)* type = "type" in prop;
     if (type && type.type == JSON_TYPE.STRING)
         istNode.info.rtti = getRtti(type.str);
-    else 
+    else
         istNode.info.isDamaged = true;
-        
+
     const(JSONValue)* name = "name" in prop;
     if (name && name.type == JSON_TYPE.STRING)
         istNode.info.name = name.str.dup;
-    else 
+    else
         istNode.info.isDamaged = true;
-        
+
     const(JSONValue)* value = "value" in prop;
     if (value && value.type == JSON_TYPE.STRING)
         istNode.info.value = text2value(value.str.dup, istNode.info);
@@ -904,7 +904,7 @@ version(BigEndian) private ubyte[] swapBE(const ref ubyte[] input, size_t div)
             result[i*4+1] = input[i*4+2];
             result[i*4+2] = input[i*4+1];
             result[i*4+3] = input[i*4+0];
-        } break;           
+        } break;
         case 8: foreach(immutable i; 0 .. input.length / div) {
             result[i*8+0] = input[i*8+7];
             result[i*8+1] = input[i*8+6];
@@ -975,7 +975,7 @@ private void writeBin(IstNode istNode, Stream stream, const FormatToken tok)
     stream.position = sizePos;
     stream.writeUint(cast(uint) (savedEnd - sizePos));
     stream.position = savedEnd;
-}  
+}
 
 private FormatToken readBin(Stream stream, IstNode istNode)
 {
@@ -1030,7 +1030,7 @@ private FormatToken readBin(Stream stream, IstNode istNode)
         istNode.info.value = swapBE(data, istNode.info.type.size);
     }
     return result;
-}  
+}
 //----
 
 /// The serialization format used when not specified.
@@ -1111,7 +1111,7 @@ alias WantAggregateEvent = void delegate(IstNode node, ref void* aggregate, out 
  * by the $(D PropertyPubliserImpl) analyzers.
  *
  * Representation:
- * The serializer uses an intermediate serialization tree (IST) that ensures a 
+ * The serializer uses an intermediate serialization tree (IST) that ensures a
  * certain flexibilty against a traditional single-shot sequential serialization.
  * As expected for a serializer, object trees can be stored or restored by
  * a simple and single call to $(D publisherToStream()) in pair with
@@ -1145,8 +1145,8 @@ private:
     IstNode _rootNode;
     /// the current parent node, always represents a PropertyPublisher
     IstNode _parentNode;
-    /// the last created node 
-    IstNode _previousNode; 
+    /// the last created node
+    IstNode _previousNode;
     /// the PropertyPublisher linked to _rootNode
     Object  _rootPublisher;
 
@@ -1157,7 +1157,7 @@ private:
     void delegate(void*) _onFinishAggregate;
 
     SerializationFormat _format;
-    
+
     Stream _stream;
     PropDescriptor!Object _rootDescr;
 
@@ -1225,7 +1225,7 @@ private:
 
     bool restoreFromEvent(IstNode node, out bool stop)
     {
-        if (!_onWantDescriptor) 
+        if (!_onWantDescriptor)
             return false;
         _onWantDescriptor(node, node.info.descriptor, stop);
         if (node.info.descriptor)
@@ -1241,7 +1241,7 @@ private:
 
     bool descriptorMatchesNode(T)(PropDescriptor!T* descr, IstNode node)
     if (isSerializable!T)
-    {   
+    {
         if (!descr || !node.info.name.length || descr.name != node.info.name ||
             getRtti!T !is descr.rtti) return false;
         else
@@ -1383,7 +1383,7 @@ public:
 
 //---- serialization ----------------------------------------------------------+
 
-    /** 
+    /**
      * Saves the IST to a Stream.
      *
      * Params:
@@ -1405,7 +1405,7 @@ public:
                 auto child = cast(IstNode) node;
                 if (child.childrenCount)
                     writeNodesFrom(child);
-                else writeFormat(_format)(child, _stream, FormatToken.prop); 
+                else writeFormat(_format)(child, _stream, FormatToken.prop);
             }
             writeFormat(_format)(parent, _stream, FormatToken.objEnd);
         }
@@ -1433,7 +1433,7 @@ public:
     {
         _format = format;
         _stream = outputStream;
-        //_mustWrite = true; 
+        //_mustWrite = true;
         _rootNode.deleteChildren;
         _previousNode = null;
         _parentNode = null;
@@ -1712,7 +1712,7 @@ public:
      *      descriptorName = The name chain that identifies the node.
      * Returns:
      *      A reference to the node that matches to the property or nulll.
-     */ 
+     */
     IstNode findNode(bool cache = false)(const(char)[] descriptorName)
     {
         if (_rootNode.info.name == descriptorName)
@@ -1762,7 +1762,7 @@ public:
      *      node = The IST node from where the restoration starts.
      *      It can be determined by a call to $(D findNode()).
      *      recursive = When set to true the restoration is recursive.
-     */  
+     */
     void nodeToPublisher(IstNode node, bool recursive = false)
     {
         bool restore(IstNode current)
@@ -1780,7 +1780,7 @@ public:
                 result = restoreFromEvent(current, stop);
                 result &= !stop;
             }
-            return result;    
+            return result;
         }
         bool restoreLoop(IstNode current)
         {
@@ -1974,7 +1974,7 @@ version(unittest)
         inf.value = value ;
         assert(value2text(&inf) == text);
         assert(text2value(text, &inf) == value);
-        //  
+        //
         void testType(T)(T t)
         {
             char[] asText;
@@ -1987,9 +1987,9 @@ version(unittest)
             //
             asText = to!string(v).dup;
             assert(value2text(&info) == asText, T.stringof);
-            static if (!isArray!T) 
+            static if (!isArray!T)
                 assert(*cast(T*)(text2value(asText, &info)).ptr == v, T.stringof);
-            static if (isArray!T) 
+            static if (isArray!T)
                 assert(cast(ubyte[])text2value(asText, &info)==cast(ubyte[])v,T.stringof);
         }
 
@@ -2020,9 +2020,9 @@ version(unittest)
         testByFormat!(SerializationFormat.izbin)();
         //testByFormat!(SerializationFormat.json)();
     }
-    
+
     class Referenced1 {}
-    
+
     class ReferencedUser: PropertyPublisher
     {
         mixin PropertyPublisherImpl;
@@ -2034,7 +2034,7 @@ version(unittest)
         {
             fRef = fSerRef.restoreReference!Referenced1;
         }
-    
+
         this()
         {
             fSerRef = construct!SerializableReference;
@@ -2056,7 +2056,7 @@ version(unittest)
             // to knwo where the members of the sub pub. are located.
         }
     }
-    
+
     class ClassA: ClassB
     {
         private:
@@ -2092,7 +2092,7 @@ version(unittest)
                 _aB2.reset;
             }
     }
-    
+
     class ClassB : PropertyPublisher
     {
         mixin PropertyPublisherImpl;
