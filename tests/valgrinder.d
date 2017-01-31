@@ -5,11 +5,18 @@ import
 import
     iz.classes;
 
+immutable string rootDir;
+
+static this()
+{
+    rootDir = __FILE_FULL_PATH__.dirName;
+}
+
 int main(string[] args)
 {
-    chdir(__FILE_FULL_PATH__.dirName);
+    chdir(rootDir);
     size_t failedCount;
-    foreach(de; dirEntries("/home/basile/Dev/dproj/iz/tests/leaks/", "*.d",
+    foreach(de; dirEntries(rootDir ~ "/leaks/", "*.d",
         SpanMode.depth))
             failedCount += !de.name.test();
     return failedCount != 0;
@@ -17,7 +24,7 @@ int main(string[] args)
 
 size_t test(string filename)
 {
-    string target = __FILE_FULL_PATH__.dirName ~ "/" ~ filename.baseName.stripExtension;
+    string target = rootDir ~ "/" ~ filename.baseName.stripExtension;
     bool result;
 
     try
