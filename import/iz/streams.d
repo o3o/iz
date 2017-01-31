@@ -985,6 +985,9 @@ body
  */
 abstract class SystemStream: Stream, StreamPersist
 {
+
+    mixin inheritedDtor;
+
     private
     {
         StreamHandle _handle;
@@ -1148,6 +1151,8 @@ abstract class SystemStream: Stream, StreamPersist
  */
 class FileStream: SystemStream
 {
+    mixin inheritedDtor;
+
     private
     {
         string _filename;
@@ -1283,6 +1288,9 @@ class FileStream: SystemStream
  */
 class MemoryStream: Stream, StreamPersist, FilePersist8
 {
+
+    mixin inheritedDtor;
+
     private
     {
         size_t _size;

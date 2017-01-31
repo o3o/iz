@@ -16,13 +16,12 @@ int main(string[] args)
 {
     chdir(rootDir);
     size_t failedCount;
-    foreach(de; dirEntries(rootDir ~ "/leaks/", "*.d",
-        SpanMode.depth))
-            failedCount += !de.name.test();
+    foreach(de; dirEntries(rootDir ~ "/leaks/", "*.d", SpanMode.depth))
+        failedCount += !de.name.test();
     return failedCount != 0;
 }
 
-size_t test(string filename)
+bool test(string filename)
 {
     string target = rootDir ~ "/" ~ filename.baseName.stripExtension;
     bool result;
@@ -38,7 +37,7 @@ size_t test(string filename)
         if (dmd.exitStatus != 0)
             throw new Exception("failed to compile " ~ filename);
 
-        // run trough valgrind
+        // run through valgrind
         Process valgrind = new Process;
         valgrind.executable = "valgrind";
         valgrind.parameters = "--leak-check=yes " ~ target;

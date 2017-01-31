@@ -56,6 +56,7 @@ class PublishedObjectArray(ItemClass, bool managed = true, string aaKey = ""): P
 if (is(ItemClass : PropertyPublisher))
 {
 
+    mixin inheritedDtor;
     mixin PropertyPublisherImpl;
 
 private:
@@ -83,6 +84,7 @@ public:
     {
         clear;
         destruct(_items);
+        callInheritedDtor();
     }
 
     /**
@@ -393,6 +395,7 @@ if (isAssociativeArray!AA && isSerializable!(KeyType!AA) &&
     isSerializable!(ValueType!AA))
 {
 
+    mixin inheritedDtor;
     mixin PropertyPublisherImpl;
 
 protected:
@@ -569,6 +572,7 @@ final class Published2dArray(T): PropertyPublisher
 if (isBasicRtType!T)
 {
 
+    mixin inheritedDtor;
     mixin PropertyPublisherImpl;
 
 protected:
@@ -640,6 +644,7 @@ public:
     ~this()
     {
         destructEach(_dimensions, _content);
+        callInheritedDtor();
     }
 
     /**
@@ -803,6 +808,7 @@ private alias ComponentSubject = CustomSubject!(ComponentNotification, Component
 class Component: PropertyPublisher
 {
 
+    mixin inheritedDtor;
     mixin PropertyPublisherImpl;
 
 private:
@@ -866,6 +872,7 @@ public:
         //
         destruct(_compSubj);
         destruct(_owned);
+        callInheritedDtor();
     }
 
     /// Returns this instance onwer.
@@ -978,8 +985,10 @@ unittest
     assert(ReferenceMan.referenceID(cast(Component)c) == "a");
 }
 
-package abstract class BaseTimer: PropertyPublisher
+package class BaseTimer: PropertyPublisher
 {
+
+    mixin inheritedDtor;
     mixin PropertyPublisherImpl;
 
 protected:
@@ -997,10 +1006,10 @@ public:
     }
 
     /// Starts the timer.
-    abstract void start();
+    void start(){}
 
     /// Stops the timer.
-    abstract void stop();
+    void stop(){}
 
     /// Starts or stops the timer or indicates its status.
     @Set void active(bool value)
@@ -1048,6 +1057,8 @@ public:
 class ThreadTimer: BaseTimer
 {
 
+    mixin inheritedDtor;
+
 private:
 
     import core.time;
@@ -1081,6 +1092,7 @@ public:
     ~this()
     {
         stop();
+        callInheritedDtor();
     }
 
     final override void start()
@@ -1111,6 +1123,7 @@ public:
 class Process: PropertyPublisher
 {
 
+    mixin inheritedDtor;
     mixin PropertyPublisherImpl;
 
 private:
@@ -1501,6 +1514,7 @@ unittest
 class AsyncProcess: Process
 {
 
+    mixin inheritedDtor;
     mixin PropertyPublisherImpl;
 
 private:
@@ -1549,6 +1563,7 @@ public:
     ~this()
     {
         destruct(_checker);
+        callInheritedDtor();
     }
 
     /**

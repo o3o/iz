@@ -265,6 +265,32 @@ unittest
 }
 
 /**
+ * When mixed in class this template has for effect to automatically call the
+ * nearest inherited destructor if no destructor is present, otherwise the
+ * existing a call to `callInheritedDtor()` should be made in the last LOC
+ * of the destructor.
+ */
+mixin template inheritedDtor()
+{
+    void callInheritedDtor(this C)()
+    {
+        import std.meta: aliasSeqOf;
+        import std.range: iota;
+        import std.traits: BaseClassesTuple;
+        alias B = BaseClassesTuple!(typeof(this));
+        foreach(i; aliasSeqOf!(iota(0, B.length)))
+            static if (__traits(hasMember, B[i], "__xdtor"))
+            {
+                mixin("this." ~ B[i].stringof ~ ".__xdtor;");
+                break;
+            }
+    }
+
+    static if (!__traits(hasMember, typeof(this), "__dtor"))
+    public ~this() {callInheritedDtor();}
+}
+
+/**
  * Returns a new, GC-free, class instance.
  *
  * Params:

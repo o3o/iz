@@ -815,6 +815,8 @@ mixin template PropertyPublisherImpl()
 
         mixin ScopedReachability;
         foreach(member; __traits(allMembers, T))
+        static if (member != "__dtor")
+        static if (member != "__ctor")
         static if (isMemberReachable!(T, member))
         static if (is(typeof(mixin(getStuff))))
         static if (!isCallable!(mixin(getStuff)) || isDelegate!(mixin(getStuff))
