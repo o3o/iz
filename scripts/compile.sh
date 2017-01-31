@@ -17,4 +17,3 @@ dmd \
 "../import/iz/math.d" \
 -lib -O -release -inline -boundscheck=off -of"../lib/iz.a" -I"../import"
 echo ...lib compiled
-read
