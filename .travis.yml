@@ -3,3 +3,5 @@ sudo: false
 script:
   - cd scripts
   - sh ./test.sh
+  - sh ./compile.sh
+  - cd tests && dmd valgrinder.d && ./valgrinder
