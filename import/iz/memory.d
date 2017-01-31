@@ -459,19 +459,13 @@ if (is(T == class) && T.stringof == Object.stringof)
 {
     if (instance)
     {
-        void* dtorPtr;
         TypeInfo_Class tic = cast(TypeInfo_Class) typeid(instance);
-        while (tic)
+        if (void* dtorPtr = tic.destructor)
         {
-            dtorPtr = tic.destructor;
-            if (dtorPtr)
-            {
-                void delegate() dtor;
-                dtor.funcptr = cast(void function()) dtorPtr;
-                dtor.ptr = cast(void*) instance;
-                dtor();
-            }
-            tic = tic.base;
+            void delegate() dtor;
+            dtor.funcptr = cast(void function()) dtorPtr;
+            dtor.ptr = cast(void*) instance;
+            dtor();
         }
         freeMem(cast(void*)instance);
         instance = null;
@@ -805,16 +799,25 @@ unittest
 
     static class Base
     {
+        mixin inheritedDtor;
         ~this(){i += 2;}
     }
 
     static class Derived: Base
     {
-        ~this(){i += 3;}
+        mixin inheritedDtor;
+        ~this(){i += 3; callInheritedDtor;}
     }
 
     Base b = construct!Derived;
-    destruct(cast(Object)b);
+    // without static type
+    destruct(cast(Object) b);
+    assert(i == 5);
+    i = 0;
+
+    Derived d = construct!Derived;
+    // with static type
+    destruct(d);
     assert(i == 5);
 }
 

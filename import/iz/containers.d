@@ -628,6 +628,7 @@ alias StaticList = ContiguousList;
 class ContiguousList(T)
 {
     mixin ListHelpers!T;
+    mixin inheritedDtor;
 
     private
     {
@@ -1065,6 +1066,7 @@ private template dlistPayload(T)
 class DynamicList(T)
 {
     mixin ListHelpers!T;
+    mixin inheritedDtor;
 
     private
     {
@@ -2603,6 +2605,7 @@ public:
 class TreeItemClass(C): C
 if (is(C==class))
 {
+    mixin inheritedDtor;
     mixin TreeItem;
 }
 
