@@ -4,4 +4,4 @@ script:
   - cd scripts
   - sh ./test.sh
   - sh ./compile.sh
-  - cd ../tests && dmd valgrinder.d && ./valgrinder
+  - cd ../tests && dmd valgrinder.d ../lib/iz.a -I../import/ && ./valgrinder
