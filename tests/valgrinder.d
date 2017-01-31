@@ -36,7 +36,7 @@ size_t test(string filename)
         dmd.execute;
 
         if (dmd.exitStatus != 0)
-            return false;
+            throw new Exception("failed to compile " ~ filename);
 
         // run trough valgrind
         Process valgrind = new Process;
@@ -63,6 +63,7 @@ size_t test(string filename)
     }
     catch(Exception e)
     {
+        stderr.writeln(e.msg);
         return false;
     }
 
