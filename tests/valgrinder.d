@@ -3,7 +3,7 @@ module valgrinder;
 import
     std.stdio, std.path, std.file, std.algorithm, std.range, std.array;
 import
-    iz.classes;
+    iz.memory, iz.classes;
 
 immutable string rootDir;
 
@@ -29,16 +29,18 @@ bool test(string filename)
     try
     {
         // compiles the test
-        Process dmd = new Process;
+        Process dmd = construct!Process;
+        scope(exit) destruct(dmd);
         dmd.executable = "dmd";
-        dmd.parameters = filename ~ " ../lib/iz.a " ~ "-I../import/";
+        dmd.parameters = filename ~ " ../lib/iz.a" ~ " -I../import/";
         dmd.execute;
 
         if (dmd.exitStatus != 0)
             throw new Exception("failed to compile " ~ filename);
 
         // run through valgrind
-        Process valgrind = new Process;
+        Process valgrind = construct!Process;
+        scope(exit) destruct(valgrind);
         valgrind.executable = "valgrind";
         valgrind.parameters = "--leak-check=yes " ~ target;
         valgrind.usePipes = true;

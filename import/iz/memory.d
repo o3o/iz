@@ -264,9 +264,8 @@ unittest
 
 /**
  * When mixed in class this template has for effect to automatically call the
- * nearest inherited destructor if no destructor is present, otherwise the
- * existing a call to `callInheritedDtor()` should be made in the last LOC
- * of the destructor.
+ * nearest inherited destructor if no destructor is present, otherwise a call
+ * to `callInheritedDtor()` should be made in the last LOC of the destructor.
  */
 mixin template inheritedDtor()
 {
@@ -282,7 +281,7 @@ private:
     else
         enum inDtor = false;
 
-     void callInheritedDtor(classT = typeof(this))()
+    public void callInheritedDtor(classT = typeof(this))()
     {
         import std.meta: aliasSeqOf;
         import std.range: iota;

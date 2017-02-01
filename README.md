@@ -13,7 +13,7 @@ This library experiments manually managed classes lifetime.
 Most of the classes declared in _iz_ are not compatible with `new` and `destroy`, instead `construct` and `destruct` must be used.
 
 - `destroy` calls the destructors from the most derived to the base using the dynamic type information of each generation and without considering the static type of the argument (which may be correct).
-- `destructs` calls the destructor defined for the static class type of the argument, unless the argument is passed after a cast to `Object`. Even in this case, only the most derived destructor gets looked-up using the type information. Once found, the other destructors are called by inheritance (i.e like does `super()` to constructors).
+- `destructs` calls the destructor defined for the static type of the argument unless it is passed after a cast to `Object`. Even in this case, only the most derived destructor gets looked-up using the type information. Once found, the other destructors are called by inheritance (i.e like what does `super()` to constructors).
 
 As a consequence, `destroy` or the GC will segfault if _iz_ classes that do not inherit from `Object` are not accurately handled with `construct` and `destruct`.
 
