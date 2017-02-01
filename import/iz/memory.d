@@ -4,13 +4,11 @@
 module iz.memory;
 
 import
-    core.exception, std.traits, std.meta;
+    core.stdc.string, core.stdc.stdlib, core.exception;
+import
+    std.traits, std.meta;
 import
     iz.types;
-version(DigitalMars)
-    { import core.stdc.stdlib, core.stdc.string; }
-else
-    { import std.c.stdlib, std.c.string; }
 
 /**
  * Like malloc() but for @safe context.
@@ -272,12 +270,23 @@ unittest
  */
 mixin template inheritedDtor()
 {
-    void callInheritedDtor(this C)()
+
+private:
+
+    import std.traits: BaseClassesTuple;
+
+    alias B = BaseClassesTuple!(typeof(this));
+    enum hasDtor = __traits(hasMember, typeof(this), "__dtor");
+    static if (hasDtor && !__traits(isSame, __traits(parent, typeof(this).__dtor), typeof(this)))
+        enum inDtor = true;
+    else
+        enum inDtor = false;
+
+     void callInheritedDtor(classT = typeof(this))()
     {
         import std.meta: aliasSeqOf;
         import std.range: iota;
-        import std.traits: BaseClassesTuple;
-        alias B = BaseClassesTuple!(typeof(this));
+
         foreach(i; aliasSeqOf!(iota(0, B.length)))
             static if (__traits(hasMember, B[i], "__xdtor"))
             {
@@ -286,7 +295,7 @@ mixin template inheritedDtor()
             }
     }
 
-    static if (!__traits(hasMember, typeof(this), "__dtor"))
+    static if (!hasDtor || inDtor)
     public ~this() {callInheritedDtor();}
 }
 
@@ -797,8 +806,14 @@ unittest
 {
     static int i;
 
+    template impl()
+    {
+        ~this(){i += 1;}
+    }
+
     static class Base
     {
+        mixin impl;
         mixin inheritedDtor;
         ~this(){i += 2;}
     }
@@ -812,12 +827,12 @@ unittest
     Base b = construct!Derived;
     // without static type
     destruct(cast(Object) b);
-    assert(i == 5);
+    assert(i == 6);
     i = 0;
 
     Derived d = construct!Derived;
     // with static type
     destruct(d);
-    assert(i == 5);
+    assert(i == 6);
 }
 
