@@ -117,7 +117,15 @@ ubyte size(RtType type)
 {
     with(RtType) final switch (type)
     {
-        case _invalid, _object, _struct, _funptr, _stream, _enum, _aa, _pointer, _union:
+        case _invalid:
+        case _object:
+        case _struct:
+        case _funptr:
+        case _stream:
+        case _enum:
+        case _aa:
+        case _pointer:
+        case _union:
             return 0;
         case _bool, _byte, _ubyte, _char:
             return 1;
@@ -313,7 +321,7 @@ struct TextTraits
 struct PubTraits
 {
     /// Returns a delegate to the struct's publicationFromName() method.
-    GenericDescriptor* delegate(string) publicationFromName;
+    GenericDescriptor* delegate(const(char)[]) publicationFromName;
 
     /// Returns a delegate to the struct's publicationFromIndex() method.
     GenericDescriptor* delegate(size_t) publicationFromIndex;
@@ -611,7 +619,7 @@ if (B.length < 2)
         const Rtti result = Rtti(RtType._funptr, dim, typeCtors, FunPtrInfo(T.stringof,
             is(T == delegate), cast(Rtti*)getRtti!R, pr));
     }
-    else static if (is(T == class) || is(T==Stream))
+    else static if (is(T == class) || is(T == Stream))
     {
         static if(!is(T == Stream))
         {
@@ -834,7 +842,7 @@ unittest
     static struct Bar
     {
         size_t publicationCount(){return 0;}
-        GenericDescriptor* publicationFromName(string){return null;}
+        GenericDescriptor* publicationFromName(const(char)[]){return null;}
         GenericDescriptor* publicationFromIndex(size_t){return null;}
     }
     Bar bar;
