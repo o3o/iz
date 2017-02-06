@@ -1,3 +1,4 @@
+#!runnable: -g -gs
 /**
  * The iz property descriptor system.
  */
@@ -573,7 +574,7 @@ interface PropertyPublisher
      * Similar to the publication() function template excepted that the
      * result type has not to be specified.
      */
-    GenericDescriptor* publicationFromName(string name);
+    GenericDescriptor* publicationFromName(const(char)[] name);
     /**
      * Returns a pointer the index-th descriptor.
      * Index must be within the [0 .. publicationCount] range.
@@ -746,7 +747,7 @@ mixin template PropertyPublisherImpl()
 
     /// see PropertyPublisher
     static if (!__traits(hasMember, ToT, "publicationFromName") || Base)
-    public GenericDescriptor* publicationFromName(string name)
+    public GenericDescriptor* publicationFromName(const(char)[] name)
     {return publication!int(name);}
 
     /// see PropertyPublisher
@@ -765,7 +766,7 @@ mixin template PropertyPublisherImpl()
      * Returns:
      *      Null if the operation fails otherwise a pointer to a PropDescriptor!T.
      */
-    public PropDescriptor!T* publication(T)(string name, bool createIfMissing = false)
+    public PropDescriptor!T* publication(T)(const(char)[] name, bool createIfMissing = false)
     {
         PropDescriptor!T* descr;
         foreach(immutable i; 0 .. _publishedDescriptors.length)
@@ -1462,7 +1463,7 @@ PropertyPublisher findPublisher(PropertyPublisher pub, string accessChain)
     {
         if (!pub || names.empty)
             return pub;
-        if (auto descr = cast(PropDescriptor!Object*) pub.publicationFromName(names.front.idup))
+        if (auto descr = cast(PropDescriptor!Object*) pub.publicationFromName(names.front))
         {
             pub = null;
             if (descr.rtti.type == RtType._object)
@@ -1474,18 +1475,20 @@ PropertyPublisher findPublisher(PropertyPublisher pub, string accessChain)
     }
 }
 ///
-/*unittest
+unittest
 {
-    class A: PropertyPublisher
+    class AU: PropertyPublisher
     {mixin PropertyPublisherImpl;}
 
     class B: PropertyPublisher
     {
         mixin PropertyPublisherImpl;
-        @SetGet A _a;
+        mixin inheritedDtor;
+
+        @SetGet AU _a;
         this()
         {
-            _a = construct!A;
+            _a = construct!AU;
             collectPublications!B;
         }
         ~this()
@@ -1497,6 +1500,8 @@ PropertyPublisher findPublisher(PropertyPublisher pub, string accessChain)
     class C: PropertyPublisher
     {
         mixin PropertyPublisherImpl;
+        mixin inheritedDtor;
+
         @SetGet B _b;
         this()
         {
@@ -1510,12 +1515,13 @@ PropertyPublisher findPublisher(PropertyPublisher pub, string accessChain)
     }
 
     C c = construct!C;
+
     assert(c.findPublisher("b") == c._b);
     assert(c.findPublisher("b.a") == c._b._a);
     assert(c.findPublisher("b.a.g") is null);
     destruct(c);
 }
-*/
+
 /**
  * Returns true if two property descriptors are bindable.
  * To be bindable, the property name must be identical but also their types.
@@ -1653,17 +1659,24 @@ void bindPublications(bool recursive = false, S, T)(auto ref S src, auto ref T t
         {
             static if (!PubIsStruct) // PubTraits should also have declarator, even if not used
             {
+                Object srcObj = srcP.typedAs!Object.get();
+                Object trgObj = trgP.typedAs!Object.get();
+                if (!srcObj || !trgObj)
+                    return;
+
+                PropertyPublisher sPb = cast(PropertyPublisher) srcObj;
+                PropertyPublisher tPb = cast(PropertyPublisher) trgObj;
+                if (!sPb || !tPb)
+                    return;
+
                 // reference
-                if (srcP.declarator !is source.declarator
-                    && trgP.declarator !is target.declarator)
+                if (sPb.declarator !is cast(Object) source
+                    && tPb.declarator !is cast(Object) target)
                         setBasicType!Object;
                 // sub object
                 else static if (recursive)
                 {
-                    bindPublications!true(
-                        (cast(PropDescriptor!Object*) srcP).get(),
-                        (cast(PropDescriptor!Object*) trgP).get()
-                    );
+                    bindPublications!true(sPb, tPb);
                 }
             }
         }
@@ -1743,35 +1756,41 @@ unittest
 {
     import iz.streams: Stream, MemoryStream;
 
-    static struct Bytes
+    static struct T23Bytes
     {
         enum ubyte[] _value = [0,1,2,3];
         ubyte[] saveToBytes() {return _value;}
         void loadFromBytes(ubyte[] value){assert(value == _value);}
     }
 
-    static struct Text
+    static struct T23Text
     {
         enum const(char)[] _value = "value";
         const(char)[] saveToText() {return _value;}
         void loadFromText(const(char)[] value){assert(value == _value);}
     }
 
-    class Foo(bool Nested) : PropertyPublisher
+    class T23Foo(bool Nested) : PropertyPublisher
     {
         mixin PropertyPublisherImpl;
+        mixin inheritedDtor;
+
         this()
         {
             static if (Nested)
-                _sub = construct!(Foo!false);
+                _sub = construct!(T23Foo!false);
             str = construct!MemoryStream;
-            collectPublications!(Foo!Nested);
+            collectPublications!(T23Foo!Nested);
+
+            static if (Nested)
+                assert(_sub.declarator is this);
+
         }
         ~this()
         {
             // TODO-cbugfix: nested prop publisher bug after binding
-            //static if (Nested) if (_sub)
-            //    destruct(_sub);
+            static if (Nested) if (_sub)
+                destruct(_sub);
             destruct(str);
         }
         @SetGet uint _a;
@@ -1779,8 +1798,8 @@ unittest
         @SetGet string _c;
         @SetGet int[][] _d;
         @SetGet int[][][] _e;
-        @SetGet Bytes _bytes;
-        @SetGet Text _text;
+        @SetGet T23Bytes _bytes;
+        @SetGet T23Text _text;
         @SetGet int[string] _f;
         MemoryStream str;
 
@@ -1790,12 +1809,19 @@ unittest
 
         static if (Nested)
         {
-            @SetGet Foo!false _sub;
+            @NoGc @SetGet T23Foo!false _sub;
         }
     }
 
-    Foo!true source = construct!(Foo!true);
-    Foo!true target = construct!(Foo!true);
+    //static assert(!MustAddGcRange!(T23Foo!true));
+    //static assert(!MustAddGcRange!(T23Foo!false));
+
+    getRtti!(T23Foo!true).classInfo.identifier.writeln;
+    getRtti!(T23Foo!false).classInfo.identifier.writeln;
+    stdout.flush;
+
+    T23Foo!true source = construct!(T23Foo!true);
+    T23Foo!true target = construct!(T23Foo!true);
     source._a = 8; source._b = ulong.max; source._c = "123";
     source._d = [[0,1,2,3],[4,5,6,7]];
     source._e = [[[0,1],[2,3]],[[4,5],[6,7]],[[8,9],[10,11]]];
@@ -1803,6 +1829,7 @@ unittest
     source._sub._a = 8; source._sub._b = ulong.max; source._sub._c = "123";
     source.str.writeInt(1);source.str.writeInt(2);source.str.writeInt(3);
     source._sub.str.writeInt(1);source._sub.str.writeInt(2);source._sub.str.writeInt(3);
+
     bindPublications!true(source, target);
 
     assert(target._a == source._a);
@@ -1822,6 +1849,7 @@ unittest
     assert(target._sub.str.readInt == 1);
     assert(target._sub.str.readInt == 2);
     assert(target._sub.str.readInt == 3);
+
     destructEach(source, target);
 }
 
