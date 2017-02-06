@@ -32,11 +32,12 @@ class SerializableReference: PropertyPublisher
 {
 
     mixin PropertyPublisherImpl;
+    mixin inheritedDtor;
 
 protected:
 
     ubyte _cnt;
-    char[] _id, _tp;
+    Array!char _id, _tp;
     void delegate(Object) _onRestored;
 
     void doSet()
@@ -54,7 +55,7 @@ protected:
 
     @Get char[] type()
     {
-        return _tp;
+        return _tp[];
     }
 
     @Set void type(char[] value)
@@ -65,7 +66,7 @@ protected:
 
     @Get char[] identifier()
     {
-         return _id;
+         return _id[];
     }
 
     @Set void identifier(char[] value)
@@ -78,6 +79,12 @@ public:
 
     ///
     this() {collectPublications!SerializableReference;}
+
+    ~this()
+    {
+        destruct(_tp);
+        destruct(_id);
+    }
 
     /**
      * Sets the internal fields according to a referenced.
@@ -143,8 +150,6 @@ package bool isSerArrayType(T)()
     }
     else return true;
 }
-
-struct GenericStruct{}
 
 /**
  * Only a sub set of the type representable as a Rtti are serializable.
@@ -2016,8 +2021,8 @@ version(unittest)
         //foreach(fmt;EnumMembers!SerializationFormat)
         //    testByFormat!fmt();
 
-        //testByFormat!(SerializationFormat.iztxt)();
-        //testByFormat!(SerializationFormat.izbin)();
+        testByFormat!(SerializationFormat.iztxt)();
+        testByFormat!(SerializationFormat.izbin)();
         //testByFormat!(SerializationFormat.json)();
     }
 
@@ -2026,6 +2031,7 @@ version(unittest)
     class ReferencedUser: PropertyPublisher
     {
         mixin PropertyPublisherImpl;
+        mixin inheritedDtor;
 
         SerializableReference fSerRef;
         Referenced1 fRef;
@@ -2096,22 +2102,32 @@ version(unittest)
     class ClassB : PropertyPublisher
     {
         mixin PropertyPublisherImpl;
+        mixin inheritedDtor;
+
         private:
-            @SetGet int[]  anIntArray;
+            Array!int  _anIntArray;
+            Array!char _someChars;
             @SetGet float  aFloat;
-            @SetGet char[] someChars;
+
         public:
-            this() {
+            this()
+            {
                 collectPublications!ClassB;
                 anIntArray = [0, 1, 2, 3];
                 aFloat = 0.123456f;
                 someChars = "azertyuiop".dup;
             }
-            void reset() {
+            void reset()
+            {
                 anIntArray = anIntArray.init;
                 aFloat = 0.0f;
                 someChars = someChars.init;
             }
+
+            @Set anIntArray(int[] value){_anIntArray = value;}
+            @Get int[] anIntArray(){return _anIntArray[];}
+            @Set someChars(char[] value){_someChars = value;}
+            @Get char[] someChars(){return _someChars[];}
     }
 
     void testByFormat(SerializationFormat format)()
@@ -2120,8 +2136,8 @@ version(unittest)
 
         MemoryStream str  = construct!MemoryStream;
         Serializer ser    = construct!Serializer;
-        ClassB b = construct!ClassB;
-        ClassA a = construct!ClassA;
+        ClassB b = construct!(ClassB);
+        ClassA a = construct!(ClassA);
         scope(exit) destructEach(str, ser, b, a);
 
         // basic sequential store/restore ---+
@@ -2190,9 +2206,9 @@ version(unittest)
         //----
 
         // store & restore a serializable reference ---+
-        auto ref1 = construct!Referenced1;
-        auto ref2 = construct!Referenced1;
-        auto usrr = construct!ReferencedUser;
+        auto ref1 = construct!(Referenced1);
+        auto ref2 = construct!(Referenced1);
+        auto usrr = construct!(ReferencedUser);
         scope(exit) destructEach(ref1, ref2, usrr);
 
         assert(ReferenceMan.storeReference!Referenced1(ref1, "referenced.ref1"));
@@ -2205,7 +2221,7 @@ version(unittest)
         str.clear;
         usrr.fRef = ref1;
         ser.publisherToStream(usrr, str, format);
-
+        //
         usrr.fRef = ref2;
         assert(usrr.fRef == ref2);
         str.position = 0;
@@ -2237,7 +2253,7 @@ version(unittest)
         assert(b.someChars == "");
         str.position = 0;
         ser.streamToIst(str,format);
-
+        //
         auto node_anIntArray = ser.findNode("root.anIntArray");
         if(node_anIntArray) ser.nodeToProperty(node_anIntArray,
              b.publication!(int[])("anIntArray"));
@@ -2248,7 +2264,7 @@ version(unittest)
         else assert(0);
         auto node_someChars = ser.findNode("root.someChars");
         if(node_someChars) ser.nodeToProperty(node_someChars,
-            b.publication!(char[])("someChars"));
+           b.publication!(char[])("someChars"));
         else assert(0);
         assert(b.anIntArray == [0, 1, 2, 3]);
         assert(b.aFloat == 0.123456f);
@@ -2413,15 +2429,19 @@ version(unittest)
         @SetGet ubyte _a = 12;
         @SetGet byte _b = 21;
         @SetGet byte _c = 31;
-        @SetGet char[] _t = "line1\"inside dq\"\nline2\nline3".dup;
         @SetGet void delegate(uint) _delegate;
         MemoryStream _stream;
+
+        Array!char _t;
+        @Set t(char[] value){_t = value;}
+        @Get char[] t(){return _t;}
 
         @SetGet RefPublisher _refPublisher; //initially null, so it's a ref.
         @SetGet SubPublisher _subPublisher; //initially assigned so 'this' is the owner.
 
         this()
         {
+            _t = "line1\"inside dq\"\nline2\nline3".dup;
             _refPublisherSource = construct!RefPublisher; // not published
             _subPublisher = construct!SubPublisher;
             _anotherSubPubliser = construct!SubPublisher;
@@ -2465,6 +2485,7 @@ version(unittest)
             destruct(_refPublisherSource);
             destruct(_anotherSubPubliser);
             destruct(_stream);
+            destruct(_t);
         }
         void delegatetarget(uint param){dgTest = "awyesss";}
         void reset()
