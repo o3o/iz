@@ -2016,8 +2016,8 @@ version(unittest)
         //foreach(fmt;EnumMembers!SerializationFormat)
         //    testByFormat!fmt();
 
-        testByFormat!(SerializationFormat.iztxt)();
-        testByFormat!(SerializationFormat.izbin)();
+        //testByFormat!(SerializationFormat.iztxt)();
+        //testByFormat!(SerializationFormat.izbin)();
         //testByFormat!(SerializationFormat.json)();
     }
 
