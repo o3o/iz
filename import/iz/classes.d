@@ -69,7 +69,7 @@ private:
 
 protected:
 
-    static immutable string _fmtName = "item<%d>";
+    @NoGc static immutable string _fmtName = "item<%d>";
     @NoGc Array!ItemClass _items;
 
 public:
@@ -276,6 +276,7 @@ unittest
     class Item : PropertyPublisher
     {
         mixin PropertyPublisherImpl;
+        mixin inheritedDtor;
         @SetGet uint _a, _b, _c;
         // a default ctor is needed.
         this(){collectPublications!Item;}
@@ -299,6 +300,8 @@ unittest
     class ItemT: PropertyPublisher
     {
         mixin PropertyPublisherImpl;
+        mixin inheritedDtor;
+
         @SetGet string name;
         @SetGet int value;
 
@@ -350,11 +353,11 @@ unittest
     itm.setProps(3u,4u,5u);
     itm = col.addItem;
     itm.setProps(6u,7u,8u);
-
+    //
     auto collaccess = col.items;
     collaccess.length = 0;
     assert(col.items.length == 3);
-
+    //
     ser.publisherToStream(col, str, SerializationFormat.iztxt);
     str.position = 0;
     col.clear;

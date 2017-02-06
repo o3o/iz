@@ -704,7 +704,7 @@ mixin template PropertyPublisherImpl()
             import iz.memory: destruct;
             foreach(ptr; _publishedDescriptors)
                 if (ptr) destruct(cast(GenericDescriptor*) ptr);
-            destruct(_publishedDescriptors);
+            _publishedDescriptors.length = 0;
         }
 
         ~this()
@@ -712,6 +712,8 @@ mixin template PropertyPublisherImpl()
             // must be called manually for structs.
             static if (!is(typeof(this) == struct))
                 destructDescriptors;
+            import iz.memory: destruct;
+            destruct(_publishedDescriptors);
         }
     }
 
