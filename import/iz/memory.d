@@ -136,6 +136,14 @@ enum TellRangeAdded;
  * when the others constructor are suposed to do the initialization job.
  */
 enum NoInit;
+///
+unittest
+{
+    @NoInit static struct Foo{int a = 42;}
+    Foo* foo = construct!Foo;
+    // initializer well skipped
+    assert(foo.a != 42);
+}
 
 /**
  * Indicates if an aggregate contains members that might be
@@ -146,7 +154,6 @@ enum NoInit;
 template MustAddGcRange(T)
 if (is(T==struct) || is(T==union) || is(T==class))
 {
-
     string check()
     {
         import std.meta: aliasSeqOf;
@@ -156,7 +163,8 @@ if (is(T==struct) || is(T==union) || is(T==class))
 
         enum addManaged = q{managedMembers ~= " " ~ T.tupleof[i].stringof;};
 
-        static if (is(T == class))
+        // TODO: allow CPP classes detection when protection compliance removed.
+        static if (is(T == class) /*&& (!isCppClass!T)*/)
         {
             foreach(BT; BaseClassesTuple!T)
             {
@@ -165,7 +173,8 @@ if (is(T==struct) || is(T==union) || is(T==class))
                     managedMembers ~= " " ~ m;
             }
         }
-
+        // TODO: use __trait(allMembers) when protection compliance removed.
+        // ".tupleof" doesn't include the static fields.
         foreach(i; aliasSeqOf!(iota(0, T.tupleof.length)))
         {
             static if (!is(typeof(T.tupleof[i])== void))
@@ -270,26 +279,29 @@ unittest
 mixin template inheritedDtor()
 {
 
-private:
+    static assert(is(typeof(this) == class));
 
-    import std.traits: BaseClassesTuple;
+    private
+    {
+        import std.traits: BaseClassesTuple;
 
-    alias B = BaseClassesTuple!(typeof(this));
-    enum hasDtor = __traits(hasMember, typeof(this), "__dtor");
-    static if (hasDtor && !__traits(isSame, __traits(parent, typeof(this).__dtor), typeof(this)))
-        enum inDtor = true;
-    else
-        enum inDtor = false;
+        alias __iz_B = BaseClassesTuple!(typeof(this));
+        enum hasDtor = __traits(hasMember, typeof(this), "__dtor");
+        static if (hasDtor && !__traits(isSame, __traits(parent, typeof(this).__dtor), typeof(this)))
+            enum inDtor = true;
+        else
+            enum inDtor = false;
+    }
 
     public void callInheritedDtor(classT = typeof(this))()
     {
         import std.meta: aliasSeqOf;
         import std.range: iota;
 
-        foreach(i; aliasSeqOf!(iota(0, B.length)))
-            static if (__traits(hasMember, B[i], "__xdtor"))
+        foreach(i; aliasSeqOf!(iota(0, __iz_B.length)))
+            static if (__traits(hasMember, __iz_B[i], "__xdtor"))
             {
-                mixin("this." ~ B[i].stringof ~ ".__xdtor;");
+                mixin("this." ~ __iz_B[i].stringof ~ ".__xdtor;");
                 break;
             }
     }
@@ -349,10 +361,10 @@ Object construct(TypeInfo_Class tic) @trusted
 }
 
 /**
- * Returns a new, GC-free, pointer to a struct.
+ * Returns a new, GC-free, pointer to a struct or to an union.
  *
  * Params:
- *      ST = A struct type.
+ *      ST = A struct or an union type.
  *      a = Variadic parameters passed to the constructor.
  */
 ST* construct(ST, A...)(A a) @trusted
@@ -393,6 +405,7 @@ if(is(ST==struct) || is(ST==union))
  *      instance = A $(D T) instance.
  */
 void destruct(T)(auto ref T* instance)
+if (is(T == struct) || is(T==union))
 {
     if (!instance)
         return;
@@ -427,17 +440,17 @@ if (is(T == struct) || is(T==union))
  * Object.
  *
  * Params:
- *      assumeNoCtor = When no __ctor is found this avoids to search one
+ *      assumeNoDtor = When no __ctor is found this avoids to search one
  *      in the base classes.
  *      T = A class type (most derived), likely to be infered.
  *      instance = A $(D T) instance.
  */
-void destruct(bool assumeNoCtor = false, T)(auto ref T instance)
+void destruct(bool assumeNoDtor = false, T)(auto ref T instance)
 if (is(T == class) && T.stringof != Object.stringof)
 {
     if (instance)
     {
-        static if (__traits(hasMember, T, "__xdtor") || assumeNoCtor)
+        static if (__traits(hasMember, T, "__xdtor") || assumeNoDtor)
         {
             static if (__traits(hasMember, T, "__xdtor"))
                 instance.__xdtor;
