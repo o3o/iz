@@ -643,3 +643,38 @@ unittest
     static assert(!isStringLiteral!int);
 }
 
+/**
+ * Indicates wether the class passed as template argument has the extern(C++)
+ * linkage attribute.
+ */
+template isCppClass(T)
+if (is(T == class))
+{
+    bool allCpp()
+    {
+        bool result = true;
+        foreach (member; __traits(allMembers, T))
+        {
+            static if (member != "this") // ?
+            static if (__traits(getOverloads, T, member).length)
+            foreach (ov; __traits(getOverloads, T, member))
+                static if (functionLinkage!ov != "C++")
+            {
+                result = false;
+                break;
+            }
+            return result;
+        }
+    }
+    enum isCppClass = allCpp();
+}
+///
+unittest
+{
+    class Foo{void bar(){} int a;}
+    static assert(!isCppClass!Foo);
+
+    extern(C++) class Bar{void bar(){} int a;}
+    static assert(isCppClass!Bar);
+}
+

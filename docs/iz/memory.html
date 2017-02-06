@@ -198,6 +198,23 @@ Like free() but for @safe context.
 </td></tr>
 </table>
 </div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>@<a href="iz/memory/NoInit.html">NoInit</a> static struct Foo{int a = 42;}
+Foo* foo = <a href="iz/memory.html#construct">construct</a>!Foo;
+// initializer well skipped
+assert(foo.a != 42);
+
+</code></pre>
+
+</div>
 </div></div><a class="anchor" id="construct"></a><div class="symbol"><div class="description"><pre><code>public CT <a href="iz/memory.html#construct">construct</a>(CT, A...)(A a) @trusted 
 if(is(CT == class) && !isAbstractClass!CT)
 </code></pre>
@@ -249,7 +266,7 @@ construct() overload.
 if(is(ST == struct) || is(ST == union))
 </code></pre>
 <div class="section"><h2></h2>
-<p>Returns a new, GC-free, pointer to a struct.
+<p>Returns a new, GC-free, pointer to a struct or to an union.
 </p>
 
 
@@ -260,7 +277,7 @@ if(is(ST == struct) || is(ST == union))
 </div>
 <div class="section"><h2>Parameters</h2>
 <table class="params">
-<tr class="param"><td class="paramName">ST</td><td class="paramDoc"><p>A struct type.
+<tr class="param"><td class="paramName">ST</td><td class="paramDoc"><p>A struct or an union type.
 </p>
 </td></tr>
 <tr class="param"><td class="paramName">a</td><td class="paramDoc"><p>Variadic parameters passed to the constructor.
@@ -268,7 +285,8 @@ if(is(ST == struct) || is(ST == union))
 </td></tr>
 </table>
 </div>
-</div></div><a class="anchor" id="destruct"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/memory.html#destruct">destruct</a>(T)(auto ref T* instance)
+</div></div><a class="anchor" id="destruct"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/memory.html#destruct">destruct</a>(T)(auto ref T* instance) 
+if(is(T == struct) || is(T == union))
 </code></pre>
 <div class="section"><h2></h2>
 <p>Destructs a struct or a union that's been previously constructed
@@ -294,11 +312,36 @@ set the the instance to null.
 </td></tr>
 </table>
 </div>
-</div></div><a class="anchor" id="destruct"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/memory.html#destruct">destruct</a>(<a href="http://dlang.org/type.html#basic-data-types">bool</a> assumeNoCtor = false, T)(auto ref T instance) 
+</div></div><a class="anchor" id="destruct"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/memory.html#destruct">destruct</a>(T)(ref T instance) 
+if(is(T == struct) || is(T == union))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Destructs a struct or a union that's allocated within another
+aggregate that's not GC-managed.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">T</td><td class="paramDoc"><p>A union or a struct type, likely to be infered.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">instance</td><td class="paramDoc"><p>A <code class="d_inline_code">T</code> instance.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="destruct"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/memory.html#destruct">destruct</a>(<a href="http://dlang.org/type.html#basic-data-types">bool</a> assumeNoDtor = false, T)(auto ref T instance) 
 if(is(T == class) && T.stringof != Object.stringof)
 </code></pre>
 <div class="section"><h2></h2>
-<p>Destructs a class that's been previously constructed with <code class="d_inline_code">construct()</code>.
+<p>Destructs a class that's been previously constructed with <code class="d_inline_code">construct()</code>
+and when the static type is known.
 </p>
 
 
@@ -306,17 +349,19 @@ if(is(T == class) && T.stringof != Object.stringof)
 <div class="section"><h2></h2>
 <p>The function calls the destructor and, when passed as reference,
 set the the instance to null.
+When the static type is not known, destruct must be called after a cast to
+Object.
 </p>
 
 
 </div>
 <div class="section"><h2>Parameters</h2>
 <table class="params">
-<tr class="param"><td class="paramName">assumeNoCtor</td><td class="paramDoc"><p>When no __ctor is found this avoids a to search one
-     in the sub classes.
+<tr class="param"><td class="paramName">assumeNoDtor</td><td class="paramDoc"><p>When no __ctor is found this avoids to search one
+     in the base classes.
 </p>
 </td></tr>
-<tr class="param"><td class="paramName">T</td><td class="paramDoc"><p>A class type, likely to be infered.
+<tr class="param"><td class="paramName">T</td><td class="paramDoc"><p>A class type (most derived), likely to be infered.
 </p>
 </td></tr>
 <tr class="param"><td class="paramName">instance</td><td class="paramDoc"><p>A <code class="d_inline_code">T</code> instance.
@@ -328,24 +373,23 @@ set the the instance to null.
 if(is(T == class) && T.stringof == Object.stringof)
 </code></pre>
 <div class="section"><h2></h2>
-<p>Destructs a class that's been previously constructed with <code class="d_inline_code">construct()</code>.
+<p>Destructs a class that's been previously constructed with <code class="d_inline_code">construct()</code> and
+when the static type is not known.
 </p>
 
 
 </div>
 <div class="section"><h2></h2>
-<p>This overload is never @nogc. It should be used for classes that are downcasted
-to a base type, where a __ctor is not yet implemented.
+<p>This overload is only selected when the instance is casted as Object.
+It should be used when there no guarantee that the instance type is the most
+derived. This overload is never @nogc.
 </p>
 
 
 </div>
 <div class="section"><h2>Parameters</h2>
 <table class="params">
-<tr class="param"><td class="paramName">T</td><td class="paramDoc"><p>A class type, likely to be infered.
-</p>
-</td></tr>
-<tr class="param"><td class="paramName">instance</td><td class="paramDoc"><p>A <code class="d_inline_code">T</code> instance.
+<tr class="param"><td class="paramName">instance</td><td class="paramDoc"><p>A class instance casted to Object.
 </p>
 </td></tr>
 </table>
@@ -502,7 +546,7 @@ registered classes don't take the module in account.
 </p>
 </td></tr><tr><td><a href="iz/memory.html#copyMem">copyMem</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-trusted">@trusted</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td>Returns: <p>the pointer to the destination, (same as dst).
 </p>
-</td></tr><tr><td><a href="iz/memory.html#freeMem">freeMem</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-trusted">@trusted</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#construct">construct</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#construct">construct</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#construct">construct</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#destruct">destruct</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#destruct">destruct</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#destruct">destruct</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#destruct">destruct</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#newPtr">newPtr</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#destructEach">destructEach</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#registerFactoryClass">registerFactoryClass</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#registerFactoryClasses">registerFactoryClasses</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#factory">factory</a><span class="extrainfo"></span></td><td></td><td></td></tr></table><h2>Templates</h2><table><tr><td><a href="iz/memory/MustAddGcRange.html">MustAddGcRange</a></td><td></td><td></td></tr></table>
+</td></tr><tr><td><a href="iz/memory.html#freeMem">freeMem</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-trusted">@trusted</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#construct">construct</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#construct">construct</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#construct">construct</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#destruct">destruct</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#destruct">destruct</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#destruct">destruct</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#destruct">destruct</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#destruct">destruct</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#newPtr">newPtr</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#destructEach">destructEach</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#registerFactoryClass">registerFactoryClass</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#registerFactoryClasses">registerFactoryClasses</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#factory">factory</a><span class="extrainfo"></span></td><td></td><td></td></tr></table><h2>Templates</h2><table><tr><td><a href="iz/memory/MustAddGcRange.html">MustAddGcRange</a></td><td></td><td></td></tr><tr><td><a href="iz/memory/inheritedDtor.html">inheritedDtor</a></td><td></td><td></td></tr></table>
 </div>
 </div><script>hljs.initHighlightingOnLoad();</script>
 

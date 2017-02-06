@@ -88,6 +88,7 @@ The life-time of the objects is automatically handled by the internal container.
 <pre><code>class Item : <a href="iz/properties/PropertyPublisher.html">PropertyPublisher</a>
 {
     mixin <a href="iz/properties/PropertyPublisherImpl.html">PropertyPublisherImpl</a>;
+    mixin <a href="iz/memory/inheritedDtor.html">inheritedDtor</a>;
     @<a href="iz/properties/SetGet.html">SetGet</a> uint _a, _b, _c;
     // a default ctor is needed.
     <a href="iz/classes/PublishedObjectArray.html#this">this</a>(){collectPublications!Item;}
@@ -137,7 +138,7 @@ version(none) <a href="iz/serializer.html#publisherToFile">publisherToFile</a>(i
 </td></tr>
 </table>
 </div>
-</div></div><a class="anchor" id="deleteItem"></a><div class="symbol"><div class="description"><pre><code>private final <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/classes/PublishedObjectArray.html#deleteItem">deleteItem</a>(T)(T t) 
+</div></div><a class="anchor" id="deleteItem"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/classes/PublishedObjectArray.html#deleteItem">deleteItem</a>(T)(T t) 
 if(isIntegral!T || is(Unqual!T == ItemClass))
 </code></pre>
 <div class="section"><h2></h2>

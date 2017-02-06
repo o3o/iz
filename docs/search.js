@@ -330,9 +330,11 @@ var items = [
 {"iz.memory.TellRangeAdded" : "iz/memory/TellRangeAdded.html"},
 {"iz.memory.NoInit" : "iz/memory/NoInit.html"},
 {"iz.memory.MustAddGcRange" : "iz/memory/MustAddGcRange.html"},
+{"iz.memory.inheritedDtor" : "iz/memory/inheritedDtor.html"},
 {"iz.memory.construct" : "iz/memory.html#construct"},
 {"iz.memory.construct" : "iz/memory.html#construct"},
 {"iz.memory.construct" : "iz/memory.html#construct"},
+{"iz.memory.destruct" : "iz/memory.html#destruct"},
 {"iz.memory.destruct" : "iz/memory.html#destruct"},
 {"iz.memory.destruct" : "iz/memory.html#destruct"},
 {"iz.memory.destruct" : "iz/memory.html#destruct"},
@@ -432,6 +434,7 @@ var items = [
 {"iz.properties.isPropertyPublisher" : "iz/properties.html#isPropertyPublisher"},
 {"iz.properties.PropertyPublisherImpl" : "iz/properties/PropertyPublisherImpl.html"},
 {"iz.properties.PropertyPublisherImpl._publishedDescriptors" : "iz/properties/PropertyPublisherImpl.html#_publishedDescriptors"},
+{"iz.properties.PropertyPublisherImpl.clearDescriptors" : "iz/properties/PropertyPublisherImpl.html#clearDescriptors"},
 {"iz.properties.PropertyPublisherImpl.declarator" : "iz/properties/PropertyPublisherImpl.html#declarator"},
 {"iz.properties.PropertyPublisherImpl.declarator" : "iz/properties/PropertyPublisherImpl.html#declarator"},
 {"iz.properties.PropertyPublisherImpl.publicationCount" : "iz/properties/PropertyPublisherImpl.html#publicationCount"},
@@ -856,6 +859,7 @@ var items = [
 {"iz.types.isCompileTimeValue" : "iz/types/isCompileTimeValue.html"},
 {"iz.types.isStringLiteral" : "iz/types.html#isStringLiteral"},
 {"iz.types.isStringLiteral" : "iz/types.html#isStringLiteral"},
+{"iz.types.isCppClass" : "iz/types/isCppClass.html"},
 {"iz" : "iz.html"},
 ];
 function search(str) {

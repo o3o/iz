@@ -492,7 +492,7 @@ assert(<a href="iz/math.html#magn">magn</a>(complex(3.0,4.0)) == 5.0);
 </div></div><a class="anchor" id="wrap"></a><div class="symbol"><div class="description"><pre><code>public T <a href="iz/math.html#wrap">wrap</a>(string bound = ")", T)(
     T value, 
     T max) 
-if(isNumeric!T && bound == ")" || bound == "]")
+if(isNumeric!T && (bound == ")" || bound == "]"))
 </code></pre>
 <div class="section"><h2></h2>
 <p>Wraps a numeric value between 0 and a max value.

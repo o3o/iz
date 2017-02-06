@@ -1821,13 +1821,6 @@ unittest
         }
     }
 
-    //static assert(!MustAddGcRange!(T23Foo!true));
-    //static assert(!MustAddGcRange!(T23Foo!false));
-
-    getRtti!(T23Foo!true).classInfo.identifier.writeln;
-    getRtti!(T23Foo!false).classInfo.identifier.writeln;
-    stdout.flush;
-
     T23Foo!true source = construct!(T23Foo!true);
     T23Foo!true target = construct!(T23Foo!true);
     source._a = 8; source._b = ulong.max; source._c = "123";
