@@ -36,7 +36,6 @@ in
 }
 body
 {
-    Ptr old = src;
     src = realloc(src, newSize);
     if (!src)
         throw construct!OutOfMemoryError;
@@ -209,9 +208,9 @@ if (is(T==struct) || is(T==union) || is(T==class))
     }
 
     static if (hasUDA!(T, NoGc))
-        enum MustAddGcRange = [];
+        static immutable MustAddGcRange = [];
     else
-        enum MustAddGcRange = check();
+        static immutable MustAddGcRange = check();
 
     static if (hasUDA!(T, TellRangeAdded))
     {

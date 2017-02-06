@@ -1002,8 +1002,8 @@ private FormatToken readBin(Stream stream, IstNode istNode)
     // type and array
     string tstr;
     uint offs = 3;
-    if ((data[1] == RtType._enum || data[1] == RtType._struct ||
-        data[1] == RtType._funptr || data[1] == RtType._object))
+    if (data[1] == RtType._enum || data[1] == RtType._struct ||
+        data[1] == RtType._funptr || data[1] == RtType._object)
     {
         tstr = fromStringz( &(cast(string)data)[3] );
         offs += tstr.length;

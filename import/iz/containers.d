@@ -32,7 +32,7 @@ struct Array(T)
         size_t _blockCount;
         bool initDone;
 
-        final void initLazy() @safe @nogc
+        void initLazy() @safe @nogc
         {
             if (initDone)
                 return;
@@ -1412,7 +1412,7 @@ class DynamicList(T)
         /**
          * Returns the items count.
          */
-        size_t count() @trusted @property @nogc
+        size_t count() @trusted @nogc
         {
             return _count;
         }

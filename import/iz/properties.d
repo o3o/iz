@@ -696,14 +696,20 @@ mixin template PropertyPublisherImpl()
         protected Array!(void*) _publishedDescriptors;
     }
 
-    // TODO-cbugfix: stack struct with publications, double free corrupt in template dtor
-    static if (!__traits(hasMember, typeof(this), "destructDescriptors"))
+    static if (!__traits(hasMember, typeof(this), "clearDescriptors"))
     {
-        final void destructDescriptors()
+        /**
+         * Destructs each property descriptor and empties their container.
+         * After the call new descriptors can still be added.
+         */
+        public final void clearDescriptors()
         {
-            import iz.memory: destruct;
-            foreach(ptr; _publishedDescriptors)
-                if (ptr) destruct(cast(GenericDescriptor*) ptr);
+            if (_publishedDescriptors.length)
+            {
+                import iz.memory: destruct;
+                foreach(ptr; _publishedDescriptors)
+                    if (ptr) destruct(cast(GenericDescriptor*) ptr);
+            }
             _publishedDescriptors.length = 0;
         }
 
@@ -711,7 +717,7 @@ mixin template PropertyPublisherImpl()
         {
             // must be called manually for structs.
             static if (!is(typeof(this) == struct))
-                destructDescriptors;
+                clearDescriptors;
             import iz.memory: destruct;
             destruct(_publishedDescriptors);
         }

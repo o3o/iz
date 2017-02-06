@@ -84,7 +84,7 @@ void setIzRoundingMode(int value) @trusted pure nothrow
  */
 const(int) roundToNearest() @trusted pure nothrow
 {
-    int result = saveIzRoundingMode;
+    const int result = saveIzRoundingMode;
     import iz.sugar: maskBit;
     int newMode = result;
     newMode = maskBit!13(newMode);
@@ -103,7 +103,7 @@ const(int) roundToNearest() @trusted pure nothrow
  */
 const(int) roundToPositive() @trusted pure nothrow
 {
-    int result = saveIzRoundingMode;
+    const int result = saveIzRoundingMode;
     import iz.sugar: maskBit;
     int newMode = result;
     newMode = maskBit!13(newMode);
@@ -122,7 +122,7 @@ const(int) roundToPositive() @trusted pure nothrow
  */
 const(int) roundToNegative() @trusted pure nothrow
 {
-    int result = saveIzRoundingMode;
+    const int result = saveIzRoundingMode;
     import iz.sugar: maskBit;
     int newMode = result;
     newMode = maskBit!14(newMode);
@@ -141,7 +141,7 @@ const(int) roundToNegative() @trusted pure nothrow
  */
 const(int) roundToZero() @trusted pure nothrow
 {
-    int result = saveIzRoundingMode;
+    const int result = saveIzRoundingMode;
     int newMode = result;
     newMode |= 1 << 13;
     newMode |= 1 << 14;
@@ -495,7 +495,7 @@ nothrow pure @safe unittest
  *      max the maximal value.
  */
 T wrap(string bound = ")", T)(T value, T max)
-if (isNumeric!T && bound == ")" || bound == "]")
+if (isNumeric!T && (bound == ")" || bound == "]"))
 {
     static if (bound == ")")
     {

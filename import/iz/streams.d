@@ -207,7 +207,7 @@ interface Stream
      *      A variable of type T. This value can be undefined if the stream
      *      position does not allow to read a T.
      */
-    final T readVariable(T)()
+    T readVariable(T)()
     {
         T result;
         read(&result, T.sizeof);
@@ -238,7 +238,7 @@ interface Stream
      * Returns:
      *      the count of bytes that's been written (either T.sizeof or 0).
      */
-    final size_t writeVariable(T)(T value)
+    size_t writeVariable(T)(T value)
     {
         return write(&value, T.sizeof);
     }
@@ -282,7 +282,7 @@ interface Stream
     @nogc void clear();
 
     /// Support for the concatenation operator.
-    final void opOpAssign(string op)(Stream rhs)
+    void opOpAssign(string op)(Stream rhs)
     {
         static if(op == "~")
         {

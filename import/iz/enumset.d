@@ -274,12 +274,12 @@ private:
             toPrevMember;
         }
 
-        bool empty() nothrow @safe @property @nogc
+        bool empty() nothrow @safe @nogc
         {
             return set.none;
         }
 
-        E front() nothrow @safe @property @nogc
+        E front() nothrow @safe @nogc
         in
         {
             assert(frontIndex >= 0);

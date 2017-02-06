@@ -486,7 +486,7 @@ body
     import std.random: uniform;
     static immutable T min = 0;
     static immutable T max = 100;
-    bool result = uniform!"[]"(min, max) > max - t;
+    const bool result = uniform!"[]"(min, max) > max - t;
     if (result) fun(a);
     return result;
 }

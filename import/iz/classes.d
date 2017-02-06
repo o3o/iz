@@ -118,7 +118,7 @@ public:
      * Params:
      *      t = Either the item to delete or its index.
      */
-    final void deleteItem(T)(T t)
+    void deleteItem(T)(T t)
     if (isIntegral!T || is(Unqual!T == ItemClass))
     {
         ptrdiff_t index;
@@ -820,7 +820,7 @@ private:
     DynamicList!Component _owned;
     ComponentSubject _compSubj;
 
-    final void addOwned(Component o)
+    void addOwned(Component o)
     {
         if (!o) return;
         _owned.add(o);
@@ -1064,14 +1064,13 @@ class ThreadTimer: BaseTimer
 
 private:
 
-    import core.time;
     import core.atomic: atomicLoad, atomicStore;
 
     shared bool _stop;
     ulong _t1, _t2;
     Thread _thread;
 
-    final void execute()
+    void execute()
     {
         while (true)
         {
@@ -1331,7 +1330,7 @@ public:
             kv.popFront;
             if (kv.empty) continue;
             v = kv.front.idup;
-            items.popFront;
+            items.popFront();
             _environment[k] = v;
         }
     }
@@ -1546,7 +1545,7 @@ protected:
         }
         else 
         {
-            import core.sys.windows.winbase;
+            import core.sys.windows.winbase : WaitForSingleObject;
             if (_onOutputBuffer && WaitForSingleObject(_ppid.stdout.windowsHandle, 0))
                 _onOutputBuffer(this);           
         }   
