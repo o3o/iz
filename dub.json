@@ -13,5 +13,5 @@
     "Basile B."
   ],
   "description" : "streams, property descriptor, serializer, binder, etc.",
-  "license" : "MIT"
+  "license" : "BSL-1.0"
 }

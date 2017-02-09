@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../../style.css"/>
+<script src="../../highlight.pack.js"></script>
+<title>PropertyPublisherImpl</title>
+<base href="../../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.<a href=iz/properties.html>properties</a>.</small><span class="highlight">PropertyPublisherImpl</span>
+</div>
+<div class="sidebar">
+<a href="iz/properties.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/properties.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li>iz.<a href="iz/classes.html">classes</a></li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li>iz.<a href="iz/enumset.html">enumset</a></li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li><span class=" selected">iz.<a href="iz/properties.html">properties</a></span>
+</li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li>iz.<a href="iz/strings.html">strings</a></li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><div class="description"><pre><code>public template PropertyPublisherImpl()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Default implementation of a PropertyPublisher.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>When mixed in an aggregate type, two analyzers can be used to create
+automatically the PropDescriptors that match the setter and getter pairs
+anotated with @Set and @Get or that match the fields annotated with @SetGet.
+The analyzers are usually called in this(). The template has to be mixed in
+each class generation that introduces new annotated properties.
+The analyzers, propCollectorGetPairs() and propCollectorGetFields(), are
+function templates that must be instantiated with the type they have
+to scan (typeof(this)). The two analyzers can be called with a
+third function template: collectPublications().
+</p>
+
+
+</div>
+</div><a class="anchor" id="_publishedDescriptors"></a><div class="symbol"><div class="description"><pre><code>protected <a href="iz/containers/Array.html">Array</a>!(<a href="http://dlang.org/type.html#basic-data-types">void</a>*) _publishedDescriptors
+</code></pre>
+<div class="section"><h2></h2>
+<p>Contains the list of PropDesrcriptors created by the analyzers.
+Even if it's possible to access directly the array, it's safer to use
+($D publication()), ($D publicationFromName()) and ($D publicationFromIndex()).
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="clearDescriptors"></a><div class="symbol"><div class="description"><pre><code>public final <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/properties/PropertyPublisherImpl.html#clearDescriptors">clearDescriptors</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Destructs each property descriptor and empties their container.
+After the call new descriptors can still be added.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="declarator"></a><div class="symbol"><div class="description"><pre><code>public Object <a href="iz/properties/PropertyPublisherImpl.html#declarator">declarator</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>see PropertyPublisher
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="declarator"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/properties/PropertyPublisherImpl.html#declarator">declarator</a>(Object value)
+</code></pre>
+<div class="section"><h2></h2>
+<p>see PropertyPublisher
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="publicationCount"></a><div class="symbol"><div class="description"><pre><code>public size_t <a href="iz/properties/PropertyPublisherImpl.html#publicationCount">publicationCount</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>see PropertyPublisher
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="publicationFromName"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/properties.html#GenericDescriptor">GenericDescriptor</a>* <a href="iz/properties/PropertyPublisherImpl.html#publicationFromName">publicationFromName</a>(const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] name)
+</code></pre>
+<div class="section"><h2></h2>
+<p>see PropertyPublisher
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="publicationFromIndex"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/properties.html#GenericDescriptor">GenericDescriptor</a>* <a href="iz/properties/PropertyPublisherImpl.html#publicationFromIndex">publicationFromIndex</a>(size_t index)
+</code></pre>
+<div class="section"><h2></h2>
+<p>see PropertyPublisher
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="publication"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/properties/PropDescriptor.html">PropDescriptor</a>!T* <a href="iz/properties/PropertyPublisherImpl.html#publication">publication</a>(T)(
+    const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] name, 
+    <a href="http://dlang.org/type.html#basic-data-types">bool</a> createIfMissing = false)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns a pointer to a descriptor according to its name.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">T</td><td class="paramDoc"><p>The type of the property.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">name</td><td class="paramDoc"><p>The identifier used for the setter and the getter.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">createIfMissing</td><td class="paramDoc"><p>When set to true, the result is never null.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>Null if the operation fails otherwise a pointer to a PropDescriptor!T.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="collectPublications"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/properties/PropertyPublisherImpl.html#collectPublications">collectPublications</a>(T)()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Performs all the possible analysis.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="collectPublicationsFromFields"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/properties/PropertyPublisherImpl.html#collectPublicationsFromFields">collectPublicationsFromFields</a>(T)()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Creates the properties descriptors for each field annotated with @SetGet.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>If the field identifier starts with '_', 'f' or 'F' then the descriptor
+.name member excludes this prefix, otherwise the descriptor .name is
+identical.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="collectPublicationsFromPairs"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/properties/PropertyPublisherImpl.html#collectPublicationsFromPairs">collectPublicationsFromPairs</a>(T)()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Creates the property descriptors for the setter/getter pairs
+annotated with @Set/@Get.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>In a class hierarchy, an overriden accessor replaces the ancestor's one.
+If a setter is annoted with @HideSet or a getter with @HideGet then
+the descriptor created when the ancestor was scanned is removed from the
+publications.
+</p>
+
+
+</div>
+</div></div><div class="section members"><h2>Variables</h2><table><tr><td><a href="iz/properties/PropertyPublisherImpl.html#_publishedDescriptors">_publishedDescriptors</a></td><td><pre><code><a href="iz/containers/Array.html">Array</a>!(<a href="http://dlang.org/type.html#basic-data-types">void</a>*)
+</code></pre>
+</td><td></td></tr></table><h2>Functions</h2><table><tr><td><a href="iz/properties/PropertyPublisherImpl.html#clearDescriptors">clearDescriptors</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropertyPublisherImpl.html#declarator">declarator</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropertyPublisherImpl.html#declarator">declarator</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropertyPublisherImpl.html#publicationCount">publicationCount</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropertyPublisherImpl.html#publicationFromName">publicationFromName</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropertyPublisherImpl.html#publicationFromIndex">publicationFromIndex</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropertyPublisherImpl.html#publication">publication</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>Null if the operation fails otherwise a pointer to a PropDescriptor!T.
+</p>
+</td></tr><tr><td><a href="iz/properties/PropertyPublisherImpl.html#collectPublications">collectPublications</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropertyPublisherImpl.html#collectPublicationsFromFields">collectPublicationsFromFields</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropertyPublisherImpl.html#collectPublicationsFromPairs">collectPublicationsFromPairs</a><span class="extrainfo"></span></td><td></td><td></td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

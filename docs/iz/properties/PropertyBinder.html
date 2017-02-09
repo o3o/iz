@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../../style.css"/>
+<script src="../../highlight.pack.js"></script>
+<title>PropertyBinder</title>
+<base href="../../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.<a href=iz/properties.html>properties</a>.</small><span class="highlight">PropertyBinder</span>
+</div>
+<div class="sidebar">
+<a href="iz/properties.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/properties.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li>iz.<a href="iz/classes.html">classes</a></li>
+<li>iz.<a href="iz/containers.html">containers</a></li>
+<li>iz.<a href="iz/enumset.html">enumset</a></li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li><span class=" selected">iz.<a href="iz/properties.html">properties</a></span>
+</li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li>iz.<a href="iz/strings.html">strings</a></li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><div class="description"><pre><code>public class PropertyBinder(T, <a href="http://dlang.org/type.html#basic-data-types">bool</a> RttiCheck = false)
+</code></pre>
+<div class="section"><h2></h2>
+<p>A PropertyBinder synchronizes the value of several variables between themselves.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>The access to the variables is done via the PropDescriptor format, hence
+a PropertyBinder stores a list of PropDescriptor with the same types.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">T</td><td class="paramDoc"><p>The type of the properties.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">RttiCheck</td><td class="paramDoc"><p>When set to true, an additional run-time check is performed.
+</p>
+</td></tr>
+</table>
+</div>
+</div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>private this()
+</code></pre>
+</div></div><a class="anchor" id="addBinding"></a><div class="symbol"><div class="description"><pre><code>private ptrdiff_t <a href="iz/properties/PropertyBinder.html#addBinding">addBinding</a>(
+    ref <a href="iz/properties/PropDescriptor.html">PropDescriptor</a>!T prop, 
+    <a href="http://dlang.org/type.html#basic-data-types">bool</a> isSource = false)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Adds a property to the list.
+If the binder is not local then aProp should neither be a local descriptor,
+otherwise the descritpor reference will become invalid.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">aProp</td><td class="paramDoc"><p>A PropDescriptor of type T.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">isSource</td><td class="paramDoc"><p>Optional boolean indicating if the descriptor is used as
+         master property.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>The index of the descriptor in the binding list.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="newBinding"></a><div class="symbol"><div class="description"><pre><code>private <a href="iz/properties/PropDescriptor.html">PropDescriptor</a>!T* <a href="iz/properties/PropertyBinder.html#newBinding">newBinding</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Adds a new property to the list.
+The life-time of the new descriptor is handled internally.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Returns</h2>
+<p>A new PropDescriptor of type T.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="removeBinding"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/properties/PropertyBinder.html#removeBinding">removeBinding</a>(size_t index)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Removes the aIndex-nth property from the list.
+The item is freed if it has been allocated by newBinding.
+source might be invalidated if it matches the item.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">index</td><td class="paramDoc"><p>The index of the descriptor to remove.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="change"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/properties/PropertyBinder.html#change">change</a>(T value)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Triggers the setter of each property.
+This method is usually called at the end of a setter method
+(in the master/source setter).
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">value</td><td class="paramDoc"><p>the new value to send to binding.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="updateFromSource"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/properties/PropertyBinder.html#updateFromSource">updateFromSource</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Calls change() using the value of source.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="source"></a><div class="symbol"><div class="description"><pre><code>private @property <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/properties/PropertyBinder.html#source">source</a>(ref <a href="iz/properties/PropDescriptor.html">PropDescriptor</a>!T src)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Sets the property used as source in updateFromSource().
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">src</td><td class="paramDoc"><p>The property to be used as source.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="source"></a><div class="symbol"><div class="description"><pre><code>private @property <a href="iz/properties/PropDescriptor.html">PropDescriptor</a>!T* <a href="iz/properties/PropertyBinder.html#source">source</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the property used as source in _updateFromSource().
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="items"></a><div class="symbol"><div class="description"><pre><code>private @property <a href="iz/containers/ContiguousList.html">ContiguousList</a>!(<a href="iz/properties/PropDescriptor.html">PropDescriptor</a>!T*) <a href="iz/properties/PropertyBinder.html#items">items</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Provides an access to the property descriptors for additional List operations.
+Note that the items whose life-time is managed should not be modified.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/properties/PropertyBinder.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropertyBinder.html#addBinding">addBinding</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>The index of the descriptor in the binding list.
+</p>
+</td></tr><tr><td><a href="iz/properties/PropertyBinder.html#newBinding">newBinding</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>A new PropDescriptor of type T.
+</p>
+</td></tr><tr><td><a href="iz/properties/PropertyBinder.html#removeBinding">removeBinding</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropertyBinder.html#change">change</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropertyBinder.html#updateFromSource">updateFromSource</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropertyBinder.html#source">source</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropertyBinder.html#source">source</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropertyBinder.html#items">items</a><span class="extrainfo"></span></td><td></td><td></td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>

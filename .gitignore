@@ -10,6 +10,7 @@ thumbs.db
 *.lib
 *.a
 *.exe
+lib/
 
 #DUB
 .dub
@@ -24,8 +25,9 @@ import/iz/logicver
 import/iz/math
 import/iz/memory
 import/iz/observer
-properties
+import/iz/properties
 import/iz/referencable
+import/iz/rtti
 import/iz/serializer
 import/iz/streams
 import/iz/strings
