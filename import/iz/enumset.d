@@ -453,20 +453,20 @@ public:
      * rhs = a setXX, an array of E members, an InputRange of E
      * or an EnumSet with the same type.
      */
-    void opAssign(S rhs) nothrow @safe @nogc
+    void opAssign(const S rhs) nothrow @safe @nogc
     {
         _container = (rhs <= _max) ? rhs : _max;
     }
 
     /// ditto
-    void opAssign(E[] rhs) nothrow @safe
+    void opAssign(const E[] rhs) nothrow @safe
     {
         _container = 0;
         foreach(elem; rhs) include(elem);
     }
 
     /// ditto
-    void opAssign(EnumSetType rhs) nothrow @safe @nogc
+    void opAssign(const EnumSetType rhs) nothrow @safe @nogc
     {
         _container = rhs._container;
     }
