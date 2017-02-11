@@ -11,14 +11,12 @@ import
  */
 interface Subject
 {
-    /// determines if anObserver is suitable for this subject.
-    bool acceptObserver(Object anObserver);
-    /// an observer can be added. it can to be tested with acceptObserver.
-    void addObserver(Object anObserver);
+    /// Determines if observer is suitable for this subject.
+    bool acceptObserver(Object observer);
+    /// An observer can be added after acceptObserver
+    void addObserver(Object observer);
     /// an observer wants to be removed.
-    void removeObserver(Object anObserver);
-    /// sends all data the observers are monitoring.
-    void updateObservers();
+    void removeObserver(Object observer);
 }
 
 /**
@@ -29,211 +27,211 @@ interface Subject
 class CustomSubject(OT): Subject
 if (is(OT == interface) || is(OT == class))
 {
-    protected
+
+protected:
+
+    DynamicList!OT _observers;
+
+public:
+
+    ///
+    this()
     {
-        DynamicList!OT _observers;
+        _observers = construct!(DynamicList!OT);
     }
-    public
+
+    ~this()
     {
-        ///
-        this()
-        {
-            _observers = construct!(DynamicList!OT);
-        }
+        destruct(_observers);
+    }
 
-        ~this()
-        {
-            _observers.destruct;
-        }
+    /// see the Subject interface.
+    bool acceptObserver(Object observer)
+    {
+        return (cast(OT) observer !is null);
+    }
 
-        /// see the Subject interface.
-        void updateObservers()
-        {
-            /*virtual: send all values*/
-        }
+    /// see the Subject interface.
+    void addObserver(Object observer)
+    {
+        if (!acceptObserver(observer))
+            return;
+        OT obs = cast(OT) observer;
+        if (_observers.find(obs) != -1)
+            return;
+        _observers.add(obs);
+    }
 
-        /// see the Subject interface.
-        bool acceptObserver(Object observer)
-        {
-            return (cast(OT) observer !is null);
-        }
+    /// Calls addObserver() foreach object passed as argument.
+    void addObservers(Objs...)(Objs objs)
+    {
+        foreach(obj; objs)
+            addObserver(obj);
+    }
 
-        /// see the Subject interface.
-        void addObserver(Object observer)
-        {
-            if (!acceptObserver(observer))
-                return;
-            auto obs = cast(OT) observer;
-            if (_observers.find(obs) != -1)
-                return;
-            _observers.add(obs);
-        }
+    /// see the Subject interface.
+    void removeObserver(Object observer)
+    {
+        if (auto obs = cast(OT) observer)
+            _observers.remove(obs);
+    }
 
-        /// Calls addObserver() foreach object passed as argument.
-        void addObservers(Objs...)(Objs objs)
-        {
-            foreach(obj; objs)
-                addObserver(obj);
-        }
-
-        /// see the Subject interface.
-        void removeObserver(Object observer)
-        {
-            if (auto obs = cast(OT) observer)
-                _observers.remove(obs);
-        }
-
-        /// list of observers
-        DynamicList!OT observers()
-        {
-            return _observers;
-        }
+    /// list of observers
+    DynamicList!OT observers()
+    {
+        return _observers;
     }
 }
 
 /**
- * ObserverInterconnector is in charge for inter-connecting subjects with 
- * their observers, whatever their specializations are.
+ * ObserverInterconnector is in charge for inter-connecting the subjects with
+ * their observers, whatever are their specializations.
  *
- * With this class, an observer can connect itself to the right subject(s) 
- * without having to know it. In the same fashion, the subjects gets their
+ * With this class, an observer can connect to the right subjects
+ * without having to know them. In the same fashion the subjects gets their
  * client list automatically filled.
  */
 class ObserverInterconnector
 {
-    private
+
+private:
+
+    DynamicList!Object _observers;
+    DynamicList!Object _subjects;
+    ptrdiff_t fUpdateCount;
+
+public:
+
+    ///
+    this()
     {
-        DynamicList!Object _observers;
-        DynamicList!Object _subjects;
-        ptrdiff_t fUpdateCount;
+        _observers = construct!(DynamicList!Object);
+        _subjects = construct!(DynamicList!Object);
     }
-    public
+
+    ~this()
     {
-        ///
-        this()
-        {
-            _observers = construct!(DynamicList!Object);
-            _subjects = construct!(DynamicList!Object);
-        }
-
-        ~this()
-        {
-            _observers.destruct;
-            _subjects.destruct;
-        }
-
-        /** 
-         * Several entities will be added.
-         * This Avoids any superfluous update while adding.
-         * Every beginUpdate() must be followed by an endUpdate().
-         */
-        void beginUpdate()
-        {
-            ++fUpdateCount;
-        }
-
-        /** 
-         * Several subjects or observers have been added.
-         * Decrements a counter and update the entities if it's equal to 0.
-         */
-        void endUpdate()
-        {
-            --fUpdateCount;
-            if (fUpdateCount > 0) return;
-            updateAll;
-        }
-
-        /**
-         * Adds an observer to the entity list.
-         */
-        void addObserver(Object observer)
-        {
-            if (_observers.find(observer) != -1) return;
-            beginUpdate;
-            _observers.add(observer);
-            endUpdate;
-        }
-        
-        /**
-         * Adds a list of observer to the entity list.
-         * Optimized for bulk adding.
-         */
-        void addObservers(Objs...)(Objs objs)
-        {
-            beginUpdate;
-            foreach(obj; objs) addObserver(obj);
-            endUpdate;
-        }
-
-        /**
-         * Removes an observer from the entity list.
-         */
-        void removeObserver(Object observer)
-        {
-            beginUpdate;
-            _observers.remove(observer);
-            foreach(immutable i; 0 .. _subjects.count)
-                (cast(Subject) _subjects[i]).removeObserver(observer);
-            endUpdate;
-        }
-
-        /**
-         * Adds a subject to the entity list.
-         */
-        void addSubject(Object subject)
-        {
-            if (_subjects.find(subject) != -1) return;
-            if( (cast(Subject) subject) is null) return;
-            beginUpdate;
-            _subjects.add(subject);
-            endUpdate;
-        }
-
-        /**
-         * Adds several subjects to the entity list.
-         * Optimized for bulk adding.
-         */
-        void addSubjects(Subjs...)(Subjs subjs)
-        {
-            beginUpdate;
-            foreach(subj; subjs) addSubject(subj);
-            endUpdate;
-        }
-
-        /**
-         * Removes a subject from the entity list.
-         */
-        void removeSubject(Object subject)
-        {
-            beginUpdate;
-            _subjects.remove(subject);
-            endUpdate;
-        }
-
-        /**
-         * Updates the connections between the entities stored in the global list.
-         * 
-         * It has usually not be called manually.
-         * During the process, each subject previously added is
-         * visited by each observer previously added.
-         *
-         * The complexity of the operation is usually reduced if beginUpdate()
-         * and endUpdate() are used adequatly.
-         */
-        void updateObservers()
-        {
-            fUpdateCount = 0;
-            foreach(immutable subjectIx; 0 .. _subjects.count)
-            {
-                auto subject = cast(Subject) _subjects[subjectIx];
-                foreach(immutable observerIx; 0 .. _observers.count)
-                    subject.addObserver(_observers[observerIx]);
-            }
-        }
-
-        /// ditto
-        alias updateAll = updateObservers;
+        _observers.destruct;
+        _subjects.destruct;
     }
+
+    /**
+     * Several entities will be added.
+     * This Avoids any superfluous update while adding.
+     * Every beginUpdate() must be followed by an endUpdate().
+     */
+    void beginUpdate()
+    {
+        ++fUpdateCount;
+    }
+
+    /**
+     * Several subjects or observers have been added.
+     * Decrements a counter and update the entities if it's equal to 0.
+     */
+    void endUpdate()
+    {
+        --fUpdateCount;
+        if (fUpdateCount > 0)
+            return;
+        updateAll;
+    }
+
+    /**
+     * Adds an observer to the list.
+     */
+    void addObserver(Object observer)
+    {
+        if (_observers.find(observer) != -1)
+            return;
+        beginUpdate;
+        _observers.add(observer);
+        endUpdate;
+    }
+
+    /**
+     * Adds a list of observer to the list.
+     * Optimized for bulk adding.
+     */
+    void addObservers(Objs...)(Objs objs)
+    {
+        beginUpdate;
+        foreach(obj; objs)
+            addObserver(obj);
+        endUpdate;
+    }
+
+    /**
+     * Removes an observer from the list.
+     */
+    void removeObserver(Object observer)
+    {
+        beginUpdate;
+        _observers.remove(observer);
+        foreach(immutable i; 0 .. _subjects.count)
+            (cast(Subject) _subjects[i]).removeObserver(observer);
+        endUpdate;
+    }
+
+    /**
+     * Adds a subject to the list.
+     */
+    void addSubject(Object subject)
+    {
+        if (_subjects.find(subject) != -1)
+            return;
+        if( (cast(Subject) subject) is null)
+            return;
+        beginUpdate;
+        _subjects.add(subject);
+        endUpdate;
+    }
+
+    /**
+     * Adds several subjects to the list.
+     * Optimized for bulk addition.
+     */
+    void addSubjects(Subjs...)(Subjs subjs)
+    {
+        beginUpdate;
+        foreach(subj; subjs)
+            addSubject(subj);
+        endUpdate;
+    }
+
+    /**
+     * Removes a subject from the entity list.
+     */
+    void removeSubject(Object subject)
+    {
+        beginUpdate;
+        _subjects.remove(subject);
+        endUpdate;
+    }
+
+    /**
+     * Updates the connections between the entities stored in the global list.
+     *
+     * It has usually not be called manually.
+     * During the process, each subject is visited by each observer.
+     *
+     * The complexity of the operation is usually reduced if beginUpdate()
+     * and endUpdate() are used adequatly.
+     */
+    void updateObservers()
+    {
+        fUpdateCount = 0;
+        foreach(immutable subjectIx; 0 .. _subjects.count)
+        {
+            Subject subject = cast(Subject) _subjects[subjectIx];
+            foreach(immutable observerIx; 0 .. _observers.count)
+                subject.addObserver(_observers[observerIx]);
+        }
+    }
+
+    /// ditto
+    alias updateAll = updateObservers;
+
 }
 
 unittest
@@ -268,7 +266,7 @@ unittest
         int _min = int.min;
         int _max = int.max;
         int _def = int.init;
-        final override void updateObservers()
+        void updateObservers()
         {
             for(auto i = 0; i < _observers.count; i++)
                 (cast(IntPropObserver)_observers[i]).min(_min);
@@ -284,7 +282,7 @@ unittest
         uint _min = uint.min;
         uint _max = uint.max;
         uint _def = uint.init;
-        final override void updateObservers()
+        void updateObservers()
         {
             for(auto i = 0; i < _observers.count; i++)
                 (cast(UintPropObserver)_observers[i]).min(_min);
@@ -383,7 +381,7 @@ if (is(E == enum))
      * The method called by a subject.
      * Params:
      * notification = the E member allowing to distinguish the "call reason".
-     * t = the parameters the observer is interested in.
+     * t = the parameters the observer is interested by.
      */
     void subjectNotification(E notification, T t);   
 }
@@ -398,80 +396,74 @@ if (is(E == enum))
 class CustomSubject(E, T...) : Subject 
 if (is(E == enum))
 {
-    protected
+
+protected:
+
+    alias ObserverType = EnumBasedObserver!(E,T);
+    DynamicList!ObserverType _observers;
+
+public:
+
+    ///
+    this()
     {
-        alias ObserverType = EnumBasedObserver!(E,T);
-        DynamicList!ObserverType _observers;
+        _observers = construct!(DynamicList!ObserverType);
     }
-    public
+
+    ~this()
     {
-        ///
-        this()
-        {
-            _observers = construct!(DynamicList!ObserverType);
-        }
+        _observers.destruct;
+    }
 
-        ~this()
-        {
-            _observers.destruct;
-        }
+    /// see the Subject interface.
+    bool acceptObserver(Object observer)
+    in
+    {
+        assert(observer);
+    }
+    body
+    {
+        return (cast(ObserverType) observer !is null);
+    }
 
-        /// see the Subject interface.
-        void updateObservers()
-        {
-            /*virtual: send all values*/
-        }
+    /// see the Subject interface.
+    void addObserver(Object observer)
+    in
+    {
+        assert(observer);
+    }
+    body
+    {
+        if (!acceptObserver(observer))
+            return;
+        auto obs = cast(ObserverType) observer;
+        if (_observers.find(obs) != -1)
+            return;
+        _observers.add(obs);
+    }
 
-        /// see the Subject interface.
-        bool acceptObserver(Object observer)
-        in
-        {
-            assert(observer);
-        }
-        body
-        {
-            return (cast(ObserverType) observer !is null);
-        }
+    /// Calls addObserver() foreach object passed as argument.
+    void addObservers(Objs...)(Objs objs)
+    {
+        foreach(obj; objs)
+            addObserver(obj);
+    }
 
-        /// see the Subject interface.
-        void addObserver(Object observer)
-        in
-        {
-            assert(observer);
-        }
-        body
-        {
-            if (!acceptObserver(observer))
-                return;
-            auto obs = cast(ObserverType) observer;
-            if (_observers.find(obs) != -1)
-                return;
-            _observers.add(obs);
-        }
-
-        /// Calls addObserver() foreach object passed as argument.
-        void addObservers(Objs...)(Objs objs)
-        {
-            foreach(obj; objs)
-                addObserver(obj);
-        }
-
-        /// see the Subject interface.
-        void removeObserver(Object observer)
-        in
-        {
-            assert(observer);
-        }
-        body
-        {
-            auto obs = cast(ObserverType) observer;
-            _observers.remove(obs);
-        }
-        ///
-        DynamicList!ObserverType observers()
-        {
-            return _observers;
-        }
+    /// see the Subject interface.
+    void removeObserver(Object observer)
+    in
+    {
+        assert(observer);
+    }
+    body
+    {
+        auto obs = cast(ObserverType) observer;
+        _observers.remove(obs);
+    }
+    ///
+    DynamicList!ObserverType observers()
+    {
+        return _observers;
     }
 } 
 
@@ -481,6 +473,7 @@ unittest
     
     class Document {}
     class Highlighter {}
+    class Invalid {}
     
     class DocSubject : CustomSubject!(DocumentNotification, Document, Highlighter)
     {
@@ -500,11 +493,11 @@ unittest
         }
     }   
     
-    auto inter = construct!ObserverInterconnector;
-    auto subj = construct!DocSubject;
-    auto obs1 = construct!DocObserver;
-    auto obs2 = construct!DocObserver;
-    auto obs3 = construct!DocObserver;
+    ObserverInterconnector inter = construct!ObserverInterconnector;
+    DocSubject subj = construct!DocSubject;
+    DocObserver obs1 = construct!DocObserver;
+    DocObserver obs2 = construct!DocObserver;
+    DocObserver obs3 = construct!DocObserver;
     
     scope(exit) destructEach(inter, subj, obs1, obs2, obs3);
     
@@ -532,6 +525,12 @@ unittest
     assert(inter._observers.count == 2);
     assert(subj.observers.count == 3);
     subj.removeObserver(obs2);
+    assert(subj.observers.count == 2);
+
+    auto inv = construct!Invalid;
+    inter.addSubject(subj);
+    inter.addObserver(inv);
+    assert(inter._observers.count == 3);
     assert(subj.observers.count == 2);
 }
 
