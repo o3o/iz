@@ -1752,7 +1752,7 @@ void bindPublications(bool recursive = false, S, T)(auto ref S src, auto ref T t
             case _dchar:    setBasicType!dchar; break;
             case _stream:   setBasicType!Stream; break;
             case _funptr:   setBasicType!GenericFunction; break;
-            case _enum:     setBasicType!GenericEnum; break;
+            case _enum:     setBasicType!int; break;
             case _struct:   setStruct; break;
             case _object:   setObject; break;
             case _pointer:  setBasicType!(int*);
@@ -1811,6 +1811,9 @@ unittest
         @SetGet int[string] _f;
         MemoryStream str;
 
+        enum Ea{a0, a1}
+        @SetGet Ea _ea;
+
         @Set void stream(Stream s)
         {str.loadFromStream(s);}
         @Get Stream stream(){return str;}
@@ -1827,6 +1830,7 @@ unittest
     source._d = [[0,1,2,3],[4,5,6,7]];
     source._e = [[[0,1],[2,3]],[[4,5],[6,7]],[[8,9],[10,11]]];
     source._f = ["a":0, "b":1];
+    source._ea = source.Ea.a1;
     source._sub._a = 8; source._sub._b = ulong.max; source._sub._c = "123";
     source.str.writeInt(1);source.str.writeInt(2);source.str.writeInt(3);
     source._sub.str.writeInt(1);source._sub.str.writeInt(2);source._sub.str.writeInt(3);
@@ -1839,6 +1843,7 @@ unittest
     assert(target._d == source._d);
     assert(target._e == source._e);
     assert(target._f == source._f);
+    assert(target._ea == source.Ea.a1);
     assert(target._sub._a == source._sub._a);
     assert(target._sub._b == source._sub._b);
     assert(target._sub._c == source._sub._c);
