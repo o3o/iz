@@ -555,7 +555,7 @@ void setNodeInfo(T)(SerNodeInfo* nodeInfo, PropDescriptor!T* descriptor)
     // enums
     else static if (is(T == GenericEnum))
     {
-        uint v = (*descriptor.typedAs!uint).get();
+        uint v = (*descriptor.as!uint).get();
         switch(nodeInfo.rtti.enumInfo.valueType.type.size)
         {
             case 1: v &= 0xFF; break;
@@ -1315,8 +1315,8 @@ private:
             //
             void addValueProp(T)()
             {
-                if (!rtti.dimension) addIstNodeForDescriptor(descr.typedAs!T);
-                else addIstNodeForDescriptor(descr.typedAs!(T[]));
+                if (!rtti.dimension) addIstNodeForDescriptor(descr.as!T);
+                else addIstNodeForDescriptor(descr.as!(T[]));
             }
             with(RtType) final switch(rtti.type)
             {
@@ -1336,20 +1336,20 @@ private:
                 case _char:   addValueProp!char; break;
                 case _wchar:  addValueProp!wchar; break;
                 case _dchar:  addValueProp!dchar; break;
-                case _enum:   addIstNodeForDescriptor(descr.typedAs!GenericEnum); break;
+                case _enum:   addIstNodeForDescriptor(descr.as!GenericEnum); break;
                 case _object:
                     auto _oldParentNode = _parentNode;
-                    addPropertyPublisher(descr.typedAs!Object);
+                    addPropertyPublisher(descr.as!Object);
                     _parentNode = _oldParentNode;
                     break;
                 case _stream:
-                    addIstNodeForDescriptor(descr.typedAs!Stream);
+                    addIstNodeForDescriptor(descr.as!Stream);
                     break;
                 case _funptr:
                     if (rtti.funptrInfo.hasContext)
-                        addIstNodeForDescriptor(descr.typedAs!GenericDelegate);
+                        addIstNodeForDescriptor(descr.as!GenericDelegate);
                     else
-                        addIstNodeForDescriptor(descr.typedAs!GenericFunction);
+                        addIstNodeForDescriptor(descr.as!GenericFunction);
                     break;
                 case _struct:
                     final switch (rtti.structInfo.type)
@@ -1366,7 +1366,7 @@ private:
                             _parentNode = _oldParentNode;
                             break;
                         case StructType._text, StructType._binary:
-                            addIstNodeForDescriptor(descr.typedAs!GenericStruct);
+                            addIstNodeForDescriptor(descr.as!GenericStruct);
                     }
             }
         }

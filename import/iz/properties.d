@@ -1,4 +1,3 @@
-#!runnable: -g -gs
 /**
  * The iz property descriptor system.
  */
@@ -10,21 +9,6 @@ import
     iz.memory, iz.types, iz.containers, iz.rtti, iz.enumset;
 
 version(unittest) import std.stdio;
-
-/**
- * Describes the accessibility of a property.
- */
-enum PropAccess
-{
-    /// denotes an error.
-    none,
-    /// read-only.
-    ro,
-    /// write-only.
-    wo,
-    /// read & write.
-    rw
-}
 
 /**
  * Used as a generic property descriptor when Rtti are used to detect
@@ -44,314 +28,299 @@ struct PropDescriptor(T)
 {
     @disable this(this);
 
-    public
+public:
+
+    static if (!is(T == struct))
     {
-        static if (!is(T == struct))
-        {
-            /// setter proptotype
-            alias PropSetter = void delegate(T value);
-            /// getter prototype
-            alias PropGetter = T delegate();
-            /// alternative setter prototype.
-            alias PropSetterConst = void delegate(const T value);
-        }
-        else
-        {
-            /// setter proptotype
-            alias PropSetter = void delegate(T value);
-            /// getter prototype
-            alias PropGetter = ref T delegate();
-            /// alternative setter prototype.
-            alias PropSetterConst = void delegate(const T value);
-        }
+        /// setter proptotype
+        alias PropSetter = void delegate(T value);
+        /// getter prototype
+        alias PropGetter = T delegate();
+        /// alternative setter prototype.
+        alias PropSetterConst = void delegate(const T value);
     }
-    package
+    else
     {
-        PropHints _hints;
+        /// setter proptotype
+        alias PropSetter = void delegate(T value);
+        /// getter prototype
+        alias PropGetter = ref T delegate();
+        /// alternative setter prototype.
+        alias PropSetterConst = void delegate(const T value);
     }
-    private
+
+package:
+
+    PropHints _hints;
+
+private:
+
+    PropSetter _setter;
+    PropGetter _getter;
+    Object _declarator;
+    const(Rtti)* _rtti;
+
+    T* _directPtr;
+
+    Array!(char) _name;
+
+    void cleanup()
     {
-        PropSetter _setter;
-        PropGetter _getter;
-        Object _declarator;
-        const(Rtti)* _rtti;
-
-        T* _directPtr;
-
-        PropAccess _access;
-
-        Array!(char) _name;
-
-        void cleanup()
-        {
-            _directPtr = null;
-            _setter = null;
-            _getter = null;
-            _declarator = null;
-            _access = PropAccess.none;
-            _name = _name.init;
-        }
-
-        void updateAccess()
-        {
-            if ((_setter is null) && (_getter !is null))
-                _access = PropAccess.ro;
-            else if ((_setter !is null) && (_getter is null))
-                _access = PropAccess.wo;
-            else if ((_setter !is null) && (_getter !is null))
-                _access = PropAccess.rw;
-            else _access = PropAccess.none;
-        }
-
-        // pseudo setter internally used when a T is directly written.
-        void internalSetter(T value)
-        {
-            alias TT = Unqual!T;
-            T current = getter()();
-            if (value != current)
-                *cast(TT*)_directPtr = value;
-        }
-
-        // pseudo getter internally used when a T is directly read
-        static if (is(T==struct))
-            ref T internalGetter()
-        {
-            return *_directPtr;
-        }
-        else
-            T internalGetter()
-        {
-            return *_directPtr;
-        }
+        _directPtr = null;
+        _setter = null;
+        _getter = null;
+        _declarator = null;
+        _name = _name.init;
     }
-    public
+
+    // pseudo setter internally used when a T is directly written.
+    void internalSetter(T value)
     {
+        alias TT = Unqual!T;
+        T current = getter()();
+        if (value != current)
+            *cast(TT*) _directPtr = value;
+    }
+
+    // pseudo getter internally used when a T is directly read
+    static if (is(T==struct))
+        ref T internalGetter()
+    {
+        return *_directPtr;
+    }
+    else
+        T internalGetter()
+    {
+        return *_directPtr;
+    }
+
+public:
+
 
 // constructors ---------------------------------------------------------------+
 
-        /**
-         * Constructs a property descriptor from a PropSetter and a PropGetter.
-         */  
-        this(PropSetter aSetter, PropGetter aGetter, string aName = "")
-        in
-        {
-            assert(aSetter);
-            assert(aGetter);
-        }
-        body
-        {
-            define(aSetter, aGetter, aName);
-        }
+    /**
+     * Constructs a property descriptor from a PropSetter and a PropGetter.
+     */
+    this(PropSetter aSetter, PropGetter aGetter, string aName = "")
+    in
+    {
+        assert(aSetter);
+        assert(aGetter);
+    }
+    body
+    {
+        define(aSetter, aGetter, aName);
+    }
 
-        /**
-         * Constructs a property descriptor from a PropSetterConst and a PropGetter.
-         */  
-        this(PropSetterConst aSetter, PropGetter aGetter, string aName = "")
-        in
-        {
-            assert(aSetter);
-            assert(aGetter);
-        }
-        body
-        {
-            define(cast(PropSetter)aSetter, aGetter,aName);
-        }
+    /**
+     * Constructs a property descriptor from a PropSetterConst and a PropGetter.
+     */
+    this(PropSetterConst aSetter, PropGetter aGetter, string aName = "")
+    in
+    {
+        assert(aSetter);
+        assert(aGetter);
+    }
+    body
+    {
+        define(cast(PropSetter)aSetter, aGetter,aName);
+    }
 
-        /**
-         * Constructs a property descriptor from a PropSetter and as getter
-         * a pointer to a variable.
-         */
-        this(PropSetter aSetter, T* aSourceData, string aName = "")
-        in
-        {
-            assert(aSetter);
-            assert(aSourceData);
-        }
-        body
-        {
-            define(aSetter, aSourceData, aName);
-        }
+    /**
+     * Constructs a property descriptor from a PropSetter and as getter
+     * a pointer to a variable.
+     */
+    this(PropSetter aSetter, T* aSourceData, string aName = "")
+    in
+    {
+        assert(aSetter);
+        assert(aSourceData);
+    }
+    body
+    {
+        define(aSetter, aSourceData, aName);
+    }
 
-        /**
-         * Constructs a property descriptor from a pointer to a variable used as
-         * a setter and getter.
-         */
-        this(T* aData, string aName = "")
-        in
-        {
-            assert(aData); 
-        }
-        body
-        {
-            define(aData, aName);
-        }
+    /**
+     * Constructs a property descriptor from a pointer to a variable used as
+     * a setter and getter.
+     */
+    this(T* aData, string aName = "")
+    in
+    {
+        assert(aData);
+    }
+    body
+    {
+        define(aData, aName);
+    }
 
-        ~this()
-        {
-            destruct(_name);
-        }
+    ~this()
+    {
+        destruct(_name);
+    }
 // ---- 
 // define all the members -----------------------------------------------------+
 
-        /**
-         * Defines a property descriptor from a PropSetter and a PropGetter.
-         */
-        void define(PropSetter aSetter, PropGetter aGetter, string aName = "")
-        {
-            cleanup;
-            _rtti = getRtti!T;
-            setter(aSetter);
-            getter(aGetter);
-            if (aName != "") {name(aName);}
-            _declarator = cast(Object) aSetter.ptr;
-        }
+    /**
+     * Defines a property descriptor from a PropSetter and a PropGetter.
+     */
+    void define(PropSetter aSetter, PropGetter aGetter, string aName = "")
+    {
+        cleanup;
+        _rtti = getRtti!T;
+        setter(aSetter);
+        getter(aGetter);
+        if (aName != "")
+            name(aName);
+        _declarator = cast(Object) aSetter.ptr;
+    }
 
-        /**
-         * Defines a property descriptor from a PropSetter and as getter
-         * a pointer to a variable.
-         */
-        void define(PropSetter aSetter, T* aSourceData, string aName = "")
-        {
-            cleanup;
-            _rtti = getRtti!T;
-            setter(aSetter);
-            setDirectSource(aSourceData);
-            if (aName != "") {name(aName);}
-            _declarator = cast(Object) aSetter.ptr;
-        }
-        /**
-         * Defines a property descriptor from a pointer to a variable used as
-         * a setter and getter.
-         */
-        void define(T* aData, string aName = "", Object aDeclarator = null)
-        {
-            cleanup;
-            _rtti = getRtti!T;
-            setDirectSource(aData);
-            setDirectTarget(aData);
-            if (aName != "") {name(aName);}
-            _declarator = aDeclarator;
-        }
+    /**
+     * Defines a property descriptor from a PropSetter and as getter
+     * a pointer to a variable.
+     */
+    void define(PropSetter aSetter, T* aSourceData, string aName = "")
+    {
+        cleanup;
+        _rtti = getRtti!T;
+        setter(aSetter);
+        setDirectSource(aSourceData);
+        if (aName != "")
+            name(aName);
+        _declarator = cast(Object) aSetter.ptr;
+    }
+
+    /**
+     * Defines a property descriptor from a pointer to a variable used as
+     * a setter and getter.
+     */
+    void define(T* aData, string aName = "", Object aDeclarator = null)
+    {
+        cleanup;
+        _rtti = getRtti!T;
+        setDirectSource(aData);
+        setDirectTarget(aData);
+        if (aName != "")
+            name(aName);
+        _declarator = aDeclarator;
+    }
 // ----
 // setter ---------------------------------------------------------------------+
 
-        /**
-         * Sets the property setter using a standard method.
-         */
-        @property void setter(PropSetter value)
-        {
-            _setter = value;
-            _declarator = cast(Object) value.ptr;
-            updateAccess;
-        }
-        /// ditto
-        @property PropSetter setter(){return _setter;}
-        /**
-         * Sets the property setter using a pointer to a variable
-         */
-        void setDirectTarget(T* location)
-        {
-            _directPtr = location;
-            _setter = &internalSetter;
-            updateAccess;
-        }
-        /**
-         * Sets the property value
-         */
-        void set(T value) {_setter(value);}
+    /**
+     * Sets the property setter using a standard method.
+     */
+    void setter(PropSetter value)
+    {
+        _setter = value;
+        _declarator = cast(Object) value.ptr;
+    }
+
+    /// ditto
+    PropSetter setter(){return _setter;}
+
+    /**
+     * Sets the property setter using a pointer to a variable
+     */
+    void setDirectTarget(T* location)
+    {
+        _directPtr = location;
+        _setter = &internalSetter;
+    }
+    /**
+     * Sets the property value
+     */
+    void set(T value) {_setter(value);}
 // ---- 
 // getter ---------------------------------------------------------------------+
 
-        /** 
-         * Sets the property getter using a standard method.
-         */
-        @property void getter(PropGetter value)
-        {
-            _getter = value;
-            _declarator = cast(Object) value.ptr;
-            updateAccess;
-        }
-        /// ditto
-        @property PropGetter getter(){return _getter;}
-        /** 
-         * Sets the property getter using a pointer to a variable
-         */
-        void setDirectSource(T* value)
-        {
-            _directPtr = value;
-            _getter = &internalGetter;
-            updateAccess;
-        }
-        /**
-         * Gets the property value
-         */
-        T get(){return _getter();}
+    /**
+     * Sets the property getter using a standard method.
+     */
+    void getter(PropGetter value)
+    {
+        _getter = value;
+        _declarator = cast(Object) value.ptr;
+    }
+
+    /// ditto
+    PropGetter getter(){return _getter;}
+
+    /**
+     * Sets the property getter using a pointer to a variable
+     */
+    void setDirectSource(T* value)
+    {
+        _directPtr = value;
+        _getter = &internalGetter;
+    }
+
+    /**
+     * Gets the property value
+     */
+    T get(){return _getter();}
 // ----     
 // misc -----------------------------------------------------------------------+
 
-        /**
-         * Returns this descriptor casted as pointer to a GenericDescriptor.
-         */
-        PropDescriptor!int* genericDescriptor()
-        {
-            return cast(typeof(return)) &this;
-        }
+    /**
+     * Returns this descriptor casted as pointer to a GenericDescriptor.
+     */
+    PropDescriptor!int* genericDescriptor()
+    {
+        return cast(PropDescriptor!int*) &this;
+    }
 
-        /**
-         * Returns this descriptor casted as pointer to a descriptor of type A.
-         */
-        PropDescriptor!A* typedAs(A)()
-        {
-            return cast(PropDescriptor!A*) &this;
-        }
+    /**
+     * Returns this descriptor casted as pointer to a descriptor of the type
+     * given by template parameter.
+     */
+    PropDescriptor!A* as(A)()
+    {
+        return cast(PropDescriptor!A*) &this;
+    }
 
-        /** 
-         * Information about the property accessibility
-         */
-        @property const(PropAccess) access()
-        {
-            return _access;
-        }
+    deprecated alias typedAs = as;
 
-        /** 
-         * Defines the string used to identify the property
-         */
-        @property void name(const(char)[] value)
-        {
-            _name = value;
-        }
+    /**
+     * Sets of gets the string used to identify the property
+     */
+    void name(const(char)[] value)
+    {
+        _name = value;
+    }
 
-        /// ditto
-        @property auto const ref name()
-        {
-            return _name;
-        }
+    /// ditto
+    ref const(Array!char) name()
+    {
+        return _name;
+    }
 
-        /**
-         * The object that declares this property.
-         * When really needed, this value is set automatically.
-         */
-        @property void declarator(Object value)
-        {
-            _declarator = value;
-        }
+    /**
+     * The object that declares this property.
+     * When really needed, this value is set automatically.
+     */
+    void declarator(Object value)
+    {
+        _declarator = value;
+    }
 
-        /// ditto
-        @property Object declarator(){return _declarator;}
+    /// ditto
+    Object declarator(){return _declarator;}
 
-        /**
-         * Returns the RuntimeTypeInfo struct for the property type.
-         */
-        @property const(Rtti*) rtti(){return _rtti;}
+    /**
+     * Returns the RuntimeTypeInfo struct for the property type.
+     */
+    const(Rtti*) rtti(){return _rtti;}
 
-        /**
-         * Returns the hints for this property.
-         */
-        ref PropHints hints(){return _hints;}
+    /**
+     * Returns the hints for this property.
+     */
+    ref const(PropHints) hints(){return _hints;}
 
 // ----        
 
-    }
 }
 ///
 unittest
@@ -378,12 +347,12 @@ unittest
     assert(foo.valueDescriptor.getter()() == 1);
     // a descriptor has a fixed size, whatever is it's specialization,
     // that allows to cast safely to any other descriptor type.
-    PropDescriptor!float* des = cast(PropDescriptor!float*) &foo.valueDescriptor;
-    // that's why a helper is integrated to cast
-    auto other = des.typedAs!byte;
+    PropDescriptor!float* fpDescr = cast(PropDescriptor!float*) &foo.valueDescriptor;
+    // that's why the halper "as" is provided to cast
+    PropDescriptor!byte* byteDescr = fpDescr.as!byte;
     // and the actual type can be retrieved with the rtti
-    assert(des.rtti is getRtti!int);
-    assert(other.rtti is getRtti!int);
+    assert(fpDescr.rtti is getRtti!int);
+    assert(byteDescr.rtti is getRtti!int);
 }
 
 unittest
@@ -391,15 +360,15 @@ unittest
     class A
     {
         private int fi;
-        @property int i(){return fi;}
-        @property void i(in int aValue){fi = aValue;}
+        int i(){return fi;}
+        void i(in int aValue){fi = aValue;}
     }
     struct Si{uint f,r,e;}
     class B
     {
         private Si fi;
-        @property ref Si i(){return fi;}
-        @property void i(Si aValue){fi = aValue;}
+        ref Si i(){return fi;}
+        void i(Si aValue){fi = aValue;}
     }
 
     auto a = construct!A;
@@ -835,7 +804,6 @@ mixin template PropertyPublisherImpl()
             static if (is(attribute == SetGet)) 
             {
                 alias Type = typeof(__traits(getMember, this, member));
-                const(Rtti)* ti = getRtti!Type;
                 auto propPtr = &__traits(getMember, this, member);
                 static if (isFieldPrefix(member[0]))
                 auto propName = member[1..$];
@@ -853,7 +821,7 @@ mixin template PropertyPublisherImpl()
                 }
                 //
                 enum h = getUDAs!(__traits(getMember, T, member), PropHints);
-                static if (h.length) descriptor.hints = h[0];
+                static if (h.length) descriptor._hints = h[0];
                 //
                 version(none) writeln(attribute.stringof, " : ", member);
                 break;
@@ -915,7 +883,7 @@ mixin template PropertyPublisherImpl()
                 }
                 //
                 enum h = getUDAs!(overload, PropHints);
-                static if (h.length) descriptor.hints = h[0];
+                static if (h.length) descriptor._hints = h[0];
                 //
                 version(none) writeln(attribute.stringof, " < ", member);
             }
@@ -935,7 +903,7 @@ mixin template PropertyPublisherImpl()
                 descriptor.define(dg, descriptor.getter, member);
                 //
                 enum h = getUDAs!(overload, PropHints);
-                static if (h.length) descriptor.hints = h[0];
+                static if (h.length) descriptor._hints = h[0];
                 //
                 version(none) writeln(attribute.stringof, " > ", member);
             }
@@ -1667,8 +1635,8 @@ void bindPublications(bool recursive = false, S, T)(auto ref S src, auto ref T t
         {
             static if (!PubIsStruct) // PubTraits should also have declarator, even if not used
             {
-                Object srcObj = srcP.typedAs!Object.get();
-                Object trgObj = trgP.typedAs!Object.get();
+                const Object srcObj = srcP.as!Object.get();
+                const Object trgObj = trgP.as!Object.get();
                 if (!srcObj || !trgObj)
                     return;
 
@@ -1911,6 +1879,8 @@ unittest
 class PropertyBinder(T, bool RttiCheck = false)
 {
 
+    mixin inheritedDtor;
+
 private:
 
     ContiguousList!(PropDescriptor!T*) _itemsToDestruct;
@@ -1935,6 +1905,7 @@ public:
         }
         _items.destruct;
         _itemsToDestruct.destruct;
+        callInheritedDtor;
     }
 
     /**
@@ -1968,7 +1939,7 @@ public:
      * Returns:
      *      A new PropDescriptor of type T.
      */
-    PropDescriptor!T * newBinding()
+    PropDescriptor!T* newBinding()
     {
         auto result = construct!(PropDescriptor!T);
         _items.add(result);
@@ -1987,8 +1958,10 @@ public:
     void removeBinding(size_t index)
     {
         auto itm = _items.extract(index);
-        if (_source && itm == _source) _source = null;
-        if (_itemsToDestruct.remove(itm)) destruct(itm);
+        if (_source && itm == _source)
+            _source = null;
+        if (_itemsToDestruct.remove(itm))
+            destruct(itm);
     }
 
     /**
@@ -2002,11 +1975,8 @@ public:
     void change(T value)
     {
         foreach(item; _items)
-        {
-            if (item.access == PropAccess.none) continue;
-            if (item.access == PropAccess.ro) continue;
-            item.set(value);
-        }
+            if (item.setter)
+                item.set(value);
     }
 
     /**
@@ -2014,8 +1984,8 @@ public:
      */
     void updateFromSource()
     {
-        if (!_source) return;
-        change(_source.get());
+        if (_source)
+            change(_source.get());
     }
 
     /**
@@ -2023,21 +1993,18 @@ public:
      * Params:
      *      src = The property to be used as source.
      */
-    @property void source(ref PropDescriptor!T src)
-    {_source = &src;}
+    void source(ref PropDescriptor!T src) {_source = &src;}
 
     /**
      * Returns the property used as source in _updateFromSource().
      */
-    @property PropDescriptor!T * source()
-    {return _source;}
+    PropDescriptor!T* source() {return _source;}
 
     /**
      * Provides an access to the property descriptors for additional List operations.
      * Note that the items whose life-time is managed should not be modified.
      */
-    @property ContiguousList!(PropDescriptor!T *) items()
-    {return _items;}
+    ContiguousList!(PropDescriptor!T*) items() {return _items;}
 }
 
 unittest
@@ -2200,8 +2167,8 @@ unittest
     class A
     {
         private int fStr;
-        public @property str(int aValue){fStr = aValue;}
-        public @property int str(){return fStr;}
+        public void str(int aValue){fStr = aValue;}
+        public int str(){return fStr;}
     }
 
     auto a0 = construct!A;
