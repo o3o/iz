@@ -31,7 +31,6 @@ private:
     @NoGc Ptr _elems;
     uint _granularity = 4096;
     size_t _blockCount;
-    bool initDone;
 
     pragma(inline, true)
     void setLength(size_t value) @nogc

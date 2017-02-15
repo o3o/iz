@@ -1280,8 +1280,8 @@ unittest
  * Returns true if the target of a PropDescriptor!Object is owned by another
  * object.
  *
- * The serializer and the binders use this to determine if a sub object has
- * to be fully copied / serialized or rather the reference (without members).
+ * The serializer and the binders use this to determine if the members of a
+ * nested object have to be copied / serialized or rather just the reference.
  *
  * Params:
  *      descriptor = A pointer to the target accessor.
