@@ -536,24 +536,37 @@ if (is(T == interface))
 }
 
 /**
+ * Destructs on pointers simply forwards $(D freeMem).
+ *
+ * Params:
+ *      instance = A pointer, typed or not.
+ */
+void destruct(T)(auto ref T* instance)
+if (isBasicType!T)
+{
+    if (instance)
+        freeMem(cast(void*) instance);
+    instance = null;
+}
+
+/**
  * Returns a pointer to a new, GC-free, basic variable.
  * Any variable allocated using this function must be manually freed with freeMem.
  *
  * Params:
  *      T = The type of the pointer to return.
  *      preFill = Optional, boolean indicating if the result has to be initialized.
+ *      a = Optional, the value.
  */
-T* newPtr(T, bool preFill = false)()
-if (isBasicType!T)
+T* newPtr(T, bool preFill = false, A...)(A a)
+if (isBasicType!T && A.length <= 1)
 {
-    static if(!preFill)
-        return cast(T*) getMem(T.sizeof);
-    else
-    {
-        auto result = cast(T*) getMem(T.sizeof);
+    T* result = cast(T*) getMem(T.sizeof);
+    static if (A.length == 1)
+        *result = a[0];
+    else static if (preFill)
         *result = T.init;
-        return result;
-    }
+    return result;
 }
 
 /**
@@ -725,6 +738,8 @@ unittest
     auto ui = newPtr!int;
     auto i = newPtr!uint;
     auto l = new ulong;
+    auto u = newPtr!uint(8);
+    assert(*u == 8u);
 
     assert(ui);
     assert(i);
@@ -734,6 +749,7 @@ unittest
     assert(GC.addrOf(i) == null);
     assert(GC.addrOf(ui) == null);
     assert(GC.addrOf(l) != null);
+    assert(GC.addrOf(u) == null);
 
     *i = 8u;
     assert(*i == 8u);
@@ -741,6 +757,7 @@ unittest
     freeMem(ui);
     freeMem(i);
     freeMem(f);
+    freeMem(u);
 
     assert(ui == null);
     assert(i == null);

@@ -14,13 +14,18 @@ version(X86_64)
     version(linux) version = Nux64;
 
 /**
- * Parameterized, GC-free, single dimenssion array.
+ * Generic, manually managed, array.
  *
  * Array(T) implements a single-dimension array of uncollected memory.
- * It internally preallocates the memory to minimize the reallocation fingerprints.
+ * It internally allocates memory blocks to minimize the reallocation fingerprints.
  *
  * Its layout differs from built-in D's dynamic arrays and they cannot be cast as T[]
  * however, most of the slicing operations are possible.
+ *
+ * Manual management implies that $(D destruct()) must be called on the array when
+ * it goes out of scope. $(D destruct()) is only called on the content when the
+ * specialization is a $(D struct() or a $(D union)). Classes and pointers must
+ * be freed by hand.
  */
 struct Array(T)
 {
@@ -141,6 +146,7 @@ public:
 
     ~this()
     {
+        length(0);
         if (_elems)
             freeMem(_elems);
         _elems = null;
@@ -202,7 +208,7 @@ public:
         {
             if (value < _length)
                 foreach (i; value.._length)
-                    destroy(opIndex(i));
+                    destruct(opIndex(i));
         }
         setLength(value);
         static if (is(T == struct))
@@ -233,7 +239,10 @@ public:
         if (_length == 0)
             return "[]";
         else
-            return to!string(opSlice);
+        {
+            auto r = opSlice();
+            return to!string(r);
+        }
     }
 
     /**
@@ -409,13 +418,13 @@ public:
     }
 
     /// Support for filling the array with a single element.
-    void opSliceAssign(T value) pure @nogc
+    void opSliceAssign(T value) @nogc
     {
         opSliceAssign(value, 0, _length);
     }
 
     /// ditto
-    void opSliceAssign(T value, size_t lo, size_t hi) pure @nogc
+    void opSliceAssign(T value, size_t lo, size_t hi) @nogc
     {
         foreach (immutable i; lo .. hi)
             *rwPtr(i) = value;
