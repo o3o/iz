@@ -24,434 +24,429 @@ version(X86_64)
  */
 struct Array(T)
 {
-    private
+
+private:
+
+    size_t _length;
+    @NoGc Ptr _elems;
+    uint _granularity = 4096;
+    size_t _blockCount;
+    bool initDone;
+
+    pragma(inline, true)
+    void setLength(size_t value) @nogc
     {
-        size_t _length;
-        @NoGc Ptr _elems;
-        uint _granularity;
-        size_t _blockCount;
-        bool initDone;
+        debug { assert (_granularity != 0); }
 
-        void initLazy() @safe @nogc
+        const size_t newBlockCount = ((value * T.sizeof) / _granularity) + 1;
+        if (_blockCount != newBlockCount)
         {
-            if (initDone)
-                return;
-            _granularity = 4096;
-            _elems = getMem(_granularity);
-            initDone = true;
+            _blockCount = newBlockCount;
+            _elems = cast(T*) reallocMem(_elems, _granularity * _blockCount);
         }
+        _length = value;
+    }
 
-        void setLength(size_t value) @nogc
+    pragma(inline, true)
+    void grow() @nogc
+    {
+        setLength(_length + 1);
+    }
+
+    pragma(inline, true)
+    void shrink() @nogc
+    {
+        setLength(_length - 1);
+    }
+
+    pragma(inline, true)
+    T* rwPtr(size_t index) pure const nothrow @nogc
+    {
+        return cast(T*) (_elems + index * T.sizeof);
+    }
+
+    struct Range
+    {
+        private size_t _i;
+        private Array!T* _a;
+        ///
+        this(ref Array!T array, size_t index = 0)
         {
-            debug { assert (_granularity != 0); }
-
-            const size_t newBlockCount = ((value * T.sizeof) / _granularity) + 1;
-            if (_blockCount != newBlockCount)
-            {
-                _blockCount = newBlockCount;
-                _elems = cast(T*) reallocMem(_elems, _granularity * _blockCount);
-            }
-            _length = value;
+            _a = &array;
+            _i = index;
         }
-
-        void grow() @nogc
+        ///
+        ref T front()
         {
-            initLazy;
-            setLength(_length + 1);
+            return _a.opIndex(_i);
         }
-
-        void shrink() @nogc
+        ///
+        void popFront()
         {
-            setLength(_length - 1);
+            ++_i;
         }
-
-        T* rwPtr(size_t index) pure const nothrow @nogc
+        ///
+        bool empty()
         {
-            return cast(T*) (_elems + index * T.sizeof);
-        }
-
-        struct Range
-        {
-            private size_t _i;
-            private Array!T* _a;
-            ///
-            this(ref Array!T array, size_t index = 0)
-            {
-                _a = &array;
-                _i = index;
-            }
-            ///
-            ref T front()
-            {
-                return _a.opIndex(_i);
-            }
-            ///
-            void popFront()
-            {
-                ++_i;
-            }
-            ///
-            bool empty()
-            {
-                return _i >= _a._length;
-            }
+            return _i >= _a._length;
         }
     }
-    public
+
+public:
+
+    this(this) @nogc
     {
-        this(this) @nogc
-        {
-            Ptr old = _elems;
-            size_t sz = _length * T.sizeof;
-            _elems = getMem(sz);
-            moveMem(_elems, old, sz);
-        }
+        Ptr old = _elems;
+        const size_t sz = _length * T.sizeof;
+        _elems = getMem(sz);
+        moveMem(_elems, old, sz);
+    }
 
-        /// Constructs the array with a list of T.
-        this(E...)(E elements) @nogc
-        if (is(Unqual!E == T) || is(T == E))
-        {
-            opAssign(elements);
-        }
+    /// Constructs the array with a list of T.
+    this(E...)(E elements) @nogc
+    if (is(Unqual!E == T) || is(T == E))
+    {
+        opAssign(elements);
+    }
 
-        /// Constructs the array with a D array of T.
-        this(E)(E[] elements...) @nogc
-        if (is(Unqual!E == T) || is(T == E))
-        {
-            opAssign(elements);
-        }
+    /// Constructs the array with a D array of T.
+    this(E)(E[] elements...) @nogc
+    if (is(Unqual!E == T) || is(T == E))
+    {
+        opAssign(elements);
+    }
 
-        /// Constructs by dispatching to the existing opAssign overloads.
-        this(E)(auto ref E value) @nogc
-        {
-            opAssign(value);
-        }
+    /// Constructs by dispatching to the existing opAssign overloads.
+    this(E)(auto ref E value) @nogc
+    {
+        opAssign(value);
+    }
 
-        static if (__traits(compiles, to!T("")) && !isSomeChar!(Unqual!T))
-        {
-            /**
-             * Constructs the array from a literal array representation.
-             * This constructor is not available when the element type verifies
-             * isSomeChar.
-             *
-             * Params:
-             *      value = An array literal.
-             * Throw:
-             *      A ConvException if T is not converitble to string.
-             */
-            this(const(char)[] value)
-            {
-                fromString(value);
-            }
-        }
-
-        ~this()
-        {
-            if (_elems)
-                freeMem(_elems);
-            _elems = null;
-        }
-
+    static if (__traits(compiles, to!T("")) && !isSomeChar!(Unqual!T))
+    {
         /**
-         * Indicates the memory allocation block-size.
-         */
-        uint granurality() const pure nothrow @safe @nogc
-        {
-            return _granularity;
-        }
-
-        /**
-         * Sets the memory allocation block-size.
-         * value should be set to 16 or 4096 (the default).
-         */
-        void granularity(uint value) @nogc
-        {
-            if (_granularity == value)
-                return;
-            if (value < T.sizeof)
-            {
-                value = 16 * T.sizeof;
-            }
-            else if (value < 16)
-            {
-                value = 16;
-            }
-            else while (_granularity % 16 != 0)
-            {
-                value--;
-            }
-            _granularity = value;
-            setLength(_length);
-        }
-
-        /**
-         * Indicates how many block the array is made of.
-         */
-        size_t blockCount() const pure nothrow @safe @nogc
-        {
-            return _blockCount;
-        }
-
-        /// Sets or gets the element count.
-        size_t length() const pure nothrow @safe @nogc
-        {
-            return _length;
-        }
-
-        /// ditto
-        void length(size_t value) @nogc
-        {
-            if (value == _length)
-                return;
-            size_t oldLen = _length;
-            static if (is(T == struct))
-            {
-                if (value < _length)
-                    foreach(i; value.._length)
-                        destroy(opIndex(i));
-            }
-            initLazy;
-            setLength(value);
-            static if (is(T == struct))
-            {
-                if (value > oldLen)
-                    foreach(i; oldLen.._length)
-                        emplace(rwPtr(i));
-            }
-        }
-
-        /**
-         * Pointer to the first element.
-         * As it's always assigned It cannot be used to determine if the array is empty.
-         */
-        Ptr ptr() pure nothrow @nogc
-        {
-            return _elems;
-        }
-
-        /**
-         * Returns the string representation of the array.
-         *
-         * Throw:
-         *      A ConvException if T is not converitble to string.
-         */
-        string toString() const
-        {
-            if (_length == 0)
-                return "[]";
-            else
-                return to!string(opSlice);
-        }
-
-        /**
-         * Sets the array from a literal representation.
+         * Constructs the array from a literal array representation.
+         * This constructor is not available when the element type verifies
+         * isSomeChar.
          *
          * Params:
          *      value = An array literal.
          * Throw:
          *      A ConvException if T is not converitble to string.
          */
-        void fromString(C = char)(const(C)[] value)
+        this(const(char)[] value)
         {
-            static if (__traits(compiles, to!T("")))
-            {
-                initLazy;
-                setLength(0);
-                T[] arr;
-
-                scope(success)
-                    opAssign(arr);
-
-                arr = to!(T[])(value);
-            }
-            else static assert(false, "don't know how to convert a string to a "
-                ~ T.stringof);
+            fromString(value);
         }
+    }
 
-        /// Returns a mutable (deep) copy of the array.
-        Array!T dup() const @nogc return
+    ~this()
+    {
+        if (_elems)
+            freeMem(_elems);
+        _elems = null;
+    }
+
+    /**
+     * Indicates the memory allocation block-size.
+     */
+    uint granurality() const pure nothrow @safe @nogc
+    {
+        return _granularity;
+    }
+
+    /**
+     * Sets the memory allocation block-size.
+     * value should be set to 16 or 4096 (the default).
+     */
+    void granularity(uint value) @nogc
+    {
+        if (_granularity == value)
+            return;
+        if (value < T.sizeof)
+        {
+            value = 16 * T.sizeof;
+        }
+        else if (value < 16)
+        {
+            value = 16;
+        }
+        else while (_granularity % 16 != 0)
+        {
+            value--;
+        }
+        _granularity = value;
+        setLength(_length);
+    }
+
+    /**
+     * Indicates how many block the array is made of.
+     */
+    size_t blockCount() const pure nothrow @safe @nogc
+    {
+        return _blockCount;
+    }
+
+    /// Sets or gets the element count.
+    size_t length() const pure nothrow @safe @nogc
+    {
+        return _length;
+    }
+
+    /// ditto
+    void length(size_t value) @nogc
+    {
+        if (value == _length)
+            return;
+        size_t oldLen = _length;
+        static if (is(T == struct))
+        {
+            if (value < _length)
+                foreach (i; value.._length)
+                    destroy(opIndex(i));
+        }
+        setLength(value);
+        static if (is(T == struct))
+        {
+            if (value > oldLen)
+                foreach (i; oldLen.._length)
+                    emplace(rwPtr(i));
+        }
+    }
+
+    /**
+     * Pointer to the first element.
+     * As it's always assigned It cannot be used to determine if the array is empty.
+     */
+    Ptr ptr() pure nothrow @nogc
+    {
+        return _elems;
+    }
+
+    /**
+     * Returns the string representation of the array.
+     *
+     * Throw:
+     *      A ConvException if T is not converitble to string.
+     */
+    string toString() const
+    {
+        if (_length == 0)
+            return "[]";
+        else
+            return to!string(opSlice);
+    }
+
+    /**
+     * Sets the array from a literal representation.
+     *
+     * Params:
+     *      value = An array literal.
+     * Throw:
+     *      A ConvException if T is not converitble to string.
+     */
+    void fromString(C = char)(const(C)[] value)
+    {
+        static if (__traits(compiles, to!T("")))
+        {
+            setLength(0);
+            T[] arr;
+
+            scope(success)
+                opAssign(arr);
+
+            arr = to!(T[])(value);
+        }
+        else static assert(false, "don't know how to convert a string to a "
+            ~ T.stringof);
+    }
+
+    /// Returns a mutable (deep) copy of the array.
+    Array!T dup() const @nogc return
+    {
+        Array!T result;
+        result.length = _length;
+        moveMem(result._elems, _elems, _length * T.sizeof);
+        return result;
+    }
+
+    /// SUpport for associative arrays.
+    size_t toHash() const nothrow @trusted
+    {
+        return opSlice().hashOf;
+    }
+
+    /// Support for equality tests.
+    bool opEquals(A)(auto ref A array) const pure @nogc @trusted
+    if ((is(Unqual!A == Unqual!(Array!T)) || is(Unqual!(ElementEncodingType!A) == T)))
+    {
+        if (_length != array.length)
+            return false;
+        else if (_length == 0 && array.length == 0)
+            return true;
+        static if (is(Unqual!A == Unqual!(Array!T)))
+            return _elems[0.._length * T.sizeof] ==
+              array._elems[0..array._length * T.sizeof];
+        else
+            return _elems[0.._length * T.sizeof] ==
+              array.ptr[0..array.length];
+    }
+
+    /// Support for the array syntax.
+    ref T opIndex(size_t i) const pure @nogc
+    {
+        return *rwPtr(i);
+    }
+
+    /// Support for the array syntax.
+    void opIndexAssign(T item, size_t i) @nogc
+    {
+        *rwPtr(i) = item;
+    }
+
+    /// Support for the foreach operator.
+    int opApply(scope int delegate(ref T) dg)
+    {
+        int result = 0;
+        foreach (immutable i; 0 .. _length)
+        {
+            result = dg(*rwPtr(i));
+            if (result) break;
+        }
+        return result;
+    }
+
+    /// Support for the foreach_reverse operator.
+    int opApplyReverse(scope int delegate(ref T) dg)
+    {
+        int result = 0;
+        foreach_reverse (immutable i; 0 .. _length)
+        {
+            result = dg(*rwPtr(i));
+            if (result) break;
+        }
+        return result;
+    }
+
+    /// Support for the dollar operator.
+    size_t opDollar() const pure nothrow @safe @nogc
+    {
+        return _length;
+    }
+
+    /// Assign another Array!T.
+    void opAssign(E)(auto ref Array!E elements) @nogc
+    if (is(Unqual!E == T) || is(E == T))
+    {
+        setLength(elements.length);
+        moveMem(_elems, elements._elems, T.sizeof * _length);
+    }
+
+    /// Assigns a D array.
+    void opAssign(E)(auto ref E[] elements) @nogc
+    if (is(Unqual!E == T) || is(E == T))
+    {
+        setLength(elements.length);
+        foreach (i, element; elements)
+            *rwPtr(i) = cast(T) element;
+    }
+
+    /// Assigns an inpunt range.
+    void opAssign(E)(auto ref E elements) @nogc
+    if (isInputRange!E && is(Unqual!(ElementType!E) == T) && !isRandomAccessRange!E)
+    {
+        const len = walkLength(elements);
+        setLength(len);
+        foreach (immutable i; 0..len)
+        {
+            opAssign(elements.front);
+            elements.popFront;
+        }
+    }
+
+    /// Support for the cat operator.
+    void opOpAssign(string op, E)(E[] elements) @nogc
+    if (is(Unqual!E == T) || is(E == T))
+    {
+        static if (op == "~")
+        {
+            const old = _length;
+            setLength(_length + elements.length);
+            moveMem( rwPtr(old), elements.ptr , T.sizeof * elements.length);
+        }
+        else assert(0, "operator not implemented");
+    }
+
+    /// Support for the cat operator.
+    void opOpAssign(string op)(T aElement) @nogc
+    {
+        static if (op == "~")
+        {
+            grow;
+            opIndexAssign(aElement, _length-1);
+        }
+        else assert(0, "operator not implemented");
+    }
+
+    /// Returns the array as a D slice. This doesnt duplicate the memory.
+    T[] opSlice() const pure @nogc
+    {
+        return opSlice!true(0, _length);
+    }
+
+    /// Returns a slice of the array as a D slice. This doesnt ducplicate the memory.
+    T[] opSlice(bool dSlice = true)(size_t lo, size_t hi) const pure @nogc
+    {
+        static if (dSlice)
+        {
+            return (cast(T*) _elems)[lo..hi];
+        }
+        else
         {
             Array!T result;
-            result.length = _length;
-            moveMem(result._elems, _elems, _length * T.sizeof);
+            result._elems = _elems + lo * T.sizeof;
             return result;
         }
-
-        /// SUpport for associative arrays.
-        size_t toHash() const nothrow @trusted
-        {
-            return opSlice().hashOf;
-        }
-
-        /// Support for equality tests.
-        bool opEquals(A)(auto ref A array) const pure @nogc @trusted
-        if ((is(Unqual!A == Unqual!(Array!T)) || is(Unqual!(ElementEncodingType!A) == T)))
-        {
-            if (_length != array.length)
-                return false;
-            else if (_length == 0 && array.length == 0)
-                return true;
-            static if (is(Unqual!A == Unqual!(Array!T)))
-                return _elems[0.._length * T.sizeof] ==
-                  array._elems[0..array._length * T.sizeof];
-            else
-                return _elems[0.._length * T.sizeof] ==
-                  array.ptr[0..array.length];
-        }
-
-        /// Support for the array syntax.
-        ref T opIndex(size_t i) const pure @nogc
-        {
-            return *rwPtr(i);
-        }
-
-        /// Support for the array syntax.
-        void opIndexAssign(T item, size_t i) @nogc
-        {
-            *rwPtr(i) = item;
-        }
-
-        /// Support for the foreach operator.
-        int opApply(scope int delegate(ref T) dg)
-        {
-            int result = 0;
-            foreach (immutable i; 0 .. _length)
-            {
-                result = dg(*rwPtr(i));
-                if (result) break;
-            }
-            return result;
-        }
-
-        /// Support for the foreach_reverse operator.
-        int opApplyReverse(scope int delegate(ref T) dg)
-        {
-            int result = 0;
-            foreach_reverse (immutable i; 0 .. _length)
-            {
-                result = dg(*rwPtr(i));
-                if (result) break;
-            }
-            return result;
-        }
-
-        /// Support for the dollar operator.
-        size_t opDollar() const pure nothrow @safe @nogc
-        {
-            return _length;
-        }
-
-        /// Assign another Array!T.
-        void opAssign(E)(auto ref Array!E elements) @nogc
-        if (is(Unqual!E == T) || is(E == T))
-        {
-            initLazy;
-            setLength(elements.length);
-            moveMem(_elems, elements._elems, T.sizeof * _length);
-        }
-
-        /// Assigns a D array.
-        void opAssign(E)(auto ref E[] elements) @nogc
-        if (is(Unqual!E == T) || is(E == T))
-        {
-            initLazy;
-            setLength(elements.length);
-            foreach (i, element; elements)
-                *rwPtr(i) = cast(T) element;
-        }
-
-        /// Assigns an inpunt range.
-        void opAssign(E)(auto ref E elements) @nogc
-        if (isInputRange!E && is(Unqual!(ElementType!E) == T) && !isRandomAccessRange!E)
-        {
-            auto len = walkLength(elements);
-            initLazy;
-            setLength(len);
-            foreach(immutable i; 0..len)
-            {
-                opAssign(elements.front);
-                elements.popFront;
-            }
-        }
-
-        /// Support for the cat operator.
-        void opOpAssign(string op, E)(E[] elements) @nogc
-        if (is(Unqual!E == T) || is(E == T))
-        {
-            static if (op == "~")
-            {
-                initLazy;
-                auto old = _length;
-                setLength(_length + elements.length);
-                moveMem( rwPtr(old), elements.ptr , T.sizeof * elements.length);
-            }
-            else assert(0, "operator not implemented");
-        }
-
-        /// Support for the cat operator.
-        void opOpAssign(string op)(T aElement) @nogc
-        {
-            static if (op == "~")
-            {
-                grow;
-                opIndexAssign(aElement, _length-1);
-            }
-            else assert(0, "operator not implemented");
-        }
-
-        /// Returns the array as a D slice. This doesnt duplicate the memory.
-        T[] opSlice() const pure @nogc
-        {
-            return opSlice!true(0, _length);
-        }
-
-        /// Returns a slice of the array as a D slice. This doesnt ducplicate the memory.
-        T[] opSlice(bool dSlice = true)(size_t lo, size_t hi) const pure @nogc
-        {
-            static if (dSlice)
-            {
-                return (cast(T*) _elems)[lo..hi];
-            }
-            else
-            {
-                Array!T result;
-                size_t len = hi - lo;
-                result._elems = _elems + lo * T.sizeof;
-                return result;
-            }
-        }
-
-        /// Support for filling the array with a single element.
-        void opSliceAssign(T value) @nogc
-        {
-            opSliceAssign(value, 0, _length);
-        }
-
-        /// ditto
-        void opSliceAssign(T value, size_t lo, size_t hi) @nogc
-        {
-            foreach(immutable i; lo .. hi)
-                *rwPtr(i) = value;
-        }
-
-        /// Returns an input range with an assignable front.
-        auto range()
-        {
-            return Range(this, 0);
-        }
-
-        /// Allows to use the array as a D built-in array.
-        alias opSlice this;
     }
+
+    /// Support for filling the array with a single element.
+    void opSliceAssign(T value) pure @nogc
+    {
+        opSliceAssign(value, 0, _length);
+    }
+
+    /// ditto
+    void opSliceAssign(T value, size_t lo, size_t hi) pure @nogc
+    {
+        foreach (immutable i; lo .. hi)
+            *rwPtr(i) = value;
+    }
+
+    /// Returns an input range with an assignable front.
+    auto range()
+    {
+        return Range(this, 0);
+    }
+
+    /// Allows to use the array as a D built-in array.
+    alias opSlice this;
 }
 
 unittest
 {
-
     alias Key = string;
     alias A = Array!int;
     A[Key] x;
     //x["a"] = [0];
+}
+
+unittest
+{
+    Array!int a;
+    a.length = 2;
+    a[] = 1;
+    assert(a[0] == 1);
+    assert(a[1] == 1);
 }
 
 unittest
@@ -493,7 +488,7 @@ unittest
 
     // loops
     int i;
-    foreach(float aflt; floatarr)
+    foreach (float aflt; floatarr)
     {
         float v = i * 0.1f;
         assert( aflt == v);
@@ -587,7 +582,7 @@ unittest
 
 private mixin template ListHelpers(T)
 {
-    static if(is (T == class))
+    static if (is (T == class))
     {
         final public T addNewItem(A...)(A a)
         {
@@ -596,7 +591,7 @@ private mixin template ListHelpers(T)
             return result;
         }
     }
-    else static if(is (T == struct))
+    else static if (is (T == struct))
     {
         final public T * addNewItem(A...)(A a)
         {
@@ -605,7 +600,7 @@ private mixin template ListHelpers(T)
             return result;
         }
     }
-    else static if(isPointer!T)
+    else static if (isPointer!T)
     {
         final public T addNewItem(A...)(A a)
         {
@@ -618,8 +613,6 @@ private mixin template ListHelpers(T)
     alias opDollar = count;
 }
 
-deprecated("Use the more accurate 'ContiguousList' name")
-alias StaticList = ContiguousList;
 
 /**
  * A list, fast to be iterated, slow to be reorganized.
@@ -630,297 +623,287 @@ class ContiguousList(T)
     mixin ListHelpers!T;
     mixin inheritedDtor;
 
-    private
-    {
+private:
+
         @NoGc Array!T _items;
-    }
-    protected
+
+
+public:
+
+    ///
+    this(A...)(A elements)
     {
-        final Exception listException()
-        {
-            return new Exception("List exception");
-        }
+        _items = Array!T(elements);
     }
-    public
+
+    ~this()
     {
-        ///
-        this(A...)(A elements)
-        {
-            _items = Array!T(elements);
-        }
+        _items.length = 0;
+    }
 
-        ~this()
-        {
-            _items.length = 0;
-        }
+    /// Support for the array syntax.
+    ref T opIndex(ptrdiff_t i)
+    {
+        return _items[i];
+    }
 
-        /// Support for the array syntax.
-        ref T opIndex(ptrdiff_t i)
-        {
-            return _items[i];
-        }
+    /// Support for the array syntax.
+    void opIndexAssign(T item, size_t i)
+    {
+        _items[i] = item;
+    }
 
-        /// Support for the array syntax.
-        void opIndexAssign(T item, size_t i)
+    /// Support for the foreach operator.
+    int opApply(scope int delegate(ref T) dg)
+    {
+        int result = 0;
+        foreach (immutable i; 0 .. _items.length)
         {
-            _items[i] = item;
+            result = dg(_items[i]);
+            if (result) break;
         }
+        return result;
+    }
 
-        /// Support for the foreach operator.
-        int opApply(scope int delegate(ref T) dg)
+    /// Support for the foreach_reverse operator.
+    int opApplyReverse(scope int delegate(ref T) dg)
+    {
+        int result = 0;
+        foreach_reverse(immutable i; 0 .. _items.length)
         {
-            int result = 0;
-            foreach(immutable i; 0 .. _items.length)
+            result = dg(_items[i]);
+            if (result) break;
+        }
+        return result;
+    }
+
+    /// Replaces the items with the content of a D T[].
+    void opAssign(T[] items)
+    {
+        _items.opAssign(items);
+    }
+
+    /// Replaces the items with the content of an Array!T.
+    void opAssign(Array!T items)
+    {
+        _items.opAssign(items);
+    }
+
+    deprecated("formely implemented for the List interface")
+    T last()
+    {
+        return _items[$-1];
+    }
+
+    deprecated("formely implemented for the List interface")
+    T first()
+    {
+        return _items[0];
+    }
+
+    /**
+     * Tries to find an item in the list.
+     *
+     * Params:
+     *      item = the item to find.
+     * Returns:
+     *      -1 if item is not present otherwise its index.
+     */
+    ptrdiff_t find(T item)
+    {
+        ptrdiff_t result = -1;
+        foreach (immutable i; 0 .. _items.length)
+        {
+            if (_items[i] == item)
             {
-                result = dg(_items[i]);
-                if (result) break;
+                result = i;
+                break;
             }
-            return result;
         }
+        return result;
+    }
 
-        /// Support for the foreach_reverse operator.
-        int opApplyReverse(scope int delegate(ref T) dg)
-        {
-            int result = 0;
-            foreach_reverse(immutable i; 0 .. _items.length)
-            {
-                result = dg(_items[i]);
-                if (result) break;
-            }
-            return result;
-        }
+    /**
+     * Adds an item at the end of the list and returns its index.
+     *
+     * Returns:
+     *      The last item index.
+     */
+    ptrdiff_t add(T item)
+    {
+        _items.grow;
+        _items[$-1] = item;
+        return _items.length - 1;
+    }
 
-        /// Replaces the items with the content of a D T[].
-        void opAssign(T[] items)
-        {
-            _items.opAssign(items);
-        }
+    /**
+     * Adds items at the end of the list.
+     *
+     * Returns:
+     *      The last item index.
+     */
+    ptrdiff_t add(I)(I items)
+    {
+        _items ~= items;
+        return _items.length - 1;
+    }
 
-        /// Replaces the items with the content of an Array!T.
-        void opAssign(Array!T items)
-        {
-            _items.opAssign(items);
-        }
+    /**
+     * Inserts an item at the beginning of the list.
+     *
+     * In a Contiguous list, add() should be preferred over insert().
+     *
+     * Returns:
+     *      Always 0.
+     */
+    ptrdiff_t insert(T item)
+    {
+        _items.grow;
+        memmove(_items.ptr + T.sizeof, _items.ptr, (_items.length - 1) * T.sizeof);
+        _items[0] = item;
+        return 0;
+    }
 
-        deprecated("formely implemented for the List interface")
-        T last()
-        {
-            return _items[$-1];
-        }
-
-        deprecated("formely implemented for the List interface")
-        T first()
-        {
-            return _items[0];
-        }
-
-        /**
-         * Tries to find an item in the list.
-         *
-         * Params:
-         *      item = the item to find.
-         * Returns:
-         *      -1 if item is not present otherwise its index.
-         */
-        ptrdiff_t find(T item)
-        {
-            ptrdiff_t result = -1;
-            foreach(immutable i; 0 .. _items.length)
-            {
-                if (_items[i] == item)
-                {
-                    result = i;
-                    break;
-                }
-            }
-            return result;
-        }
-
-        /**
-         * Adds an item at the end of the list and returns its index.
-         *
-         * Returns:
-         *      The last item index.
-         */
-        ptrdiff_t add(T item)
+    /**
+     * Inserts an item at a given position.
+     *
+     * In a Contiguous list, add() should ne preferred over insert().
+     *
+     * Params:
+     *      position = The position where to insert.
+     *      item = The item to insert.
+     * Returns:
+     *      The item index, position if it was valid.
+     */
+    ptrdiff_t insert(size_t position, T item)
+    {
+        if (position == 0)
+            return insert(item);
+        else if (position >= _items.length)
+            return add(item);
+        else
         {
             _items.grow;
-            _items[$-1] = item;
-            return _items.length - 1;
+            memmove(_items.ptr + T.sizeof * position + 1,
+                    _items.ptr + T.sizeof * position,
+                    (_items.length - 1 - position) * T.sizeof);
+            _items[position] = item;
+            return position;
         }
+    }
 
-        /**
-         * Adds items at the end of the list.
-         *
-         * Returns:
-         *      The last item index.
-         */
-        ptrdiff_t add(I)(I items)
+    /**
+     * Exchanges the positions of two items.
+     *
+     * Params:
+     *      item1 = The first item.
+     *      item2 = The second item.
+     */
+    void swapItems(T item1, T item2)
+    in
+    {
+        assert(item1 != item2);
+    }
+    body
+    {
+        ptrdiff_t i1 = find(item1);
+        ptrdiff_t i2 = find(item2);
+        if (i1 != -1 && i2 != -1)
         {
-            _items ~= items;
-            return _items.length - 1;
+            _items[i1] = _items[i2];
+            _items[i2] = item1;
         }
+    }
 
-        /**
-         * Inserts an item at the beginning of the list.
-         *
-         * In a Contiguous list, add() should be preferred over insert().
-         *
-         * Returns:
-         *      Always 0.
-         */
-        ptrdiff_t insert(T item)
-        {
-            _items.grow;
-            memmove(_items.ptr + T.sizeof, _items.ptr, (_items.length - 1) * T.sizeof);
-            _items[0] = item;
-            return 0;
-        }
+    /**
+     * Exchanges the positions of two items.
+     *
+     * Params:
+     *      index1 = The first item index.
+     *      index2 = The second item index.
+     */
+    void swapIndexes(size_t index1, size_t index2)
+    {
+        if (index1 == index2) return;
+        if ((index1 >= _items.length) | (index2 >= _items.length)) return;
 
-        /**
-         * Inserts an item at a given position.
-         *
-         * In a Contiguous list, add() should ne preferred over insert().
-         *
-         * Params:
-         *      position = The position where to insert.
-         *      item = The item to insert.
-         * Returns:
-         *      The item index, position if it was valid.
-         */
-        ptrdiff_t insert(size_t position, T item)
-        {
-            if (position == 0)
-                return insert(item);
-            else if (position >= _items.length)
-                return add(item);
-            else
-            {
-                _items.grow;
-                scope(failure) throw listException;
-                memmove(    _items.ptr + T.sizeof * position + 1,
-                            _items.ptr + T.sizeof * position,
-                            (_items.length - 1 - position) * T.sizeof);
-                _items[position] = item;
-                return position;
-            }
-        }
+        auto old = _items[index1];
+        _items[index1] = _items[index2];
+        _items[index2] = old;
+    }
 
-        /**
-         * Exchanges the positions of two items.
-         *
-         * Params:
-         *      item1 = The first item.
-         *      item2 = The second item.
-         */
-        void swapItems(T item1, T item2)
-        in
-        {
-            assert(item1 != item2);
-        }
-        body
-        {
-            ptrdiff_t i1 = find(item1);
-            ptrdiff_t i2 = find(item2);
-            if (i1 != -1 && i2 != -1)
-            {
-                _items[i1] = _items[i2];
-                _items[i2] = item1;
-            }
-        }
+    /**
+     * Removes an item from the list.
+     *
+     * Params:
+     *      item = The item to remove.
+     * Returns:
+     *      true if the item wasin the list, false otherwise.
+     */
+    bool remove(T item)
+    {
+        auto i = find(item);
+        auto result = (i != -1);
+        if (result)
+            extract(i);
+        return result;
+    }
 
-        /**
-         * Exchanges the positions of two items.
-         *
-         * Params:
-         *      index1 = The first item index.
-         *      index2 = The second item index.
-         */
-        void swapIndexes(size_t index1, size_t index2)
+    /**
+     * Removes an item from the list.
+     *
+     * Params:
+     *      index = The index of the item to remove.
+     * Returns:
+     *      The item that's been removed.
+     */
+    T extract(size_t index)
+    {
+        T result = _items[index];
+        if (index == _items.length-1)
         {
-            if (index1 == index2) return;
-            if ((index1 >= _items.length) | (index2 >= _items.length)) return;
-
-            auto old = _items[index1];
-            _items[index1] = _items[index2];
-            _items[index2] = old;
+            _items.shrink;
         }
-
-        /**
-         * Removes an item from the list.
-         *
-         * Params:
-         *      item = The item to remove.
-         * Returns:
-         *      true if the item wasin the list, false otherwise.
-         */
-        bool remove(T item)
+        else if (index == 0)
         {
-            auto i = find(item);
-            auto result = (i != -1);
-            if (result)
-                extract(i);
-            return result;
+            memmove(_items.ptr, _items.ptr + T.sizeof, (_items.length - 1) * T.sizeof);
+            _items.shrink;
         }
-
-        /**
-         * Removes an item from the list.
-         *
-         * Params:
-         *      index = The index of the item to remove.
-         * Returns:
-         *      The item that's been removed.
-         */
-        T extract(size_t index)
+        else
         {
-            T result = _items[index];
-            if (index == _items.length-1)
-            {
-                _items.shrink;
-            }
-            else if (index == 0)
-            {
-                scope(failure) throw listException;
-                memmove(_items.ptr, _items.ptr + T.sizeof, (_items.length - 1) * T.sizeof);
-                _items.shrink;
-            }
-            else
-            {
-                Ptr fromPtr = _items.ptr + T.sizeof * index;
-                scope(failure) throw listException;
-                memmove(fromPtr, fromPtr + T.sizeof, (_items.length - index) * T.sizeof);
-                _items.shrink;
-            }
-            return result;
+            Ptr fromPtr = _items.ptr + T.sizeof * index;
+            memmove(fromPtr, fromPtr + T.sizeof, (_items.length - index) * T.sizeof);
+            _items.shrink;
         }
+        return result;
+    }
 
-        /**
-         * Empties the list.
-         */
-        void clear()
-        {
-            _items.length = 0;
-        }
+    /**
+     * Empties the list.
+     */
+    void clear()
+    {
+        _items.length = 0;
+    }
 
-        /**
-         * Returns the items count.
-         */
-        final size_t count() const pure nothrow @safe
-        {
-            return _items.opDollar();
-        }
+    /**
+     * Returns the items count.
+     */
+    final size_t count() const pure nothrow @safe
+    {
+        return _items.opDollar();
+    }
 
-        /**
-         * Returns the internal array.
-         *
-         * ContiguousList doesn't contain any other hidden field
-         * and the container can be modified without altering the
-         * state of the list.
-         */
-        ref Array!T array() nothrow @safe
-        {
-            return _items;
-        }
+    /**
+     * Returns the internal array.
+     *
+     * ContiguousList doesn't contain any other hidden field
+     * and the container can be modified without altering the
+     * state of the list.
+     */
+    final ref Array!T array() nothrow @safe
+    {
+        return _items;
     }
 }
 
@@ -1068,443 +1051,441 @@ class DynamicList(T)
     mixin ListHelpers!T;
     mixin inheritedDtor;
 
-    private
+private:
+
+    size_t _count;
+    void* _last;
+    void* _first;
+    alias payload = dlistPayload!T;
+
+    void* getPayloadFromIx(size_t index) @safe @nogc nothrow
     {
-        size_t _count;
-        void* _last;
-        void* _first;
-        alias payload = dlistPayload!T;
+        void* current = _first;
+        foreach (immutable i; 0 .. index)
+            current = payload.getNext(current);
+        return current;
+    }
 
-        void* getPayloadFromIx(size_t index) @safe @nogc nothrow
+    void* getPayloadFromDt(T item) @trusted
+    {
+        void* current = _first;
+        while (current)
         {
-            void* current = _first;
-            foreach (immutable i; 0 .. index)
-                current = payload.getNext(current);
-            return current;
+            if (payload.getData(current) == item)
+                break;
+            current = payload.getNext(current);
         }
+        return current;
+    }
 
-        void* getPayloadFromDt(T item) @trusted
+public:
+
+    ///
+    this(A...)(A elements)
+    {
+        foreach (elem; elements)
+            add(elem);
+    }
+
+    ~this()
+    {
+        clear;
+    }
+
+    /// Support for the array syntax.
+    T opIndex(ptrdiff_t i) @safe @nogc nothrow
+    {
+        void* _pld = getPayloadFromIx(i);
+        return payload.getData(_pld);
+    }
+
+    /// Support for the array syntax.
+    void opIndexAssign(T item, size_t i) @safe @nogc nothrow
+    {
+        void* _pld = getPayloadFromIx(i);
+        payload.setData(_pld, item);
+    }
+
+    /// Support for the foreach operator.
+    int opApply(int delegate(T) dg) @trusted
+    {
+        int result = 0;
+        void* current = _first;
+        while (current)
         {
-            void* current = _first;
-            while(current)
-            {
-                T _data = payload.getData(current);
-                if (_data == item)
-                    break;
-                current = payload.getNext(current);
-            }
-            return current;
+            result = dg(payload.getData(current));
+            if (result) break;
+            current = payload.getNext(current);
+        }
+        return result;
+    }
+
+    /// Support for the foreach_reverse operator.
+    int opApplyReverse(int delegate(T) dg) @trusted
+    {
+        int result = 0;
+        void* current = _last;
+        while (current)
+        {
+            result = dg(payload.getData(current));
+            if (result) break;
+            current = payload.getPrev(current);
+        }
+        return result;
+    }
+
+    /// Replaces the items with the content of a D T[].
+    void opAssign(T[] elems) @trusted @nogc
+    {
+        clear;
+        foreach (elem; elems)
+            add(elem);
+    }
+
+    /// Returns the first element.
+    T last() @safe @nogc nothrow
+    {
+        return payload.getData(_last);
+    }
+
+    /// Returns the last element.
+    T first() @safe @nogc nothrow
+    {
+        return payload.getData(_first);
+    }
+
+    /**
+     * Tries to find an item in the list.
+     *
+     * Params:
+     *      item = the item to find.
+     * Returns:
+     *      -1 if item is not present otherwise its index.
+     */
+    ptrdiff_t find(T item) @trusted
+    {
+        void* current = _first;
+        ptrdiff_t result = -1;
+        while (current)
+        {
+            result++;
+            if (payload.getData(current) == item)
+                return result++;
+            current = payload.getNext(current);
+        }
+        return -1;
+    }
+
+    /**
+     * Adds an item at the end of the list and returns its index.
+     */
+    ptrdiff_t add(T item) @trusted @nogc
+    {
+        if (!_first)
+            return insert(item);
+        else
+        {
+            void* _pld = payload.newPld(_last, null, item);
+            payload.setNext(_last, _pld);
+            _last = _pld;
+            return _count++;
         }
     }
-    public
+
+    /**
+     * Adds items at the end of the list and returns the last item index.
+     */
+    ptrdiff_t add(T[] items) @trusted @nogc
     {
-        ///
-        this(A...)(A elements)
+        foreach (item; items)
+            add(item);
+        return _count - 1;
+    }
+
+    /**
+     * Inserts an item at the beginning of the list.
+     */
+    ptrdiff_t insert(T item) @trusted @nogc
+    {
+        void* _pld = payload.newPld(null, _first, item);
+        if (_first) payload.setPrev(_first, _pld);
+        else _last = _pld;
+        _first = _pld;
+        ++_count;
+        return 0;
+    }
+
+    /**
+     * Inserts an item at a given position.
+     *
+     * Params:
+     *      position = The position where to insert.
+     *      item = The item to insert.
+     * Returns:
+     *      The item index, position if it was valid.
+     */
+    ptrdiff_t insert(size_t position, T item) @trusted @nogc
+    {
+        if (!_first || position == 0)
         {
-            foreach(elem; elements)
-                add(elem);
+            return insert(item);
         }
-
-        ~this()
+        else if (position >= _count)
         {
-            clear;
+            return add(item);
         }
-
-        /// Support for the array syntax.
-        T opIndex(ptrdiff_t i) @safe @nogc nothrow
+        else
         {
-            void* _pld = getPayloadFromIx(i);
-            return payload.getData(_pld);
+            void* old = getPayloadFromIx(position);
+            void* prev = payload.getPrev(old);
+            void* _pld = payload.newPld(prev, old, item);
+            payload.setPrev(old, _pld);
+            payload.setNext(prev, _pld);
+            _count++;
+            return position;
         }
+    }
 
-        /// Support for the array syntax.
-        void opIndexAssign(T item, size_t i) @safe @nogc nothrow
+    /**
+     * Exchanges the positions of two items.
+     *
+     * Params:
+     *      item1 = The first item.
+     *      item2 = The second item.
+     */
+    void swapItems(T item1, T item2) @trusted
+    {
+        void* _pld1 = getPayloadFromDt(item1);
+        if (_pld1 == null) return;
+        void* _pld2 = getPayloadFromDt(item2);
+        if (_pld2 == null) return;
+
+        T _data1 = payload.getData(_pld1);
+        T _data2 = payload.getData(_pld2);
+
+        payload.setData(_pld1, _data2);
+        payload.setData(_pld2, _data1);
+    }
+
+    /**
+     * Exchanges the positions of two items.
+     *
+     * Params:
+     *      index1 = The first item index.
+     *      index2 = The second item index.
+     */
+    void swapIndexes(size_t index1, size_t index2) @trusted
+    {
+        void* _pld1 = getPayloadFromIx(index1);
+        if (_pld1 == null) return;
+        void* _pld2 = getPayloadFromIx(index2);
+        if (_pld2 == null) return;
+
+        T _data1 = payload.getData(_pld1);
+        T _data2 = payload.getData(_pld2);
+
+        payload.setData(_pld1, _data2);
+        payload.setData(_pld2, _data1);
+    }
+
+    /**
+     * Removes an item from the list.
+     *
+     * Params:
+     *      item = The item to remove.
+     * Returns:
+     *      true if the item wasin the list, false otherwise.
+     */
+    bool remove(T item) @trusted
+    {
+        void* _pld = getPayloadFromDt(item);
+        if (!_pld) return false;
+
+        void* _prev = payload.getPrev(_pld);
+        void* _next = payload.getNext(_pld);
+        if (_last == _pld && _prev)
         {
-            void* _pld = getPayloadFromIx(i);
-            payload.setData(_pld, item);
+            _last = _prev;
+            payload.setNext(_last, null);
+            _next = null;
         }
-
-        /// Support for the foreach operator.
-        int opApply(int delegate(T) dg) @trusted
+        else if (_first == _pld && _next)
         {
-            int result = 0;
-            void* current = _first;
-            while(current)
-            {
-                result = dg(payload.getData(current));
-                if (result) break;
-                current = payload.getNext(current);
-            }
-            return result;
+            _first = _next;
+            payload.setPrev(_first, null);
+            _prev = null;
         }
-
-        /// Support for the foreach_reverse operator.
-        int opApplyReverse(int delegate(T) dg) @trusted
+        else if (_prev && _next)
         {
-            int result = 0;
-            void* current = _last;
-            while(current)
-            {
-                result = dg(payload.getData(current));
-                if (result) break;
-                current = payload.getPrev(current);
-            }
-            return result;
+            if (_prev) payload.setNext(_prev, _next);
+            if (_next) payload.setPrev(_next, _prev);
         }
-
-        /// Replaces the items with the content of a D T[].
-        void opAssign(T[] elems) @trusted @nogc
+        payload.freePld(_pld);
+        if (_last == _first && _last == _pld)
         {
-            clear;
-            foreach(elem; elems)
-                add(elem);
-        }
-
-        /// Returns the first element.
-        T last() @safe @nogc nothrow
-        {
-            return payload.getData(_last);
-        }
-
-        /// Returns the last element.
-        T first() @safe @nogc nothrow
-        {
-            return payload.getData(_first);
-        }
-
-        /**
-         * Tries to find an item in the list.
-         *
-         * Params:
-         *      item = the item to find.
-         * Returns:
-         *      -1 if item is not present otherwise its index.
-         */
-        ptrdiff_t find(T item) @trusted
-        {
-            void* current = _first;
-            ptrdiff_t result = -1;
-            while(current)
-            {
-                result++;
-                T _data = payload.getData(current);
-                if (_data == item) return result++;
-                current = payload.getNext(current);
-            }
-            return -1;
-        }
-
-        /**
-         * Adds an item at the end of the list and returns its index.
-         */
-        ptrdiff_t add(T item) @trusted @nogc
-        {
-            if (!_first)
-                return insert(item);
-            else
-            {
-                void* _pld = payload.newPld(_last, null, item);
-                payload.setNext(_last, _pld);
-                _last = _pld;
-                return _count++;
-            }
-        }
-
-        /**
-         * Adds items at the end of the list and returns the last item index.
-         */
-        ptrdiff_t add(T[] items) @trusted @nogc
-        {
-            foreach (item; items)
-                add(item);
-            return _count - 1;
-        }
-
-        /**
-         * Inserts an item at the beginning of the list.
-         */
-        ptrdiff_t insert(T item) @trusted @nogc
-        {
-            void* _pld = payload.newPld(null, _first, item);
-            if (_first) payload.setPrev(_first, _pld);
-            else _last = _pld;
-            _first = _pld;
-            ++_count;
-            return 0;
-        }
-
-        /**
-         * Inserts an item at a given position.
-         *
-         * Params:
-         *      position = The position where to insert.
-         *      item = The item to insert.
-         * Returns:
-         *      The item index, position if it was valid.
-         */
-        ptrdiff_t insert(size_t position, T item) @trusted @nogc
-        {
-            if (!_first || position == 0)
-            {
-                return insert(item);
-            }
-            else if (position >= _count)
-            {
-                return add(item);
-            }
-            else
-            {
-                void* old = getPayloadFromIx(position);
-                void* prev = payload.getPrev(old);
-                void* _pld = payload.newPld(prev, old, item);
-                payload.setPrev(old, _pld);
-                payload.setNext(prev, _pld);
-                _count++;
-                return position;
-            }
-        }
-
-        /**
-         * Exchanges the positions of two items.
-         *
-         * Params:
-         *      item1 = The first item.
-         *      item2 = The second item.
-         */
-        void swapItems(T item1, T item2) @trusted
-        {
-            void* _pld1 = getPayloadFromDt(item1);
-            if (_pld1 == null) return;
-            void* _pld2 = getPayloadFromDt(item2);
-            if (_pld2 == null) return;
-
-            T _data1 = payload.getData(_pld1);
-            T _data2 = payload.getData(_pld2);
-
-            payload.setData(_pld1, _data2);
-            payload.setData(_pld2, _data1);
-        }
-
-        /**
-         * Exchanges the positions of two items.
-         *
-         * Params:
-         *      index1 = The first item index.
-         *      index2 = The second item index.
-         */
-        void swapIndexes(size_t index1, size_t index2) @trusted
-        {
-            void* _pld1 = getPayloadFromIx(index1);
-            if (_pld1 == null) return;
-            void* _pld2 = getPayloadFromIx(index2);
-            if (_pld2 == null) return;
-
-            T _data1 = payload.getData(_pld1);
-            T _data2 = payload.getData(_pld2);
-
-            payload.setData(_pld1, _data2);
-            payload.setData(_pld2, _data1);
-        }
-
-        /**
-         * Removes an item from the list.
-         *
-         * Params:
-         *      item = The item to remove.
-         * Returns:
-         *      true if the item wasin the list, false otherwise.
-         */
-        bool remove(T item) @trusted
-        {
-            void* _pld = getPayloadFromDt(item);
-            if (!_pld) return false;
-
-            void* _prev = payload.getPrev(_pld);
-            void* _next = payload.getNext(_pld);
-            if (_last == _pld && _prev)
-            {
-                _last = _prev;
-                payload.setNext(_last, null);
-                _next = null;
-            }
-            else if (_first == _pld && _next)
-            {
-                _first = _next;
-                payload.setPrev(_first, null);
-                _prev = null;
-            }
-            else if (_prev && _next)
-            {
-                if (_prev) payload.setNext(_prev, _next);
-                if (_next) payload.setPrev(_next, _prev);
-            }
-            payload.freePld(_pld);
-            if (_last == _first && _last == _pld)
-            {
-                _last = null;
-                _first = null;
-            }
-            --_count;
-            return true;
-        }
-
-        /**
-         * Removes an item from the list.
-         *
-         * Params:
-         *      index = The index of the item to remove.
-         * Returns:
-         *      The item that's been removed.
-         */
-        T extract(size_t index) @trusted
-        {
-            T result;
-            void* _pld = getPayloadFromIx(index);
-            if (!_pld) return result;
-            result = payload.getData(_pld);
-
-            void* _prev = payload.getPrev(_pld);
-            void* _next = payload.getNext(_pld);
-            if (_last == _pld && _prev)
-            {
-                _last = _prev;
-                payload.setNext(_prev, null);
-                _next = null;
-            }
-            else if (_first == _pld && _next)
-            {
-                _first = _next;
-                payload.setPrev(_next, null);
-                _prev = null;
-            }
-            else if (_prev && _next)
-            {
-                payload.setNext(_prev, _next);
-                payload.setPrev(_next, _prev);
-            }
-            payload.freePld(_pld);
-            if (_last == _first && _last == _pld)
-            {
-                _last = null;
-                _first = null;
-            }
-            --_count;
-            return result;
-        }
-
-        /**
-         * Empties the list.
-         */
-        void clear() @trusted @nogc
-        {
-            void* current = _first;
-            while(current)
-            {
-                void* _old = current;
-                current = payload.getNext(current);
-                payload.freePld(_old);
-            }
-            _count = 0;
-            _first = null;
             _last = null;
+            _first = null;
+        }
+        --_count;
+        return true;
+    }
+
+    /**
+     * Removes an item from the list.
+     *
+     * Params:
+     *      index = The index of the item to remove.
+     * Returns:
+     *      The item that's been removed.
+     */
+    T extract(size_t index) @trusted
+    {
+        T result;
+        void* _pld = getPayloadFromIx(index);
+        if (!_pld) return result;
+        result = payload.getData(_pld);
+
+        void* _prev = payload.getPrev(_pld);
+        void* _next = payload.getNext(_pld);
+        if (_last == _pld && _prev)
+        {
+            _last = _prev;
+            payload.setNext(_prev, null);
+            _next = null;
+        }
+        else if (_first == _pld && _next)
+        {
+            _first = _next;
+            payload.setPrev(_next, null);
+            _prev = null;
+        }
+        else if (_prev && _next)
+        {
+            payload.setNext(_prev, _next);
+            payload.setPrev(_next, _prev);
+        }
+        payload.freePld(_pld);
+        if (_last == _first && _last == _pld)
+        {
+            _last = null;
+            _first = null;
+        }
+        --_count;
+        return result;
+    }
+
+    /**
+     * Empties the list.
+     */
+    void clear() @trusted @nogc
+    {
+        void* current = _first;
+        while (current)
+        {
+            void* _old = current;
+            current = payload.getNext(current);
+            payload.freePld(_old);
+        }
+        _count = 0;
+        _first = null;
+        _last = null;
+    }
+
+    /**
+     * Returns the items count.
+     */
+    size_t count() @trusted @nogc
+    {
+        return _count;
+    }
+
+    Range opSlice()
+    {
+        return Range(_first, _last);
+    }
+
+    Range opSlice(size_t lo, size_t hi) @trusted
+    {
+        return Range(getPayloadFromIx(lo), getPayloadFromIx(hi));
+    }
+
+    alias length = count;
+
+    alias put = add;
+
+    private struct Range
+    {
+        private void* _begin;
+        private void* _end;
+
+        private this(void* b, void* e)
+        {
+            _begin = b;
+            _end = e;
         }
 
         /**
-         * Returns the items count.
+         * Returns $(D true) if the range is _empty
          */
-        size_t count() @trusted @nogc
+        bool empty() const @property
         {
-            return _count;
+            return _begin is null;
         }
 
-        Range opSlice()
+        /**
+         * Returns the first element in the range
+         */
+        T front() @safe @nogc
         {
-            return Range(_first, _last);
+            return payload.getData(_begin);
         }
 
-        Range opSlice(size_t lo, size_t hi) @trusted
+        /**
+         * Returns the last element in the range
+         */
+        T back() @safe @nogc
         {
-            return Range(getPayloadFromIx(lo), getPayloadFromIx(hi));
+            return payload.getData(_end);
         }
 
-        alias length = count;
-
-        alias put = add;
-
-        struct Range
+        /**
+         * pop the front element from the range
+         *
+         * complexity: amortized $(BIGOH 1)
+         */
+        void popFront() @safe @nogc
         {
-            private void* _begin;
-            private void* _end;
+            _begin = payload.getNext(_begin);
+        }
 
-            private this(void* b, void* e)
-            {
-                _begin = b;
-                _end = e;
-            }
+        /**
+         * pop the back element from the range
+         *
+         * complexity: amortized $(BIGOH 1)
+         */
+        void popBack() @safe @nogc
+        {
+            _end = payload.getPrev(_end);
+        }
 
-            /**
-             * Returns $(D true) if the range is _empty
-             */
-            @property bool empty() const
-            {
-                return _begin is null;
-            }
+        /**
+         * Trivial _save implementation, needed for $(D isForwardRange).
+         */
+        Range save() @safe @nogc
+        {
+            return this;
+        }
 
-            /**
-             * Returns the first element in the range
-             */
-            @property T front()
+        size_t length() @safe @nogc
+        {
+            size_t result;
+            auto cur = _begin;
+            while (cur)
             {
-                return payload.getData(_begin);
+                cur = payload.getNext(cur);
+                ++result;
             }
-
-            /**
-             * Returns the last element in the range
-             */
-            @property T back()
-            {
-                return payload.getData(_end);
-            }
-
-            /**
-             * pop the front element from the range
-             *
-             * complexity: amortized $(BIGOH 1)
-             */
-            void popFront()
-            {
-                _begin = payload.getNext(_begin);
-            }
-
-            /**
-             * pop the back element from the range
-             *
-             * complexity: amortized $(BIGOH 1)
-             */
-            void popBack()
-            {
-                _end = payload.getPrev(_end);
-            }
-
-            /**
-             * Trivial _save implementation, needed for $(D isForwardRange).
-             */
-            @property Range save()
-            {
-                return this;
-            }
-
-            @property size_t length()
-            {
-                size_t result;
-                auto cur = _begin;
-                while(cur)
-                {
-                    cur = payload.getNext(cur);
-                    ++result;
-                }
-                return result;
-            }
+            return result;
         }
     }
 }
@@ -1648,7 +1629,7 @@ unittest
 
         size_t i;
         cList = arrayOfC[0..10];
-        foreach(C c; cList)
+        foreach (C c; cList)
         {
             assert(c is arrayOfC[i]);
             ++i;
@@ -1675,7 +1656,7 @@ unittest
 
 /**
  * TreeItemSiblings is an input range that allows to
- * iterate over the children of a TreeItem.
+ * iterate the children of a TreeItem.
  */
 struct TreeItemChildren(T)
 {
@@ -1731,7 +1712,7 @@ public:
     {
         T result = _front;
         ptrdiff_t cnt = 0;
-        while(true)
+        while (true)
         {
             if (cnt++ == index || !result)
                 return result;
@@ -1801,7 +1782,7 @@ public:
     }
 
     ///
-    T front()
+    T front() @safe @nogc
     {
         return _front;
     }
@@ -1813,7 +1794,7 @@ public:
     }
 
     ///
-    bool empty()
+    bool empty() @safe @nogc
     {
         return _front is null;
     }
@@ -1831,7 +1812,7 @@ public:
     {
         T result = _front;
         ptrdiff_t cnt = 0;
-        while(true)
+        while (true)
         {
             if (cnt++ == index || !result)
                 return result;
@@ -1869,7 +1850,7 @@ public:
 }
 
 /**
- * The TreeItem mixin turns its implementer into a tree item.
+ * The TreeItem mixin turns its target into a tree item.
  */
 mixin template TreeItem()
 {
@@ -1992,7 +1973,7 @@ public:
     {
         TreeItemType result;
         result = self;
-        while(result.nextSibling)
+        while (result.nextSibling)
         {
             result = result.nextSibling;
         }
@@ -2011,7 +1992,7 @@ public:
         {
             TreeItemType result;
             result = self;
-            while(result.prevSibling)
+            while (result.prevSibling)
             {
                 result = result.prevSibling;
             }
@@ -2030,15 +2011,15 @@ public:
     body
     {
         auto current = self;
-        while(current)
+        while (current)
         {
             if (current is sibling) break;
             current = current.prevSibling;
         }
-        if(!current)
+        if (!current)
         {
             current = self;
-            while(current)
+            while (current)
             {
                 if (current is sibling) break;
                 current = current.nextSibling;
@@ -2126,14 +2107,14 @@ public:
                 sibling.nextSibling.removeSibling(sibling);
         }
 
-        size_t cnt = siblingCount;
+        const size_t cnt = siblingCount;
         if (index == 0) insertSibling(sibling);
         else if (index >= cnt) addSibling(sibling);
         else
         {
             size_t result = 1;
             auto old = firstSibling;
-            while(old)
+            while (old)
             {
                 if (result == index)
                 {
@@ -2170,7 +2151,7 @@ public:
         auto item1oldnext = sibling1._nextSibling;
         auto item2oldprev = sibling2._prevSibling;
         auto item2oldnext = sibling2._nextSibling;
-        bool contiguous = item2oldprev == sibling1 || item1oldprev == sibling2;
+        const bool contiguous = item2oldprev == sibling1 || item1oldprev == sibling2;
 
         if (!contiguous)
         {
@@ -2221,7 +2202,7 @@ public:
      */
     bool removeSibling(TreeItemType sibling)
     {
-        if (!sibling || sibling.parent && sibling.parent != parent)
+        if (!sibling || (sibling.parent && sibling.parent != parent))
             return false;
 
         TreeItemType oldprev = sibling._prevSibling;
@@ -2279,13 +2260,13 @@ public:
     {
         size_t toFront, toBack;
         auto current = self;
-        while(current)
+        while (current)
         {
             current = current._prevSibling;
             toFront++;
         }
         current = self;
-        while(current)
+        while (current)
         {
             current = current._nextSibling;
             toBack++;
@@ -2300,7 +2281,7 @@ public:
     {
         ptrdiff_t result = -1;
         TreeItemType current = self;
-        while(current)
+        while (current)
         {
             current = current._prevSibling;
             result++;
@@ -2371,7 +2352,7 @@ public:
     {
         size_t result;
         auto current = self;
-        while(current._parent)
+        while (current._parent)
         {
             current = current._parent;
             result++;
@@ -2385,7 +2366,7 @@ public:
     TreeItemType root()
     {
         auto current = self;
-        while(current._parent)
+        while (current._parent)
             current = current._parent;
         return current;
     }
@@ -2524,7 +2505,7 @@ public:
     void removeChildren()
     {
         auto current = _firstChild;
-        while(current)
+        while (current)
         {
             current.removeChildren;
 
@@ -2546,7 +2527,7 @@ public:
      */
     void deleteChildren()
     {
-        while(_firstChild)
+        while (_firstChild)
         {
             auto current = _firstChild;
             _firstChild = current.nextSibling;
@@ -2572,7 +2553,7 @@ public:
     {
         import std.format: format;
         char[] result;
-        foreach(immutable i; 0 .. level) result ~= '\t';
+        foreach (immutable i; 0 .. level) result ~= '\t';
         result ~= format( "Index: %.4d - NodeType: %s", siblingIndex, typeof(this).stringof);
         return result;
     }
@@ -2593,7 +2574,7 @@ public:
         else
             txt = itemToTextNative ~ "\r\n";
         writeArray!false(stream, txt);
-        foreach(c; children)
+        foreach (c; children)
             c.saveToStream(stream, itemToText);
     }
 // -----------------------------------------------------------------------------
@@ -2684,7 +2665,7 @@ unittest
     assert(root1.findSibling(ObjectTreeItems[18]) > -1);
     assert(root1.findSibling(ObjectTreeItems[0]) > -1);
 
-    foreach(item; root1.siblings)
+    foreach (item; root1.siblings)
     {
         assert(root1.findSibling(item) == item.siblingIndex);
     }
@@ -2728,8 +2709,8 @@ unittest
         assert(items1[i].siblingIndex == i);
     }
 
-    for( auto i = 0; i < items2.length; i++)
-        for( auto j = 0; j < items2[i].length; j++)
+    for (auto i = 0; i < items2.length; i++)
+        for (auto j = 0; j < items2[i].length; j++)
         {
             items2[i][j] = construct!ObjectTreeItem;
             items1[i].addChild(items2[i][j]);
@@ -2878,7 +2859,7 @@ unittest
     scope(exit) destructEach(root, c0, c1, c2);
 
     size_t it;
-    foreach(ObjectTreeItem child; root.children)
+    foreach (ObjectTreeItem child; root.children)
     {
         assert(c0.parent);
         assert(c1.parent);
