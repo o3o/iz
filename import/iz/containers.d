@@ -2909,6 +2909,7 @@ private:
 public:
 
     @disable this();
+    @disable this(this);
 
     static if (!isMap)
     {
@@ -2967,6 +2968,7 @@ public:
     alias Bucket = typeof(this);
     struct FindResult
     {
+        @disable this(this);
         /// the hash after probing
         size_t endHash;
         /// the bucket after probing
@@ -3001,7 +3003,7 @@ enum CollisionHandling
 
 private alias CH = CollisionHandling;
 
-private size_t fnv1(bool fnv1a = false)(ubyte[] data)
+private size_t fnv1Impl(bool fnv1a = false)(ubyte[] data)
 {
     static if (size_t.sizeof == 8)
         size_t h = 0xCBF29CE484222325UL;
@@ -3041,14 +3043,18 @@ private size_t fnv1(bool fnv1a = false)(ubyte[] data)
     return h;
 }
 
+/**
+ * Default hash function used in the HashSet and the HashMap
+ */
 pragma(inline, true)
-private size_t defaultHash(V)(auto ref V value)
+size_t fnv1(V, bool fnv1a = false)(auto ref V value)
 {
     static if (isBasicType!V)
         auto v = *cast(ubyte[V.sizeof]*) &value;
     else static if (isArray!V)
         auto v = cast(ubyte[]) value;
-    return fnv1(v);
+    else static assert(0);
+    return fnv1Impl!fnv1a(v);
 }
 
 struct HashOrMapRange(T)
@@ -3092,7 +3098,7 @@ if (isPointer!(ReturnType!(T.opIndex)) && hasLength!T)
  *          literal delegate or lambda.
  *      ch = The mode for handling the collisions.
  */
-struct HashSet(K, alias hasherFun = defaultHash, CH ch = CH.linearProbe)
+struct HashSet(K, alias hasherFun = fnv1, CH ch = CH.linearProbe)
 {
 
     static assert(ch == CH.linearProbe, "bucketArray and none not implemented");
@@ -3130,28 +3136,25 @@ private:
         destruct(old);
     }
 
+    pragma(inline, true)
     size_t nextHash(size_t value) @nogc @safe
     {
         return (value + 1) & (_hashes.length - 1);
     }
 
+    //pragma(inline, true)
     Bucket.FindResult find()(auto ref K key)
     {
         Bucket.FindResult fr;
         const size_t hb = hasher(key);
-
         fr.endHash = hb;
 
-        if (!_hashes.length)
-            return fr;
-
-        fr.bucket = _hashes[hb];
-
-        while (true)
+        if (_hashes.length)
         {
-            if (fr.bucket)
+            fr.bucket = _hashes[hb];
+            while (true)
             {
-                if (*fr.bucket != key)
+                if (fr.bucket && *fr.bucket != key)
                 {
                     //writeln("probing for ", key);
                     fr.endHash = nextHash(fr.endHash);
@@ -3164,7 +3167,6 @@ private:
                 }
                 else break;
             }
-            else break;
         }
         return fr;
     }
@@ -3566,7 +3568,7 @@ public:
  *          literal delegate or lambda.
  *      ch = The mode for handling the collisions.
  */
-struct HashMap(K, V, alias hasherFun = defaultHash, CH ch = CH.linearProbe)
+struct HashMap(K, V, alias hasherFun = fnv1, CH ch = CH.linearProbe)
 {
 
     static assert(ch == CH.linearProbe, "bucketArray and none not implemented");
@@ -3604,28 +3606,25 @@ private:
         destruct(old);
     }
 
+    pragma(inline, true)
     size_t nextHash(size_t value) @nogc @safe
     {
         return (value + 1) & (_hashes.length - 1);
     }
 
+    //pragma(inline, true)
     Bucket.FindResult find()(auto ref K key)
     {
         Bucket.FindResult fr;
         const size_t hb = hasher(key);
-
         fr.endHash = hb;
 
-        if (!_hashes.length)
-            return fr;
-
-        fr.bucket = _hashes[hb];
-
-        while (true)
+        if (_hashes.length)
         {
-            if (fr.bucket)
+            fr.bucket = _hashes[hb];
+            while (true)
             {
-                if (*fr.bucket != key)
+                if (fr.bucket && *fr.bucket != key)
                 {
                     //writeln("probing for ", key);
                     fr.endHash = nextHash(fr.endHash);
@@ -3638,7 +3637,6 @@ private:
                 }
                 else break;
             }
-            else break;
         }
         return fr;
     }
