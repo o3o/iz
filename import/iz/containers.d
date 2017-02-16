@@ -9,6 +9,8 @@ import
     std.exception, std.string, std.traits, std.conv, std.range.primitives;
 import
     iz.memory, iz.types, iz.streams;
+version(unittest) import
+    std.stdio: writeln, write, stdout;
 
 version(X86_64)
     version(linux) version = Nux64;
@@ -2954,6 +2956,25 @@ public:
 
         }
     }
+
+    import std.typecons: Tuple, tuple;
+
+    auto ptr()
+    {
+        static if (!isMap)
+            return &_key;
+        else
+            return cast(Tuple!(K,V)*) &this;
+    }
+
+    alias Bucket = typeof(this);
+    struct FindResult
+    {
+        /// the hash after probing
+        size_t endHash;
+        /// the bucket after probing
+        Bucket* bucket;
+    }
 }
 
 unittest
@@ -3057,12 +3078,6 @@ private:
     @NoGc Array!(Bucket*) _hashes;
     size_t _count;
 
-    struct FindResult
-    {
-        size_t endHash;
-        Bucket* bucket;
-    }
-
     struct HashRange
     {
         HashSetT _hs;
@@ -3100,6 +3115,7 @@ private:
 
     void reHash() @nogc
     {
+        _count = 0;
         auto old = _hashes.dup;
         assert(old == _hashes);
         _hashes[] = null;
@@ -3117,12 +3133,16 @@ private:
         return (value + 1) & (_hashes.length - 1);
     }
 
-    FindResult find(KK)(auto ref KK key)
+    Bucket.FindResult find(KK)(auto ref KK key)
     {
-        FindResult fr;
+        Bucket.FindResult fr;
         const size_t hb = hasher(key);
 
         fr.endHash = hb;
+
+        if (!_hashes.length)
+            return fr;
+
         fr.bucket = _hashes[hb];
 
         while (true)
@@ -3187,7 +3207,7 @@ public:
      * Throws:
      *      An out of memory Error if an internal call to $(D reserve()) fails.
      * Returns:
-     *      If the key is added or if it's alrady included then returns $(D true),
+     *      If the key is added or if it's already included then returns $(D true),
      *      otherwise $(D false).
      */
     bool insert(bool rsv = true, KK)(auto ref KK key)
@@ -3195,18 +3215,8 @@ public:
     {
         bool result;
         static if (rsv)
-        {
-            // TODO-cbugfix: something not quite clear when deactivated
-            version(all)
-            {
-                if (_count == 0)
-                    reserve(4);
-                else
-                    reserve(1);
-            }
-            else reserve(1);
-        }
-        FindResult fr = find(key);
+            reserve(1);
+        Bucket.FindResult fr = find(key);
         if (fr.bucket is null || *fr.bucket != key)
         {
             assert(key !in this);
@@ -3256,13 +3266,13 @@ public:
     if (is(KK == K))
     {
         bool result;
-        FindResult fr = find(key);
+        Bucket.FindResult fr = find(key);
         if (fr.bucket)
         {
             result = true;
             destruct(fr.bucket);
             _hashes[fr.endHash] = null;
-            --_count;
+            reHash;
         }
         return result;
     }
@@ -3347,7 +3357,7 @@ public:
     if (is(KK == K))
     {
         const(K)* result;
-        const FindResult fr = find(key);
+        const Bucket.FindResult fr = find(key);
         if (fr.bucket)
             result = &fr.bucket._key;
         return result;
@@ -3545,5 +3555,331 @@ public:
         assert(1 in co);
         destruct(co);
     }
+}
+
+/**
+ * A manually managed hashmap.
+ *
+ * Params:
+ *      K = The key type.
+ *      V = The value type
+ *      hasherFun = The hashing function, a $(D size_t(K value);) function,
+ *          literal delegate or lambda.
+ *      ch = The mode for handling the collisions.
+ */
+struct HashMap(K, V, alias hasherFun = defaultHash, CH ch = CH.linearProbe)
+{
+
+    static assert(ch == CH.linearProbe, "bucketArray and none not implemented");
+
+    static assert (is(typeof( (){size_t r = hasherFun(K.init);}  )),
+        "invalid hash function");
+
+private:
+
+    alias MapT = typeof(this);
+    alias Bucket = LinearProbeBucket!(K,V);
+    @NoGc Array!(Bucket*) _hashes;
+    size_t _count;
+
+    pragma(inline, true)
+    size_t hasher(KK)(auto ref KK key) @nogc
+    {
+        return hasherFun(key) & (_hashes.length - 1);
+    }
+
+    void reHash() @nogc
+    {
+        _count = 0;
+        auto old = _hashes.dup;
+        assert(old == _hashes);
+        _hashes[] = null;
+        foreach (immutable i; 0..old.length)
+        {
+            if (auto b = old[i])
+                insert(b._key, b._value);
+        }
+        destruct(old);
+    }
+
+    size_t nextHash(size_t value) @nogc @safe
+    {
+        return (value + 1) & (_hashes.length - 1);
+    }
+
+    Bucket.FindResult find(KK)(auto ref KK key)
+    {
+        Bucket.FindResult fr;
+        const size_t hb = hasher(key);
+
+        fr.endHash = hb;
+
+        if (!_hashes.length)
+            return fr;
+
+        fr.bucket = _hashes[hb];
+
+        while (true)
+        {
+            if (fr.bucket)
+            {
+                if (*fr.bucket != key)
+                {
+                    //writeln("probing for ", key);
+                    fr.endHash = nextHash(fr.endHash);
+                    if (fr.endHash == hb)
+                    {
+                        //writeln("probing failed for ", key);
+                        break;
+                    }
+                    fr.bucket = _hashes[fr.endHash];
+                }
+                else break;
+            }
+            else break;
+        }
+        return fr;
+    }
+
+public:
+
+    import std.typecons: Tuple, tuple;
+    alias MapPair = Tuple!(K, V);
+
+
+    ~this() @nogc
+    {
+        foreach(immutable i; 0.._hashes.length)
+            if (Bucket* lpbk = _hashes[i])
+                destruct(lpbk);
+        destruct(_hashes);
+    }
+
+    /**
+     * Tries to insert a key-value pair in the map.
+     *
+     * Params:
+     *      key = The key.
+     *      value = The corresponding value.
+     * Throws:
+     *      An out of memory Error if an internal call to $(D reserve()) fails.
+     * Returns:
+     *      If the key is added or if it's already included then returns $(D true),
+     *      otherwise $(D false).
+     */
+    bool insert(bool rsv = true, KK, VV)(auto ref KK key, auto ref VV value)
+    if (is(KK == K) && is(VV == V))
+    {
+        bool result;
+        static if (rsv)
+            reserve(1);
+        Bucket.FindResult fr = find(key);
+        if (fr.bucket is null || *fr.bucket != key)
+        {
+            assert(key !in this);
+            Bucket* n = construct!Bucket(key, value);
+            if (fr.bucket is null)
+            {
+                assert(key !in this);
+                _hashes[fr.endHash] = n;
+                result = true;
+                ++_count;
+            }
+            else destruct(n);
+        }
+        else if (*fr.bucket == key)
+            result = true;
+        return result;
+    }
+
+    /**
+     * Tries to remove a key from the set.
+     *
+     * Returns:
+     *      $(D true) if the key was included otherwise $(D false).
+     */
+    bool remove(KK)(auto ref KK key)
+    if (is(KK == K))
+    {
+        bool result;
+        Bucket.FindResult fr = find(key);
+        if (fr.bucket)
+        {
+            result = true;
+            destruct(fr.bucket);
+            _hashes[fr.endHash] = null;
+            reHash;
+        }
+        return result;
+    }
+
+    /**
+     * Clears and empties the set.
+     */
+    void clear() @nogc
+    {
+        foreach (immutable i; 0.._hashes.length)
+            if (auto b = _hashes[i])
+                destruct(b);
+        _hashes[] = null;
+        _hashes.length = 0;
+        _count = 0;
+    }
+
+    /**
+     * Support for appending an element. Forwards $(D insert()) with a default-
+     * initialized value.
+     */
+    auto opOpAssign(string op : "~" , KK)(auto ref KK key)
+    {
+        return insert(key, V.init);
+    }
+
+    /**
+     * Support for inserting using the array syntax. Forwards $(D insert()).
+     */
+    void opIndexAssign(KK, VV)(auto ref VV value, auto ref KK key)
+    if (is(KK == K) && is(VV == V))
+    {
+        insert(key, value);
+    }
+
+    /**
+     * Reserves slots for at least N supplemental key-value pairs.
+     *
+     * Throws:
+     *      An out of memory Error if the reallocation fails.
+     * Params:
+     *      value = The count of additional slots to reserve.
+     */
+    void reserve(size_t value) @nogc
+    {
+        import std.math: nextPow2;
+        const size_t nl = nextPow2(_count + value);
+        const size_t ol = _hashes.length;
+
+        if (nl > _hashes.length)
+        {
+            _hashes.length = nl;
+            _hashes[ol..nl] = null;
+            reHash();
+        }
+    }
+
+    /**
+     * Minimizes the memory usage.
+     */
+    void minimize() @nogc
+    {
+        import std.math: nextPow2;
+        const size_t nl = nextPow2(_count-1);
+
+        if (nl < _hashes.length)
+        {
+            Array!(MapPair) old;
+            foreach (immutable i; 0.._hashes.length)
+                if (auto b = _hashes[i])
+                    old ~= tuple(b._key, b._value);
+            clear;
+            foreach (immutable i; 0..old.length)
+            {
+                insert(old[i][0..2]);
+                static if (is(K==struct))
+                    destruct(old[i]);
+            }
+            destruct(old);
+        }
+    }
+
+    /**
+     * Tests the presence of a key in the set.
+     *
+     * Params:
+     *      key = The key to test.
+     * Returns:
+     *      $(D null) if the key is not present otherwise a pointer to the
+     *          value that mapped.
+     */
+    const(V)* opBinaryRight(string op : "in", KK)(auto ref KK key)
+    if (is(KK == K))
+    {
+        const(V)* result;
+        const Bucket.FindResult fr = find(key);
+        if (fr.bucket)
+            result = &fr.bucket._value;
+        return result;
+    }
+
+    /**
+     * Support for the array syntax.
+     */
+    const(MapPair)* opIndex(const size_t index) @nogc
+    {
+        return _hashes[index].ptr;
+    }
+
+    /**
+     * Returns the count of non-null elements in the set.
+     */
+    size_t count() @nogc {return _count;}
+
+    /**
+     * Returns the length of the set.
+     */
+    size_t length() @nogc {return _hashes.length;}
+
+    /// ditto
+    alias opDollar = length;
+}
+
+unittest
+{
+    HashMap!(string, int) hmsi;
+    hmsi.reserve(15);
+
+    hmsi.insert("cat", 0);
+    hmsi.insert("dog", 1);
+    hmsi.insert("pig", 2);
+    assert(hmsi.count == 3);
+    assert(*("cat" in hmsi) == 0);
+    assert(*("dog" in hmsi) == 1);
+    assert(*("pig" in hmsi) == 2);
+    assert("bat" !in hmsi);
+    assert("bug" !in hmsi);
+
+    hmsi["bat"] = 3;
+    hmsi["bug"] = 4;
+    assert(hmsi.count == 5);
+    assert(*("cat" in hmsi) == 0);
+    assert(*("dog" in hmsi) == 1);
+    assert(*("pig" in hmsi) == 2);
+    assert(*("bat" in hmsi) == 3);
+    assert(*("bug" in hmsi) == 4);
+
+    assert(hmsi.remove("cat"));
+    assert(hmsi.count == 4);
+    assert("cat" !in hmsi);
+    assert(*("dog" in hmsi) == 1);
+    assert(*("pig" in hmsi) == 2);
+    assert(*("bat" in hmsi) == 3);
+    assert(*("bug" in hmsi) == 4);
+
+    hmsi["owl"] = 5;
+    assert(hmsi.count == 5);
+    assert("cat" !in hmsi);
+    assert(*("dog" in hmsi) == 1);
+    assert(*("pig" in hmsi) == 2);
+    assert(*("bat" in hmsi) == 3);
+    assert(*("bug" in hmsi) == 4);
+    assert(*("owl" in hmsi) == 5);
+
+    hmsi.clear;
+    assert(hmsi.count == 0);
+    assert("cat" !in hmsi);
+    assert("dog" !in hmsi);
+    assert("pig" !in hmsi);
+    assert("bat" !in hmsi);
+    assert("bug" !in hmsi);
+    assert("owl" !in hmsi);
 }
 
