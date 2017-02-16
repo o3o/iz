@@ -3122,8 +3122,10 @@ private:
         foreach (immutable i; 0..old.length)
         {
             if (auto b = old[i])
+            {
                 insert(b._key);
-
+                destruct(b);
+            }
         }
         destruct(old);
     }
@@ -3597,7 +3599,10 @@ private:
         foreach (immutable i; 0..old.length)
         {
             if (auto b = old[i])
+            {
                 insert(b._key, b._value);
+                destruct(b);
+            }
         }
         destruct(old);
     }
@@ -3671,6 +3676,7 @@ public:
     if (is(KK == K) && is(VV == V))
     {
         bool result;
+        static if (rsv)
         static if (rsv)
             reserve(1);
         Bucket.FindResult fr = find(key);
@@ -3832,7 +3838,7 @@ public:
     alias opDollar = length;
 }
 
-unittest
+@nogc unittest
 {
     HashMap!(string, int) hmsi;
     hmsi.reserve(15);
