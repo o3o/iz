@@ -2962,7 +2962,7 @@ public:
     auto ptr()
     {
         static if (!isMap)
-            return &_key;
+            return &this;
         else
             return cast(Tuple!(K,V)*) &this;
     }
@@ -3054,6 +3054,38 @@ private size_t defaultHash(V)(auto ref V value)
     return fnv1(v);
 }
 
+struct HashOrMapRange(T)
+if (isPointer!(ReturnType!(T.opIndex)) && hasLength!T)
+{
+    T _hashOrMap;
+    alias PF = ReturnType!(T.opIndex);
+    alias F = PointerTarget!PF;
+    size_t index;
+
+    this(ref T hashOrMap) @nogc
+    {
+        _hashOrMap = hashOrMap;
+        while (!_hashOrMap[index])
+            ++index;
+    }
+
+    void popFront() @nogc
+    {
+        PF curr = null;
+        while (!curr)
+        {
+            ++index;
+            curr = _hashOrMap[index];
+        }
+    }
+
+    bool empty() @nogc
+    {return index >= _hashOrMap.length;}
+
+    F front() @nogc
+    {return *_hashOrMap[index];}
+}
+
 /**
  * A manually managed hashset.
  *
@@ -3077,35 +3109,6 @@ private:
     alias Bucket = LinearProbeBucket!K;
     @NoGc Array!(Bucket*) _hashes;
     size_t _count;
-
-    struct HashRange
-    {
-        HashSetT _hs;
-        size_t index;
-
-        this(ref HashSetT hs) @nogc
-        {
-            _hs = hs;
-            while (!front())
-                ++index;
-        }
-
-        void popFront() @nogc
-        {
-            const(K)* curr = null;
-            while (!curr)
-            {
-                ++index;
-                curr = front();
-            }
-        }
-
-        bool empty() @nogc
-        {return index >= _hs.length;}
-
-        const(K)* front() @nogc
-        {return _hs[index];}
-    }
 
     pragma(inline, true)
     size_t hasher(KK)(auto ref KK key) @nogc
@@ -3376,9 +3379,9 @@ public:
     /**
      * Returns an input range consisting of each non-null key.
      */
-    HashRange byKey() return @nogc
+    auto byKey() return @nogc
     {
-        return HashRange(this);
+        return HashOrMapRange!HashSetT(this);
     }
 
     /**
@@ -3501,10 +3504,10 @@ public:
     assert(hss.insert("yak"));
     auto r = hss.byKey;
     assert(!r.empty);
-    assert((*r.front).among("cow","yak"));
+    assert((r.front).among("cow","yak"));
     r.popFront;
     assert(!r.empty);
-    assert((*r.front).among("cow","yak"));
+    assert((r.front).among("cow","yak"));
     r.popFront;
     assert(r.empty);
     assert(hss.length == 16);
@@ -3751,6 +3754,14 @@ public:
     }
 
     /**
+     * Returns an input range consisting of each non-null key-value pair.
+     */
+    auto byKeyValue() return @nogc
+    {
+        return HashOrMapRange!MapT(this);
+    }
+
+    /**
      * Reserves slots for at least N supplemental key-value pairs.
      *
      * Throws:
@@ -3818,10 +3829,17 @@ public:
 
     /**
      * Support for the array syntax.
+     *
+     * Returns:
+     *      A pointer to a tuple that contains, when not null, the
+     *      key and the value of the element pointed by $(D_PARAM index).
      */
     const(MapPair)* opIndex(const size_t index) @nogc
     {
-        return _hashes[index].ptr;
+        if (auto r = _hashes[index])
+            return r.ptr;
+        else
+            return null;
     }
 
     /**
@@ -3887,5 +3905,19 @@ public:
     assert("bat" !in hmsi);
     assert("bug" !in hmsi);
     assert("owl" !in hmsi);
+}
+
+@nogc unittest
+{
+    HashMap!(int, int) hmii;
+    hmii.reserve(32);
+    hmii[1] = 3;
+    hmii[2] = 4;
+    foreach(kv; hmii.byKeyValue)
+    {
+        assert(kv[0] == 1 || kv[0] == 2);
+        assert(kv[1] == 3 || kv[1] == 4);
+    }
+    destruct(hmii);
 }
 
