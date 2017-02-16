@@ -47,16 +47,20 @@
 <div class="aggregate-symbol"><div class="description"><pre><code>public struct Array(T)
 </code></pre>
 <div class="section"><h2></h2>
-<p>Parameterized, GC-free, single dimenssion array.
+<p>Generic, manually managed, array.
 </p>
 
 
 </div>
 <div class="section"><h2></h2>
 <p>Array(T) implements a single-dimension array of uncollected memory.
-It internally preallocates the memory to minimize the reallocation fingerprints.
+It internally allocates memory blocks to minimize the reallocation fingerprints.
 Its layout differs from built-in D's dynamic arrays and they cannot be cast as T[]
 however, most of the slicing operations are possible.
+Manual management implies that <code class="d_inline_code">destruct()</code> must be called on the array when
+it goes out of scope. <code class="d_inline_code">destruct()</code> is only called on the content when the
+specialization is a <code class="d_inline_code">struct() or a <code class="d_inline_code">union</code></code>. Classes and pointers must
+be freed by hand.
 </p>
 
 
@@ -70,8 +74,7 @@ Allows to use the array as a D built-in array.
 
 
 </div>
-<pre><code>
-alias Key = string;
+<pre><code>alias Key = string;
 alias A = <a href="iz/containers/Array.html">Array</a>!int;
 A[Key] x;
 //x["a"] = [0];
@@ -79,7 +82,7 @@ A[Key] x;
 </code></pre>
 
 </div>
-</div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>public this(E...)(E elements) @nogc 
+</div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>private this(E...)(E elements) @nogc 
 if(is(Unqual!E == T) || is(T == E))
 </code></pre>
 <div class="section"><h2></h2>
@@ -92,7 +95,7 @@ if(is(Unqual!E == T) || is(T == E))
 
 
 </div>
-</div></div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>public this(E)(E[] elements...) @nogc 
+</div></div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>private this(E)(E[] elements...) @nogc 
 if(is(Unqual!E == T) || is(T == E))
 </code></pre>
 <div class="section"><h2></h2>
@@ -105,7 +108,7 @@ if(is(Unqual!E == T) || is(T == E))
 
 
 </div>
-</div></div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>public this(E)(auto ref E value) @nogc
+</div></div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>private this(E)(auto ref E value) @nogc
 </code></pre>
 <div class="section"><h2></h2>
 <p>Constructs by dispatching to the existing opAssign overloads.
@@ -117,7 +120,7 @@ if(is(Unqual!E == T) || is(T == E))
 
 
 </div>
-</div></div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>public this(const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] value)
+</div></div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>private this(const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] value)
 </code></pre>
 <div class="section"><h2></h2>
 <p>Constructs the array from a literal array representation.
@@ -144,7 +147,7 @@ isSomeChar.
 
 
 </div>
-</div></div><a class="anchor" id="granurality"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">uint</a> <a href="iz/containers/Array.html#granurality">granurality</a>() const pure nothrow @safe @nogc
+</div></div><a class="anchor" id="granurality"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">uint</a> <a href="iz/containers/Array.html#granurality">granurality</a>() const pure nothrow @safe @nogc
 </code></pre>
 <div class="section"><h2></h2>
 <p>Indicates the memory allocation block-size.
@@ -156,7 +159,7 @@ isSomeChar.
 
 
 </div>
-</div></div><a class="anchor" id="granularity"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#granularity">granularity</a>(<a href="http://dlang.org/type.html#basic-data-types">uint</a> value) @nogc
+</div></div><a class="anchor" id="granularity"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#granularity">granularity</a>(<a href="http://dlang.org/type.html#basic-data-types">uint</a> value) @nogc
 </code></pre>
 <div class="section"><h2></h2>
 <p>Sets the memory allocation block-size.
@@ -169,7 +172,7 @@ value should be set to 16 or 4096 (the default).
 
 
 </div>
-</div></div><a class="anchor" id="blockCount"></a><div class="symbol"><div class="description"><pre><code>public size_t <a href="iz/containers/Array.html#blockCount">blockCount</a>() const pure nothrow @safe @nogc
+</div></div><a class="anchor" id="blockCount"></a><div class="symbol"><div class="description"><pre><code>private size_t <a href="iz/containers/Array.html#blockCount">blockCount</a>() const pure nothrow @safe @nogc
 </code></pre>
 <div class="section"><h2></h2>
 <p>Indicates how many block the array is made of.
@@ -181,7 +184,7 @@ value should be set to 16 or 4096 (the default).
 
 
 </div>
-</div></div><a class="anchor" id="length"></a><div class="symbol"><div class="description"><pre><code>public size_t <a href="iz/containers/Array.html#length">length</a>() const pure nothrow @safe @nogc
+</div></div><a class="anchor" id="length"></a><div class="symbol"><div class="description"><pre><code>private size_t <a href="iz/containers/Array.html#length">length</a>() const pure nothrow @safe @nogc
 </code></pre>
 <div class="section"><h2></h2>
 <p>Sets or gets the element count.
@@ -193,7 +196,7 @@ value should be set to 16 or 4096 (the default).
 
 
 </div>
-</div></div><a class="anchor" id="length"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#length">length</a>(size_t value) @nogc
+</div></div><a class="anchor" id="length"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#length">length</a>(size_t value) @nogc
 </code></pre>
 <div class="section"><h2></h2>
 <p>Sets or gets the element count.
@@ -205,7 +208,7 @@ value should be set to 16 or 4096 (the default).
 
 
 </div>
-</div></div><a class="anchor" id="ptr"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/types.html#Ptr">Ptr</a> <a href="iz/containers/Array.html#ptr">ptr</a>() pure nothrow @nogc
+</div></div><a class="anchor" id="ptr"></a><div class="symbol"><div class="description"><pre><code>private <a href="iz/types.html#Ptr">Ptr</a> <a href="iz/containers/Array.html#ptr">ptr</a>() pure nothrow @nogc
 </code></pre>
 <div class="section"><h2></h2>
 <p>Pointer to the first element.
@@ -218,7 +221,7 @@ As it's always assigned It cannot be used to determine if the array is empty.
 
 
 </div>
-</div></div><a class="anchor" id="toString"></a><div class="symbol"><div class="description"><pre><code>public string <a href="iz/containers/Array.html#toString">toString</a>() const
+</div></div><a class="anchor" id="toString"></a><div class="symbol"><div class="description"><pre><code>private string <a href="iz/containers/Array.html#toString">toString</a>() const
 </code></pre>
 <div class="section"><h2></h2>
 <p>Returns the string representation of the array.
@@ -236,7 +239,7 @@ As it's always assigned It cannot be used to determine if the array is empty.
 
 
 </div>
-</div></div><a class="anchor" id="fromString"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#fromString">fromString</a>(C = <a href="http://dlang.org/type.html#basic-data-types">char</a>)(const(C)[] value)
+</div></div><a class="anchor" id="fromString"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#fromString">fromString</a>(C = <a href="http://dlang.org/type.html#basic-data-types">char</a>)(const(C)[] value)
 </code></pre>
 <div class="section"><h2></h2>
 <p>Sets the array from a literal representation.
@@ -261,7 +264,7 @@ As it's always assigned It cannot be used to determine if the array is empty.
 
 
 </div>
-</div></div><a class="anchor" id="dup"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/containers/Array.html">Array</a>!T <a href="iz/containers/Array.html#dup">dup</a>() const @nogc return
+</div></div><a class="anchor" id="dup"></a><div class="symbol"><div class="description"><pre><code>private <a href="iz/containers/Array.html">Array</a>!T <a href="iz/containers/Array.html#dup">dup</a>() const @nogc return
 </code></pre>
 <div class="section"><h2></h2>
 <p>Returns a mutable (deep) copy of the array.
@@ -273,7 +276,7 @@ As it's always assigned It cannot be used to determine if the array is empty.
 
 
 </div>
-</div></div><a class="anchor" id="toHash"></a><div class="symbol"><div class="description"><pre><code>public size_t <a href="iz/containers/Array.html#toHash">toHash</a>() const nothrow @trusted
+</div></div><a class="anchor" id="toHash"></a><div class="symbol"><div class="description"><pre><code>private size_t <a href="iz/containers/Array.html#toHash">toHash</a>() const nothrow @trusted
 </code></pre>
 <div class="section"><h2></h2>
 <p>SUpport for associative arrays.
@@ -285,7 +288,7 @@ As it's always assigned It cannot be used to determine if the array is empty.
 
 
 </div>
-</div></div><a class="anchor" id="opEquals"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/containers/Array.html#opEquals">opEquals</a>(A)(auto ref A array) const pure @nogc @trusted 
+</div></div><a class="anchor" id="opEquals"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/containers/Array.html#opEquals">opEquals</a>(A)(auto ref A array) const pure @nogc @trusted 
 if((is(Unqual!A == Unqual!(<a href="iz/containers/Array.html">Array</a>!T)) || is(Unqual!(ElementEncodingType!A) == T)))
 </code></pre>
 <div class="section"><h2></h2>
@@ -298,7 +301,7 @@ if((is(Unqual!A == Unqual!(<a href="iz/containers/Array.html">Array</a>!T)) || i
 
 
 </div>
-</div></div><a class="anchor" id="opIndex"></a><div class="symbol"><div class="description"><pre><code>public ref T <a href="iz/containers/Array.html#opIndex">opIndex</a>(size_t i) const pure @nogc
+</div></div><a class="anchor" id="opIndex"></a><div class="symbol"><div class="description"><pre><code>private ref T <a href="iz/containers/Array.html#opIndex">opIndex</a>(size_t i) const pure @nogc
 </code></pre>
 <div class="section"><h2></h2>
 <p>Support for the array syntax.
@@ -310,7 +313,7 @@ if((is(Unqual!A == Unqual!(<a href="iz/containers/Array.html">Array</a>!T)) || i
 
 
 </div>
-</div></div><a class="anchor" id="opIndexAssign"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#opIndexAssign">opIndexAssign</a>(
+</div></div><a class="anchor" id="opIndexAssign"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#opIndexAssign">opIndexAssign</a>(
     T item, 
     size_t i) @nogc
 </code></pre>
@@ -324,7 +327,7 @@ if((is(Unqual!A == Unqual!(<a href="iz/containers/Array.html">Array</a>!T)) || i
 
 
 </div>
-</div></div><a class="anchor" id="opApply"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">int</a> <a href="iz/containers/Array.html#opApply">opApply</a>(scope <a href="http://dlang.org/type.html#basic-data-types">int</a> delegate(ref T) dg)
+</div></div><a class="anchor" id="opApply"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">int</a> <a href="iz/containers/Array.html#opApply">opApply</a>(scope <a href="http://dlang.org/type.html#basic-data-types">int</a> delegate(ref T) dg)
 </code></pre>
 <div class="section"><h2></h2>
 <p>Support for the foreach operator.
@@ -336,7 +339,7 @@ if((is(Unqual!A == Unqual!(<a href="iz/containers/Array.html">Array</a>!T)) || i
 
 
 </div>
-</div></div><a class="anchor" id="opApplyReverse"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">int</a> <a href="iz/containers/Array.html#opApplyReverse">opApplyReverse</a>(scope <a href="http://dlang.org/type.html#basic-data-types">int</a> delegate(ref T) dg)
+</div></div><a class="anchor" id="opApplyReverse"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">int</a> <a href="iz/containers/Array.html#opApplyReverse">opApplyReverse</a>(scope <a href="http://dlang.org/type.html#basic-data-types">int</a> delegate(ref T) dg)
 </code></pre>
 <div class="section"><h2></h2>
 <p>Support for the foreach_reverse operator.
@@ -348,7 +351,7 @@ if((is(Unqual!A == Unqual!(<a href="iz/containers/Array.html">Array</a>!T)) || i
 
 
 </div>
-</div></div><a class="anchor" id="opDollar"></a><div class="symbol"><div class="description"><pre><code>public size_t <a href="iz/containers/Array.html#opDollar">opDollar</a>() const pure nothrow @safe @nogc
+</div></div><a class="anchor" id="opDollar"></a><div class="symbol"><div class="description"><pre><code>private size_t <a href="iz/containers/Array.html#opDollar">opDollar</a>() const pure nothrow @safe @nogc
 </code></pre>
 <div class="section"><h2></h2>
 <p>Support for the dollar operator.
@@ -360,7 +363,7 @@ if((is(Unqual!A == Unqual!(<a href="iz/containers/Array.html">Array</a>!T)) || i
 
 
 </div>
-</div></div><a class="anchor" id="opAssign"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#opAssign">opAssign</a>(E)(auto ref <a href="iz/containers/Array.html">Array</a>!E elements) @nogc 
+</div></div><a class="anchor" id="opAssign"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#opAssign">opAssign</a>(E)(auto ref <a href="iz/containers/Array.html">Array</a>!E elements) @nogc 
 if(is(Unqual!E == T) || is(E == T))
 </code></pre>
 <div class="section"><h2></h2>
@@ -373,7 +376,7 @@ if(is(Unqual!E == T) || is(E == T))
 
 
 </div>
-</div></div><a class="anchor" id="opAssign"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#opAssign">opAssign</a>(E)(auto ref E[] elements) @nogc 
+</div></div><a class="anchor" id="opAssign"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#opAssign">opAssign</a>(E)(auto ref E[] elements) @nogc 
 if(is(Unqual!E == T) || is(E == T))
 </code></pre>
 <div class="section"><h2></h2>
@@ -386,7 +389,7 @@ if(is(Unqual!E == T) || is(E == T))
 
 
 </div>
-</div></div><a class="anchor" id="opAssign"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#opAssign">opAssign</a>(E)(auto ref E elements) @nogc 
+</div></div><a class="anchor" id="opAssign"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#opAssign">opAssign</a>(E)(auto ref E elements) @nogc 
 if(isInputRange!E && is(Unqual!(ElementType!E) == T) && !isRandomAccessRange!E)
 </code></pre>
 <div class="section"><h2></h2>
@@ -399,7 +402,7 @@ if(isInputRange!E && is(Unqual!(ElementType!E) == T) && !isRandomAccessRange!E)
 
 
 </div>
-</div></div><a class="anchor" id="opOpAssign"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#opOpAssign">opOpAssign</a>(string op, E)(E[] elements) @nogc 
+</div></div><a class="anchor" id="opOpAssign"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#opOpAssign">opOpAssign</a>(string op, E)(E[] elements) @nogc 
 if(is(Unqual!E == T) || is(E == T))
 </code></pre>
 <div class="section"><h2></h2>
@@ -412,7 +415,7 @@ if(is(Unqual!E == T) || is(E == T))
 
 
 </div>
-</div></div><a class="anchor" id="opOpAssign"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#opOpAssign">opOpAssign</a>(string op)(T aElement) @nogc
+</div></div><a class="anchor" id="opOpAssign"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#opOpAssign">opOpAssign</a>(string op)(T aElement) @nogc
 </code></pre>
 <div class="section"><h2></h2>
 <p>Support for the cat operator.
@@ -424,7 +427,7 @@ if(is(Unqual!E == T) || is(E == T))
 
 
 </div>
-</div></div><a class="anchor" id="opSlice"></a><div class="symbol"><div class="description"><pre><code>public T[] <a href="iz/containers/Array.html#opSlice">opSlice</a>() const pure @nogc
+</div></div><a class="anchor" id="opSlice"></a><div class="symbol"><div class="description"><pre><code>private T[] <a href="iz/containers/Array.html#opSlice">opSlice</a>() const pure @nogc
 </code></pre>
 <div class="section"><h2></h2>
 <p>Returns the array as a D slice. This doesnt duplicate the memory.
@@ -436,7 +439,7 @@ if(is(Unqual!E == T) || is(E == T))
 
 
 </div>
-</div></div><a class="anchor" id="opSlice"></a><div class="symbol"><div class="description"><pre><code>public T[] <a href="iz/containers/Array.html#opSlice">opSlice</a>(<a href="http://dlang.org/type.html#basic-data-types">bool</a> dSlice = true)(
+</div></div><a class="anchor" id="opSlice"></a><div class="symbol"><div class="description"><pre><code>private T[] <a href="iz/containers/Array.html#opSlice">opSlice</a>(<a href="http://dlang.org/type.html#basic-data-types">bool</a> dSlice = true)(
     size_t lo, 
     size_t hi) const pure @nogc
 </code></pre>
@@ -450,7 +453,7 @@ if(is(Unqual!E == T) || is(E == T))
 
 
 </div>
-</div></div><a class="anchor" id="opSliceAssign"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#opSliceAssign">opSliceAssign</a>(T value) @nogc
+</div></div><a class="anchor" id="opSliceAssign"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#opSliceAssign">opSliceAssign</a>(T value) @nogc
 </code></pre>
 <div class="section"><h2></h2>
 <p>Support for filling the array with a single element.
@@ -462,7 +465,7 @@ if(is(Unqual!E == T) || is(E == T))
 
 
 </div>
-</div></div><a class="anchor" id="opSliceAssign"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#opSliceAssign">opSliceAssign</a>(
+</div></div><a class="anchor" id="opSliceAssign"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/Array.html#opSliceAssign">opSliceAssign</a>(
     T value, 
     size_t lo, 
     size_t hi) @nogc
@@ -477,7 +480,7 @@ if(is(Unqual!E == T) || is(E == T))
 
 
 </div>
-</div></div><a class="anchor" id="range"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/containers/Array.html#range">range</a>()
+</div></div><a class="anchor" id="range"></a><div class="symbol"><div class="description"><pre><code>private <a href="iz/containers/Array.html#range">range</a>()
 </code></pre>
 <div class="section"><h2></h2>
 <p>Returns an input range with an assignable front.

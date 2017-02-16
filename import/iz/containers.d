@@ -420,7 +420,7 @@ public:
     /// Support for filling the array with a single element.
     void opSliceAssign(T value) @nogc
     {
-        opSliceAssign(value, 0, _length);
+        rwPtr(0)[0.._length] = value;
     }
 
     /// ditto
@@ -2891,6 +2891,659 @@ unittest
             c0.siblingIndex = 0;
         }
         it++;
+    }
+}
+
+private struct LinearProbeBucket(K, V = void)
+{
+
+    enum isMap = !is(V == void);
+
+private:
+
+    K _key;
+    static if (isMap) V _value;
+
+public:
+
+    @disable this();
+
+    static if (!isMap)
+    {
+        this(KK)(auto ref KK key)
+        if (is(KK == K))
+        {
+            _key = key;
+        }
+    }
+    else
+    {
+        this(KK, VV)(auto ref KK key, auto ref VV value)
+        if (is(KK == K) && is(VV == V))
+        {
+            _key = key;
+            _value = value;
+        }
+    }
+
+    ~this()
+    {
+        static if (is(K == struct))
+        {
+            destruct(_key);
+        }
+        static if (isMap && is(V == struct))
+        {
+            destruct(_value);
+        }
+    }
+
+    auto opEquals(KK)(auto ref KK key) const
+    if (is(KK == K))
+    {
+        static if (!isMap)
+        {
+            return key == _key;
+        }
+        else
+        {
+            if (key == _key)
+                return cast(const(V)*) &_value;
+            else
+                return cast(const(V)*) null;
+
+        }
+    }
+}
+
+unittest
+{
+    LinearProbeBucket!string lpbs = LinearProbeBucket!string("cat");
+    assert(lpbs == "cat");
+    assert(lpbs != "dog");
+
+    LinearProbeBucket!(string,int) lpbsi = LinearProbeBucket!(string,int)("cat", 1);
+    assert(*(lpbsi == "cat") == 1);
+    assert((lpbsi == "rat") is null);
+}
+
+/**
+ * Enumerates the collision handling modes that
+ * can be specified to instantiate a HashSet or a Map.
+ */
+enum CollisionHandling
+{
+    /// Hanlde collision using linear probe.
+    linearProbe,
+    /// Handle the collision by inserting in a bucket.
+    bucketArray,
+    /// Assumes the hash function not to produce collisions.
+    none,
+}
+
+private alias CH = CollisionHandling;
+
+private size_t fnv1(bool fnv1a = false)(ubyte[] data)
+{
+    static if (size_t.sizeof == 8)
+        size_t h = 0xCBF29CE484222325UL;
+    else static if (size_t.sizeof == 4)
+        size_t h = 0x811C9DC5UL;
+    else static assert(0);
+
+    static if (size_t.sizeof == 8)
+    foreach (immutable ubyte i; data)
+    {
+        static if (fnv1a)
+        {
+            h ^= i;
+            h *= 0x100000001B3UL;
+        }
+        else
+        {
+            h *= 0x100000001B3UL;
+            h ^= i;
+        }
+    }
+    else static if (size_t.sizeof == 4)
+    foreach (immutable ubyte i; data)
+    {
+        static if (fnv1a)
+        {
+            h ^= i;
+            h *= 0x1000193U;
+        }
+        else
+        {
+            h *= 0x1000193U;
+            h ^= i;
+        }
+    }
+    else static assert(0);
+    return h;
+}
+
+pragma(inline, true)
+private size_t defaultHash(V)(auto ref V value)
+{
+    static if (isBasicType!V)
+        auto v = *cast(ubyte[V.sizeof]*) &value;
+    else static if (isArray!V)
+        auto v = cast(ubyte[]) value;
+    return fnv1(v);
+}
+
+/**
+ * A manually managed hashset.
+ *
+ * Params:
+ *      K = the key type.
+ *      hasherFun = The hashing function, a $(D size_t(K value);) function,
+ *          literal delegate or lambda.
+ *      ch = The mode for handling the collisions.
+ */
+struct HashSet(K, alias hasherFun = defaultHash, CH ch = CH.linearProbe)
+{
+
+    static assert(ch == CH.linearProbe, "bucketArray and none not implemented");
+
+    static assert (is(typeof( (){size_t r = hasherFun(K.init);}  )),
+        "invalid hash function");
+
+private:
+
+    alias HashSetT = typeof(this);
+    alias Bucket = LinearProbeBucket!K;
+    @NoGc Array!(Bucket*) _hashes;
+    size_t _count;
+
+    struct FindResult
+    {
+        size_t endHash;
+        Bucket* bucket;
+    }
+
+    struct HashRange
+    {
+        HashSetT _hs;
+        size_t index;
+
+        this(ref HashSetT hs) @nogc
+        {
+            _hs = hs;
+            while (!front())
+                ++index;
+        }
+
+        void popFront() @nogc
+        {
+            const(K)* curr = null;
+            while (!curr)
+            {
+                ++index;
+                curr = front();
+            }
+        }
+
+        bool empty() @nogc
+        {return index >= _hs.length;}
+
+        const(K)* front() @nogc
+        {return _hs[index];}
+    }
+
+    pragma(inline, true)
+    size_t hasher(KK)(auto ref KK key) @nogc
+    {
+        return hasherFun(key) & (_hashes.length - 1);
+    }
+
+    void reHash() @nogc
+    {
+        auto old = _hashes.dup;
+        assert(old == _hashes);
+        _hashes[] = null;
+        foreach (immutable i; 0..old.length)
+        {
+            if (auto b = old[i])
+                insert(b._key);
+
+        }
+        destruct(old);
+    }
+
+    size_t nextHash(size_t value) @nogc @safe
+    {
+        return (value + 1) & (_hashes.length - 1);
+    }
+
+    FindResult find(KK)(auto ref KK key)
+    {
+        FindResult fr;
+        const size_t hb = hasher(key);
+
+        fr.endHash = hb;
+        fr.bucket = _hashes[hb];
+
+        while (true)
+        {
+            if (fr.bucket)
+            {
+                if (*fr.bucket != key)
+                {
+                    //writeln("probing for ", key);
+                    fr.endHash = nextHash(fr.endHash);
+                    if (fr.endHash == hb)
+                    {
+                        //writeln("probing failed for ", key);
+                        break;
+                    }
+                    fr.bucket = _hashes[fr.endHash];
+                }
+                else break;
+            }
+            else break;
+        }
+        return fr;
+    }
+
+public:
+
+    /**
+     * Constructs using either a list of keys, arrays of keys, or both.
+     */
+    this(A...)(A a)
+    {
+        import std.meta: aliasSeqOf;
+        import std.range: iota;
+
+        foreach(i; aliasSeqOf!(iota(0, A.length)))
+        {
+            static if (is(A[i] == K))
+                continue;
+            else static if (isArray!(A[i]))
+                continue;
+            else static if (is(A[i] == Array!K))
+                continue;
+            else static assert(0, A[i].stringof ~ " not supported");
+        }
+        foreach(i; aliasSeqOf!(iota(0, A.length)))
+                insert(a[i]);
+    }
+
+    ~this() @nogc
+    {
+        foreach(immutable i; 0.._hashes.length)
+            if (Bucket* lpbk = _hashes[i])
+                destruct(lpbk);
+        destruct(_hashes);
+    }
+
+    /**
+     * Tries to insert key(s) in the set.
+     *
+     * Params:
+     *      key = either single keys, array of keys, or both.
+     * Throws:
+     *      An out of memory Error if an internal call to $(D reserve()) fails.
+     * Returns:
+     *      If the key is added or if it's alrady included then returns $(D true),
+     *      otherwise $(D false).
+     */
+    bool insert(bool rsv = true, KK)(auto ref KK key)
+    if (is(KK == K))
+    {
+        bool result;
+        static if (rsv)
+        {
+            // TODO-cbugfix: something not quite clear when deactivated
+            version(all)
+            {
+                if (_count == 0)
+                    reserve(4);
+                else
+                    reserve(1);
+            }
+            else reserve(1);
+        }
+        FindResult fr = find(key);
+        if (fr.bucket is null || *fr.bucket != key)
+        {
+            assert(key !in this);
+            Bucket* n = construct!Bucket(key);
+            if (fr.bucket is null)
+            {
+                assert(key !in this);
+                _hashes[fr.endHash] = n;
+                result = true;
+                ++_count;
+            }
+            else destruct(n);
+        }
+        else if (*fr.bucket == key)
+            result = true;
+        return result;
+    }
+
+    /// ditto
+    bool insert(KK)(auto ref KK keys)
+    if ((isArray!KK && is(Unqual!(ElementEncodingType!KK) == K)) || is(KK == Array!K))
+    {
+        bool result = true;
+        reserve(keys.length);
+        foreach(k; keys)
+            result &= insert!false(k);
+        return result;
+    }
+
+    /// ditto
+    bool insert(KK...)(auto ref KK keys)
+    {
+        bool result = true;
+        reserve(KK.length);
+        foreach(k; keys)
+            result &= insert!false(k);
+        return result;
+    }
+
+    /**
+     * Tries to remove a key from the set.
+     *
+     * Returns:
+     *      $(D true) if the key was included otherwise $(D false).
+     */
+    bool remove(KK)(auto ref KK key)
+    if (is(KK == K))
+    {
+        bool result;
+        FindResult fr = find(key);
+        if (fr.bucket)
+        {
+            result = true;
+            destruct(fr.bucket);
+            _hashes[fr.endHash] = null;
+            --_count;
+        }
+        return result;
+    }
+
+    /**
+     * Clears and empties the set.
+     */
+    void clear() @nogc
+    {
+        foreach (immutable i; 0.._hashes.length)
+            if (auto b = _hashes[i])
+                destruct(b);
+        _hashes[] = null;
+        _hashes.length = 0;
+        _count = 0;
+    }
+
+    /**
+     * Support for appending element(s). Forwards $(D insert()).
+     */
+    auto opOpAssign(string op : "~" , KK...)(auto ref KK keys)
+    {
+        return insert(keys);
+    }
+
+    /**
+     * Reserves slots for at least N supplemental keys.
+     *
+     * Throws:
+     *      An out of memory Error if the reallocation fails.
+     * Params:
+     *      value = The count of additional slots to reserve.
+     */
+    void reserve(size_t value) @nogc
+    {
+        import std.math: nextPow2;
+        const size_t nl = nextPow2(_count + value);
+        const size_t ol = _hashes.length;
+
+        if (nl > _hashes.length)
+        {
+            _hashes.length = nl;
+            _hashes[ol..nl] = null;
+            reHash();
+        }
+    }
+
+    /**
+     * Minimizes the memory usage.
+     */
+    void minimize() @nogc
+    {
+        import std.math: nextPow2;
+        const size_t nl = nextPow2(_count-1);
+
+        if (nl < _hashes.length)
+        {
+            Array!(K) old;
+            foreach (immutable i; 0.._hashes.length)
+                if (auto b = _hashes[i])
+                    old ~= b._key;
+            clear;
+            foreach (immutable i; 0..old.length)
+            {
+                insert(old[i]);
+                static if (is(K==struct))
+                    destruct(old[i]);
+            }
+            destruct(old);
+        }
+    }
+
+    /**
+     * Tests the presence of a key in the set.
+     *
+     * Params:
+     *      key = The key to test.
+     * Returns:
+     *      $(D null) if the key is not present otherwise a pointer to the key.
+     */
+    const(K)* opBinaryRight(string op : "in", KK)(auto ref KK key)
+    if (is(KK == K))
+    {
+        const(K)* result;
+        const FindResult fr = find(key);
+        if (fr.bucket)
+            result = &fr.bucket._key;
+        return result;
+    }
+
+    /**
+     * Support for the array syntax.
+     */
+    const(K)* opIndex(const size_t index) @nogc
+    {
+        return &_hashes[index]._key;
+    }
+
+    /**
+     * Returns an input range consisting of each non-null key.
+     */
+    HashRange byKey() return @nogc
+    {
+        return HashRange(this);
+    }
+
+    /**
+     * Returns the count of non-null elements in the set.
+     */
+    size_t count() @nogc {return _count;}
+
+    /**
+     * Returns the length of the set.
+     */
+    size_t length() @nogc {return _hashes.length;}
+
+    /// ditto
+    alias opDollar = length;
+}
+///
+@nogc unittest
+{
+    HashSet!string commands;
+    // can insert up to 16 element without reallocation
+    commands.reserve(15);
+    // appends elements
+    commands.insert("move");
+    commands.insert("insert");
+    commands.insert("delete");
+    // test for inclusion
+    assert("move" in commands);
+    // remove something
+    commands.remove("insert");
+    assert(commands.count == 2);
+    assert("insert" !in commands);
+    // empties and frees memory
+    commands.clear;
+    // manually manged implies to destruct by hand
+    import iz.memory;
+    destruct(commands);
+}
+
+@nogc unittest
+{
+    HashSet!string hss;
+
+    hss.reserve(7);
+    assert(hss.length == 8);
+
+    foreach(i; 0 .. hss._hashes.length)
+        assert(hss._hashes[i] is null);
+
+    assert(hss.insert("cat"));
+    assert("dog" !in hss);
+    assert("cat" in hss);
+
+    assert(hss.insert("rat"));
+    assert("dog" !in hss);
+    assert("cat" in hss);
+    assert("rat" in hss);
+
+    assert(hss.insert("fly"));
+    assert("dog" !in hss);
+    assert("cat" in hss);
+    assert("rat" in hss);
+    assert("fly" in hss);
+
+    assert(hss.insert("bee"));
+    assert("dog" !in hss);
+    assert("cat" in hss);
+    assert("rat" in hss);
+    assert("fly" in hss);
+    assert("bee" in hss);
+
+    assert(hss.insert("ant"));
+    assert("dog" !in hss);
+    assert("cat" in hss);
+    assert("rat" in hss);
+    assert("fly" in hss);
+    assert("bee" in hss);
+    assert("ant" in hss);
+    assert("fox" !in hss);
+
+    assert(hss.insert("fox"));
+    assert("dog" !in hss);
+    assert("cat" in hss);
+    assert("rat" in hss);
+    assert("fly" in hss);
+    assert("bee" in hss);
+    assert("ant" in hss);
+    assert("fox" in hss);
+
+    assert(hss.insert("bat"));
+    assert("dog" !in hss);
+    assert("cat" in hss);
+    assert("rat" in hss);
+    assert("fly" in hss);
+    assert("bee" in hss);
+    assert("ant" in hss);
+    assert("fox" in hss);
+    assert("bat" in hss);
+
+    assert(hss.insert("cow"));
+    assert("dog" !in hss);
+    assert("cat" in hss);
+    assert("rat" in hss);
+    assert("fly" in hss);
+    assert("bee" in hss);
+    assert("ant" in hss);
+    assert("fox" in hss);
+    assert("bat" in hss);
+    assert("cow" in hss);
+
+    assert(hss.remove("bat"));
+    assert("bat" !in hss);
+
+    hss.clear;
+    assert(hss.count == 0);
+    assert(hss.length == 0);
+
+    hss.reserve(8);
+    import std.algorithm: among;
+    assert(hss.insert("cow"));
+    assert(hss.insert("yak"));
+    auto r = hss.byKey;
+    assert(!r.empty);
+    assert((*r.front).among("cow","yak"));
+    r.popFront;
+    assert(!r.empty);
+    assert((*r.front).among("cow","yak"));
+    r.popFront;
+    assert(r.empty);
+    assert(hss.length == 16);
+
+    assert(hss.count == 2);
+    hss.minimize;
+    assert(hss.length < 16);
+
+    destruct(hss);
+}
+
+@nogc unittest // to test the bug 0 elem without reserve(4)
+{
+    HashSet!string co;
+    assert(co.count == 0);
+    co.insert("abcd");
+    assert(co.count == 1);
+    co.insert("abcd");
+    assert(co.count == 1);
+    co.insert("abcd");
+    assert(co.count == 1);
+    co.insert("abcde");
+    assert(co.count == 2);
+    co.insert("abcde");
+    assert(co.count == 2);
+    co.insert("abcde");
+    assert(co.count == 2);
+    co.insert("abcde");
+    assert(co.count == 2);
+    destruct(co);
+}
+
+@nogc unittest
+{
+    {
+        HashSet!string co = HashSet!string("ab", "ab", "cd");
+        assert(co.count == 2);
+        destruct(co);
+    }
+    {
+        static a = ["ab", "cd"];
+        HashSet!string co = HashSet!string("ab", a);
+        assert(co.count == 2);
+        destruct(co);
+    }
+    {
+        HashSet!int co = HashSet!int(1);
+        assert(co.count == 1);
+        assert(2 !in co);
+        assert(1 in co);
+        destruct(co);
     }
 }
 

@@ -64,21 +64,9 @@ if(is(OT == interface) || is(OT == class))
 </td></tr>
 </table>
 </div>
-</div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>public this()
+</div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>protected this()
 </code></pre>
-</div></div><a class="anchor" id="updateObservers"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/CustomSubject.html#updateObservers">updateObservers</a>()
-</code></pre>
-<div class="section"><h2></h2>
-<p>see the Subject interface.
-</p>
-
-
-</div>
-<div class="section"><h2></h2>
-
-
-</div>
-</div></div><a class="anchor" id="acceptObserver"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/observer/CustomSubject.html#acceptObserver">acceptObserver</a>(Object observer)
+</div></div><a class="anchor" id="acceptObserver"></a><div class="symbol"><div class="description"><pre><code>protected <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/observer/CustomSubject.html#acceptObserver">acceptObserver</a>(Object observer)
 </code></pre>
 <div class="section"><h2></h2>
 <p>see the Subject interface.
@@ -90,7 +78,7 @@ if(is(OT == interface) || is(OT == class))
 
 
 </div>
-</div></div><a class="anchor" id="addObserver"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/CustomSubject.html#addObserver">addObserver</a>(Object observer)
+</div></div><a class="anchor" id="addObserver"></a><div class="symbol"><div class="description"><pre><code>protected <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/CustomSubject.html#addObserver">addObserver</a>(Object observer)
 </code></pre>
 <div class="section"><h2></h2>
 <p>see the Subject interface.
@@ -102,7 +90,7 @@ if(is(OT == interface) || is(OT == class))
 
 
 </div>
-</div></div><a class="anchor" id="addObservers"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/CustomSubject.html#addObservers">addObservers</a>(Objs...)(Objs objs)
+</div></div><a class="anchor" id="addObservers"></a><div class="symbol"><div class="description"><pre><code>protected <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/CustomSubject.html#addObservers">addObservers</a>(Objs...)(Objs objs)
 </code></pre>
 <div class="section"><h2></h2>
 <p>Calls addObserver() foreach object passed as argument.
@@ -114,7 +102,7 @@ if(is(OT == interface) || is(OT == class))
 
 
 </div>
-</div></div><a class="anchor" id="removeObserver"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/CustomSubject.html#removeObserver">removeObserver</a>(Object observer)
+</div></div><a class="anchor" id="removeObserver"></a><div class="symbol"><div class="description"><pre><code>protected <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/CustomSubject.html#removeObserver">removeObserver</a>(Object observer)
 </code></pre>
 <div class="section"><h2></h2>
 <p>see the Subject interface.
@@ -126,7 +114,7 @@ if(is(OT == interface) || is(OT == class))
 
 
 </div>
-</div></div><a class="anchor" id="observers"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/containers/DynamicList.html">DynamicList</a>!OT <a href="iz/observer/CustomSubject.html#observers">observers</a>()
+</div></div><a class="anchor" id="observers"></a><div class="symbol"><div class="description"><pre><code>protected <a href="iz/containers/DynamicList.html">DynamicList</a>!OT <a href="iz/observer/CustomSubject.html#observers">observers</a>()
 </code></pre>
 <div class="section"><h2></h2>
 <p>list of observers
@@ -138,7 +126,7 @@ if(is(OT == interface) || is(OT == class))
 
 
 </div>
-</div></div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/observer/CustomSubject.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#updateObservers">updateObservers</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#acceptObserver">acceptObserver</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#addObserver">addObserver</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#addObservers">addObservers</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#removeObserver">removeObserver</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#observers">observers</a><span class="extrainfo"></span></td><td></td><td></td></tr></table>
+</div></div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/observer/CustomSubject.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#acceptObserver">acceptObserver</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#addObserver">addObserver</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#addObservers">addObservers</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#removeObserver">removeObserver</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#observers">observers</a><span class="extrainfo"></span></td><td></td><td></td></tr></table>
 </div>
 </div><div class="aggregate-symbol"><div class="description"><pre><code>public class CustomSubject(E, T...) : <a href="iz/observer/Subject.html">Subject</a>
 if(is(E == enum))
@@ -164,21 +152,9 @@ This version only accept an observer if it's an EnumBasedObserver.
 </td></tr>
 </table>
 </div>
-</div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>public this()
+</div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>protected this()
 </code></pre>
-</div></div><a class="anchor" id="updateObservers"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/CustomSubject.html#updateObservers">updateObservers</a>()
-</code></pre>
-<div class="section"><h2></h2>
-<p>see the Subject interface.
-</p>
-
-
-</div>
-<div class="section"><h2></h2>
-
-
-</div>
-</div></div><a class="anchor" id="acceptObserver"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/observer/CustomSubject.html#acceptObserver">acceptObserver</a>(Object observer)
+</div></div><a class="anchor" id="acceptObserver"></a><div class="symbol"><div class="description"><pre><code>protected <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/observer/CustomSubject.html#acceptObserver">acceptObserver</a>(Object observer)
 </code></pre>
 <div class="section "><h2>Contracts</h2><pre><code>in
 {
@@ -197,7 +173,7 @@ This version only accept an observer if it's an EnumBasedObserver.
 
 
 </div>
-</div></div><a class="anchor" id="addObserver"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/CustomSubject.html#addObserver">addObserver</a>(Object observer)
+</div></div><a class="anchor" id="addObserver"></a><div class="symbol"><div class="description"><pre><code>protected <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/CustomSubject.html#addObserver">addObserver</a>(Object observer)
 </code></pre>
 <div class="section "><h2>Contracts</h2><pre><code>in
 {
@@ -216,7 +192,7 @@ This version only accept an observer if it's an EnumBasedObserver.
 
 
 </div>
-</div></div><a class="anchor" id="addObservers"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/CustomSubject.html#addObservers">addObservers</a>(Objs...)(Objs objs)
+</div></div><a class="anchor" id="addObservers"></a><div class="symbol"><div class="description"><pre><code>protected <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/CustomSubject.html#addObservers">addObservers</a>(Objs...)(Objs objs)
 </code></pre>
 <div class="section"><h2></h2>
 <p>Calls addObserver() foreach object passed as argument.
@@ -228,7 +204,7 @@ This version only accept an observer if it's an EnumBasedObserver.
 
 
 </div>
-</div></div><a class="anchor" id="removeObserver"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/CustomSubject.html#removeObserver">removeObserver</a>(Object observer)
+</div></div><a class="anchor" id="removeObserver"></a><div class="symbol"><div class="description"><pre><code>protected <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/CustomSubject.html#removeObserver">removeObserver</a>(Object observer)
 </code></pre>
 <div class="section "><h2>Contracts</h2><pre><code>in
 {
@@ -247,9 +223,9 @@ This version only accept an observer if it's an EnumBasedObserver.
 
 
 </div>
-</div></div><a class="anchor" id="observers"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/containers/DynamicList.html">DynamicList</a>!ObserverType <a href="iz/observer/CustomSubject.html#observers">observers</a>()
+</div></div><a class="anchor" id="observers"></a><div class="symbol"><div class="description"><pre><code>protected <a href="iz/containers/DynamicList.html">DynamicList</a>!ObserverType <a href="iz/observer/CustomSubject.html#observers">observers</a>()
 </code></pre>
-</div></div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/observer/CustomSubject.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#updateObservers">updateObservers</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#acceptObserver">acceptObserver</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#addObserver">addObserver</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#addObservers">addObservers</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#removeObserver">removeObserver</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#observers">observers</a><span class="extrainfo"></span></td><td></td><td></td></tr></table>
+</div></div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/observer/CustomSubject.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#acceptObserver">acceptObserver</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#addObserver">addObserver</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#addObservers">addObservers</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#removeObserver">removeObserver</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/observer/CustomSubject.html#observers">observers</a><span class="extrainfo"></span></td><td></td><td></td></tr></table>
 </div>
 </div><script>hljs.initHighlightingOnLoad();</script>
 

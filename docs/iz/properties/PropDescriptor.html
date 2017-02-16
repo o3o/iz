@@ -84,7 +84,7 @@ Foo foo;
 foo.valueDescriptor.<a href="iz/properties/PropDescriptor.html#define">define</a>(&foo.value, &foo.value, "foo.value");
 // defines the property using the <a href="iz/properties/PropDescriptor.html#setter">setter</a> and a pointer to the field.
 foo.valueDescriptor.<a href="iz/properties/PropDescriptor.html#define">define</a>(&foo.value, &foo._value, "foo.value");
-// .<a href="iz/properties/PropDescriptor.html#get">get</a> and .<a href="iz/properties/PropDescriptor.html#set">set</a> allow to <a href="iz/properties/PropDescriptor.html#access">access</a> the property value
+// .<a href="iz/properties/PropDescriptor.html#get">get</a> and .<a href="iz/properties/PropDescriptor.html#set">set</a> allow to access the property value
 foo.valueDescriptor.<a href="iz/properties/PropDescriptor.html#set">set</a>(2);
 assert(foo.valueDescriptor.<a href="iz/properties/PropDescriptor.html#get">get</a> == 2);
 // <a href="iz/properties/PropDescriptor.html#getter">getter</a>() and <a href="iz/properties/PropDescriptor.html#setter">setter</a>() too but they are used to <a href="iz/properties/PropDescriptor.html#set">set</a>/<a href="iz/properties/PropDescriptor.html#get">get</a> the delegates.
@@ -92,12 +92,12 @@ foo.valueDescriptor.<a href="iz/properties/PropDescriptor.html#setter">setter</a
 assert(foo.valueDescriptor.<a href="iz/properties/PropDescriptor.html#getter">getter</a>()() == 1);
 // a descriptor has a fixed <a href="iz/rtti.html#size">size</a>, whatever is it's specialization,
 // that allows to cast safely to any other descriptor type.
-<a href="iz/properties/PropDescriptor.html">PropDescriptor</a>!float* des = cast(<a href="iz/properties/PropDescriptor.html">PropDescriptor</a>!float*) &foo.valueDescriptor;
-// that's why a helper is integrated to cast
-auto other = des.<a href="iz/properties/PropDescriptor.html#typedAs">typedAs</a>!byte;
+<a href="iz/properties/PropDescriptor.html">PropDescriptor</a>!float* fpDescr = cast(<a href="iz/properties/PropDescriptor.html">PropDescriptor</a>!float*) &foo.valueDescriptor;
+// that's why the halper "<a href="iz/properties/PropDescriptor.html#as">as</a>" is provided to cast
+<a href="iz/properties/PropDescriptor.html">PropDescriptor</a>!byte* byteDescr = fpDescr.<a href="iz/properties/PropDescriptor.html#as">as</a>!byte;
 // and the actual type can be retrieved with the <a href="iz/properties/PropDescriptor.html#rtti">rtti</a>
-assert(des.<a href="iz/properties/PropDescriptor.html#rtti">rtti</a> is <a href="iz/rtti.html#getRtti">getRtti</a>!int);
-assert(other.<a href="iz/properties/PropDescriptor.html#rtti">rtti</a> is <a href="iz/rtti.html#getRtti">getRtti</a>!int);
+assert(fpDescr.<a href="iz/properties/PropDescriptor.html#rtti">rtti</a> is <a href="iz/rtti.html#getRtti">getRtti</a>!int);
+assert(byteDescr.<a href="iz/properties/PropDescriptor.html#rtti">rtti</a> is <a href="iz/rtti.html#getRtti">getRtti</a>!int);
 
 </code></pre>
 
@@ -313,7 +313,7 @@ a setter and getter.
 
 
 </div>
-</div></div><a class="anchor" id="setter"></a><div class="symbol"><div class="description"><pre><code>public @property <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/properties/PropDescriptor.html#setter">setter</a>(<a href="iz/properties/PropDescriptor.html#PropSetter">PropSetter</a> value)
+</div></div><a class="anchor" id="setter"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/properties/PropDescriptor.html#setter">setter</a>(<a href="iz/properties/PropDescriptor.html#PropSetter">PropSetter</a> value)
 </code></pre>
 <div class="section"><h2></h2>
 <p>Sets the property setter using a standard method.
@@ -325,7 +325,7 @@ a setter and getter.
 
 
 </div>
-</div></div><a class="anchor" id="setter"></a><div class="symbol"><div class="description"><pre><code>public @property <a href="iz/properties/PropDescriptor.html#PropSetter">PropSetter</a> <a href="iz/properties/PropDescriptor.html#setter">setter</a>()
+</div></div><a class="anchor" id="setter"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/properties/PropDescriptor.html#PropSetter">PropSetter</a> <a href="iz/properties/PropDescriptor.html#setter">setter</a>()
 </code></pre>
 <div class="section"><h2></h2>
 <p>Sets the property setter using a standard method.
@@ -361,13 +361,11 @@ a setter and getter.
 
 
 </div>
-</div></div><a class="anchor" id="getter"></a><div class="symbol"><div class="description"><pre><code>public @property <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/properties/PropDescriptor.html#getter">getter</a>(<a href="iz/properties/PropDescriptor.html#PropGetter">PropGetter</a> value)
+</div></div><a class="anchor" id="getter"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/properties/PropDescriptor.html#getter">getter</a>(<a href="iz/properties/PropDescriptor.html#PropGetter">PropGetter</a> value)
 </code></pre>
 <div class="section"><h2></h2>
-<ul>
-<li>Sets the property getter using a standard method.
-</li>
-</ul>
+<p>Sets the property getter using a standard method.
+</p>
 
 
 </div>
@@ -375,13 +373,11 @@ a setter and getter.
 
 
 </div>
-</div></div><a class="anchor" id="getter"></a><div class="symbol"><div class="description"><pre><code>public @property <a href="iz/properties/PropDescriptor.html#PropGetter">PropGetter</a> <a href="iz/properties/PropDescriptor.html#getter">getter</a>()
+</div></div><a class="anchor" id="getter"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/properties/PropDescriptor.html#PropGetter">PropGetter</a> <a href="iz/properties/PropDescriptor.html#getter">getter</a>()
 </code></pre>
 <div class="section"><h2></h2>
-<ul>
-<li>Sets the property getter using a standard method.
-</li>
-</ul>
+<p>Sets the property getter using a standard method.
+</p>
 
 
 </div>
@@ -392,10 +388,8 @@ a setter and getter.
 </div></div><a class="anchor" id="setDirectSource"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/properties/PropDescriptor.html#setDirectSource">setDirectSource</a>(T* value)
 </code></pre>
 <div class="section"><h2></h2>
-<ul>
-<li>Sets the property getter using a pointer to a variable
-</li>
-</ul>
+<p>Sets the property getter using a pointer to a variable
+</p>
 
 
 </div>
@@ -427,10 +421,11 @@ a setter and getter.
 
 
 </div>
-</div></div><a class="anchor" id="typedAs"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/properties/PropDescriptor.html">PropDescriptor</a>!A* <a href="iz/properties/PropDescriptor.html#typedAs">typedAs</a>(A)()
+</div></div><a class="anchor" id="as"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/properties/PropDescriptor.html">PropDescriptor</a>!A* <a href="iz/properties/PropDescriptor.html#as">as</a>(A)()
 </code></pre>
 <div class="section"><h2></h2>
-<p>Returns this descriptor casted as pointer to a descriptor of type A.
+<p>Returns this descriptor casted as pointer to a descriptor of the type
+given by template parameter.
 </p>
 
 
@@ -439,13 +434,11 @@ a setter and getter.
 
 
 </div>
-</div></div><a class="anchor" id="access"></a><div class="symbol"><div class="description"><pre><code>public @property const(<a href="iz/properties/PropAccess.html">PropAccess</a>) <a href="iz/properties/PropDescriptor.html#access">access</a>()
+</div></div><a class="anchor" id="name"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/properties/PropDescriptor.html#name">name</a>(const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] value)
 </code></pre>
 <div class="section"><h2></h2>
-<ul>
-<li>Information about the property accessibility
-</li>
-</ul>
+<p>Sets of gets the string used to identify the property
+</p>
 
 
 </div>
@@ -453,13 +446,11 @@ a setter and getter.
 
 
 </div>
-</div></div><a class="anchor" id="name"></a><div class="symbol"><div class="description"><pre><code>public @property <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/properties/PropDescriptor.html#name">name</a>(const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] value)
+</div></div><a class="anchor" id="name"></a><div class="symbol"><div class="description"><pre><code>public ref const(<a href="iz/containers/Array.html">Array</a>!char) <a href="iz/properties/PropDescriptor.html#name">name</a>()
 </code></pre>
 <div class="section"><h2></h2>
-<ul>
-<li>Defines the string used to identify the property
-</li>
-</ul>
+<p>Sets of gets the string used to identify the property
+</p>
 
 
 </div>
@@ -467,21 +458,7 @@ a setter and getter.
 
 
 </div>
-</div></div><a class="anchor" id="name"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/properties/PropDescriptor.html#name">name</a>()
-</code></pre>
-<div class="section"><h2></h2>
-<ul>
-<li>Defines the string used to identify the property
-</li>
-</ul>
-
-
-</div>
-<div class="section"><h2></h2>
-
-
-</div>
-</div></div><a class="anchor" id="declarator"></a><div class="symbol"><div class="description"><pre><code>public @property <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/properties/PropDescriptor.html#declarator">declarator</a>(Object value)
+</div></div><a class="anchor" id="declarator"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/properties/PropDescriptor.html#declarator">declarator</a>(Object value)
 </code></pre>
 <div class="section"><h2></h2>
 <p>The object that declares this property.
@@ -494,7 +471,7 @@ When really needed, this value is set automatically.
 
 
 </div>
-</div></div><a class="anchor" id="declarator"></a><div class="symbol"><div class="description"><pre><code>public @property Object <a href="iz/properties/PropDescriptor.html#declarator">declarator</a>()
+</div></div><a class="anchor" id="declarator"></a><div class="symbol"><div class="description"><pre><code>public Object <a href="iz/properties/PropDescriptor.html#declarator">declarator</a>()
 </code></pre>
 <div class="section"><h2></h2>
 <p>The object that declares this property.
@@ -507,7 +484,7 @@ When really needed, this value is set automatically.
 
 
 </div>
-</div></div><a class="anchor" id="rtti"></a><div class="symbol"><div class="description"><pre><code>public @property const(<a href="iz/rtti/Rtti.html">Rtti</a>*) <a href="iz/properties/PropDescriptor.html#rtti">rtti</a>()
+</div></div><a class="anchor" id="rtti"></a><div class="symbol"><div class="description"><pre><code>public const(<a href="iz/rtti/Rtti.html">Rtti</a>*) <a href="iz/properties/PropDescriptor.html#rtti">rtti</a>()
 </code></pre>
 <div class="section"><h2></h2>
 <p>Returns the RuntimeTypeInfo struct for the property type.
@@ -519,7 +496,7 @@ When really needed, this value is set automatically.
 
 
 </div>
-</div></div><a class="anchor" id="hints"></a><div class="symbol"><div class="description"><pre><code>public ref <a href="iz/properties.html#PropHints">PropHints</a> <a href="iz/properties/PropDescriptor.html#hints">hints</a>()
+</div></div><a class="anchor" id="hints"></a><div class="symbol"><div class="description"><pre><code>public ref const(<a href="iz/properties.html#PropHints">PropHints</a>) <a href="iz/properties/PropDescriptor.html#hints">hints</a>()
 </code></pre>
 <div class="section"><h2></h2>
 <p>Returns the hints for this property.
@@ -543,7 +520,7 @@ When really needed, this value is set automatically.
 </code></pre>
 </td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#PropSetterConst">PropSetterConst</a></td><td><pre><code><a href="http://dlang.org/type.html#basic-data-types">void</a> delegate(const T value)
 </code></pre>
-</td><td></td></tr></table><h2>Functions</h2><table><tr><td><a href="iz/properties/PropDescriptor.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#define">define</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#define">define</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#define">define</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#setter">setter</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#setter">setter</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#setDirectTarget">setDirectTarget</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#set">set</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#getter">getter</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#getter">getter</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#setDirectSource">setDirectSource</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#get">get</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#genericDescriptor">genericDescriptor</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#typedAs">typedAs</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#access">access</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#name">name</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#name">name</a><span class="extrainfo"><span class="stor-classes"><span class="attr-property">@property</span>, <span class="attr-auto">auto</span>, <span class="attr-const">const</span>, <span class="attr-ref">ref</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#declarator">declarator</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#declarator">declarator</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#rtti">rtti</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#hints">hints</a><span class="extrainfo"></span></td><td></td><td></td></tr></table>
+</td><td></td></tr></table><h2>Functions</h2><table><tr><td><a href="iz/properties/PropDescriptor.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#define">define</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#define">define</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#define">define</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#setter">setter</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#setter">setter</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#setDirectTarget">setDirectTarget</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#set">set</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#getter">getter</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#getter">getter</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#setDirectSource">setDirectSource</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#get">get</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#genericDescriptor">genericDescriptor</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#as">as</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#name">name</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#name">name</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#declarator">declarator</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#declarator">declarator</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#rtti">rtti</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/properties/PropDescriptor.html#hints">hints</a><span class="extrainfo"></span></td><td></td><td></td></tr></table>
 </div>
 </div><script>hljs.initHighlightingOnLoad();</script>
 

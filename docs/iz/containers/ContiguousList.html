@@ -57,9 +57,9 @@ Encapsulates an Array!T and interfaces it as a list.
 
 
 </div>
-</div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>public this(A...)(A elements)
+</div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>private this(A...)(A elements)
 </code></pre>
-</div></div><a class="anchor" id="opIndex"></a><div class="symbol"><div class="description"><pre><code>public ref T <a href="iz/containers/ContiguousList.html#opIndex">opIndex</a>(ptrdiff_t i)
+</div></div><a class="anchor" id="opIndex"></a><div class="symbol"><div class="description"><pre><code>private ref T <a href="iz/containers/ContiguousList.html#opIndex">opIndex</a>(ptrdiff_t i)
 </code></pre>
 <div class="section"><h2></h2>
 <p>Support for the array syntax.
@@ -71,7 +71,7 @@ Encapsulates an Array!T and interfaces it as a list.
 
 
 </div>
-</div></div><a class="anchor" id="opIndexAssign"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/ContiguousList.html#opIndexAssign">opIndexAssign</a>(
+</div></div><a class="anchor" id="opIndexAssign"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/ContiguousList.html#opIndexAssign">opIndexAssign</a>(
     T item, 
     size_t i)
 </code></pre>
@@ -85,7 +85,7 @@ Encapsulates an Array!T and interfaces it as a list.
 
 
 </div>
-</div></div><a class="anchor" id="opApply"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">int</a> <a href="iz/containers/ContiguousList.html#opApply">opApply</a>(scope <a href="http://dlang.org/type.html#basic-data-types">int</a> delegate(ref T) dg)
+</div></div><a class="anchor" id="opApply"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">int</a> <a href="iz/containers/ContiguousList.html#opApply">opApply</a>(scope <a href="http://dlang.org/type.html#basic-data-types">int</a> delegate(ref T) dg)
 </code></pre>
 <div class="section"><h2></h2>
 <p>Support for the foreach operator.
@@ -97,7 +97,7 @@ Encapsulates an Array!T and interfaces it as a list.
 
 
 </div>
-</div></div><a class="anchor" id="opApplyReverse"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">int</a> <a href="iz/containers/ContiguousList.html#opApplyReverse">opApplyReverse</a>(scope <a href="http://dlang.org/type.html#basic-data-types">int</a> delegate(ref T) dg)
+</div></div><a class="anchor" id="opApplyReverse"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">int</a> <a href="iz/containers/ContiguousList.html#opApplyReverse">opApplyReverse</a>(scope <a href="http://dlang.org/type.html#basic-data-types">int</a> delegate(ref T) dg)
 </code></pre>
 <div class="section"><h2></h2>
 <p>Support for the foreach_reverse operator.
@@ -109,7 +109,7 @@ Encapsulates an Array!T and interfaces it as a list.
 
 
 </div>
-</div></div><a class="anchor" id="opAssign"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/ContiguousList.html#opAssign">opAssign</a>(T[] items)
+</div></div><a class="anchor" id="opAssign"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/ContiguousList.html#opAssign">opAssign</a>(T[] items)
 </code></pre>
 <div class="section"><h2></h2>
 <p>Replaces the items with the content of a D T[].
@@ -121,7 +121,7 @@ Encapsulates an Array!T and interfaces it as a list.
 
 
 </div>
-</div></div><a class="anchor" id="opAssign"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/ContiguousList.html#opAssign">opAssign</a>(<a href="iz/containers/Array.html">Array</a>!T items)
+</div></div><a class="anchor" id="opAssign"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/ContiguousList.html#opAssign">opAssign</a>(<a href="iz/containers/Array.html">Array</a>!T items)
 </code></pre>
 <div class="section"><h2></h2>
 <p>Replaces the items with the content of an Array!T.
@@ -133,7 +133,7 @@ Encapsulates an Array!T and interfaces it as a list.
 
 
 </div>
-</div></div><a class="anchor" id="find"></a><div class="symbol"><div class="description"><pre><code>public ptrdiff_t <a href="iz/containers/ContiguousList.html#find">find</a>(T item)
+</div></div><a class="anchor" id="find"></a><div class="symbol"><div class="description"><pre><code>private ptrdiff_t <a href="iz/containers/ContiguousList.html#find">find</a>(T item)
 </code></pre>
 <div class="section"><h2></h2>
 <p>Tries to find an item in the list.
@@ -158,7 +158,7 @@ Encapsulates an Array!T and interfaces it as a list.
 
 
 </div>
-</div></div><a class="anchor" id="add"></a><div class="symbol"><div class="description"><pre><code>public ptrdiff_t <a href="iz/containers/ContiguousList.html#add">add</a>(T item)
+</div></div><a class="anchor" id="add"></a><div class="symbol"><div class="description"><pre><code>private ptrdiff_t <a href="iz/containers/ContiguousList.html#add">add</a>(T item)
 </code></pre>
 <div class="section"><h2></h2>
 <p>Adds an item at the end of the list and returns its index.
@@ -176,7 +176,7 @@ Encapsulates an Array!T and interfaces it as a list.
 
 
 </div>
-</div></div><a class="anchor" id="add"></a><div class="symbol"><div class="description"><pre><code>public ptrdiff_t <a href="iz/containers/ContiguousList.html#add">add</a>(I)(I items)
+</div></div><a class="anchor" id="add"></a><div class="symbol"><div class="description"><pre><code>private ptrdiff_t <a href="iz/containers/ContiguousList.html#add">add</a>(I)(I items)
 </code></pre>
 <div class="section"><h2></h2>
 <p>Adds items at the end of the list.
@@ -194,7 +194,7 @@ Encapsulates an Array!T and interfaces it as a list.
 
 
 </div>
-</div></div><a class="anchor" id="insert"></a><div class="symbol"><div class="description"><pre><code>public ptrdiff_t <a href="iz/containers/ContiguousList.html#insert">insert</a>(T item)
+</div></div><a class="anchor" id="insert"></a><div class="symbol"><div class="description"><pre><code>private ptrdiff_t <a href="iz/containers/ContiguousList.html#insert">insert</a>(T item)
 </code></pre>
 <div class="section"><h2></h2>
 <p>Inserts an item at the beginning of the list.
@@ -214,7 +214,7 @@ Encapsulates an Array!T and interfaces it as a list.
 
 
 </div>
-</div></div><a class="anchor" id="insert"></a><div class="symbol"><div class="description"><pre><code>public ptrdiff_t <a href="iz/containers/ContiguousList.html#insert">insert</a>(
+</div></div><a class="anchor" id="insert"></a><div class="symbol"><div class="description"><pre><code>private ptrdiff_t <a href="iz/containers/ContiguousList.html#insert">insert</a>(
     size_t position, 
     T item)
 </code></pre>
@@ -246,7 +246,7 @@ Encapsulates an Array!T and interfaces it as a list.
 
 
 </div>
-</div></div><a class="anchor" id="swapItems"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/ContiguousList.html#swapItems">swapItems</a>(
+</div></div><a class="anchor" id="swapItems"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/ContiguousList.html#swapItems">swapItems</a>(
     T item1, 
     T item2)
 </code></pre>
@@ -277,7 +277,7 @@ Encapsulates an Array!T and interfaces it as a list.
 </td></tr>
 </table>
 </div>
-</div></div><a class="anchor" id="swapIndexes"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/ContiguousList.html#swapIndexes">swapIndexes</a>(
+</div></div><a class="anchor" id="swapIndexes"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/ContiguousList.html#swapIndexes">swapIndexes</a>(
     size_t index1, 
     size_t index2)
 </code></pre>
@@ -301,7 +301,7 @@ Encapsulates an Array!T and interfaces it as a list.
 </td></tr>
 </table>
 </div>
-</div></div><a class="anchor" id="remove"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/containers/ContiguousList.html#remove">remove</a>(T item)
+</div></div><a class="anchor" id="remove"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/containers/ContiguousList.html#remove">remove</a>(T item)
 </code></pre>
 <div class="section"><h2></h2>
 <p>Removes an item from the list.
@@ -326,7 +326,7 @@ Encapsulates an Array!T and interfaces it as a list.
 
 
 </div>
-</div></div><a class="anchor" id="extract"></a><div class="symbol"><div class="description"><pre><code>public T <a href="iz/containers/ContiguousList.html#extract">extract</a>(size_t index)
+</div></div><a class="anchor" id="extract"></a><div class="symbol"><div class="description"><pre><code>private T <a href="iz/containers/ContiguousList.html#extract">extract</a>(size_t index)
 </code></pre>
 <div class="section"><h2></h2>
 <p>Removes an item from the list.
@@ -351,7 +351,7 @@ Encapsulates an Array!T and interfaces it as a list.
 
 
 </div>
-</div></div><a class="anchor" id="clear"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/ContiguousList.html#clear">clear</a>()
+</div></div><a class="anchor" id="clear"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/ContiguousList.html#clear">clear</a>()
 </code></pre>
 <div class="section"><h2></h2>
 <p>Empties the list.
@@ -363,7 +363,7 @@ Encapsulates an Array!T and interfaces it as a list.
 
 
 </div>
-</div></div><a class="anchor" id="count"></a><div class="symbol"><div class="description"><pre><code>public final size_t <a href="iz/containers/ContiguousList.html#count">count</a>() const pure nothrow @safe
+</div></div><a class="anchor" id="count"></a><div class="symbol"><div class="description"><pre><code>private final size_t <a href="iz/containers/ContiguousList.html#count">count</a>() const pure nothrow @safe
 </code></pre>
 <div class="section"><h2></h2>
 <p>Returns the items count.
@@ -375,7 +375,7 @@ Encapsulates an Array!T and interfaces it as a list.
 
 
 </div>
-</div></div><a class="anchor" id="array"></a><div class="symbol"><div class="description"><pre><code>public ref <a href="iz/containers/Array.html">Array</a>!T <a href="iz/containers/ContiguousList.html#array">array</a>() nothrow @safe
+</div></div><a class="anchor" id="array"></a><div class="symbol"><div class="description"><pre><code>private final ref <a href="iz/containers/Array.html">Array</a>!T <a href="iz/containers/ContiguousList.html#array">array</a>() nothrow @safe
 </code></pre>
 <div class="section"><h2></h2>
 <p>Returns the internal array.

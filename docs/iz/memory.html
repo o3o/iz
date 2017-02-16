@@ -420,8 +420,28 @@ constructed with <code class="d_inline_code">construct()</code>.
 </td></tr>
 </table>
 </div>
-</div></div><a class="anchor" id="newPtr"></a><div class="symbol"><div class="description"><pre><code>public T* <a href="iz/memory.html#newPtr">newPtr</a>(T, <a href="http://dlang.org/type.html#basic-data-types">bool</a> preFill = false)() 
+</div></div><a class="anchor" id="destruct"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/memory.html#destruct">destruct</a>(T)(auto ref T* instance) 
 if(isBasicType!T)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Destructs on pointers simply forwards <code class="d_inline_code">freeMem</code>.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">instance</td><td class="paramDoc"><p>A pointer, typed or not.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="newPtr"></a><div class="symbol"><div class="description"><pre><code>public T* <a href="iz/memory.html#newPtr">newPtr</a>(T, <a href="http://dlang.org/type.html#basic-data-types">bool</a> preFill = false, A...)(A a) 
+if(isBasicType!T && A.length <= 1)
 </code></pre>
 <div class="section"><h2></h2>
 <p>Returns a pointer to a new, GC-free, basic variable.
@@ -440,6 +460,9 @@ Any variable allocated using this function must be manually freed with freeMem.
 </p>
 </td></tr>
 <tr class="param"><td class="paramName">preFill</td><td class="paramDoc"><p>Optional, boolean indicating if the result has to be initialized.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">a</td><td class="paramDoc"><p>Optional, the value.
 </p>
 </td></tr>
 </table>
@@ -546,7 +569,7 @@ registered classes don't take the module in account.
 </p>
 </td></tr><tr><td><a href="iz/memory.html#copyMem">copyMem</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-trusted">@trusted</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td>Returns: <p>the pointer to the destination, (same as dst).
 </p>
-</td></tr><tr><td><a href="iz/memory.html#freeMem">freeMem</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-trusted">@trusted</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#construct">construct</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#construct">construct</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#construct">construct</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#destruct">destruct</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#destruct">destruct</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#destruct">destruct</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#destruct">destruct</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#destruct">destruct</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#newPtr">newPtr</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#destructEach">destructEach</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#registerFactoryClass">registerFactoryClass</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#registerFactoryClasses">registerFactoryClasses</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#factory">factory</a><span class="extrainfo"></span></td><td></td><td></td></tr></table><h2>Templates</h2><table><tr><td><a href="iz/memory/MustAddGcRange.html">MustAddGcRange</a></td><td></td><td></td></tr><tr><td><a href="iz/memory/inheritedDtor.html">inheritedDtor</a></td><td></td><td></td></tr></table>
+</td></tr><tr><td><a href="iz/memory.html#freeMem">freeMem</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nothrow">nothrow</span>, <span class="attr-trusted">@trusted</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#construct">construct</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#construct">construct</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#construct">construct</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#destruct">destruct</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#destruct">destruct</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#destruct">destruct</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#destruct">destruct</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#destruct">destruct</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#destruct">destruct</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#newPtr">newPtr</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#destructEach">destructEach</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#registerFactoryClass">registerFactoryClass</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#registerFactoryClasses">registerFactoryClasses</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/memory.html#factory">factory</a><span class="extrainfo"></span></td><td></td><td></td></tr></table><h2>Templates</h2><table><tr><td><a href="iz/memory/MustAddGcRange.html">MustAddGcRange</a></td><td></td><td></td></tr><tr><td><a href="iz/memory/inheritedDtor.html">inheritedDtor</a></td><td></td><td></td></tr></table>
 </div>
 </div><script>hljs.initHighlightingOnLoad();</script>
 

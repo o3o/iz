@@ -47,57 +47,28 @@
 <div class="aggregate-symbol"><div class="description"><pre><code>public class ObserverInterconnector
 </code></pre>
 <div class="section"><h2></h2>
-<p>ObserverInterconnector is in charge for inter-connecting subjects with
-their observers, whatever their specializations are.
+<p>ObserverInterconnector is in charge for inter-connecting the subjects with
+their observers, whatever are their specializations.
 </p>
 
 
 </div>
 <div class="section"><h2></h2>
-<p>With this class, an observer can connect itself to the right subject(s)
-without having to know it. In the same fashion, the subjects gets their
+<p>With this class, an observer can connect to the right subjects
+without having to know them. In the same fashion the subjects gets their
 client list automatically filled.
 </p>
 
 
 </div>
-</div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>public this()
+</div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>private this()
 </code></pre>
-</div></div><a class="anchor" id="beginUpdate"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/ObserverInterconnector.html#beginUpdate">beginUpdate</a>()
-</code></pre>
-<div class="section"><h2></h2>
-<ul>
-<li>Several entities will be added.
-<pre class="prettyprint"><code>* This Avoids any superfluous update while adding.
-* Every <a href="iz/observer/ObserverInterconnector.html#beginUpdate">beginUpdate</a>() must be followed by an <a href="iz/observer/ObserverInterconnector.html#endUpdate">endUpdate</a>().
-</code></pre></li>
-</ul>
-
-
-</div>
-<div class="section"><h2></h2>
-
-
-</div>
-</div></div><a class="anchor" id="endUpdate"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/ObserverInterconnector.html#endUpdate">endUpdate</a>()
+</div></div><a class="anchor" id="beginUpdate"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/ObserverInterconnector.html#beginUpdate">beginUpdate</a>()
 </code></pre>
 <div class="section"><h2></h2>
-<ul>
-<li>Several subjects or observers have been added.
-<pre class="prettyprint"><code>* Decrements a counter and update the entities if it's equal to 0.
-</code></pre></li>
-</ul>
-
-
-</div>
-<div class="section"><h2></h2>
-
-
-</div>
-</div></div><a class="anchor" id="addObserver"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/ObserverInterconnector.html#addObserver">addObserver</a>(Object observer)
-</code></pre>
-<div class="section"><h2></h2>
-<p>Adds an observer to the entity list.
+<p>Several entities will be added.
+This Avoids any superfluous update while adding.
+Every beginUpdate() must be followed by an endUpdate().
 </p>
 
 
@@ -106,10 +77,35 @@ client list automatically filled.
 
 
 </div>
-</div></div><a class="anchor" id="addObservers"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/ObserverInterconnector.html#addObservers">addObservers</a>(Objs...)(Objs objs)
+</div></div><a class="anchor" id="endUpdate"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/ObserverInterconnector.html#endUpdate">endUpdate</a>()
 </code></pre>
 <div class="section"><h2></h2>
-<p>Adds a list of observer to the entity list.
+<p>Several subjects or observers have been added.
+Decrements a counter and update the entities if it's equal to 0.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="addObserver"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/ObserverInterconnector.html#addObserver">addObserver</a>(Object observer)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Adds an observer to the list.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="addObservers"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/ObserverInterconnector.html#addObservers">addObservers</a>(Objs...)(Objs objs)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Adds a list of observer to the list.
 Optimized for bulk adding.
 </p>
 
@@ -119,10 +115,10 @@ Optimized for bulk adding.
 
 
 </div>
-</div></div><a class="anchor" id="removeObserver"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/ObserverInterconnector.html#removeObserver">removeObserver</a>(Object observer)
+</div></div><a class="anchor" id="removeObserver"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/ObserverInterconnector.html#removeObserver">removeObserver</a>(Object observer)
 </code></pre>
 <div class="section"><h2></h2>
-<p>Removes an observer from the entity list.
+<p>Removes an observer from the list.
 </p>
 
 
@@ -131,10 +127,10 @@ Optimized for bulk adding.
 
 
 </div>
-</div></div><a class="anchor" id="addSubject"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/ObserverInterconnector.html#addSubject">addSubject</a>(Object subject)
+</div></div><a class="anchor" id="addSubject"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/ObserverInterconnector.html#addSubject">addSubject</a>(Object subject)
 </code></pre>
 <div class="section"><h2></h2>
-<p>Adds a subject to the entity list.
+<p>Adds a subject to the list.
 </p>
 
 
@@ -143,11 +139,11 @@ Optimized for bulk adding.
 
 
 </div>
-</div></div><a class="anchor" id="addSubjects"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/ObserverInterconnector.html#addSubjects">addSubjects</a>(Subjs...)(Subjs subjs)
+</div></div><a class="anchor" id="addSubjects"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/ObserverInterconnector.html#addSubjects">addSubjects</a>(Subjs...)(Subjs subjs)
 </code></pre>
 <div class="section"><h2></h2>
-<p>Adds several subjects to the entity list.
-Optimized for bulk adding.
+<p>Adds several subjects to the list.
+Optimized for bulk addition.
 </p>
 
 
@@ -156,7 +152,7 @@ Optimized for bulk adding.
 
 
 </div>
-</div></div><a class="anchor" id="removeSubject"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/ObserverInterconnector.html#removeSubject">removeSubject</a>(Object subject)
+</div></div><a class="anchor" id="removeSubject"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/ObserverInterconnector.html#removeSubject">removeSubject</a>(Object subject)
 </code></pre>
 <div class="section"><h2></h2>
 <p>Removes a subject from the entity list.
@@ -168,7 +164,7 @@ Optimized for bulk adding.
 
 
 </div>
-</div></div><a class="anchor" id="updateObservers"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/ObserverInterconnector.html#updateObservers">updateObservers</a>()
+</div></div><a class="anchor" id="updateObservers"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/observer/ObserverInterconnector.html#updateObservers">updateObservers</a>()
 </code></pre>
 <div class="section"><h2></h2>
 <p>Updates the connections between the entities stored in the global list.
@@ -178,8 +174,7 @@ Optimized for bulk adding.
 </div>
 <div class="section"><h2></h2>
 <p>It has usually not be called manually.
-During the process, each subject previously added is
-visited by each observer previously added.
+During the process, each subject is visited by each observer.
 The complexity of the operation is usually reduced if beginUpdate()
 and endUpdate() are used adequatly.
 </p>
@@ -196,8 +191,7 @@ and endUpdate() are used adequatly.
 </div>
 <div class="section"><h2></h2>
 <p>It has usually not be called manually.
-During the process, each subject previously added is
-visited by each observer previously added.
+During the process, each subject is visited by each observer.
 The complexity of the operation is usually reduced if beginUpdate()
 and endUpdate() are used adequatly.
 </p>
