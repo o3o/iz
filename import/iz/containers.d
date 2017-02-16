@@ -2912,16 +2912,14 @@ public:
 
     static if (!isMap)
     {
-        this(KK)(auto ref KK key)
-        if (is(KK == K))
+        this(K)(auto ref K key)
         {
             _key = key;
         }
     }
     else
     {
-        this(KK, VV)(auto ref KK key, auto ref VV value)
-        if (is(KK == K) && is(VV == V))
+        this()(auto ref K key, auto ref V value)
         {
             _key = key;
             _value = value;
@@ -2940,8 +2938,7 @@ public:
         }
     }
 
-    auto opEquals(KK)(auto ref KK key) const
-    if (is(KK == K))
+    auto opEquals()(auto ref K key) const
     {
         static if (!isMap)
         {
@@ -3111,7 +3108,7 @@ private:
     size_t _count;
 
     pragma(inline, true)
-    size_t hasher(KK)(auto ref KK key) @nogc
+    size_t hasher()(auto ref K key) @nogc
     {
         return hasherFun(key) & (_hashes.length - 1);
     }
@@ -3138,7 +3135,7 @@ private:
         return (value + 1) & (_hashes.length - 1);
     }
 
-    Bucket.FindResult find(KK)(auto ref KK key)
+    Bucket.FindResult find()(auto ref K key)
     {
         Bucket.FindResult fr;
         const size_t hb = hasher(key);
@@ -3215,8 +3212,7 @@ public:
      *      If the key is added or if it's already included then returns $(D true),
      *      otherwise $(D false).
      */
-    bool insert(bool rsv = true, KK)(auto ref KK key)
-    if (is(KK == K))
+    bool insert(bool rsv = true)(auto ref K key)
     {
         bool result;
         static if (rsv)
@@ -3267,8 +3263,7 @@ public:
      * Returns:
      *      $(D true) if the key was included otherwise $(D false).
      */
-    bool remove(KK)(auto ref KK key)
-    if (is(KK == K))
+    bool remove()(auto ref K key)
     {
         bool result;
         Bucket.FindResult fr = find(key);
@@ -3358,8 +3353,7 @@ public:
      * Returns:
      *      $(D null) if the key is not present otherwise a pointer to the key.
      */
-    const(K)* opBinaryRight(string op : "in", KK)(auto ref KK key)
-    if (is(KK == K))
+    const(K)* opBinaryRight(string op : "in")(auto ref K key)
     {
         const(K)* result;
         const Bucket.FindResult fr = find(key);
@@ -3588,7 +3582,7 @@ private:
     size_t _count;
 
     pragma(inline, true)
-    size_t hasher(KK)(auto ref KK key) @nogc
+    size_t hasher()(auto ref K key) @nogc
     {
         return hasherFun(key) & (_hashes.length - 1);
     }
@@ -3615,7 +3609,7 @@ private:
         return (value + 1) & (_hashes.length - 1);
     }
 
-    Bucket.FindResult find(KK)(auto ref KK key)
+    Bucket.FindResult find()(auto ref K key)
     {
         Bucket.FindResult fr;
         const size_t hb = hasher(key);
@@ -3675,8 +3669,7 @@ public:
      *      If the key is added or if it's already included then returns $(D true),
      *      otherwise $(D false).
      */
-    bool insert(bool rsv = true, KK, VV)(auto ref KK key, auto ref VV value)
-    if (is(KK == K) && is(VV == V))
+    bool insert(bool rsv = true)(auto ref K key, auto ref V value)
     {
         bool result;
         static if (rsv)
@@ -3707,8 +3700,7 @@ public:
      * Returns:
      *      $(D true) if the key was included otherwise $(D false).
      */
-    bool remove(KK)(auto ref KK key)
-    if (is(KK == K))
+    bool remove()(auto ref K key)
     {
         bool result;
         Bucket.FindResult fr = find(key);
@@ -3739,7 +3731,7 @@ public:
      * Support for appending an element. Forwards $(D insert()) with a default-
      * initialized value.
      */
-    auto opOpAssign(string op : "~" , KK)(auto ref KK key)
+    auto opOpAssign(string op : "~")(auto ref K key)
     {
         return insert(key, V.init);
     }
@@ -3747,8 +3739,7 @@ public:
     /**
      * Support for inserting using the array syntax. Forwards $(D insert()).
      */
-    void opIndexAssign(KK, VV)(auto ref VV value, auto ref KK key)
-    if (is(KK == K) && is(VV == V))
+    void opIndexAssign()(auto ref V value, auto ref K key)
     {
         insert(key, value);
     }
@@ -3817,8 +3808,7 @@ public:
      *      $(D null) if the key is not present otherwise a pointer to the
      *          value that mapped.
      */
-    const(V)* opBinaryRight(string op : "in", KK)(auto ref KK key)
-    if (is(KK == K))
+    const(V)* opBinaryRight(string op : "in")(auto ref K key)
     {
         const(V)* result;
         const Bucket.FindResult fr = find(key);
