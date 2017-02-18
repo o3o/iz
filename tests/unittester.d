@@ -1,4 +1,4 @@
-module tester;
+module unittester;
 
 import
     iz.testing;

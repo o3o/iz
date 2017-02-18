@@ -32,7 +32,7 @@ object _1: TCENativeProject
       )
       pathsOptions.outputFilename = 'temp/iztests'
       pathsOptions.extraSources.Strings = (
-        'scripts/tester.d'
+        'tests/unittester.d'
         'import/iz/testing.d'
       )
       otherOptions.coverage = True

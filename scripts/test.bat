@@ -1,7 +1,7 @@
 @echo off
 echo ---------------------------------------
 echo compiling library...
-dmd tester.d^
+dmd ..\tests\unittester.d^
  "../import/iz/testing.d"^
  "../import/iz/memory.d"^
  "../import/iz/types.d"^
