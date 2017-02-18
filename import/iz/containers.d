@@ -6,7 +6,8 @@ module iz.containers;
 import
     core.exception, core.stdc.string;
 import
-    std.exception, std.string, std.traits, std.conv, std.range.primitives;
+    std.exception, std.string, std.traits, std.conv, std.range.primitives,
+    std.typecons;
 import
     iz.memory, iz.types, iz.streams;
 version(unittest) import
@@ -209,8 +210,10 @@ public:
         static if (is(T == struct))
         {
             if (value < _length)
+            {
                 foreach (i; value.._length)
                     destruct(opIndex(i));
+            }
         }
         setLength(value);
         static if (is(T == struct))
@@ -236,6 +239,7 @@ public:
      * Throw:
      *      A ConvException if T is not converitble to string.
      */
+    static if (__traits(compiles, to!string(opSlice())))
     string toString() const
     {
         if (_length == 0)
@@ -280,7 +284,7 @@ public:
         return result;
     }
 
-    /// SUpport for associative arrays.
+    /// Support for associative arrays.
     size_t toHash() const nothrow @trusted
     {
         return opSlice().hashOf;
@@ -2918,7 +2922,8 @@ unittest
     }
 }
 
-private struct LinearProbeBucket(K, V = void)
+
+private struct LinearProbeSlot(K, V = void)
 {
 
     enum isMap = !is(V == void);
@@ -2977,8 +2982,6 @@ public:
         }
     }
 
-    import std.typecons: Tuple, tuple;
-
     auto ptr()
     {
         static if (!isMap)
@@ -3000,30 +3003,14 @@ public:
 
 unittest
 {
-    LinearProbeBucket!string lpbs = LinearProbeBucket!string("cat");
+    LinearProbeSlot!string lpbs = LinearProbeSlot!string("cat");
     assert(lpbs == "cat");
     assert(lpbs != "dog");
 
-    LinearProbeBucket!(string,int) lpbsi = LinearProbeBucket!(string,int)("cat", 1);
+    LinearProbeSlot!(string,int) lpbsi = LinearProbeSlot!(string,int)("cat", 1);
     assert(*(lpbsi == "cat") == 1);
     assert((lpbsi == "rat") is null);
 }
-
-/**
- * Enumerates the collision handling modes that
- * can be specified to instantiate a HashSet or a Map.
- */
-enum CollisionHandling
-{
-    /// Hanlde collision using linear probe.
-    linearProbe,
-    /// Handle the collision by inserting in a bucket.
-    bucketArray,
-    /// Assumes the hash function not to produce collisions.
-    none,
-}
-
-private alias CH = CollisionHandling;
 
 private size_t fnv1Impl(bool fnv1a = false)(ubyte[] data)
 {
@@ -3066,6 +3053,42 @@ private size_t fnv1Impl(bool fnv1a = false)(ubyte[] data)
 }
 
 /**
+ * Enumerates the collision handling modes that
+ * can be specified to instantiate a HashSet or a Map.
+ */
+enum CollisionHandling
+{
+    /// Hanlde collision using linear probing.
+    linearProbe,
+    /// Handle the collision by inserting in a bucket.
+    bucketArray,
+    /// Assumes the hash function not to produce collisions.
+    none,
+}
+
+private alias CH = CollisionHandling;
+
+/// Aliases an hashset implementation, by default HashSet_AB.
+template HashSet(CollisionHandling ch = CH.bucketArray)
+{
+    static if (ch == CH.linearProbe)
+        alias HashSet = HashSet_LP;
+    else static if (ch == CH.bucketArray)
+        alias HashSet = HashSet_AB;
+    else
+        static assert(0);
+}
+
+/// Aliases an hashset implementation, by default HashMap_LP.
+template HashMap(CollisionHandling ch = CH.linearProbe)
+{
+    static if (ch == CH.linearProbe)
+        alias HashSet = HashMap_LP;
+    else
+        static assert(0);
+}
+
+/**
  * Default hash function used in the HashSet and the HashMap
  */
 pragma(inline, true)
@@ -3079,7 +3102,7 @@ size_t fnv1(V, bool fnv1a = false)(auto ref V value)
     return fnv1Impl!fnv1a(v);
 }
 
-struct HashOrMapRange(T)
+struct RangeForLpSet(T)
 if (isPointer!(ReturnType!(T.opIndex)) && hasLength!T)
 {
     T _hashOrMap;
@@ -3112,41 +3135,37 @@ if (isPointer!(ReturnType!(T.opIndex)) && hasLength!T)
 }
 
 /**
- * A manually managed hashset.
+ * A manually managed hashset that uses linear probing to solve the collisions.
  *
  * Params:
  *      K = the key type.
  *      hasherFun = The hashing function, a $(D size_t(K value);) function,
  *          literal delegate or lambda.
- *      ch = The mode for handling the collisions.
  */
-struct HashSet(K, alias hasherFun = fnv1, CH ch = CH.linearProbe)
+struct HashSet_LP(K, alias hasherFun = fnv1)
 {
-
-    static assert(ch == CH.linearProbe, "bucketArray and none not implemented");
-
     static assert (is(typeof( (){size_t r = hasherFun(K.init);}  )),
         "invalid hash function");
 
 private:
 
     alias HashSetT = typeof(this);
-    alias Bucket = LinearProbeBucket!K;
-    @NoGc Array!(Bucket*) _hashes;
+    alias Bucket = LinearProbeSlot!K;
+    @NoGc Array!(Bucket*) _slots;
     size_t _count;
 
     pragma(inline, true)
     size_t hasher()(auto ref K key) @nogc
     {
-        return hasherFun(key) & (_hashes.length - 1);
+        return hasherFun(key) & (_slots.length - 1);
     }
 
     void reHash() @nogc
     {
         _count = 0;
-        auto old = _hashes.dup;
-        assert(old == _hashes);
-        _hashes[] = null;
+        auto old = _slots.dup;
+        assert(old == _slots);
+        _slots[] = null;
         foreach (immutable i; 0..old.length)
         {
             if (auto b = old[i])
@@ -3161,7 +3180,7 @@ private:
     pragma(inline, true)
     size_t nextHash(size_t value) @nogc @safe
     {
-        return (value + 1) & (_hashes.length - 1);
+        return (value + 1) & (_slots.length - 1);
     }
 
     //pragma(inline, true)
@@ -3171,21 +3190,17 @@ private:
         const size_t hb = hasher(key);
         fr.endHash = hb;
 
-        if (_hashes.length)
+        if (_slots.length)
         {
-            fr.bucket = _hashes[hb];
+            fr.bucket = _slots[hb];
             while (true)
             {
                 if (fr.bucket && *fr.bucket != key)
                 {
-                    //writeln("probing for ", key);
                     fr.endHash = nextHash(fr.endHash);
                     if (fr.endHash == hb)
-                    {
-                        //writeln("probing failed for ", key);
                         break;
-                    }
-                    fr.bucket = _hashes[fr.endHash];
+                    fr.bucket = _slots[fr.endHash];
                 }
                 else break;
             }
@@ -3203,7 +3218,7 @@ public:
         import std.meta: aliasSeqOf;
         import std.range: iota;
 
-        foreach(i; aliasSeqOf!(iota(0, A.length)))
+        foreach (i; aliasSeqOf!(iota(0, A.length)))
         {
             static if (is(A[i] == K))
                 continue;
@@ -3213,16 +3228,16 @@ public:
                 continue;
             else static assert(0, A[i].stringof ~ " not supported");
         }
-        foreach(i; aliasSeqOf!(iota(0, A.length)))
+        foreach (i; aliasSeqOf!(iota(0, A.length)))
                 insert(a[i]);
     }
 
     ~this() @nogc
     {
-        foreach(immutable i; 0.._hashes.length)
-            if (Bucket* lpbk = _hashes[i])
+        foreach (immutable i; 0.._slots.length)
+            if (Bucket* lpbk = _slots[i])
                 destruct(lpbk);
-        destruct(_hashes);
+        destruct(_slots);
     }
 
     /**
@@ -3249,7 +3264,7 @@ public:
             if (fr.bucket is null)
             {
                 assert(key !in this);
-                _hashes[fr.endHash] = n;
+                _slots[fr.endHash] = n;
                 result = true;
                 ++_count;
             }
@@ -3295,7 +3310,7 @@ public:
         {
             result = true;
             destruct(fr.bucket);
-            _hashes[fr.endHash] = null;
+            _slots[fr.endHash] = null;
             reHash;
         }
         return result;
@@ -3306,11 +3321,11 @@ public:
      */
     void clear() @nogc
     {
-        foreach (immutable i; 0.._hashes.length)
-            if (auto b = _hashes[i])
+        foreach (immutable i; 0.._slots.length)
+            if (auto b = _slots[i])
                 destruct(b);
-        _hashes[] = null;
-        _hashes.length = 0;
+        _slots[] = null;
+        _slots.length = 0;
         _count = 0;
     }
 
@@ -3334,12 +3349,12 @@ public:
     {
         import std.math: nextPow2;
         const size_t nl = nextPow2(_count + value);
-        const size_t ol = _hashes.length;
+        const size_t ol = _slots.length;
 
-        if (nl > _hashes.length)
+        if (nl > _slots.length)
         {
-            _hashes.length = nl;
-            _hashes[ol..nl] = null;
+            _slots.length = nl;
+            _slots[ol..nl] = null;
             reHash();
         }
     }
@@ -3352,11 +3367,11 @@ public:
         import std.math: nextPow2;
         const size_t nl = nextPow2(_count-1);
 
-        if (nl < _hashes.length)
+        if (nl < _slots.length)
         {
             Array!(K) old;
-            foreach (immutable i; 0.._hashes.length)
-                if (auto b = _hashes[i])
+            foreach (immutable i; 0.._slots.length)
+                if (auto b = _slots[i])
                     old ~= b._key;
             clear;
             foreach (immutable i; 0..old.length)
@@ -3391,7 +3406,7 @@ public:
      */
     const(K)* opIndex(const size_t index) @nogc
     {
-        return &_hashes[index]._key;
+        return &_slots[index]._key;
     }
 
     /**
@@ -3399,7 +3414,7 @@ public:
      */
     auto byKey() return @nogc
     {
-        return HashOrMapRange!HashSetT(this);
+        return RangeForLpSet!HashSetT(this);
     }
 
     /**
@@ -3410,7 +3425,7 @@ public:
     /**
      * Returns the length of the set.
      */
-    size_t length() @nogc {return _hashes.length;}
+    size_t length() @nogc {return _slots.length;}
 
     /// ditto
     alias opDollar = length;
@@ -3418,7 +3433,7 @@ public:
 ///
 @nogc unittest
 {
-    HashSet!string commands;
+    HashSet_LP!string commands;
     // can insert up to 16 element without reallocation
     commands.reserve(15);
     // appends elements
@@ -3440,13 +3455,13 @@ public:
 
 @nogc unittest
 {
-    HashSet!string hss;
+    HashSet_LP!string hss;
 
     hss.reserve(7);
     assert(hss.length == 8);
 
-    foreach(i; 0 .. hss._hashes.length)
-        assert(hss._hashes[i] is null);
+    foreach(i; 0 .. hss._slots.length)
+        assert(hss._slots[i] is null);
 
     assert(hss.insert("cat"));
     assert("dog" !in hss);
@@ -3537,9 +3552,9 @@ public:
     destruct(hss);
 }
 
-@nogc unittest // to test the bug 0 elem without reserve(4)
+@nogc unittest
 {
-    HashSet!string co;
+    HashSet_LP!string co;
     assert(co.count == 0);
     co.insert("abcd");
     assert(co.count == 1);
@@ -3561,18 +3576,18 @@ public:
 @nogc unittest
 {
     {
-        HashSet!string co = HashSet!string("ab", "ab", "cd");
+        HashSet_LP!string co = HashSet_LP!string("ab", "ab", "cd");
         assert(co.count == 2);
         destruct(co);
     }
     {
         static a = ["ab", "cd"];
-        HashSet!string co = HashSet!string("ab", a);
+        HashSet_LP!string co = HashSet_LP!string("ab", a);
         assert(co.count == 2);
         destruct(co);
     }
     {
-        HashSet!int co = HashSet!int(1);
+        HashSet_LP!int co = HashSet_LP!int(1);
         assert(co.count == 1);
         assert(2 !in co);
         assert(1 in co);
@@ -3581,42 +3596,38 @@ public:
 }
 
 /**
- * A manually managed hashmap.
+ * A manually managed hashmap that uses linear probing to solve the collisions.
  *
  * Params:
  *      K = The key type.
  *      V = The value type
  *      hasherFun = The hashing function, a $(D size_t(K value);) function,
  *          literal delegate or lambda.
- *      ch = The mode for handling the collisions.
  */
-struct HashMap(K, V, alias hasherFun = fnv1, CH ch = CH.linearProbe)
+struct HashMap_LP(K, V, alias hasherFun = fnv1)
 {
-
-    static assert(ch == CH.linearProbe, "bucketArray and none not implemented");
-
     static assert (is(typeof( (){size_t r = hasherFun(K.init);}  )),
         "invalid hash function");
 
 private:
 
     alias MapT = typeof(this);
-    alias Bucket = LinearProbeBucket!(K,V);
-    @NoGc Array!(Bucket*) _hashes;
+    alias Bucket = LinearProbeSlot!(K,V);
+    @NoGc Array!(Bucket*) _slots;
     size_t _count;
 
     pragma(inline, true)
     size_t hasher()(auto ref K key) @nogc
     {
-        return hasherFun(key) & (_hashes.length - 1);
+        return hasherFun(key) & (_slots.length - 1);
     }
 
     void reHash() @nogc
     {
         _count = 0;
-        auto old = _hashes.dup;
-        assert(old == _hashes);
-        _hashes[] = null;
+        auto old = _slots.dup;
+        assert(old == _slots);
+        _slots[] = null;
         foreach (immutable i; 0..old.length)
         {
             if (auto b = old[i])
@@ -3631,7 +3642,7 @@ private:
     pragma(inline, true)
     size_t nextHash(size_t value) @nogc @safe
     {
-        return (value + 1) & (_hashes.length - 1);
+        return (value + 1) & (_slots.length - 1);
     }
 
     //pragma(inline, true)
@@ -3641,21 +3652,17 @@ private:
         const size_t hb = hasher(key);
         fr.endHash = hb;
 
-        if (_hashes.length)
+        if (_slots.length)
         {
-            fr.bucket = _hashes[hb];
+            fr.bucket = _slots[hb];
             while (true)
             {
                 if (fr.bucket && *fr.bucket != key)
                 {
-                    //writeln("probing for ", key);
                     fr.endHash = nextHash(fr.endHash);
                     if (fr.endHash == hb)
-                    {
-                        //writeln("probing failed for ", key);
                         break;
-                    }
-                    fr.bucket = _hashes[fr.endHash];
+                    fr.bucket = _slots[fr.endHash];
                 }
                 else break;
             }
@@ -3665,16 +3672,14 @@ private:
 
 public:
 
-    import std.typecons: Tuple, tuple;
     alias MapPair = Tuple!(K, V);
-
 
     ~this() @nogc
     {
-        foreach(immutable i; 0.._hashes.length)
-            if (Bucket* lpbk = _hashes[i])
+        foreach(immutable i; 0.._slots.length)
+            if (Bucket* lpbk = _slots[i])
                 destruct(lpbk);
-        destruct(_hashes);
+        destruct(_slots);
     }
 
     /**
@@ -3703,7 +3708,7 @@ public:
             if (fr.bucket is null)
             {
                 assert(key !in this);
-                _hashes[fr.endHash] = n;
+                _slots[fr.endHash] = n;
                 result = true;
                 ++_count;
             }
@@ -3728,7 +3733,7 @@ public:
         {
             result = true;
             destruct(fr.bucket);
-            _hashes[fr.endHash] = null;
+            _slots[fr.endHash] = null;
             reHash;
         }
         return result;
@@ -3739,11 +3744,11 @@ public:
      */
     void clear() @nogc
     {
-        foreach (immutable i; 0.._hashes.length)
-            if (auto b = _hashes[i])
+        foreach (immutable i; 0.._slots.length)
+            if (auto b = _slots[i])
                 destruct(b);
-        _hashes[] = null;
-        _hashes.length = 0;
+        _slots[] = null;
+        _slots.length = 0;
         _count = 0;
     }
 
@@ -3769,7 +3774,7 @@ public:
      */
     auto byKeyValue() return @nogc
     {
-        return HashOrMapRange!MapT(this);
+        return RangeForLpSet!MapT(this);
     }
 
     /**
@@ -3784,12 +3789,12 @@ public:
     {
         import std.math: nextPow2;
         const size_t nl = nextPow2(_count + value);
-        const size_t ol = _hashes.length;
+        const size_t ol = _slots.length;
 
-        if (nl > _hashes.length)
+        if (nl > _slots.length)
         {
-            _hashes.length = nl;
-            _hashes[ol..nl] = null;
+            _slots.length = nl;
+            _slots[ol..nl] = null;
             reHash();
         }
     }
@@ -3802,17 +3807,17 @@ public:
         import std.math: nextPow2;
         const size_t nl = nextPow2(_count-1);
 
-        if (nl < _hashes.length)
+        if (nl < _slots.length)
         {
             Array!(MapPair) old;
-            foreach (immutable i; 0.._hashes.length)
-                if (auto b = _hashes[i])
+            foreach (immutable i; 0.._slots.length)
+                if (auto b = _slots[i])
                     old ~= tuple(b._key, b._value);
             clear;
             foreach (immutable i; 0..old.length)
             {
                 insert(old[i][0..2]);
-                static if (is(K==struct))
+                static if (is(K == struct))
                     destruct(old[i]);
             }
             destruct(old);
@@ -3846,7 +3851,7 @@ public:
      */
     const(MapPair)* opIndex(const size_t index) @nogc
     {
-        if (auto r = _hashes[index])
+        if (auto r = _slots[index])
             return r.ptr;
         else
             return null;
@@ -3860,7 +3865,7 @@ public:
     /**
      * Returns the length of the set.
      */
-    size_t length() @nogc {return _hashes.length;}
+    size_t length() @nogc {return _slots.length;}
 
     /// ditto
     alias opDollar = length;
@@ -3868,7 +3873,7 @@ public:
 
 @nogc unittest
 {
-    HashMap!(string, int) hmsi;
+    HashMap_LP!(string, int) hmsi;
     hmsi.reserve(15);
 
     hmsi.insert("cat", 0);
@@ -3917,9 +3922,9 @@ public:
     assert("owl" !in hmsi);
 }
 
-@nogc unittest
+version(all) @nogc unittest
 {
-    HashMap!(int, int) hmii;
+    HashMap_LP!(int, int) hmii;
     hmii.reserve(32);
     hmii[1] = 3;
     hmii[2] = 4;
@@ -3929,5 +3934,438 @@ public:
         assert(kv[1] == 3 || kv[1] == 4);
     }
     destruct(hmii);
+}
+
+/**
+ * The bucket used in HashSet_AB and HashMap_AB.
+ */
+struct ArrayBucket(K, V = void)
+{
+
+private:
+
+    static if (!isMap)
+    {
+        alias ArrayT = Array!K;
+    }
+    else
+    {
+        alias ArrayT = Array!Pair;
+    }
+
+    ArrayT _array;
+
+public:
+
+    enum isMap = !is(V == void);
+
+    static if (isMap)
+    /// Aliases the array element type when the bucket is used in a map.
+    alias Pair = Tuple!(K, V);
+
+    ~this() @nogc
+    {
+        static if (isMap)
+        {
+            foreach (immutable i; 0.._array.length)
+            {
+                static if (is(K == struct))
+                    destruct(_array[i][0]);
+                static if (is(V == struct))
+                    destruct(_array[i][1]);
+            }
+        }
+        destruct(_array);
+    }
+
+    ref const(ArrayT) array() const @nogc nothrow
+    {return _array;}
+
+    static if (isMap)
+    void insert(ref K key, ref V value) @nogc nothrow
+    {
+        _array ~= tuple(key, value);
+    }
+    else
+    void insert(ref K key) @nogc nothrow
+    {
+        _array ~= key;
+    }
+
+    bool remove(ref K key) /*@nogc*/ nothrow
+    {
+        bool result;
+        foreach (immutable i; 0.._array._length)
+            if (_array[i] == key)
+        {
+            result = true;
+            if (i == 0)
+            {
+                if (_array.length > 1)
+                    _array = _array[1..$];
+                else
+                    _array.length = 0;
+            }
+            else if (i == _array.length-1)
+            {
+                _array.length = _array.length - 1;
+            }
+            else _array = _array[0..i] ~ _array[i+1..$];
+            break;
+        }
+        return result;
+    }
+
+    pragma(inline, true)
+    void clear() @nogc nothrow
+    {
+        _array.length = 0;
+    }
+
+    ptrdiff_t indexOfKey(ref K key) @nogc const pure nothrow
+    {
+        ptrdiff_t result = -1;
+        foreach (immutable i; 0.._array.length)
+        {
+            static if (isMap)
+            {
+                if (_array[i][0] == key)
+                {
+                    result = i;
+                    break;
+                }
+            }
+            else
+            {
+                if (_array[i] == key)
+                {
+                    result = i;
+                    break;
+                }
+            }
+        }
+        return result;
+    }
+
+    const(K)* getKey(ref K key) @nogc const pure nothrow
+    {
+        const(K)* result;
+        if (const size_t j =  _array.length)
+            foreach (immutable i; 0..j)
+        {
+            static if (isMap)
+            {
+                if (_array[i][0] == key)
+                {
+                    result = &_array[i][0];
+                    break;
+                }
+            }
+            else
+            {
+                if (_array[i] == key)
+                {
+                    result = &_array[i];
+                    break;
+                }
+            }
+        }
+        return result;
+    }
+
+    static if (isMap)
+    ptrdiff_t indexOfValue(ref V value) @nogc const pure nothrow
+    {
+        ptrdiff_t result = -1;
+        foreach(immutable i; 0.._array.length)
+        {
+            if (_array[i][1] == value)
+            {
+                result = i;
+                break;
+            }
+        }
+        return result;
+    }
+}
+
+/**
+ * A manually managed hashset that uses buckets to solve the collisions.
+ *
+ * Params:
+ *      K = the key type.
+ *      hasherFun = The hashing function, a $(D size_t(K value);) function,
+ *          literal delegate or lambda.
+ */
+struct HashSet_AB(K, alias hasherFun = fnv1)
+{
+    static assert (is(typeof( (){size_t r = hasherFun(K.init);}  )),
+        "invalid hash function");
+
+private:
+
+    alias BucketT = ArrayBucket!K;
+    @NoGc Array!BucketT _buckets;
+    size_t _count;
+
+    pragma(inline, true)
+    size_t hasher()(auto ref K key) @nogc
+    {
+        return hasherFun(key) & (_buckets.length - 1);
+    }
+
+    void reHash() @nogc
+    {
+        Array!BucketT old = _buckets;
+        assert(old.ptr != _buckets.ptr);
+        foreach (immutable i; 0.._buckets.length)
+            _buckets[i].clear;
+        foreach (immutable i; 0..old.length)
+        {
+            foreach (immutable j; 0..old[i]._array.length)
+            {
+                const size_t h = hasher(old[i]._array[j]);
+                _buckets[h].insert(old[i]._array[j]);
+            }
+        }
+        destruct(old);
+    }
+
+public:
+
+    ~this()
+    {
+        destruct(_buckets);
+    }
+
+    /**
+     * Tries to insert key(s) in the set.
+     *
+     * Params:
+     *      key = either single keys, array of keys, or both.
+     * Throws:
+     *      An out of memory Error if an internal call to $(D reserve()) fails.
+     * Returns:
+     *      If the key is added or if it's already included then returns $(D true),
+     *      otherwise $(D false).
+     */
+    bool insert()(auto ref K key)
+    {
+        bool result;
+        if (!_buckets.length || key !in this)
+        {
+            result = true;
+            import std.math: nextPow2;
+            const size_t nl = nextPow2(_count + 1);
+            if (nl > _buckets.length)
+            {
+                _buckets.length = nl;
+                reHash;
+            }
+            const size_t h = hasher(key);
+            assert(h < _buckets.length);
+            _buckets[h].insert(key);
+            ++_count;
+        }
+        return result;
+    }
+
+    /// ditto
+    bool insert(KK)(auto ref KK keys)
+    if ((isArray!KK && is(Unqual!(ElementEncodingType!KK) == K)) || is(KK == Array!K))
+    {
+        bool result = true;
+        reserve(keys.length);
+        foreach(k; keys)
+            result &= insert!false(k);
+        return result;
+    }
+
+    /// ditto
+    bool insert(KK...)(auto ref KK keys)
+    {
+        bool result = true;
+        reserve(KK.length);
+        foreach(k; keys)
+            result &= insert!false(k);
+        return result;
+    }
+
+    /**
+     * Tries to remove a key from the set.
+     *
+     * Returns:
+     *      $(D true) if the key was included otherwise $(D false).
+     */
+    bool remove()(auto ref K key)
+    {
+        const size_t h = hasher(key);
+        const bool result = _buckets[h].remove(key);
+        if (result)
+            --_count;
+        return result;
+    }
+
+    /**
+     * Reserves some buckets for at least N additional elements.
+     */
+    void reserve(size_t value) nothrow @nogc
+    {
+        import std.math: isPowerOf2, nextPow2;
+        value += _buckets.length;
+        if (!value.isPowerOf2)
+            value = value.nextPow2;
+        _buckets.length = value;
+        reHash;
+    }
+
+    void clear() @nogc
+    {
+        _buckets.length = 0;
+        _buckets.length = 2;
+        _count = 0;
+    }
+
+    /**
+     * Tests the presence of a key in the set.
+     *
+     * Params:
+     *      key = The key to test.
+     * Returns:
+     *      $(D null) if the key is not present otherwise a pointer to the key.
+     */
+    const(K)* opBinaryRight(string op : "in")(auto ref K key)
+    {
+        return _buckets[hasher(key)].getKey(key);
+    }
+
+    /**
+     * Support for the array syntax.
+     *
+     * Returns:
+     *      A pointer to a bucket.
+     */
+    const(BucketT)* opIndex(const size_t index) pure nothrow @nogc
+    {
+        return &_buckets[index];
+    }
+
+    /**
+     * Returns the elements count.
+     */
+    size_t count() pure nothrow @nogc {return _count;}
+
+    /**
+     * Returns the set length.
+     */
+    size_t length() pure nothrow @nogc {return _buckets.length;}
+
+    /**
+     * Returns the count of synonyms
+     */
+    size_t collisions() pure nothrow @nogc
+    {
+        size_t result;
+        foreach(immutable i; 0.._buckets.length)
+            result += _buckets[i]._array.length > 1 ?
+                _buckets[i]._array.length - 1 : 0;
+        return result;
+    }
+
+    /// ditto
+    alias opDollar = length;
+}
+
+@nogc unittest
+{
+    HashSet_AB!string hss;
+
+    assert(hss.insert("cat"));
+    assert(hss.length == 2);
+    assert("dog" !in hss);
+    assert("cat" in hss);
+
+    //assert(hss.insert("rat"));
+    //assert("dog" !in hss);
+    //assert("cat" in hss);
+    //assert("rat" in hss);
+
+    /*assert(hss.insert("fly"));
+    assert("dog" !in hss);
+    assert("cat" in hss);
+    assert("rat" in hss);
+    assert("fly" in hss);
+
+    assert(hss.insert("bee"));
+    assert("dog" !in hss);
+    assert("cat" in hss);
+    assert("rat" in hss);
+    assert("fly" in hss);
+    assert("bee" in hss);
+
+    assert(hss.insert("ant"));
+    assert("dog" !in hss);
+    assert("cat" in hss);
+    assert("rat" in hss);
+    assert("fly" in hss);
+    assert("bee" in hss);
+    assert("ant" in hss);
+    assert("fox" !in hss);
+
+    assert(hss.insert("fox"));
+    assert("dog" !in hss);
+    assert("cat" in hss);
+    assert("rat" in hss);
+    assert("fly" in hss);
+    assert("bee" in hss);
+    assert("ant" in hss);
+    assert("fox" in hss);
+
+    assert(hss.insert("bat"));
+    assert("dog" !in hss);
+    assert("cat" in hss);
+    assert("rat" in hss);
+    assert("fly" in hss);
+    assert("bee" in hss);
+    assert("ant" in hss);
+    assert("fox" in hss);
+    assert("bat" in hss);
+
+    assert(hss.insert("cow"));
+    assert("dog" !in hss);
+    assert("cat" in hss);
+    assert("rat" in hss);
+    assert("fly" in hss);
+    assert("bee" in hss);
+    assert("ant" in hss);
+    assert("fox" in hss);
+    assert("bat" in hss);
+    assert("cow" in hss);
+
+    assert(hss.remove("bat"));
+    assert("bat" !in hss);
+
+    hss.clear;
+    assert(hss.count == 0);*/
+    //assert(hss.length == 0);
+
+    /*import std.algorithm: among;
+    assert(hss.insert("cow"));
+    assert(hss.insert("yak"));
+    auto r = hss.byKey;
+    assert(!r.empty);
+    assert((r.front).among("cow","yak"));
+    r.popFront;
+    assert(!r.empty);
+    assert((r.front).among("cow","yak"));
+    r.popFront;
+    assert(r.empty);
+    assert(hss.length == 16);
+
+    assert(hss.count == 2);
+    hss.minimize;
+    assert(hss.length < 16);*/
+
+    destruct(hss);
 }
 

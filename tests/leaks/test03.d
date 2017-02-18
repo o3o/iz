@@ -3,7 +3,7 @@ module test03;
 import
     iz.memory, iz.containers;
 
-HashSet!(ubyte[8]) commands;
+HashSet_LP!(ubyte[8]) commands;
 
 void main()
 {
