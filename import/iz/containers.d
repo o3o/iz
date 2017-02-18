@@ -374,6 +374,17 @@ public:
         }
     }
 
+    /// Support for the cat operator
+    ref typeof(this) opBinary(string op : "~", R)(auto ref R rhs)
+    if (__traits(hasMember, T, "length") && __traits(hasMember, T, "ptr"))
+    {
+        typeof(this) result;
+        result.setLength(_length + rhs.length);
+        moveMem(rwPtr(result), _elems , T.sizeof * _length);
+        moveMem(rwPtr(result) + _length * T.sizeof , rhs._elems , T.sizeof * rhs.length);
+        return result;
+    }
+
     /// Support for the cat operator.
     void opOpAssign(string op, E)(E[] elements) @nogc
     if (is(Unqual!E == T) || is(E == T))
@@ -588,6 +599,17 @@ unittest
     Array!int a = source;
     a = a[0..1] ~ a[2..$];
     assert(a == [0,2,3]);
+}
+
+unittest
+{
+    int[] aa = [0,1];
+    int[] bb = [2,3];
+    Array!int a = aa;
+    Array!int b = bb;
+    Array!int c = a ~ b;
+    assert(c  == [0,1,2,3]);
+    assert(c ~ c == [0,1,2,3,0,1,2,3]);
 }
 
 private mixin template ListHelpers(T)
