@@ -276,7 +276,7 @@ public:
     }
 
     /// Returns a mutable (deep) copy of the array.
-    Array!T dup() const @nogc return
+    Array!T dup() @nogc return
     {
         Array!T result;
         result.length = _length;
@@ -313,7 +313,7 @@ public:
     }
 
     /// Support for the array syntax.
-    void opIndexAssign(T item, size_t i) @nogc
+    void opIndexAssign()(auto ref T item, size_t i) @nogc
     {
         *rwPtr(i) = item;
     }
@@ -390,7 +390,7 @@ public:
     }
 
     /// Support for the cat operator.
-    void opOpAssign(string op, E)(E[] elements) @nogc
+    void opOpAssign(string op, E)(auto ref E[] elements) @nogc
     if (is(Unqual!E == T) || is(E == T))
     {
         static if (op == "~")
@@ -403,7 +403,7 @@ public:
     }
 
     /// Support for the cat operator.
-    void opOpAssign(string op)(T aElement) @nogc
+    void opOpAssign(string op)(auto ref T aElement) @nogc
     {
         static if (op == "~")
         {
@@ -435,13 +435,13 @@ public:
     }
 
     /// Support for filling the array with a single element.
-    void opSliceAssign(T value) @nogc
+    void opSliceAssign()(auto ref T value) @nogc
     {
         rwPtr(0)[0.._length] = value;
     }
 
     /// ditto
-    void opSliceAssign(T value, size_t lo, size_t hi) @nogc
+    void opSliceAssign()(auto ref T value, size_t lo, size_t hi) @nogc
     {
         foreach (immutable i; lo .. hi)
             *rwPtr(i) = value;
