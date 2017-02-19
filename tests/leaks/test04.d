@@ -22,6 +22,6 @@ void main(string[] args)
     pitems[0] = construct!Item;
     destruct(pitems[0]);
 
-    destroy(items);
-    destroy(pitems);
+    destruct(items);
+    destruct(pitems);
 }
