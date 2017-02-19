@@ -3114,33 +3114,47 @@ size_t fnv1(V, bool fnv1a = false)(auto ref V value)
 struct RangeForLpSet(T)
 if (isPointer!(ReturnType!(T.opIndex)) && hasLength!T)
 {
-    T _hashOrMap;
+
+private:
+
     alias PF = ReturnType!(T.opIndex);
     alias F = PointerTarget!PF;
-    size_t index;
 
-    this(ref T hashOrMap) @nogc
+    size_t index;
+    T* _hashOrMap;
+
+    pragma(inline, true)
+    void next()
     {
-        _hashOrMap = hashOrMap;
-        while (!_hashOrMap[index])
+        while (index < _hashOrMap.length)
+        {
+            if ((*_hashOrMap)[index])
+                break;
             ++index;
+        }
+    }
+
+public:
+
+    this(T* hashOrMap) @nogc
+    {
+        assert(hashOrMap);
+        _hashOrMap = hashOrMap;
+        next();
     }
 
     void popFront() @nogc
     {
-        PF curr = null;
-        while (!curr)
-        {
-            ++index;
-            curr = _hashOrMap[index];
-        }
+        PF curr;
+        ++index;
+        next();
     }
 
     bool empty() @nogc
     {return index >= _hashOrMap.length;}
 
     F front() @nogc
-    {return *_hashOrMap[index];}
+    {return *(*_hashOrMap)[index];}
 }
 
 /**
@@ -3423,7 +3437,7 @@ public:
      */
     auto byKey() return @nogc
     {
-        return RangeForLpSet!HashSetT(this);
+        return RangeForLpSet!HashSetT(&this);
     }
 
     /**
@@ -3783,7 +3797,7 @@ public:
      */
     auto byKeyValue() return @nogc
     {
-        return RangeForLpSet!MapT(this);
+        return RangeForLpSet!MapT(&this);
     }
 
     /**
@@ -3931,7 +3945,7 @@ public:
     assert("owl" !in hmsi);
 }
 
-version(all) @nogc unittest
+@nogc unittest
 {
     HashMap_LP!(int, int) hmii;
     hmii.reserve(32);
