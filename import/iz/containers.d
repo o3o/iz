@@ -43,13 +43,13 @@ private:
     pragma(inline, true)
     void setLength(size_t value) @nogc
     {
-        debug { assert (_granularity != 0); }
+        assert(_granularity != 0);
 
         const size_t newBlockCount = ((value * T.sizeof) / _granularity) + 1;
         if (_blockCount != newBlockCount)
         {
             _blockCount = newBlockCount;
-            _elems = cast(T*) reallocMem(_elems, _granularity * _blockCount);
+            _elems = reallocMem(_elems, _granularity * _blockCount);
         }
         _length = value;
     }
@@ -101,14 +101,6 @@ private:
 
 public:
 
-    this(this) @nogc
-    {
-        Ptr old = _elems;
-        const size_t sz = _length * T.sizeof;
-        _elems = getMem(sz);
-        moveMem(_elems, old, sz);
-    }
-
     /// Constructs the array with a list of T.
     this(E...)(E elements) @nogc
     if (is(Unqual!E == T) || is(T == E))
@@ -144,6 +136,23 @@ public:
         this(const(char)[] value)
         {
             fromString(value);
+        }
+    }
+
+    this(this) @nogc
+    {
+        if (_length == 0)
+        {
+            freeMem(_elems);
+            _blockCount = 0;
+            _granularity = 4096;
+        }
+        else
+        {
+            Ptr old = _elems;
+            const size_t sz = _granularity * _blockCount;
+            _elems = getMem(sz);
+            moveMem(_elems, old, sz);
         }
     }
 
