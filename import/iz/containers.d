@@ -99,6 +99,16 @@ private:
         }
     }
 
+    pragma(inline, true)
+    void postblitElements()()
+    {
+        static if (is(T == struct) && hasMember!(T, "__postblit") && isCopyable!T )
+        {
+            foreach(i; 0.._length)
+                (*rwPtr(i)).__postblit();
+        }
+    }
+
 public:
 
     /// Constructs the array with a list of T.
@@ -153,6 +163,7 @@ public:
             const size_t sz = _granularity * _blockCount;
             _elems = getMem(sz);
             moveMem(_elems, old, sz);
+            postblitElements;
         }
     }
 
@@ -285,11 +296,14 @@ public:
     }
 
     /// Returns a mutable (deep) copy of the array.
-    Array!T dup() @nogc return
+    Array!T dup()() return
     {
         Array!T result;
+        result._granularity = _granularity;
         result.length = _length;
-        moveMem(result._elems, _elems, _length * T.sizeof);
+        const size_t sz = _granularity * _blockCount;
+        moveMem(result._elems, _elems, sz);
+        result.postblitElements;
         return result;
     }
 
