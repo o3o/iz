@@ -4017,6 +4017,11 @@ public:
         destruct(_array);
     }
 
+    this(this) @nogc
+    {
+        _array.__postblit;
+    }
+
     ref const(ArrayT) array() const @nogc nothrow
     {return _array;}
 
@@ -4155,8 +4160,8 @@ private:
 
     void reHash() @nogc
     {
+        _count = 0;
         Array!BucketT old = _buckets;
-        assert(old.ptr != _buckets.ptr);
         foreach (immutable i; 0.._buckets.length)
             _buckets[i].clear;
         foreach (immutable i; 0..old.length)
@@ -4164,7 +4169,7 @@ private:
             foreach (immutable j; 0..old[i]._array.length)
             {
                 const size_t h = hasher(old[i]._array[j]);
-                _buckets[h].insert(old[i]._array[j]);
+                insert!false(old[i]._array[j]);
             }
         }
         destruct(old);
@@ -4188,19 +4193,14 @@ public:
      *      If the key is added or if it's already included then returns $(D true),
      *      otherwise $(D false).
      */
-    bool insert()(auto ref K key)
+    bool insert(bool rsv = true)(auto ref K key)
     {
         bool result;
         if (!_buckets.length || key !in this)
         {
             result = true;
-            import std.math: nextPow2;
-            const size_t nl = nextPow2(_count + 1);
-            if (nl > _buckets.length)
-            {
-                _buckets.length = nl;
-                reHash;
-            }
+            static if (rsv)
+                reserve(1);
             const size_t h = hasher(key);
             assert(h < _buckets.length);
             _buckets[h].insert(key);
@@ -4246,22 +4246,27 @@ public:
     }
 
     /**
-     * Reserves some buckets for at least N additional elements.
+     * Reserves slots for at least N supplemental keys.
+     *
+     * Throws:
+     *      An out of memory Error if the reallocation fails.
+     * Params:
+     *      value = The count of additional slots to reserve.
      */
-    void reserve(size_t value) nothrow @nogc
+    void reserve(size_t value) @nogc
     {
-        import std.math: isPowerOf2, nextPow2;
-        value += _buckets.length;
-        if (!value.isPowerOf2)
-            value = value.nextPow2;
-        _buckets.length = value;
-        reHash;
+        import std.math: nextPow2;
+        const size_t nl = nextPow2(_count + value);
+        if (nl > _buckets.length)
+        {
+            _buckets.length = nl;
+            reHash();
+        }
     }
 
     void clear() @nogc
     {
         _buckets.length = 0;
-        _buckets.length = 2;
         _count = 0;
     }
 
@@ -4315,7 +4320,7 @@ public:
     alias opDollar = length;
 }
 
-@nogc unittest
+/*@nogc*/ unittest
 {
     HashSet_AB!string hss;
 
@@ -4324,25 +4329,25 @@ public:
     assert("dog" !in hss);
     assert("cat" in hss);
 
-    //assert(hss.insert("rat"));
-    //assert("dog" !in hss);
-    //assert("cat" in hss);
-    //assert("rat" in hss);
+    assert(hss.insert("rat"));
+    assert("dog" !in hss);
+    assert("cat" in hss);
+    assert("rat" in hss);
 
-    /*assert(hss.insert("fly"));
+    assert(hss.insert("fly"));
     assert("dog" !in hss);
     assert("cat" in hss);
     assert("rat" in hss);
     assert("fly" in hss);
 
-    assert(hss.insert("bee"));
+    //assert(hss.insert("bee"));
     assert("dog" !in hss);
     assert("cat" in hss);
     assert("rat" in hss);
     assert("fly" in hss);
-    assert("bee" in hss);
+    //assert("bee" in hss);
 
-    assert(hss.insert("ant"));
+    /*assert(hss.insert("ant"));
     assert("dog" !in hss);
     assert("cat" in hss);
     assert("rat" in hss);
@@ -4351,7 +4356,7 @@ public:
     assert("ant" in hss);
     assert("fox" !in hss);
 
-    assert(hss.insert("fox"));
+    /*assert(hss.insert("fox"));
     assert("dog" !in hss);
     assert("cat" in hss);
     assert("rat" in hss);
@@ -4360,7 +4365,7 @@ public:
     assert("ant" in hss);
     assert("fox" in hss);
 
-    assert(hss.insert("bat"));
+    /*assert(hss.insert("bat"));
     assert("dog" !in hss);
     assert("cat" in hss);
     assert("rat" in hss);
@@ -4381,7 +4386,7 @@ public:
     assert("bat" in hss);
     assert("cow" in hss);
 
-    assert(hss.remove("bat"));
+    /*assert(hss.remove("bat"));
     assert("bat" !in hss);
 
     hss.clear;
