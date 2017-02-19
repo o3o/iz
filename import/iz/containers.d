@@ -428,7 +428,7 @@ public:
     }
 
     /// Support for the cat operator.
-    void opOpAssign(string op)(auto ref T aElement) @nogc
+    void opOpAssign(string op)(T aElement) @nogc
     {
         static if (op == "~")
         {
@@ -460,13 +460,13 @@ public:
     }
 
     /// Support for filling the array with a single element.
-    void opSliceAssign()(auto ref T value) @nogc
+    void opSliceAssign()(T value) @nogc
     {
         rwPtr(0)[0.._length] = value;
     }
 
     /// ditto
-    void opSliceAssign()(auto ref T value, size_t lo, size_t hi) @nogc
+    void opSliceAssign()(T value, size_t lo, size_t hi) @nogc
     {
         foreach (immutable i; lo .. hi)
             *rwPtr(i) = value;
