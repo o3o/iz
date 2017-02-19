@@ -222,12 +222,14 @@ public:
     }
 
     /// ditto
-    void length(size_t value) @nogc
+    void length(V)(V value)
+    if (isIntegral!V)
     {
         if (value == _length)
             return;
         size_t oldLen = _length;
-        static if (is(T == struct))
+        import iz.types;
+        static if (is(T == struct) && !isTuple!T)
         {
             if (value < _length)
             {
