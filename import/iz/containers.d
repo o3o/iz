@@ -3794,7 +3794,12 @@ public:
             else destruct(n);
         }
         else if (*fr.slot == key)
+        {
             result = true;
+            destruct(fr.slot);
+            Slot* n = construct!Slot(key, value);
+            _slots[fr.endHash] = n;
+        }
         return result;
     }
 
@@ -3936,6 +3941,11 @@ public:
             return null;
     }
 
+    const(V)* opIndex()(auto ref K key)
+    {
+        return key in this;
+    }
+
     /**
      * Returns the count of non-null elements in the set.
      */
@@ -3999,6 +4009,19 @@ public:
     assert("bat" !in hmsi);
     assert("bug" !in hmsi);
     assert("owl" !in hmsi);
+
+    hmsi["bat"] = 3;
+    hmsi["bug"] = 4;
+    assert(hmsi.count == 2);
+    assert(*hmsi["bat"] == 3);
+    assert(*hmsi["bug"] == 4);
+    hmsi["bat"] = 4;
+    hmsi["bug"] = 3;
+    assert(hmsi.count == 2);
+    assert(*hmsi["bat"] == 4);
+    assert(*hmsi["bug"] == 3);
+
+    destruct(hmsi);
 }
 
 @nogc unittest
