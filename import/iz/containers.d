@@ -4052,7 +4052,8 @@ private:
     }
     else
     {
-        alias ArrayT = Array!Pair;
+        alias Pair = Tuple!(K, V);
+        alias ArrayT = Array!(Pair);
     }
 
     ArrayT _array;
@@ -4060,10 +4061,6 @@ private:
 public:
 
     enum isMap = !is(V == void);
-
-    static if (isMap)
-    /// Aliases the array element type when the bucket is used in a map.
-    alias Pair = Tuple!(K, V);
 
     ~this() @nogc
     {
@@ -4103,8 +4100,15 @@ public:
     {
         bool result;
         foreach (immutable i; 0.._array._length)
-            if (_array[i] == key)
         {
+            static if (!isMap)
+            {
+                if (_array[i] != key)
+                    continue;
+            }
+            else if (_array[i][0] != key)
+                continue;
+
             result = true;
             if (i == 0)
             {
@@ -4175,6 +4179,22 @@ public:
                     result = &_array[i];
                     break;
                 }
+            }
+        }
+        return result;
+    }
+
+    static if (isMap)
+    const(V)* getValue(ref K key) @nogc const pure nothrow
+    {
+        const(V)* result;
+        if (const size_t j =  _array.length)
+            foreach (immutable i; 0..j)
+        {
+            if (_array[i][0] == key)
+            {
+                result = &_array[i][1];
+                    break;
             }
         }
         return result;
@@ -4442,6 +4462,7 @@ public:
     void clear() @nogc
     {
         _buckets.length = 0;
+        _buckets.length = 2;
         _count = 0;
     }
 
@@ -4574,7 +4595,6 @@ public:
 
     hss.clear;
     assert(hss.count == 0);
-    assert(hss.length == 0);
 
     import std.algorithm: among;
     hss.reserve(20);
@@ -4601,5 +4621,302 @@ public:
     HashSet_AB!int hsi;
     assert(hsi.byKey.empty);
     destruct(hsi);
+}
+
+
+/**
+ * A manually managed hashmap that uses buckets to solve the collisions.
+ *
+ * Params:
+ *      K = the key type.
+ *      V = the value type.
+ *      hasherFun = The hashing function, a $(D size_t(K value);) function,
+ *          literal delegate or lambda.
+ */
+struct HashMap_AB(K, V, alias hasherFun = fnv1)
+{
+    static assert (is(typeof( (){size_t r = hasherFun(K.init);}  )),
+        "invalid hash function");
+    static assert (!is(K == void),
+        "invalid Key type");
+    static assert (!is(V == void),
+        "invalid Value type");
+
+private:
+
+    alias HashMapT = typeof(this);
+    alias BucketT = ArrayBucket!(K,V);
+    @NoGc Array!BucketT _buckets;
+    size_t _count;
+
+    pragma(inline, true)
+    size_t hasher()(auto ref K key) @nogc
+    {
+        return hasherFun(key) & (_buckets.length - 1);
+    }
+
+    void reHash() @nogc
+    {
+        _count = 0;
+        Array!BucketT old = _buckets;
+        foreach (immutable i; 0.._buckets.length)
+            _buckets[i].clear;
+        foreach (immutable i; 0..old.length)
+        {
+            foreach (immutable j; 0..old[i]._array.length)
+            {
+                const size_t h = hasher(old[i]._array[j][0]);
+                insert!false(old[i]._array[j][0], old[i]._array[j][1]);
+            }
+        }
+        destruct(old);
+    }
+
+public:
+
+    ~this() @nogc
+    {
+        destruct(_buckets);
+    }
+
+    /**
+     * Tries to insert a key-value pair in the set.
+     *
+     * Params:
+     *      key = The key.
+     *      value = The value.
+     * Throws:
+     *      An out of memory Error if an internal call to $(D reserve()) fails.
+     * Returns:
+     *      If the key is added or if it's already included then returns $(D true),
+     *      otherwise $(D false).
+     */
+    bool insert(bool rsv = true)(auto ref K key, auto ref V value)
+    {
+        bool result;
+        const size_t h = hasher(key);
+        assert(h < _buckets.length);
+        if (!_buckets.length || key !in this)
+        {
+            result = true;
+            static if (rsv)
+                reserve(1);
+            _buckets[h].insert(key, value);
+            ++_count;
+        }
+        else
+        {
+            result = true;
+            _buckets[h].remove(key);
+            _buckets[h].insert(key, value);
+        }
+        return result;
+    }
+
+    /**
+     * Tries to remove a key from the set.
+     *
+     * Returns:
+     *      $(D true) if the key was included otherwise $(D false).
+     */
+    bool remove()(auto ref K key) @nogc
+    {
+        const size_t h = hasher(key);
+        const bool result = _buckets[h].remove(key);
+        if (result)
+            --_count;
+        return result;
+    }
+
+    /**
+     * Reserves buckets for at least N supplemental key-value pairs.
+     *
+     * Throws:
+     *      An out of memory Error if the reallocation fails.
+     * Params:
+     *      value = The count of additional slots to reserve.
+     */
+    void reserve(size_t value) @nogc
+    {
+        import std.math: nextPow2;
+        const size_t nl = nextPow2(_count + value);
+        if (nl > _buckets.length)
+        {
+            _buckets.length = nl;
+            reHash();
+        }
+    }
+
+    /**
+     * Minimizes the memory used by the map.
+     *
+     * Throws:
+     *      An out of memory Error if the reallocation fails.
+     */
+    void minimize() @nogc
+    {
+        import std.math: nextPow2;
+        const size_t nl = nextPow2(_count-1);
+
+        if (nl < _buckets.length)
+        {
+            Array!BucketT old = _buckets;
+            clear;
+             _buckets.length = nl;
+            foreach (immutable i; 0..old.length)
+                foreach (immutable j; 0..old[i]._array.length)
+            {
+                insert!false(old[i]._array[j][0], old[i]._array[j][1]);
+            }
+            destruct(old);
+        }
+    }
+
+    /**
+     * Empties the map.
+     */
+    void clear() @nogc
+    {
+        _buckets.length = 0;
+        _buckets.length = 2;
+        _count = 0;
+    }
+
+    /**
+     * Retrieves the value associated to a key.
+     *
+     * Params:
+     *      key = The key.
+     * Returns:
+     *      $(D null) if the key is not present otherwise a pointer to associated value.
+     */
+    const(V)* opBinaryRight(string op : "in")(auto ref K key)
+    {
+        return _buckets[hasher(key)].getValue(key);
+    }
+
+    /**
+     * Support for the array syntax.
+     *
+     * Returns:
+     *      A pointer to a bucket.
+     */
+    const(BucketT)* opIndex(const size_t index) pure nothrow @nogc
+    {
+        return &_buckets[index];
+    }
+
+    /**
+     * Support for retrieving a value using the array syntax.
+     */
+    const(V)* opIndex()(auto ref K key)
+    {
+        return key in this;
+    }
+
+    /**
+     * Support for assigning using the array syntax.
+     */
+    void opIndexAssign()(auto ref V value, auto ref K key)
+    {
+        insert(key, value);
+    }
+
+    /**
+     * Returns an input range that iterates the key-value pairs.
+     */
+    auto byKeyValue()
+    {
+        return RangeForAbSet!HashMapT(&this);
+    }
+
+    /**
+     * Returns the elements count.
+     */
+    size_t count() pure nothrow @nogc {return _count;}
+
+    /**
+     * Returns the buckets count.
+     */
+    size_t length() pure nothrow @nogc {return _buckets.length;}
+
+    /**
+     * Returns the count of synonyms
+     */
+    size_t collisions() pure nothrow @nogc
+    {
+        size_t result;
+        foreach(immutable i; 0.._buckets.length)
+            result += _buckets[i]._array.length > 1 ?
+                _buckets[i]._array.length - 1 : 0;
+        return result;
+    }
+
+    /// ditto
+    alias opDollar = length;
+}
+
+@nogc unittest
+{
+    HashMap_AB!(string, int) hmsi;
+    hmsi.reserve(15);
+
+    hmsi.insert("cat", 0);
+    hmsi.insert("dog", 1);
+    hmsi.insert("pig", 2);
+    assert(hmsi.count == 3);
+    assert(*("cat" in hmsi) == 0);
+    assert(*("dog" in hmsi) == 1);
+    assert(*("pig" in hmsi) == 2);
+    assert("bat" !in hmsi);
+    assert("bug" !in hmsi);
+
+    hmsi["bat"] = 3;
+    hmsi["bug"] = 4;
+    assert(hmsi.count == 5);
+    assert(*("cat" in hmsi) == 0);
+    assert(*("dog" in hmsi) == 1);
+    assert(*("pig" in hmsi) == 2);
+    assert(*("bat" in hmsi) == 3);
+    assert(*("bug" in hmsi) == 4);
+
+    assert(hmsi.remove("cat"));
+    assert(hmsi.count == 4);
+    assert("cat" !in hmsi);
+    assert(*("dog" in hmsi) == 1);
+    assert(*("pig" in hmsi) == 2);
+    assert(*("bat" in hmsi) == 3);
+    assert(*("bug" in hmsi) == 4);
+
+    hmsi["owl"] = 5;
+    assert(hmsi.count == 5);
+    assert("cat" !in hmsi);
+    assert(*("dog" in hmsi) == 1);
+    assert(*("pig" in hmsi) == 2);
+    assert(*("bat" in hmsi) == 3);
+    assert(*("bug" in hmsi) == 4);
+    assert(*("owl" in hmsi) == 5);
+
+    hmsi.clear;
+    assert(hmsi.count == 0);
+    assert("cat" !in hmsi);
+    assert("dog" !in hmsi);
+    assert("pig" !in hmsi);
+    assert("bat" !in hmsi);
+    assert("bug" !in hmsi);
+    assert("owl" !in hmsi);
+
+    hmsi["bat"] = 3;
+    hmsi["bug"] = 4;
+    assert(hmsi.count == 2);
+    assert(*hmsi["bat"] == 3);
+    assert(*hmsi["bug"] == 4);
+    hmsi["bat"] = 4;
+    hmsi["bug"] = 3;
+    assert(hmsi.count == 2);
+    assert(*hmsi["bat"] == 4);
+    assert(*hmsi["bug"] == 3);
+
+    destruct(hmsi);
 }
 
