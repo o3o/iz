@@ -326,7 +326,7 @@ interface Stream
 auto streamRange(T, ST)(ST st)
 if (is(ST : Stream))
 {
-    return construct!(StreamRange!(ST,T))(st);
+    return StreamRange!(ST,T)(st);
 }
 
 /**
@@ -445,7 +445,7 @@ unittest
     str.write(src2.ptr, src2.length * long.sizeof);
     auto rng2 = streamRange!long(str);
     scope(exit) destruct(rng2);
-    foreach(long v; *rng2)
+    foreach(long v; rng2)
     {
         assert(v == src2[i - 10]);
         ++i;
@@ -732,6 +732,7 @@ unittest
     import std.array: array;
     auto text = "01\r\n23\n45\n".dup;
     MemoryStream str = construct!MemoryStream();
+    scope(exit) destruct(str);
     str.write(text.ptr, text.length);
     str.position = 0;
     auto _01 = str.readUTF8Line.array;
@@ -749,6 +750,7 @@ unittest
     import std.array: array;
     auto text = "01\r23\né5é".dup;
     MemoryStream str = construct!MemoryStream();
+    scope(exit) destruct(str);
     str.write(text.ptr, text.length);
     str.position = 0;
     auto _01 = str.readUTF8Line.array;
@@ -762,6 +764,7 @@ unittest
     import std.array: array;
     auto text = "\n\n\r\n".dup;
     MemoryStream str = construct!MemoryStream();
+    scope(exit) destruct(str);
     str.write(text.ptr, text.length);
     str.position = 0;
     auto ln0 = str.readUTF8Line.array;
@@ -780,6 +783,7 @@ unittest
     import std.array: array;
     auto text = "01\r\n23\n45".dup;
     MemoryStream str = construct!MemoryStream();
+    scope(exit) destruct(str);
     str.write(text.ptr, text.length);
     str.position = 0;
     auto _01 = str.readUTF8Line!(true).array;
@@ -882,6 +886,7 @@ unittest
 {
     auto text = "01\r\n23\n4à\n".dup;
     MemoryStream str = construct!MemoryStream();
+    scope(exit) destruct(str);
     str.write(text.ptr, text.length);
     str.position = 0;
     auto _01 = str.readln;
@@ -898,6 +903,7 @@ unittest
 {
     auto text = "01\r\n23\n4à\r\n".dup;
     MemoryStream str = construct!MemoryStream();
+    scope(exit) destruct(str);
     str.write(text.ptr, text.length);
     str.position = 0;
     auto _01 = str.readln!true;
@@ -1459,7 +1465,8 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
         {
             Ptr result = _memory;
             if (!ptr) return result;
-            if (freeCurrent && _freeFlag) freeMem(_memory);
+            if (freeCurrent || _freeFlag)
+                freeMem(_memory);
             _position = 0;
             _size = newSize;
             _memory = ptr;
@@ -1621,16 +1628,16 @@ unittest
 {
     // MemoryStream.setMemory
     Ptr mem = getMem(4096);
-    auto str = construct!MemoryStream;
+    MemoryStream str = construct!MemoryStream;
     scope(exit) destruct(str);
-    ////
+
     str.size = 128;
     str.position = 128;
     str.setMemory(mem, 4096);
     assert(str.memory == mem);
     assert(str.size == 4096);
     assert(str.position == 0);
-    //
+
     auto arr = [0,1,2,3,4,5,6,7,8,9];
     str.setMemory(arr.ptr, arr.length * arr[0].sizeof, false);
     assert(str.memory == arr.ptr);

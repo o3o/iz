@@ -16,12 +16,20 @@ int main(string[] args)
 {
     chdir(rootDir);
     size_t failedCount;
+    // tests dedicated  to leaks
     foreach(de; dirEntries(rootDir ~ "/leaks/", "*.d", SpanMode.depth))
-        failedCount += !de.name.test();
+        failedCount += !de.name.test!false();
+    // common libraries unittests
+    foreach(de; dirEntries(rootDir ~ "/../import/iz/", "*.d", SpanMode.depth))
+    {
+        if (de.name.baseName.among("serializer.d", "classes.d", "package.d"))
+            continue;
+        failedCount += !de.name.test!true();
+    }
     return failedCount != 0;
 }
 
-bool test(string filename)
+bool test(bool ut)(string filename)
 {
     string target = rootDir ~ "/" ~ filename.baseName.stripExtension;
     bool result;
@@ -32,7 +40,11 @@ bool test(string filename)
         Process dmd = construct!Process;
         scope(exit) destruct(dmd);
         dmd.executable = "dmd";
-        dmd.parameters = filename ~ " ../lib/iz.a" ~ " -I../import/";
+        static if (!ut)
+            dmd.parameters = filename ~ " ../lib/iz.a" ~ " -I../import/";
+        else
+            dmd.parameters = filename ~ " ../lib/iz.a" ~ " -I../import/" ~
+                " -unittest -main -version=checkleaks";
         dmd.execute;
 
         if (dmd.exitStatus != 0)

@@ -686,9 +686,12 @@ mixin template PropertyPublisherImpl()
         {
             // must be called manually for structs.
             static if (!is(typeof(this) == struct))
+            {
                 clearDescriptors;
             import iz.memory: destruct;
             destruct(_publishedDescriptors);
+
+            }
         }
     }
 
@@ -915,6 +918,7 @@ mixin template PropertyPublisherImpl()
                 {
                     auto index = _publishedDescriptors[].countUntil(descr);
                     assert(index != -1);
+                    destruct(cast(GenericDescriptor*)_publishedDescriptors[index]);
                     _publishedDescriptors = _publishedDescriptors[0..index] ~ _publishedDescriptors[index+1 .. $];
                 }
             }
@@ -1150,6 +1154,7 @@ unittest
     {
         mixin PropertyPublisherImpl;
         this(uint value){collectPublications!Bug;}
+        ~this(){clearDescriptors;}
         @SetGet uint _a;
     }
     // test that the 'static if things' related to 'interface inheritance'
@@ -1175,7 +1180,7 @@ unittest
     static assert( !__traits(compiles, mixin(decl)));
 }
 
-unittest
+version(checkleaks){} else unittest
 {
     // test safety, setter & getter types mismatch
     version(assert)
@@ -1188,13 +1193,11 @@ unittest
             @Set void b(string value){}
             @Get int b(){return 0;}
         }
-        try
-        {
-            auto b = construct!Bug;
-            destruct(b);
-        }
+        Bug b;
+        try b = construct!Bug;
         catch(Error e) test = true;
         assert(test);
+        destruct(b);
     }
 }
 
@@ -1239,7 +1242,7 @@ unittest
     destructEach(a1,a2);
 }
 
-unittest
+version(checkleaks){} else unittest
 {
     // test that invalid pairs throw
     class Test: PropertyPublisher
@@ -1253,9 +1256,11 @@ unittest
         @Set void error2(Object o){}
     }
     bool ouch;
-    try auto test = construct!Test;
+    Test test;
+    try test = construct!Test;
     catch(Error e)ouch = true;
     assert(ouch);
+    destruct(test);
 }
 
 unittest
@@ -1377,33 +1382,34 @@ void destructOwnedPublishers(bool recursive = true)(PropertyPublisher pub)
 
         static if (recursive)
             destructOwnedPublishers(sub);
+
         destruct(obj);
     }
 }
 ///
 unittest
 {
-    class A: PropertyPublisher
+    class A19: PropertyPublisher
     {mixin PropertyPublisherImpl; string c;}
 
-    class B: PropertyPublisher
+    class B19: PropertyPublisher
     {
         mixin PropertyPublisherImpl;
-        @SetGet A _a0;
-        @SetGet A _a1;
+        @SetGet A19 _a0;
+        @SetGet A19 _a1;
         this()
         {
-            _a0 = construct!A;
-            collectPublications!B;
+            _a0 = construct!A19;
+            collectPublications!B19;
             // _a1 not seen by the scanner so not owned
-            _a1 = construct!A;
+            _a1 = construct!A19;
         }
         ~this()
         {
             destruct(_a1);
         }
     }
-    B b = construct!B;
+    B19 b = construct!B19;
     // implicitly destructs b._a0.
     destructOwnedPublishers(b);
     destruct(b);
@@ -1834,6 +1840,7 @@ unittest
         mixin PropertyPublisherImpl;
         @SetGet int _a = 8;
         @SetGet int _b = 9;
+        ~this() {this.clearDescriptors; }
     }
 
     static struct Parent
@@ -1841,6 +1848,7 @@ unittest
         mixin PropertyPublisherImpl;
         @SetGet Child _child1;
         @SetGet Child _child2;
+        ~this() {this.clearDescriptors; }
     }
 
     Parent p0, p1;

@@ -142,6 +142,7 @@ unittest
     Foo* foo = construct!Foo;
     // initializer well skipped
     assert(foo.a != 42);
+    destruct(foo);
 }
 
 /**
@@ -783,6 +784,8 @@ unittest
     assert(b.text == "B");
     C c = cast(C) construct(tics[2]);
     assert(c.array == [1,2,3]);
+
+    destructEach(a, b, c);
 }
 
 unittest
@@ -801,8 +804,13 @@ unittest
     C c = cast(C) factory("C");
     assert(c.array == [1,2,3]);
 
-    import std.exception: assertThrown;
-    assertThrown(factory("D"));
+    version(checkleaks) {} else
+    {
+        import std.exception: assertThrown;
+        assertThrown(factory("D"));
+    }
+
+    destructEach(a,b,c);
 }
 
 @nogc unittest
@@ -818,16 +826,19 @@ unittest
     ubyte* ovl = (cast (ubyte*)src) + 16;
     moveMem(cast(void*)ovl, cast(void*)src, 32);
     assert((cast (ubyte*)ovl)[31] == 7);
+    freeMem(src);
+    freeMem(dst);
 }
 
 @nogc unittest
 {
-    @NoInit static struct Foo {uint a = 1;}
+    @NoInit static struct Foo {uint a = 1; ~this() @nogc{}}
     Foo* foo = construct!Foo;
     assert(foo.a != 1);
-    @NoInit static class Bar {uint a = 1;}
+    @NoInit static class Bar {uint a = 1; ~this() @nogc{}}
     Bar bar = construct!Bar;
     assert(bar.a != 1);
+    destructEach(foo, bar);
 }
 
 unittest

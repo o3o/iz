@@ -1283,6 +1283,7 @@ unittest
     deepIterate!((e) => ++cnt, "children")(root);
     assert(cnt == 7);
 
+    root.deleteChildren;
     destruct(root);
 }
 

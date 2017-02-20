@@ -511,11 +511,11 @@ unittest
     assert( a[1] == 9);
     assert( a[$-1] == 9);
 
-    auto b = Array!int(0,1,2,3,4,5,6);
+    Array!int b = Array!int(0,1,2,3,4,5,6);
     assert( b.length == 7);
     assert( b[$-1] == 6);
 
-    auto floatarr = Array!float ([0.0f, 0.1f, 0.2f, 0.3f, 0.4f]);
+    Array!float floatarr = Array!float ([0.0f, 0.1f, 0.2f, 0.3f, 0.4f]);
     assert( floatarr.length == 5);
     assert( floatarr[0] == 0.0f);
     assert( floatarr[1] == 0.1f);
@@ -524,15 +524,21 @@ unittest
     assert( floatarr[4] == 0.4f);
 
     // copy-cons
-    a = Array!size_t("[]");
-    assert(a.length == 0);
-    assertThrown(a = Array!size_t("["));
-    assertThrown(a = Array!size_t("]"));
-    assertThrown(a = Array!size_t("[,]"));
-    assertThrown(a = Array!size_t("[,"));
-    assertThrown(a = Array!size_t("[0,1,]"));
-    assertThrown(a = Array!size_t("[,0,1]"));
-    assertThrown(a = Array!size_t("[0,1.874f]"));
+    Array!size_t er = Array!size_t("[]");
+    assert(er.length == 0);
+
+    // leaks
+    version(checkleaks){}
+    else
+    {
+        assertThrown(er = Array!size_t("]"));
+        assertThrown(er = Array!size_t("]"));
+        assertThrown(er = Array!size_t("[,]"));
+        assertThrown(er = Array!size_t("[,"));
+        assertThrown(er = Array!size_t("[0,1,]"));
+        assertThrown(er = Array!size_t("[,0,1]"));
+        assertThrown(er = Array!size_t("[0,1.874f]"));
+    }
     a = Array!size_t("[10,11,12,13]");
     assert(a.length == 4);
     assert(a.toString == "[10, 11, 12, 13]");
@@ -600,19 +606,19 @@ unittest
     Array!char b = a;
     assert(b.length == 6);
     assert(b == "123456");
+    destructEach(a,b);
 }
 
 unittest
 {
-    int c;
-    // TODO-cArray: destroying struct
-    struct S{int i = 1; /*~this() @nogc {c = 1;}*/}
+    static int c;
+    static struct S{int i = 1; ~this() @nogc {c = 1;}}
     Array!S array;
     assert(array.toString == "[]");
     array.length = 1;
     assert(array[0].i == 1);
     array.length = 0;
-    //assert(c);
+    assert(c);
 }
 
 unittest
@@ -621,6 +627,7 @@ unittest
     Array!int a = source;
     assert(a == source);
     assert(a.dup == source);
+    destruct(a);
 }
 
 @nogc unittest
@@ -631,6 +638,7 @@ unittest
     assert(a == source);
     a = a[0..1] ~ a[2..$];
     assert(a == r);
+    destruct(a);
 }
 
 @nogc unittest
@@ -644,6 +652,7 @@ unittest
     Array!int c = a ~ b;
     assert(c  == r0);
     assert(c ~ c == r1);
+    destructEach(a, b, c);
 }
 
 private mixin template ListHelpers(T)
@@ -1713,6 +1722,9 @@ unittest
         assert(cList.count == 10);
         assert(cList.first == arrayOfC[0]);
         assert(cList.last == arrayOfC[9]);
+
+        foreach(o; arrayOfC)
+            destruct(o);
     }
 
     test!(ContiguousList);
@@ -2676,102 +2688,105 @@ alias StructTreeItem = TreeItemStruct!q{public void* data;};
 
 unittest
 {
-    ObjectTreeItem[20] ObjectTreeItems;
-    ObjectTreeItem root1;
+    ObjectTreeItem[20] items;
+    ObjectTreeItem root;
 
-    ObjectTreeItems[0] = construct!ObjectTreeItem;
-    root1 = ObjectTreeItems[0];
-    for (auto i =1; i < ObjectTreeItems.length; i++)
+    items[0] = construct!ObjectTreeItem;
+    root = items[0];
+    for (auto i =1; i < items.length; i++)
     {
-        ObjectTreeItems[i] = construct!ObjectTreeItem;
-        if (i>0) root1.addSibling( ObjectTreeItems[i] );
-        assert( ObjectTreeItems[i].siblingIndex == i );
-        assert( root1.siblings[i].siblingIndex == i );
-        assert( root1.siblings[i] == ObjectTreeItems[i] );
-        if (i>0) assert( ObjectTreeItems[i].prevSibling.siblingIndex == i-1 );
-        assert(root1.lastSibling.siblingIndex == i);
+        items[i] = construct!ObjectTreeItem;
+        if (i>0) root.addSibling( items[i] );
+        assert( items[i].siblingIndex == i );
+        assert( root.siblings[i].siblingIndex == i );
+        assert( root.siblings[i] == items[i] );
+        if (i>0) assert( items[i].prevSibling.siblingIndex == i-1 );
+        assert(root.lastSibling.siblingIndex == i);
     }
-    assert(root1.siblingCount == ObjectTreeItems.length);
+    assert(root.siblingCount == items.length);
 
-    assert(ObjectTreeItems[1].nextSibling.siblingIndex == 2);
-    assert(ObjectTreeItems[1].prevSibling.siblingIndex == 0);
+    assert(items[1].nextSibling.siblingIndex == 2);
+    assert(items[1].prevSibling.siblingIndex == 0);
 
-    root1.exchangeSibling(ObjectTreeItems[10],ObjectTreeItems[16]);
-    assert(root1.siblingCount == ObjectTreeItems.length);
-    assert( ObjectTreeItems[10].siblingIndex == 16);
-    assert( ObjectTreeItems[16].siblingIndex == 10);
+    root.exchangeSibling(items[10],items[16]);
+    assert(root.siblingCount == items.length);
+    assert( items[10].siblingIndex == 16);
+    assert( items[16].siblingIndex == 10);
 
-    root1.exchangeSibling(ObjectTreeItems[10],ObjectTreeItems[16]);
-    assert(root1.siblingCount == ObjectTreeItems.length);
-    assert( ObjectTreeItems[10].siblingIndex == 10);
-    assert( ObjectTreeItems[16].siblingIndex == 16);
+    root.exchangeSibling(items[10],items[16]);
+    assert(root.siblingCount == items.length);
+    assert( items[10].siblingIndex == 10);
+    assert( items[16].siblingIndex == 16);
 
 
-    ObjectTreeItems[8].siblingIndex = 4;
-    assert( ObjectTreeItems[8].siblingIndex == 4);
+    items[8].siblingIndex = 4;
+    assert( items[8].siblingIndex == 4);
     //assert( ObjectTreeItems[4].siblingIndex == 5); // when siblingIndex() calls remove/insert
     //assert( ObjectTreeItems[4].siblingIndex == 8); // when siblingIndex() calls exchangeSibling.
 
-    assert( root1.siblings[16] == ObjectTreeItems[16]);
-    assert( root1.siblings[10] == ObjectTreeItems[10]);
-    root1.siblings[16] = ObjectTreeItems[10]; // exchg
-    assert(root1.siblingCount == ObjectTreeItems.length);
-    root1.siblings[16] = ObjectTreeItems[16]; // exchg
-    assert(root1.siblingCount == ObjectTreeItems.length);
-    assert( ObjectTreeItems[16].siblingIndex == 16);
-    assert( ObjectTreeItems[10].siblingIndex == 10);
+    assert( root.siblings[16] == items[16]);
+    assert( root.siblings[10] == items[10]);
+    root.siblings[16] = items[10]; // exchg
+    assert(root.siblingCount == items.length);
+    root.siblings[16] = items[16]; // exchg
+    assert(root.siblingCount == items.length);
+    assert( items[16].siblingIndex == 16);
+    assert( items[10].siblingIndex == 10);
 
-    auto c = construct!ObjectTreeItem;
-    root1.siblings[10] = c;
-    root1.siblings[16] = ObjectTreeItems[10];
-    assert( ObjectTreeItems[16].siblingIndex == 0);
-    assert( ObjectTreeItems[10].siblingIndex == 16);
+    ObjectTreeItem c = construct!ObjectTreeItem;
+    root.siblings[10] = c;
+    root.siblings[16] = items[10];
+    assert( items[16].siblingIndex == 0);
+    assert( items[10].siblingIndex == 16);
     assert( c.siblingIndex == 10);
 
-    assert(root1.findSibling(ObjectTreeItems[18]) > -1);
-    assert(root1.findSibling(ObjectTreeItems[0]) > -1);
+    assert(root.findSibling(items[18]) > -1);
+    assert(root.findSibling(items[0]) > -1);
 
-    foreach (item; root1.siblings)
+    foreach (item; root.siblings)
     {
-        assert(root1.findSibling(item) == item.siblingIndex);
+        assert(root.findSibling(item) == item.siblingIndex);
     }
 
-    root1.removeSibling(19);
-    assert(root1.siblingCount == ObjectTreeItems.length -1);
-    root1.removeSibling(18);
-    assert(root1.siblingCount == ObjectTreeItems.length -2);
-    root1.removeSibling(ObjectTreeItems[13]);
-    assert(root1.siblingCount == ObjectTreeItems.length -3);
+    root.removeSibling(19);
+    assert(root.siblingCount == items.length -1);
+    root.removeSibling(18);
+    assert(root.siblingCount == items.length -2);
+    root.removeSibling(items[13]);
+    assert(root.siblingCount == items.length -3);
     //root1[0] = null; // exception because root1[0] = root1
-    assert(root1.siblingCount == ObjectTreeItems.length -3);
-    root1.siblings[1] = null;
-    assert(root1.siblingCount == ObjectTreeItems.length -4);
+    assert(root.siblingCount == items.length -3);
+    root.siblings[1] = null;
+    assert(root.siblingCount == items.length -4);
 
-    //
+    foreach(o; items)
+        destruct(o);
+    destruct(c);
+}
+
+unittest
+{
+    ObjectTreeItem root;
     ObjectTreeItem[20] items1;
     ObjectTreeItem[4][20] items2;
-    assert( items1[12] is null);
-    assert( items2[12][0] is null);
-    assert( items2[18][3] is null);
 
-    ObjectTreeItem root2;
-    root2 = construct!ObjectTreeItem;
-    assert(root2.level == 0);
+    root = construct!ObjectTreeItem;
+    assert(root.level == 0);
     for (auto i=0; i < items1.length; i++)
     {
         items1[i] = construct!ObjectTreeItem;
-        root2.addChild(items1[i]);
-        assert(root2.childrenCount == 1 + i);
-        assert(items1[i].parent is root2);
+        root.addChild(items1[i]);
+        assert(root.childrenCount == 1 + i);
+        assert(items1[i].parent is root);
         assert(items1[i].siblingCount == 1 + i);
         assert(items1[i].level == 1);
         assert(items1[i].siblingIndex == i);
     }
-    root2.removeChildren;
-    assert(root2.childrenCount == 0);
+    root.removeChildren;
+    assert(root.childrenCount == 0);
     for (auto i=0; i < items1.length; i++)
     {
-        root2.addChild(items1[i]);
+        root.addChild(items1[i]);
         assert(items1[i].siblingIndex == i);
     }
 
@@ -2785,7 +2800,7 @@ unittest
             assert(items2[i][j].siblingCount == 1 + j);
         }
 
-    root2.deleteChildren;
+    root.deleteChildren;
 /*
     // this is an expected behavior:
 
@@ -2797,33 +2812,34 @@ unittest
     writeln( items1[12].level );
 */
 
-    root2.addNewChild!ObjectTreeItem();
-        root2.children[0].addNewChild!ObjectTreeItem();
-        root2.children[0].addNewChild!ObjectTreeItem();
-        root2.children[0].addNewChild!ObjectTreeItem();
-    root2.addNewChild!ObjectTreeItem();
-        root2.children[1].addNewChild!ObjectTreeItem();
-        root2.children[1].addNewChild!ObjectTreeItem();
-        root2.children[1].addNewChild!ObjectTreeItem();
-        root2.children[1].addNewChild!ObjectTreeItem();
-            root2.children[1].children[3].addNewChild!ObjectTreeItem();
-            root2.children[1].children[3].addNewChild!ObjectTreeItem();
-            root2.children[1].children[3].addNewChild!ObjectTreeItem();
+    root.addNewChild!ObjectTreeItem();
+        root.children[0].addNewChild!ObjectTreeItem();
+        root.children[0].addNewChild!ObjectTreeItem();
+        root.children[0].addNewChild!ObjectTreeItem();
+    root.addNewChild!ObjectTreeItem();
+        root.children[1].addNewChild!ObjectTreeItem();
+        root.children[1].addNewChild!ObjectTreeItem();
+        root.children[1].addNewChild!ObjectTreeItem();
+        root.children[1].addNewChild!ObjectTreeItem();
+            root.children[1].children[3].addNewChild!ObjectTreeItem();
+            root.children[1].children[3].addNewChild!ObjectTreeItem();
+            root.children[1].children[3].addNewChild!ObjectTreeItem();
 
-    assert(root2.childrenCount == 2);
-    assert(root2.children[0].childrenCount == 3);
-    assert(root2.children[1].childrenCount == 4);
-    assert(root2.children[1].children[3].childrenCount == 3);
-    assert(root2.children[1].children[3].children[0].level == 3);
+    assert(root.childrenCount == 2);
+    assert(root.children[0].childrenCount == 3);
+    assert(root.children[1].childrenCount == 4);
+    assert(root.children[1].children[3].childrenCount == 3);
+    assert(root.children[1].children[3].children[0].level == 3);
 
-    assert(root2.children[1].children[3].children[0].root is root2);
-    assert(root2.children[1].children[3].root is root2);
+    assert(root.children[1].children[3].children[0].root is root);
+    assert(root.children[1].children[3].root is root);
 
     auto str = construct!MemoryStream;
-    root2.saveToStream(str);
+    root.saveToStream(str);
     //str.saveToFile("treenodes.txt");
     str.destruct;
-    root2.deleteChildren;
+    root.deleteChildren;
+    destruct(root);
 }
 
 unittest

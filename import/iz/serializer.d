@@ -13,6 +13,8 @@ public
     import iz.types, iz.properties, iz.referencable, iz.streams;
 }
 
+//TODO-cleaks: fix leaks in unittest mode
+
 // Serializable types validator & misc. ---------------------------------------+
 
 /**
@@ -204,6 +206,12 @@ struct SerNodeInfo
     bool    isDamaged;
     /// hint to rebuild the IST
     bool    isLastChild;
+
+    ~this()
+    {
+        destruct(value);
+        destruct(name);
+    }
 }
 
 /// IST node
@@ -235,6 +243,7 @@ public:
     {
         _info.name.length = 0;
         _info.value.length = 0;
+        destruct(_info);
         deleteChildren;
     }
 
@@ -1900,6 +1909,8 @@ unittest
     assert(a.sub2.data1 == 1);
     assert(a.sub1.data2 == 2);
     assert(a.sub2.data2 == 2);
+    // cleanup
+    destructEach(a, serializer, stream);
 }
 
 //----
@@ -2110,6 +2121,7 @@ version(unittest)
             @SetGet float  aFloat;
 
         public:
+
             this()
             {
                 collectPublications!ClassB;
@@ -2117,6 +2129,13 @@ version(unittest)
                 aFloat = 0.123456f;
                 someChars = "azertyuiop".dup;
             }
+
+            ~this()
+            {
+                destructEach(_anIntArray, _someChars);
+                callInheritedDtor;
+            }
+
             void reset()
             {
                 anIntArray = anIntArray.init;
@@ -2416,6 +2435,7 @@ version(unittest)
     class MainPublisher: PropertyPublisher
     {
         mixin PropertyPublisherImpl;
+        mixin inheritedDtor;
 
         // target when _subPublisher wont be found
         SubPublisher _anotherSubPubliser;
@@ -2486,6 +2506,7 @@ version(unittest)
             destruct(_anotherSubPubliser);
             destruct(_stream);
             destruct(_t);
+            callInheritedDtor;
         }
         void delegatetarget(uint param){dgTest = "awyesss";}
         void reset()
@@ -2768,6 +2789,7 @@ version(unittest)
             Child _child1;
             @Get ref Child child1(){return _child1;}
             @Set void child1(Child value) {}
+            ~this() {destruct(_child1);}
         }
 
         Serializer ser = construct!Serializer;

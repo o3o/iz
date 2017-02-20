@@ -532,5 +532,6 @@ unittest
     inter.addObserver(inv);
     assert(inter._observers.count == 3);
     assert(subj.observers.count == 2);
+    destruct(inv);
 }
 

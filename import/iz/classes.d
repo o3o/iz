@@ -3,6 +3,8 @@
  */
 module iz.classes;
 
+//TODO-cleaks: fix leaks in unittest mode
+
 import
     core.thread;
 version(Posix)
@@ -537,6 +539,7 @@ unittest
     AAC aac = construct!AAC;
     Serializer ser = construct!Serializer;
     MemoryStream str = construct!MemoryStream;
+    scope(exit) destructEach(aac, ser, str);
 
     aac.fromAA(a);
     ser.publisherToStream(aac, str);
@@ -705,6 +708,7 @@ unittest
 {
     alias Publisher = Published2dArray!uint;
     Publisher pub = construct!Publisher;
+    scope(exit) destruct(pub);
 
     auto array = [[0u,1u],[2u,3u,4u],[5u,6u,7u,8u]];
     pub.fromArray(array);
@@ -952,7 +956,7 @@ public:
 unittest
 {
 
-    auto root = Component.create(null);
+    Component root = Component.create(null);
     root.name = "root";
     assert(root.owner is null);
     assert(root.name == "root");
@@ -964,13 +968,13 @@ unittest
     assert(owned1.name == "component1");
     assert(owned1.qualifiedName == "root.component1");
 
-    auto owned11 = Component.create!Component(owned1);
+    Component owned11 = Component.create!Component(owned1);
     owned11.name = "component1";
     assert(owned11.owner is owned1);
     assert(owned11.name == "component1");
     assert(owned11.qualifiedName == "root.component1.component1");
 
-    auto owned12 = Component.create!Component(owned1);
+    Component owned12 = Component.create!Component(owned1);
     owned12.name = "component1";
     assert(owned12.name == "component1_0");
     assert(owned12.qualifiedName == "root.component1.component1_0");
