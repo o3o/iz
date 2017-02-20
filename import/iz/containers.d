@@ -2966,7 +2966,14 @@ private:
 public:
 
     @disable this();
-    @disable this(this);
+
+    this(this) @nogc
+    {
+        static if (is(K == struct) && hasMember!(K, "__postblit") && isCopyable!K)
+            _key.__postblit;
+        static if (isMap && is(V == struct) && hasMember!(V, "__postblit") && isCopyable!V)
+            _value.__postblit;
+    }
 
     static if (!isMap)
     {
@@ -3020,14 +3027,14 @@ public:
             return cast(Tuple!(K,V)*) &this;
     }
 
-    alias Bucket = typeof(this);
+    alias Slot = typeof(this);
     struct FindResult
     {
         @disable this(this);
         /// the hash after probing
         size_t endHash;
         /// the bucket after probing
-        Bucket* bucket;
+        Slot* slot;
     }
 }
 
@@ -3132,8 +3139,7 @@ size_t fnv1(V, bool fnv1a = false)(auto ref V value)
     return fnv1Impl!fnv1a(v);
 }
 
-struct RangeForLpSet(T)
-if (isPointer!(ReturnType!(T.opIndex)) && hasLength!T)
+private struct RangeForLpSet(T)
 {
 
 private:
@@ -3191,12 +3197,14 @@ struct HashSet_LP(K, alias hasherFun = fnv1)
 {
     static assert (is(typeof( (){size_t r = hasherFun(K.init);}  )),
         "invalid hash function");
+    static assert (!is(K == void),
+        "invalid Key type");
 
 private:
 
     alias HashSetT = typeof(this);
-    alias Bucket = LinearProbeSlot!K;
-    @NoGc Array!(Bucket*) _slots;
+    alias Slot = LinearProbeSlot!K;
+    @NoGc Array!(Slot*) _slots;
     size_t _count;
 
     pragma(inline, true)
@@ -3208,7 +3216,7 @@ private:
     void reHash() @nogc
     {
         _count = 0;
-        auto old = _slots.dup;
+        Array!(Slot*) old = _slots;
         assert(old == _slots);
         _slots[] = null;
         foreach (immutable i; 0..old.length)
@@ -3229,23 +3237,23 @@ private:
     }
 
     //pragma(inline, true)
-    Bucket.FindResult find()(auto ref K key)
+    Slot.FindResult find()(auto ref K key)
     {
-        Bucket.FindResult fr;
+        Slot.FindResult fr;
         const size_t hb = hasher(key);
         fr.endHash = hb;
 
         if (_slots.length)
         {
-            fr.bucket = _slots[hb];
+            fr.slot = _slots[hb];
             while (true)
             {
-                if (fr.bucket && *fr.bucket != key)
+                if (fr.slot && *fr.slot != key)
                 {
                     fr.endHash = nextHash(fr.endHash);
                     if (fr.endHash == hb)
                         break;
-                    fr.bucket = _slots[fr.endHash];
+                    fr.slot = _slots[fr.endHash];
                 }
                 else break;
             }
@@ -3280,9 +3288,20 @@ public:
     ~this() @nogc
     {
         foreach (immutable i; 0.._slots.length)
-            if (Bucket* lpbk = _slots[i])
-                destruct(lpbk);
+            if (Slot* slt = _slots[i])
+                destruct(slt);
         destruct(_slots);
+    }
+
+    this(this) @nogc
+    {
+        foreach (immutable i; 0.._slots.length)
+            if (Slot* slt = _slots[i])
+        {
+            Slot* n = construct!Slot(slt._key);
+            n.__postblit();
+            _slots[i] = n;
+        }
     }
 
     /**
@@ -3301,12 +3320,12 @@ public:
         bool result;
         static if (rsv)
             reserve(1);
-        Bucket.FindResult fr = find(key);
-        if (fr.bucket is null || *fr.bucket != key)
+        Slot.FindResult fr = find(key);
+        if (fr.slot is null || *fr.slot != key)
         {
             assert(key !in this);
-            Bucket* n = construct!Bucket(key);
-            if (fr.bucket is null)
+            Slot* n = construct!Slot(key);
+            if (fr.slot is null)
             {
                 assert(key !in this);
                 _slots[fr.endHash] = n;
@@ -3315,7 +3334,7 @@ public:
             }
             else destruct(n);
         }
-        else if (*fr.bucket == key)
+        else if (*fr.slot == key)
             result = true;
         return result;
     }
@@ -3350,11 +3369,11 @@ public:
     bool remove()(auto ref K key)
     {
         bool result;
-        Bucket.FindResult fr = find(key);
-        if (fr.bucket)
+        Slot.FindResult fr = find(key);
+        if (fr.slot)
         {
             result = true;
-            destruct(fr.bucket);
+            destruct(fr.slot);
             _slots[fr.endHash] = null;
             reHash;
         }
@@ -3440,9 +3459,9 @@ public:
     const(K)* opBinaryRight(string op : "in")(auto ref K key)
     {
         const(K)* result;
-        const Bucket.FindResult fr = find(key);
-        if (fr.bucket)
-            result = &fr.bucket._key;
+        const Slot.FindResult fr = find(key);
+        if (fr.slot)
+            result = &fr.slot._key;
         return result;
     }
 
@@ -3653,12 +3672,16 @@ struct HashMap_LP(K, V, alias hasherFun = fnv1)
 {
     static assert (is(typeof( (){size_t r = hasherFun(K.init);}  )),
         "invalid hash function");
+    static assert (!is(K == void),
+        "invalid Key type");
+    static assert (!is(V == void),
+        "invalid Value type");
 
 private:
 
     alias MapT = typeof(this);
-    alias Bucket = LinearProbeSlot!(K,V);
-    @NoGc Array!(Bucket*) _slots;
+    alias Slot = LinearProbeSlot!(K,V);
+    @NoGc Array!(Slot*) _slots;
     size_t _count;
 
     pragma(inline, true)
@@ -3691,23 +3714,23 @@ private:
     }
 
     //pragma(inline, true)
-    Bucket.FindResult find()(auto ref K key)
+    Slot.FindResult find()(auto ref K key)
     {
-        Bucket.FindResult fr;
+        Slot.FindResult fr;
         const size_t hb = hasher(key);
         fr.endHash = hb;
 
         if (_slots.length)
         {
-            fr.bucket = _slots[hb];
+            fr.slot = _slots[hb];
             while (true)
             {
-                if (fr.bucket && *fr.bucket != key)
+                if (fr.slot && *fr.slot != key)
                 {
                     fr.endHash = nextHash(fr.endHash);
                     if (fr.endHash == hb)
                         break;
-                    fr.bucket = _slots[fr.endHash];
+                    fr.slot = _slots[fr.endHash];
                 }
                 else break;
             }
@@ -3722,9 +3745,20 @@ public:
     ~this() @nogc
     {
         foreach(immutable i; 0.._slots.length)
-            if (Bucket* lpbk = _slots[i])
-                destruct(lpbk);
+            if (Slot* slt = _slots[i])
+                destruct(slt);
         destruct(_slots);
+    }
+
+    this(this) @nogc
+    {
+        foreach (immutable i; 0.._slots.length)
+            if (Slot* slt = _slots[i])
+        {
+            Slot* n = construct!Slot(slt._key, slt._value);
+            n.__postblit();
+            _slots[i] = n;
+        }
     }
 
     /**
@@ -3745,12 +3779,12 @@ public:
         static if (rsv)
         static if (rsv)
             reserve(1);
-        Bucket.FindResult fr = find(key);
-        if (fr.bucket is null || *fr.bucket != key)
+        Slot.FindResult fr = find(key);
+        if (fr.slot is null || *fr.slot != key)
         {
             assert(key !in this);
-            Bucket* n = construct!Bucket(key, value);
-            if (fr.bucket is null)
+            Slot* n = construct!Slot(key, value);
+            if (fr.slot is null)
             {
                 assert(key !in this);
                 _slots[fr.endHash] = n;
@@ -3759,7 +3793,7 @@ public:
             }
             else destruct(n);
         }
-        else if (*fr.bucket == key)
+        else if (*fr.slot == key)
             result = true;
         return result;
     }
@@ -3773,11 +3807,11 @@ public:
     bool remove()(auto ref K key)
     {
         bool result;
-        Bucket.FindResult fr = find(key);
-        if (fr.bucket)
+        Slot.FindResult fr = find(key);
+        if (fr.slot)
         {
             result = true;
-            destruct(fr.bucket);
+            destruct(fr.slot);
             _slots[fr.endHash] = null;
             reHash;
         }
@@ -3881,9 +3915,9 @@ public:
     const(V)* opBinaryRight(string op : "in")(auto ref K key)
     {
         const(V)* result;
-        const Bucket.FindResult fr = find(key);
-        if (fr.bucket)
-            result = &fr.bucket._value;
+        const Slot.FindResult fr = find(key);
+        if (fr.slot)
+            result = &fr.slot._value;
         return result;
     }
 
@@ -4137,6 +4171,65 @@ public:
         }
         return result;
     }
+
+    size_t length() @nogc const pure nothrow {return _array.length;}
+}
+
+private struct RangeForAbSet(T)
+{
+
+private:
+
+    T* _hashSetOrMap;
+    alias B = ReturnType!(T.opIndex);
+    B _currBucket;
+    bool _empty;
+    size_t _bucketIndex;
+    size_t _keyIndex;
+
+public:
+
+    this(T* hashSetOrMap) @nogc nothrow
+    {
+        assert(hashSetOrMap);
+        _hashSetOrMap = hashSetOrMap;
+        popFront;
+    }
+
+    bool empty() @nogc nothrow
+    {
+        return _currBucket is null;
+    }
+
+    void popFront() @nogc nothrow
+    {
+        if (_currBucket)
+        {
+            ++_keyIndex;
+            if (_keyIndex == _currBucket.length)
+            {
+                _currBucket = null;
+                _keyIndex = 0;
+            }
+        }
+        if (!_currBucket)
+        {
+            while (_bucketIndex < _hashSetOrMap._buckets.length)
+            {
+                ++_bucketIndex;
+                _currBucket = (*_hashSetOrMap)[_bucketIndex];
+                if (_currBucket.length)
+                    break;
+            }
+            if (_bucketIndex == _hashSetOrMap._buckets.length)
+                _currBucket = null;
+        }
+    }
+
+    auto ref front()
+    {
+        return _currBucket._array[_keyIndex];
+    }
 }
 
 /**
@@ -4151,9 +4244,12 @@ struct HashSet_AB(K, alias hasherFun = fnv1)
 {
     static assert (is(typeof( (){size_t r = hasherFun(K.init);}  )),
         "invalid hash function");
+    static assert (!is(K == void),
+        "invalid Key type");
 
 private:
 
+    alias HashSetT = typeof(this);
     alias BucketT = ArrayBucket!K;
     @NoGc Array!BucketT _buckets;
     size_t _count;
@@ -4183,7 +4279,29 @@ private:
 
 public:
 
-    ~this()
+    /**
+     * Constructs using either a list of keys, arrays of keys, or both.
+     */
+    this(A...)(A a)
+    {
+        import std.meta: aliasSeqOf;
+        import std.range: iota;
+
+        foreach (i; aliasSeqOf!(iota(0, A.length)))
+        {
+            static if (is(A[i] == K))
+                continue;
+            else static if (isArray!(A[i]))
+                continue;
+            else static if (is(A[i] == Array!K))
+                continue;
+            else static assert(0, A[i].stringof ~ " not supported");
+        }
+        foreach (i; aliasSeqOf!(iota(0, A.length)))
+                insert(a[i]);
+    }
+
+    ~this() @nogc
     {
         destruct(_buckets);
     }
@@ -4252,7 +4370,7 @@ public:
     }
 
     /**
-     * Reserves slots for at least N supplemental keys.
+     * Reserves buckets for at least N supplemental keys.
      *
      * Throws:
      *      An out of memory Error if the reallocation fails.
@@ -4270,6 +4388,34 @@ public:
         }
     }
 
+    /**
+     * Minimizes the memory used by the set.
+     *
+     * Throws:
+     *      An out of memory Error if the reallocation fails.
+     */
+    void minimize() @nogc
+    {
+        import std.math: nextPow2;
+        const size_t nl = nextPow2(_count-1);
+
+        if (nl < _buckets.length)
+        {
+            Array!BucketT old = _buckets;
+            clear;
+             _buckets.length = nl;
+            foreach (immutable i; 0..old.length)
+                foreach (immutable j; 0..old[i]._array.length)
+            {
+                insert!false(old[i]._array[j]);
+            }
+            destruct(old);
+        }
+    }
+
+    /**
+     * Empties the set.
+     */
     void clear() @nogc
     {
         _buckets.length = 0;
@@ -4301,12 +4447,20 @@ public:
     }
 
     /**
+     * Returns an input range that iterates the keys.
+     */
+    auto byKey()
+    {
+        return RangeForAbSet!HashSetT(&this);
+    }
+
+    /**
      * Returns the elements count.
      */
     size_t count() pure nothrow @nogc {return _count;}
 
     /**
-     * Returns the set length.
+     * Returns the buckets count.
      */
     size_t length() pure nothrow @nogc {return _buckets.length;}
 
@@ -4399,7 +4553,8 @@ public:
     assert(hss.count == 0);
     assert(hss.length == 0);
 
-    /*import std.algorithm: among;
+    import std.algorithm: among;
+    hss.reserve(20);
     assert(hss.insert("cow"));
     assert(hss.insert("yak"));
     auto r = hss.byKey;
@@ -4410,12 +4565,18 @@ public:
     assert((r.front).among("cow","yak"));
     r.popFront;
     assert(r.empty);
-    assert(hss.length == 16);
 
-    assert(hss.count == 2);
+    assert(hss.length == 32);
     hss.minimize;
-    assert(hss.length < 16);*/
+    assert(hss.length == 2);
 
     destruct(hss);
+}
+
+@nogc unittest
+{
+    HashSet_AB!int hsi;
+    assert(hsi.byKey.empty);
+    destruct(hsi);
 }
 

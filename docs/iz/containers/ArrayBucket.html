@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <link rel="stylesheet" type="text/css" href="../../style.css"/>
 <script src="../../highlight.pack.js"></script>
-<title>HashSet</title>
+<title>ArrayBucket</title>
 <base href="../../"/>
 <script src="search.js"></script>
 <script src="show_hide.js"></script>
@@ -14,7 +14,7 @@
 <div class="breadcrumbs">
 <table id="results"></table>
 <a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
-<small>iz.<a href=iz/containers.html>containers</a>.</small><span class="highlight">HashSet</span>
+<small>iz.<a href=iz/containers.html>containers</a>.</small><span class="highlight">ArrayBucket</span>
 </div>
 <div class="sidebar">
 <a href="iz/containers.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
@@ -44,10 +44,10 @@
 </ul>
 </div></div>
 <div class="content">
-<div class="aggregate-symbol"><div class="description"><pre><code>private @trusted @nogc nothrow template HashSet(<a href="iz/containers/CollisionHandling.html">CollisionHandling</a> ch = CH.bucketArray)
+<div class="aggregate-symbol"><div class="description"><pre><code>private @trusted @nogc nothrow struct ArrayBucket(K, V = <a href="http://dlang.org/type.html#basic-data-types">void</a>)
 </code></pre>
 <div class="section"><h2></h2>
-<p>Aliases an hashset implementation, by default HashSet_AB.
+<p>The bucket used in HashSet_AB and HashMap_AB.
 </p>
 
 
@@ -56,7 +56,23 @@
 
 
 </div>
-</div></div><script>hljs.initHighlightingOnLoad();</script>
+</div><a class="anchor" id="Pair"></a><div class="symbol"><div class="description"><pre><code>alias Pair = Tuple!(K, V)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Aliases the array element type when the bucket is used in a map.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><div class="section members"><h2>Aliases</h2><table><tr><td><a href="iz/containers/ArrayBucket.html#Pair">Pair</a></td><td><pre><code>Tuple!(K, V)
+</code></pre>
+</td><td></td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
 
 </div>
 <footer>

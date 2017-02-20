@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="../../style.css"/>
+<script src="../../highlight.pack.js"></script>
+<title>HashSet_AB</title>
+<base href="../../"/>
+<script src="search.js"></script>
+<script src="show_hide.js"></script>
+</head>
+<body>
+<div class="main">
+<div class="breadcrumbs">
+<table id="results"></table>
+<a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
+<small>iz.<a href=iz/containers.html>containers</a>.</small><span class="highlight">HashSet_AB</span>
+</div>
+<div class="sidebar">
+<a href="iz/containers.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/containers.html#show-toc" class="show" id="show-toc">&#187;</a>
+<div id="toc-id" class="toc">
+<ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
+<ul id="iz" style='display:block'>
+<li>iz.<a href="iz/classes.html">classes</a></li>
+<li><span class=" selected">iz.<a href="iz/containers.html">containers</a></span>
+</li>
+<li>iz.<a href="iz/enumset.html">enumset</a></li>
+<li>iz.<a href="iz/logicver.html">logicver</a></li>
+<li>iz.<a href="iz/math.html">math</a></li>
+<li>iz.<a href="iz/memory.html">memory</a></li>
+<li>iz.<a href="iz/observer.html">observer</a></li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
+<li>iz.<a href="iz/referencable.html">referencable</a></li>
+<li>iz.<a href="iz/rtti.html">rtti</a></li>
+<li>iz.<a href="iz/serializer.html">serializer</a></li>
+<li>iz.<a href="iz/streams.html">streams</a></li>
+<li>iz.<a href="iz/strings.html">strings</a></li>
+<li>iz.<a href="iz/sugar.html">sugar</a></li>
+<li>iz.<a href="iz/types.html">types</a></li>
+</ul>
+</li>
+
+</ul>
+</div></div>
+<div class="content">
+<div class="aggregate-symbol"><div class="description"><pre><code>private @trusted @nogc nothrow struct HashSet_AB(K, alias hasherFun = <a href="iz/containers.html#fnv1">fnv1</a>)
+</code></pre>
+<div class="section"><h2></h2>
+<p>A manually managed hashset that uses buckets to solve the collisions.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">K</td><td class="paramDoc"><p>the key type.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">hasherFun</td><td class="paramDoc"><p>The hashing function, a <code class="d_inline_code">size_t(K value);</code> function,
+         literal delegate or lambda.
+</p>
+</td></tr>
+</table>
+</div>
+</div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>private this(A...)(A a)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Constructs using either a list of keys, arrays of keys, or both.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="insert"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/containers/HashSet_AB.html#insert">insert</a>(<a href="http://dlang.org/type.html#basic-data-types">bool</a> rsv = true)(auto ref K key)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Tries to insert key(s) in the set.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">key</td><td class="paramDoc"><p>either single keys, array of keys, or both.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Throws</h2>
+<p>An out of memory Error if an internal call to <code class="d_inline_code">reserve()</code> fails.
+</p>
+
+
+</div>
+<div class="section"><h2>Returns</h2>
+<p>If the key is added or if it's already included then returns <code class="d_inline_code">true</code>,
+     otherwise <code class="d_inline_code">false</code>.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="insert"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/containers/HashSet_AB.html#insert">insert</a>(KK)(auto ref KK keys) 
+if((isArray!KK && is(Unqual!(ElementEncodingType!KK) == K)) || is(KK == <a href="iz/containers/Array.html">Array</a>!K))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Tries to insert key(s) in the set.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">key</td><td class="paramDoc"><p>either single keys, array of keys, or both.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Throws</h2>
+<p>An out of memory Error if an internal call to <code class="d_inline_code">reserve()</code> fails.
+</p>
+
+
+</div>
+<div class="section"><h2>Returns</h2>
+<p>If the key is added or if it's already included then returns <code class="d_inline_code">true</code>,
+     otherwise <code class="d_inline_code">false</code>.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="insert"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/containers/HashSet_AB.html#insert">insert</a>(KK...)(auto ref KK keys)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Tries to insert key(s) in the set.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">key</td><td class="paramDoc"><p>either single keys, array of keys, or both.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Throws</h2>
+<p>An out of memory Error if an internal call to <code class="d_inline_code">reserve()</code> fails.
+</p>
+
+
+</div>
+<div class="section"><h2>Returns</h2>
+<p>If the key is added or if it's already included then returns <code class="d_inline_code">true</code>,
+     otherwise <code class="d_inline_code">false</code>.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="remove"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/containers/HashSet_AB.html#remove">remove</a>()(auto ref K key) @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Tries to remove a key from the set.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Returns</h2>
+<p><code class="d_inline_code">true</code> if the key was included otherwise <code class="d_inline_code">false</code>.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="reserve"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/HashSet_AB.html#reserve">reserve</a>(size_t value) @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Reserves buckets for at least N supplemental keys.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Throws</h2>
+<p>An out of memory Error if the reallocation fails.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">value</td><td class="paramDoc"><p>The count of additional slots to reserve.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="minimize"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/HashSet_AB.html#minimize">minimize</a>() @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Minimizes the memory used by the set.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Throws</h2>
+<p>An out of memory Error if the reallocation fails.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="clear"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/HashSet_AB.html#clear">clear</a>() @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Empties the set.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="opBinaryRight"></a><div class="symbol"><div class="description"><pre><code>private const(K)* <a href="iz/containers/HashSet_AB.html#opBinaryRight">opBinaryRight</a>(string op : "in")(auto ref K key)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Tests the presence of a key in the set.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">key</td><td class="paramDoc"><p>The key to test.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p><code class="d_inline_code">null</code> if the key is not present otherwise a pointer to the key.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="opIndex"></a><div class="symbol"><div class="description"><pre><code>private const(BucketT)* <a href="iz/containers/HashSet_AB.html#opIndex">opIndex</a>(const size_t index) pure nothrow @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Support for the array syntax.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Returns</h2>
+<p>A pointer to a bucket.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="byKey"></a><div class="symbol"><div class="description"><pre><code>private <a href="iz/containers/HashSet_AB.html#byKey">byKey</a>()
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns an input range that iterates the keys.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="count"></a><div class="symbol"><div class="description"><pre><code>private size_t <a href="iz/containers/HashSet_AB.html#count">count</a>() pure nothrow @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the elements count.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="length"></a><div class="symbol"><div class="description"><pre><code>private size_t <a href="iz/containers/HashSet_AB.html#length">length</a>() pure nothrow @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the buckets count.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="collisions"></a><div class="symbol"><div class="description"><pre><code>private size_t <a href="iz/containers/HashSet_AB.html#collisions">collisions</a>() pure nothrow @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the count of synonyms
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="opDollar"></a><div class="symbol"><div class="description"><pre><code>alias opDollar = <a href="iz/containers/HashSet_AB.html#length">length</a>
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the count of synonyms
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><div class="section members"><h2>Aliases</h2><table><tr><td><a href="iz/containers/HashSet_AB.html#opDollar">opDollar</a></td><td><pre><code><a href="iz/containers/HashSet_AB.html#length">length</a>
+</code></pre>
+</td><td></td></tr></table><h2>Functions</h2><table><tr><td><a href="iz/containers/HashSet_AB.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/containers/HashSet_AB.html#insert">insert</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>If the key is added or if it's already included then returns <code class="d_inline_code">true</code>,
+     otherwise <code class="d_inline_code">false</code>.
+</p>
+</td></tr><tr><td><a href="iz/containers/HashSet_AB.html#insert">insert</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>If the key is added or if it's already included then returns <code class="d_inline_code">true</code>,
+     otherwise <code class="d_inline_code">false</code>.
+</p>
+</td></tr><tr><td><a href="iz/containers/HashSet_AB.html#insert">insert</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>If the key is added or if it's already included then returns <code class="d_inline_code">true</code>,
+     otherwise <code class="d_inline_code">false</code>.
+</p>
+</td></tr><tr><td><a href="iz/containers/HashSet_AB.html#remove">remove</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td>Returns: <p><code class="d_inline_code">true</code> if the key was included otherwise <code class="d_inline_code">false</code>.
+</p>
+</td></tr><tr><td><a href="iz/containers/HashSet_AB.html#reserve">reserve</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/HashSet_AB.html#minimize">minimize</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/HashSet_AB.html#clear">clear</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/HashSet_AB.html#opBinaryRight">opBinaryRight</a><span class="extrainfo"></span></td><td></td><td>Returns: <p><code class="d_inline_code">null</code> if the key is not present otherwise a pointer to the key.
+</p>
+</td></tr><tr><td><a href="iz/containers/HashSet_AB.html#opIndex">opIndex</a><span class="extrainfo"><span class="method-attribs"><span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td>Returns: <p>A pointer to a bucket.
+</p>
+</td></tr><tr><td><a href="iz/containers/HashSet_AB.html#byKey">byKey</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/HashSet_AB.html#count">count</a><span class="extrainfo"><span class="method-attribs"><span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/HashSet_AB.html#length">length</a><span class="extrainfo"><span class="method-attribs"><span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/HashSet_AB.html#collisions">collisions</a><span class="extrainfo"><span class="method-attribs"><span class="attr-pure">pure</span>, <span class="attr-nothrow">nothrow</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr></table>
+</div>
+</div><script>hljs.initHighlightingOnLoad();</script>
+
+</div>
+<footer>
+Generated with <a href="https://github.com/kiith-sa/harbored-mod">harbored-mod</a>
+</footer>
+</div>
+</body>
+</html>
