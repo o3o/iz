@@ -16,7 +16,7 @@ import
 Ptr getMem(size_t size) nothrow @trusted @nogc
 in
 {
-    assert(size);
+    //assert(size);
 }
 body
 {

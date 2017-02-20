@@ -149,15 +149,15 @@ public:
         }
     }
 
-    this(this) @nogc
+    this(this)
     {
-        if (_length == 0)
+        /*if (_length == 0)
         {
             freeMem(_elems);
             _blockCount = 0;
             _granularity = 4096;
         }
-        else
+        else*/
         {
             Ptr old = _elems;
             const size_t sz = _granularity * _blockCount;
@@ -262,7 +262,7 @@ public:
      *      A ConvException if T is not converitble to string.
      */
     static if (__traits(compiles, to!string(opSlice())))
-    string toString() const
+    string toString()
     {
         if (_length == 0)
             return "[]";
@@ -310,7 +310,7 @@ public:
     }
 
     /// Support for associative arrays.
-    size_t toHash() const nothrow @trusted
+    size_t toHash() nothrow @trusted
     {
         return opSlice().hashOf;
     }
@@ -404,13 +404,13 @@ public:
     }
 
     /// Support for the cat operator
-    ref typeof(this) opBinary(string op : "~", R)(auto ref R rhs)
-    if (__traits(hasMember, T, "length") && __traits(hasMember, T, "ptr"))
+    auto ref typeof(this) opBinary(string op : "~", R)(auto ref R rhs) return @nogc
+    if (__traits(hasMember, R, "length") && __traits(hasMember, R, "ptr"))
     {
         typeof(this) result;
-        result.setLength(_length + rhs.length);
-        moveMem(rwPtr(result), _elems , T.sizeof * _length);
-        moveMem(rwPtr(result) + _length * T.sizeof , rhs._elems , T.sizeof * rhs.length);
+        result.length = _length + rhs.length;
+        moveMem(result.rwPtr(0), _elems , T.sizeof * _length);
+        moveMem(result.rwPtr(_length), rhs._elems , T.sizeof * rhs.length);
         return result;
     }
 
@@ -438,14 +438,8 @@ public:
         else assert(0, "operator not implemented");
     }
 
-    /// Returns the array as a D slice. This doesnt duplicate the memory.
-    T[] opSlice() const pure @nogc
-    {
-        return opSlice!true(0, _length);
-    }
-
-    /// Returns a slice of the array as a D slice. This doesnt ducplicate the memory.
-    T[] opSlice(bool dSlice = true)(size_t lo, size_t hi) const pure @nogc
+    /// Returns a slice of the array. The memory is not duplicated.
+    auto ref opSlice(bool dSlice = false)(size_t lo, size_t hi) return @nogc
     {
         static if (dSlice)
         {
@@ -454,9 +448,16 @@ public:
         else
         {
             Array!T result;
-            result._elems = _elems + lo * T.sizeof;
+            result.length = hi - lo;
+            moveMem(result.rwPtr(0), rwPtr(lo), (hi - lo) * T.sizeof);
             return result;
         }
+    }
+
+    /// Returns the array as a D slice. The memory is not duplicated.
+    T[] opSlice() const
+    {
+        return (cast(T*) _elems)[0.._length];
     }
 
     /// Support for filling the array with a single element.
@@ -622,23 +623,27 @@ unittest
     assert(a.dup == source);
 }
 
-unittest
+@nogc unittest
 {
-    int[] source = [0,1,2,3];
+    static int[] source = [0,1,2,3];
+    static int[] r = [0,2,3];
     Array!int a = source;
+    assert(a == source);
     a = a[0..1] ~ a[2..$];
-    assert(a == [0,2,3]);
+    assert(a == r);
 }
 
-unittest
+@nogc unittest
 {
-    int[] aa = [0,1];
-    int[] bb = [2,3];
+    static int[] aa = [0,1];
+    static int[] bb = [2,3];
+    static int[] r0 = [0,1,2,3];
+    static int[] r1 = [0,1,2,3,0,1,2,3];
     Array!int a = aa;
     Array!int b = bb;
     Array!int c = a ~ b;
-    assert(c  == [0,1,2,3]);
-    assert(c ~ c == [0,1,2,3,0,1,2,3]);
+    assert(c  == r0);
+    assert(c ~ c == r1);
 }
 
 private mixin template ListHelpers(T)
@@ -3139,14 +3144,15 @@ private:
     size_t index;
     T* _hashOrMap;
 
-    pragma(inline, true)
+    //pragma(inline, true)
     void next()
     {
         while (index < _hashOrMap.length)
         {
             if ((*_hashOrMap)[index])
                 break;
-            ++index;
+            else
+                ++index;
         }
     }
 
@@ -4036,7 +4042,7 @@ public:
         _array ~= key;
     }
 
-    bool remove(ref K key) /*@nogc*/ nothrow
+    bool remove(ref K key) @nogc nothrow
     {
         bool result;
         foreach (immutable i; 0.._array._length)
@@ -4236,7 +4242,7 @@ public:
      * Returns:
      *      $(D true) if the key was included otherwise $(D false).
      */
-    bool remove()(auto ref K key)
+    bool remove()(auto ref K key) @nogc
     {
         const size_t h = hasher(key);
         const bool result = _buckets[h].remove(key);
@@ -4320,7 +4326,7 @@ public:
     alias opDollar = length;
 }
 
-/*@nogc*/ unittest
+@nogc unittest
 {
     HashSet_AB!string hss;
 
@@ -4340,14 +4346,14 @@ public:
     assert("rat" in hss);
     assert("fly" in hss);
 
-    //assert(hss.insert("bee"));
+    assert(hss.insert("bee"));
     assert("dog" !in hss);
     assert("cat" in hss);
     assert("rat" in hss);
     assert("fly" in hss);
-    //assert("bee" in hss);
+    assert("bee" in hss);
 
-    /*assert(hss.insert("ant"));
+    assert(hss.insert("ant"));
     assert("dog" !in hss);
     assert("cat" in hss);
     assert("rat" in hss);
@@ -4356,7 +4362,7 @@ public:
     assert("ant" in hss);
     assert("fox" !in hss);
 
-    /*assert(hss.insert("fox"));
+    assert(hss.insert("fox"));
     assert("dog" !in hss);
     assert("cat" in hss);
     assert("rat" in hss);
@@ -4365,7 +4371,7 @@ public:
     assert("ant" in hss);
     assert("fox" in hss);
 
-    /*assert(hss.insert("bat"));
+    assert(hss.insert("bat"));
     assert("dog" !in hss);
     assert("cat" in hss);
     assert("rat" in hss);
@@ -4386,12 +4392,12 @@ public:
     assert("bat" in hss);
     assert("cow" in hss);
 
-    /*assert(hss.remove("bat"));
+    assert(hss.remove("bat"));
     assert("bat" !in hss);
 
     hss.clear;
-    assert(hss.count == 0);*/
-    //assert(hss.length == 0);
+    assert(hss.count == 0);
+    assert(hss.length == 0);
 
     /*import std.algorithm: among;
     assert(hss.insert("cow"));

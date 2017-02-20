@@ -239,7 +239,7 @@ public:
     }
     body
     {
-        return _items[lo .. hi];
+        return _items[][lo .. hi];
     }
 
     /**
@@ -694,7 +694,7 @@ public:
         foreach(len; _dimensions)
         {
             array[i].length = len;
-            array[i] = _content[start .. start + len];
+            array[i] = _content[][start .. start + len];
             start += len;
             ++i;
         }
@@ -928,7 +928,7 @@ public:
         ReferenceMan.storeReference(this, qualifiedName);
     }
     /// ditto
-    final @Get const(char)[] name() {return _name;}
+    final @Get const(char)[] name() {return _name[];}
 
     /**
      * Returns the fully qualified name of this component in the owner
@@ -937,7 +937,7 @@ public:
     final const(char)[] qualifiedName()
     {
         const(char)[][] result;
-        result ~= _name;
+        result ~= _name[];
         Component c = _owner;
         while (c)
         {
