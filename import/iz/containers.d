@@ -3019,7 +3019,7 @@ public:
         }
     }
 
-    auto opEquals()(auto ref K key) const
+    auto opEquals(KK)(auto ref KK key) const
     {
         static if (!isMap)
         {
@@ -3235,7 +3235,7 @@ private:
     size_t _count;
 
     pragma(inline, true)
-    size_t hasher()(auto ref K key) @nogc
+    size_t hasher(KK)(auto ref KK key) @nogc
     {
         return hasherFun(key) & (_slots.length - 1);
     }
@@ -3264,7 +3264,7 @@ private:
     }
 
     //pragma(inline, true)
-    Slot.FindResult find()(auto ref K key)
+    Slot.FindResult find(KK)(auto ref KK key)
     {
         Slot.FindResult fr;
         const size_t hb = hasher(key);
@@ -3486,10 +3486,10 @@ public:
      * Returns:
      *      $(D null) if the key is not present otherwise a pointer to the key.
      */
-    const(K)* opBinaryRight(string op : "in")(auto ref K key)
+    K* opBinaryRight(string op : "in", KK)(auto ref KK key)
     {
-        const(K)* result;
-        const Slot.FindResult fr = find(key);
+        K* result;
+        Slot.FindResult fr = find(key);
         if (fr.slot)
             result = &fr.slot._key;
         return result;
@@ -3498,7 +3498,7 @@ public:
     /**
      * Support for the array syntax.
      */
-    const(K)* opIndex(const size_t index) @nogc
+    K* opIndex(const size_t index) @nogc
     {
         return &_slots[index]._key;
     }
@@ -3715,7 +3715,7 @@ private:
     size_t _count;
 
     pragma(inline, true)
-    size_t hasher()(auto ref K key) @nogc
+    size_t hasher(KK)(auto ref KK key) @nogc
     {
         return hasherFun(key) & (_slots.length - 1);
     }
@@ -3744,7 +3744,7 @@ private:
     }
 
     //pragma(inline, true)
-    Slot.FindResult find()(auto ref K key)
+    Slot.FindResult find(KK)(auto ref KK key)
     {
         Slot.FindResult fr;
         const size_t hb = hasher(key);
@@ -3949,10 +3949,10 @@ public:
      *      $(D null) if the key is not present otherwise a pointer to the
      *          value that mapped.
      */
-    const(V)* opBinaryRight(string op : "in")(auto ref K key)
+    V* opBinaryRight(string op : "in", KK)(auto ref KK key)
     {
-        const(V)* result;
-        const Slot.FindResult fr = find(key);
+        V* result;
+        Slot.FindResult fr = find(key);
         if (fr.slot)
             result = &fr.slot._value;
         return result;
@@ -3965,7 +3965,7 @@ public:
      *      A pointer to a tuple that contains, when not null, the
      *      key and the value of the element pointed by $(D_PARAM index).
      */
-    const(MapPair)* opIndex(const size_t index) @nogc
+    MapPair* opIndex(const size_t index) @nogc
     {
         if (auto r = _slots[index])
             return r.ptr;
@@ -3973,7 +3973,8 @@ public:
             return null;
     }
 
-    const(V)* opIndex()(auto ref K key)
+    V* opIndex(KK)(auto ref KK key)
+    if (!is(KK == size_t))
     {
         return key in this;
     }
@@ -4190,9 +4191,9 @@ public:
         return result;
     }
 
-    const(K)* getKey(ref K key) @nogc const pure nothrow
+    K* getKey(KK)(ref KK key) @nogc const pure nothrow
     {
-        const(K)* result;
+        K* result;
         if (const size_t j =  _array.length)
             foreach (immutable i; 0..j)
         {
@@ -4217,9 +4218,9 @@ public:
     }
 
     static if (isMap)
-    const(V)* getValue(ref K key) @nogc const pure nothrow
+    V* getValue(KK)(ref KK key) @nogc const pure nothrow
     {
-        const(V)* result;
+        V* result;
         if (const size_t j =  _array.length)
             foreach (immutable i; 0..j)
         {
@@ -4330,7 +4331,7 @@ private:
     size_t _count;
 
     pragma(inline, true)
-    size_t hasher()(auto ref K key) @nogc
+    size_t hasher(KK)(auto ref KK key) @nogc
     {
         return hasherFun(key) & (_buckets.length - 1);
     }
@@ -4509,7 +4510,7 @@ public:
      * Returns:
      *      $(D null) if the key is not present otherwise a pointer to the key.
      */
-    const(K)* opBinaryRight(string op : "in")(auto ref K key)
+    K* opBinaryRight(string op : "in", KK)(auto ref KK key)
     {
         return _buckets[hasher(key)].getKey(key);
     }
@@ -4520,7 +4521,7 @@ public:
      * Returns:
      *      A pointer to a bucket.
      */
-    const(BucketT)* opIndex(const size_t index) pure nothrow @nogc
+    BucketT* opIndex(const size_t index) pure nothrow @nogc
     {
         return &_buckets[index];
     }
@@ -4685,7 +4686,7 @@ private:
     size_t _count;
 
     pragma(inline, true)
-    size_t hasher()(auto ref K key) @nogc
+    size_t hasher(KK)(auto ref KK key) @nogc
     {
         return hasherFun(key) & (_buckets.length - 1);
     }
@@ -4828,7 +4829,7 @@ public:
      * Returns:
      *      $(D null) if the key is not present otherwise a pointer to associated value.
      */
-    const(V)* opBinaryRight(string op : "in")(auto ref K key)
+    V* opBinaryRight(string op : "in", KK)(auto ref KK key)
     {
         return _buckets[hasher(key)].getValue(key);
     }
@@ -4839,7 +4840,7 @@ public:
      * Returns:
      *      A pointer to a bucket.
      */
-    const(BucketT)* opIndex(const size_t index) pure nothrow @nogc
+    BucketT* opIndex(const size_t index) pure nothrow @nogc
     {
         return &_buckets[index];
     }
@@ -4847,7 +4848,8 @@ public:
     /**
      * Support for retrieving a value using the array syntax.
      */
-    const(V)* opIndex()(auto ref K key)
+    V* opIndex(KK)(auto ref KK key)
+    if (!is(KK == size_t))
     {
         return key in this;
     }
