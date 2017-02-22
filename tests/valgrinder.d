@@ -21,11 +21,7 @@ int main(string[] args)
         failedCount += !de.name.test!false();
     // common libraries unittests
     foreach(de; dirEntries(rootDir ~ "/../import/iz/", "*.d", SpanMode.depth))
-    {
-        if (de.name.baseName.among("serializer.d", "classes.d", "package.d"))
-            continue;
         failedCount += !de.name.test!true();
-    }
     return failedCount != 0;
 }
 

@@ -317,7 +317,7 @@ public:
     /**
      * Returns the hints for this property.
      */
-    ref const(PropHints) hints(){return _hints;}
+    ref PropHints hints(){return _hints;}
 
 // ----        
 
@@ -684,14 +684,9 @@ mixin template PropertyPublisherImpl()
 
         ~this()
         {
-            // must be called manually for structs.
-            static if (!is(typeof(this) == struct))
-            {
-                clearDescriptors;
+            clearDescriptors;
             import iz.memory: destruct;
             destruct(_publishedDescriptors);
-
-            }
         }
     }
 
@@ -762,7 +757,7 @@ mixin template PropertyPublisherImpl()
         {
             import iz.memory: construct;
             _publishedDescriptors ~= construct!(PropDescriptor!T);
-            (cast(typeof(descr))_publishedDescriptors[$-1]).name = name.idup; // GC eats name otherwise
+            (cast(typeof(descr))_publishedDescriptors[$-1]).name = name;
             descr = cast(typeof(descr)) _publishedDescriptors[$-1];
         }
         return descr;
@@ -824,7 +819,7 @@ mixin template PropertyPublisherImpl()
                 }
                 //
                 enum h = getUDAs!(__traits(getMember, T, member), PropHints);
-                static if (h.length) descriptor._hints = h[0];
+                static if (h.length) descriptor.hints = h[0];
                 //
                 version(none) writeln(attribute.stringof, " : ", member);
                 break;
@@ -886,7 +881,7 @@ mixin template PropertyPublisherImpl()
                 }
                 //
                 enum h = getUDAs!(overload, PropHints);
-                static if (h.length) descriptor._hints = h[0];
+                static if (h.length) descriptor.hints = h[0];
                 //
                 version(none) writeln(attribute.stringof, " < ", member);
             }
@@ -906,7 +901,7 @@ mixin template PropertyPublisherImpl()
                 descriptor.define(dg, descriptor.getter, member);
                 //
                 enum h = getUDAs!(overload, PropHints);
-                static if (h.length) descriptor._hints = h[0];
+                static if (h.length) descriptor.hints = h[0];
                 //
                 version(none) writeln(attribute.stringof, " > ", member);
             }
@@ -1154,7 +1149,6 @@ unittest
     {
         mixin PropertyPublisherImpl;
         this(uint value){collectPublications!Bug;}
-        ~this(){clearDescriptors;}
         @SetGet uint _a;
     }
     // test that the 'static if things' related to 'interface inheritance'

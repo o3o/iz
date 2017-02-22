@@ -13,8 +13,6 @@ public
     import iz.types, iz.properties, iz.referencable, iz.streams;
 }
 
-//TODO-cleaks: fix leaks in unittest mode
-
 // Serializable types validator & misc. ---------------------------------------+
 
 /**
@@ -1499,7 +1497,7 @@ public:
     /**
      * Builds the IST from a struct that has the traits of a property publisher.
      */
-    void publisherToIst(S)(auto ref S root)
+    void publisherToIst(S)(ref S root)
     if (is(S == struct))
     {
         const(Rtti)* rtti = getRtti!S;
@@ -1534,10 +1532,10 @@ public:
      *      root = The Object from where the restoreation starts. It has to be
      *      a PropPublisher.
      */
-    void istToPublisher(R)(auto ref R root)
+    void istToPublisher(R)(ref R root)
     if (is(R == class) || is(R == struct))
     {
-        void restoreFrom(T)(IstNode node, T target)
+        void restoreFrom(T)(IstNode node, ref T target)
         {
             static if (is(T : Object))
                 if (!target) return;
@@ -1612,7 +1610,8 @@ public:
                         else
                         {
                             void* oldCtxt = sd.rtti.structInfo.pubTraits.setContext(structPtr);
-                            restoreFrom(childNode, sd.rtti.structInfo.pubTraits);
+                            auto pubStruct = sd.rtti.structInfo.pubTraits;
+                            restoreFrom(childNode, pubStruct);
                             sd.rtti.structInfo.pubTraits.restoreContext(oldCtxt);
                         }
                     }
@@ -1655,9 +1654,18 @@ public:
      *      root = The Object from where the restoreation starts. It has to be
      *      a PropPublisher.
      */
-    void streamToPublisher(R)(Stream inputStream, auto ref R root,
+    void streamToPublisher(R)(Stream inputStream, ref R root,
         SerializationFormat format = defaultFormat)
-    if (is(R == class) || is(R == struct))
+    if (is(R == struct))
+    {
+        streamToIst(inputStream, format);
+        istToPublisher(root);
+    }
+
+    /// ditto
+    void streamToPublisher(R)(Stream inputStream, R root,
+        SerializationFormat format = defaultFormat)
+    if (is(R == class))
     {
         streamToIst(inputStream, format);
         istToPublisher(root);
@@ -2076,34 +2084,39 @@ version(unittest)
 
     class ClassA: ClassB
     {
+        mixin inheritedDtor;
         private:
             ClassB _aB1, _aB2;
-            PropDescriptor!Object aB1descr, aB2descr;
+            PropDescriptor!Object* aB1descr, aB2descr;
         public:
-            this() {
-
+            this()
+            {
                 assert(!this.publicationFromName("aB1"));
                 assert(!this.publicationFromName("aB2"));
-
                 _aB1 = construct!ClassB;
                 _aB2 = construct!ClassB;
-                aB1descr.define(cast(Object*)&_aB1, "aB1", this);
-                aB2descr.define(cast(Object*)&_aB2, "aB2", this);
+                aB1descr = construct!(PropDescriptor!Object)(cast(Object*)&_aB1, "aB1");
+                aB2descr = construct!(PropDescriptor!Object)(cast(Object*)&_aB2, "aB2");
+                aB1descr.declarator = this;
+                aB2descr.declarator = this;
 
                 // add publications by hand.
-                _publishedDescriptors ~= cast(void*) &aB1descr;
-                _publishedDescriptors ~= cast(void*) &aB2descr;
+                _publishedDescriptors ~= cast(void*) aB1descr;
+                _publishedDescriptors ~= cast(void*) aB2descr;
 
                 // without the scanners ownership must be set manually
-                setTargetObjectOwner(&aB1descr, this);
-                setTargetObjectOwner(&aB2descr, this);
-                assert(targetObjectOwnedBy(&aB1descr, this));
-                assert(targetObjectOwnedBy(&aB2descr, this));
+                setTargetObjectOwner(aB1descr, this);
+                setTargetObjectOwner(aB2descr, this);
+                assert(targetObjectOwnedBy(aB1descr, this));
+                assert(targetObjectOwnedBy(aB2descr, this));
             }
-            ~this() {
+            ~this()
+            {
                 destructEach(_aB1, _aB2);
+                callInheritedDtor;
             }
-            override void reset() {
+            override void reset()
+            {
                 super.reset;
                 _aB1.reset;
                 _aB2.reset;
@@ -2125,9 +2138,9 @@ version(unittest)
             this()
             {
                 collectPublications!ClassB;
-                anIntArray = [0, 1, 2, 3];
                 aFloat = 0.123456f;
-                someChars = "azertyuiop".dup;
+                _someChars = "azertyuiop";
+                anIntArray = [0, 1, 2, 3];
             }
 
             ~this()
@@ -2138,9 +2151,9 @@ version(unittest)
 
             void reset()
             {
-                anIntArray = anIntArray.init;
+                _anIntArray.length = 0;
+                _someChars.length = 0;
                 aFloat = 0.0f;
-                someChars = someChars.init;
             }
 
             @Set anIntArray(int[] value){_anIntArray = value;}
@@ -2168,7 +2181,6 @@ version(unittest)
         assert(b.someChars == "");
         str.position = 0;
         ser.streamToPublisher(str,b,format);
-
 
         str.clear;
         ser.serializationTree.saveToStream(str);
@@ -2240,19 +2252,19 @@ version(unittest)
         str.clear;
         usrr.fRef = ref1;
         ser.publisherToStream(usrr, str, format);
-        //
+
         usrr.fRef = ref2;
         assert(usrr.fRef == ref2);
         str.position = 0;
         ser.streamToPublisher(str, usrr, format);
         assert(usrr.fRef == ref1);
-        //
+
         usrr.fRef = null;
         assert(usrr.fRef is null);
         str.position = 0;
         ser.streamToPublisher(str, usrr, format);
         assert(usrr.fRef is ref1);
-        //
+
         str.clear;
         usrr.fRef = null;
         ser.publisherToStream(usrr, str, format);
