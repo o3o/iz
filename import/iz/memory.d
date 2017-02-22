@@ -584,8 +584,6 @@ if (Objs.length > 1)
         destruct(obj);
 }
 
-private __gshared TypeInfo_Class[string] registeredClasses;
-
 /**
  * Register a class type that can be created dynamically, using its name.
  *
@@ -597,22 +595,36 @@ private __gshared TypeInfo_Class[string] registeredClasses;
  *      T = A class.
  *      name = The name used to register the class.
  *      By default the `T.stringof` is used.
+ *      f = The class repository, a hashmap of TypeInfo_Class by string.
  */
-void registerFactoryClass(T)(string name = "")
+void registerFactoryClass(T, F)(ref F f, string name = "")
 if (is(T == class) && !isAbstractClass!T)
 {
     if (!name.length)
         name = T.stringof;
-    registeredClasses[name] = typeid(T);
+    f[name] = typeid(T);
 }
 
 /**
  * Calls registerClass() for each template argument.
+ *
+ * Params:
+ *      A = A list of classes, from one up to nine.
+ *      f = The class repository, a hashmap of TypeInfo_Class by string.
  */
-void registerFactoryClasses(A...)()
+void registerFactoryClasses(A1, A2 = void, A3 = void, A4 = void, A5 = void,
+    A6 = void, A7 = void, A8 = void, A9 = void, F)(ref F f)
 {
-    foreach(T; A)
-        registerFactoryClass!T();
+    void tryRegister(A)()
+    {
+        static if (is(A == class))
+            registerFactoryClass!(A, F)(f);
+        else static if (!is(A == void))
+            static assert(0, A.stringof ~ " is not a class");
+    }
+    tryRegister!A1;tryRegister!A2;tryRegister!A3;
+    tryRegister!A4;tryRegister!A5;tryRegister!A6;
+    tryRegister!A7;tryRegister!A8;tryRegister!A9;
 }
 
 /**
@@ -622,12 +634,13 @@ void registerFactoryClasses(A...)()
  *
  * Params:
  *      className = the class name, as registered in registerFactoryClass().
+ *      factory = The class repository, a hashmap of TypeInfo_Class by string.
  * Throws:
  *      An Exception if the class is not registered.
  */
-Object factory(string className)
+Object factory(F)(ref F f, string className)
 {
-    TypeInfo_Class* tic = className in registeredClasses;
+    TypeInfo_Class* tic = className in f;
     if (!tic)
         throw construct!Exception("factory exception, unregistered class");
     return
@@ -790,24 +803,29 @@ unittest
 
 unittest
 {
+    alias Factory = __gshared TypeInfo_Class[string];
+    Factory classRegistry;
+
     class A{string text; this(){text = "A";}}
     class B{string text; this(){text = "B";}}
     class C{int[] array; this(){array = [1,2,3];}}
-    registerFactoryClass!A;
-    registerFactoryClass!B;
-    registerFactoryClass!C;
+    registerFactoryClass!A(classRegistry);
+    classRegistry.registerFactoryClass!B;
+    classRegistry.registerFactoryClass!C;
 
-    A a = cast(A) factory("A");
+    registerFactoryClasses!(A,B)(classRegistry);
+
+    A a = cast(A) classRegistry.factory("A");
     assert(a.text == "A");
-    B b = cast(B) factory("B");
+    B b = cast(B) classRegistry.factory("B");
     assert(b.text == "B");
-    C c = cast(C) factory("C");
+    C c = cast(C) classRegistry.factory("C");
     assert(c.array == [1,2,3]);
 
     version(checkleaks) {} else
     {
         import std.exception: assertThrown;
-        assertThrown(factory("D"));
+        assertThrown(classRegistry.factory("D"));
     }
 
     destructEach(a,b,c);
