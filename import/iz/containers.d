@@ -3241,7 +3241,7 @@ private:
         return hasherFun(key) & (_slots.length - 1);
     }
 
-    void reHash() @nogc
+    void reHash()() @nogc
     {
         _count = 0;
         Array!(Slot*) old = _slots;
@@ -3295,6 +3295,7 @@ public:
      * Constructs using either a list of keys, arrays of keys, or both.
      */
     this(A...)(A a)
+    if (A.length)
     {
         import std.meta: aliasSeqOf;
         import std.range: iota;
@@ -3447,7 +3448,7 @@ public:
      * Params:
      *      value = The count of additional slots to reserve.
      */
-    void reserve(size_t value) @nogc
+    void reserve()(size_t value) @nogc
     {
         import std.math: nextPow2;
         const size_t nl = nextPow2(_count + value);
@@ -3464,7 +3465,7 @@ public:
     /**
      * Minimizes the memory usage.
      */
-    void minimize() @nogc
+    void minimize()()
     {
         import std.math: nextPow2;
         const size_t nl = nextPow2(_count-1);
@@ -3675,7 +3676,7 @@ public:
     destruct(co);
 }
 
-@nogc unittest
+ unittest
 {
     {
         HashSet_LP!string co = HashSet_LP!string("ab", "ab", "cd");
@@ -3728,7 +3729,7 @@ private:
         return hasherFun(key) & (_slots.length - 1);
     }
 
-    void reHash() @nogc
+    void reHash()()
     {
         _count = 0;
         auto old = _slots.dup;
@@ -3813,7 +3814,7 @@ public:
      *      If the key is added or if it's already included then returns $(D true),
      *      otherwise $(D false).
      */
-    bool insert(alias mode = imExpand)(ref K key, auto ref V value) @nogc
+    bool insert(alias mode = imExpand)(ref K key, auto ref V value)
     if (isImplicitlyConvertible!(typeof(mode), bool))
     {
         bool result;
@@ -3916,7 +3917,7 @@ public:
      * Params:
      *      value = The count of additional slots to reserve.
      */
-    void reserve(size_t value) @nogc
+    void reserve()(size_t value) @nogc
     {
         import std.math: nextPow2;
         const size_t nl = nextPow2(_count + value);
@@ -3933,7 +3934,7 @@ public:
     /**
      * Minimizes the memory usage.
      */
-    void minimize() @nogc
+    void minimize()()
     {
         import std.math: nextPow2;
         const size_t nl = nextPow2(_count-1);
@@ -4144,7 +4145,7 @@ public:
         _array ~= key;
     }
 
-    bool remove(ref K key) @nogc nothrow
+    bool remove()(ref K key)
     {
         bool result;
         foreach (immutable i; 0.._array._length)
@@ -4181,7 +4182,7 @@ public:
         _array.length = 0;
     }
 
-    ptrdiff_t indexOfKey(ref K key) @nogc const pure nothrow
+    ptrdiff_t indexOfKey()(ref K key)
     {
         ptrdiff_t result = -1;
         foreach (immutable i; 0.._array.length)
@@ -4206,7 +4207,7 @@ public:
         return result;
     }
 
-    K* getKey(KK)(ref KK key) @nogc const pure nothrow
+    K* getKey(KK)(ref KK key)
     {
         K* result;
         if (const size_t j =  _array.length)
@@ -4233,7 +4234,7 @@ public:
     }
 
     static if (isMap)
-    V* getValue(KK)(ref KK key) @nogc const pure nothrow
+    V* getValue(KK)(ref KK key)
     {
         V* result;
         if (const size_t j =  _array.length)
@@ -4249,7 +4250,7 @@ public:
     }
 
     static if (isMap)
-    ptrdiff_t indexOfValue(ref V value) @nogc const pure nothrow
+    ptrdiff_t indexOfValue()(ref V value)
     {
         ptrdiff_t result = -1;
         foreach(immutable i; 0.._array.length)
@@ -4351,7 +4352,7 @@ private:
         return hasherFun(key) & (_buckets.length - 1);
     }
 
-    void reHash() @nogc
+    void reHash()()
     {
         _count = 0;
         Array!BucketT old = _buckets;
@@ -4410,7 +4411,7 @@ public:
      *      If the key is added or if it's already included then returns $(D true),
      *      otherwise $(D false).
      */
-    bool insert(alias mode = true)(ref K key) @nogc
+    bool insert(alias mode = true)(ref K key)
     if (isImplicitlyConvertible!(typeof(mode), bool))
     {
         bool result;
@@ -4478,7 +4479,7 @@ public:
      * Params:
      *      value = The count of additional slots to reserve.
      */
-    void reserve(size_t value) @nogc
+    void reserve()(size_t value)
     {
         import std.math: nextPow2;
         const size_t nl = nextPow2(_count + value);
@@ -4495,7 +4496,7 @@ public:
      * Throws:
      *      An out of memory Error if the reallocation fails.
      */
-    void minimize() @nogc
+    void minimize()()
     {
         import std.math: nextPow2;
         const size_t nl = nextPow2(_count-1);
@@ -4709,7 +4710,7 @@ private:
         return hasherFun(key) & (_buckets.length - 1);
     }
 
-    void reHash() @nogc
+    void reHash()()
     {
         _count = 0;
         Array!BucketT old = _buckets;
@@ -4747,7 +4748,7 @@ public:
      *      If the key is added or if it's already included then returns $(D true),
      *      otherwise $(D false).
      */
-    bool insert(alias mode = imExpand)(ref K key, auto ref V value) @nogc
+    bool insert(alias mode = imExpand)(ref K key, auto ref V value)
     if (isImplicitlyConvertible!(typeof(mode), bool))
     {
         bool result;
@@ -4802,7 +4803,7 @@ public:
      * Params:
      *      value = The count of additional slots to reserve.
      */
-    void reserve(size_t value) @nogc
+    void reserve()(size_t value) @nogc
     {
         import std.math: nextPow2;
         const size_t nl = nextPow2(_count + value);
@@ -4819,7 +4820,7 @@ public:
      * Throws:
      *      An out of memory Error if the reallocation fails.
      */
-    void minimize() @nogc
+    void minimize()()
     {
         import std.math: nextPow2;
         const size_t nl = nextPow2(_count-1);
@@ -5013,11 +5014,14 @@ unittest
     aa0.insert(s);
 }
 
-@nogc unittest
+unittest
 {
     struct Foo {}
     HashMap_AB!(Foo,Foo) a1;
-    //class Bar {  override bool opEquals(Object) pure @nogc nothrow {return true;} }
-    //HashMap_AB!(Bar,Bar) a1;
+    class Bar {  override bool opEquals(Object) pure @nogc nothrow {return true;} }
+    {HashMap_AB!(Bar,Bar) a2;}
+    {HashMap_LP!(Bar,Bar) a2;}
+    {HashSet_AB!(Bar) a2;}
+    {HashSet_LP!(Bar) a2;}
 }
 
