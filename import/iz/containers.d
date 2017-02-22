@@ -4257,7 +4257,7 @@ private struct RangeForAbSet(T)
 private:
 
     T* _hashSetOrMap;
-    alias B = ReturnType!(T.opIndex);
+    alias B = ReturnType!(T.bucket);
     B _currBucket;
     bool _empty;
     size_t _bucketIndex;
@@ -4293,7 +4293,7 @@ public:
             while (_bucketIndex < _hashSetOrMap._buckets.length)
             {
                 ++_bucketIndex;
-                _currBucket = (*_hashSetOrMap)[_bucketIndex];
+                _currBucket = (*_hashSetOrMap).bucket(_bucketIndex);
                 if (_currBucket.length)
                     break;
             }
@@ -4516,12 +4516,9 @@ public:
     }
 
     /**
-     * Support for the array syntax.
-     *
-     * Returns:
-     *      A pointer to a bucket.
+     * Returns the nth bucket.
      */
-    BucketT* opIndex(const size_t index) pure nothrow @nogc
+    BucketT* bucket(const size_t index) pure nothrow @nogc
     {
         return &_buckets[index];
     }
@@ -4659,7 +4656,6 @@ public:
     destruct(hsi);
 }
 
-
 /**
  * A manually managed hashmap that uses buckets to solve the collisions.
  *
@@ -4733,9 +4729,11 @@ public:
     if (isImplicitlyConvertible!(typeof(mode), bool))
     {
         bool result;
+        if (!_buckets.length)
+            reserve(1);
         const size_t h = hasher(key);
         assert(h < _buckets.length);
-        if (!_buckets.length || key !in this)
+        if (key !in this)
         {
             result = true;
             static if (mode)
@@ -4831,16 +4829,16 @@ public:
      */
     V* opBinaryRight(string op : "in", KK)(auto ref KK key)
     {
-        return _buckets[hasher(key)].getValue(key);
+        V* result;
+        if (_buckets.length)
+            result = _buckets[hasher(key)].getValue(key);
+        return result;
     }
 
     /**
-     * Support for the array syntax.
-     *
-     * Returns:
-     *      A pointer to a bucket.
+     * Returns the nth bucket.
      */
-    BucketT* opIndex(const size_t index) pure nothrow @nogc
+    BucketT* bucket(const size_t index) pure nothrow @nogc
     {
         return &_buckets[index];
     }
@@ -4849,7 +4847,6 @@ public:
      * Support for retrieving a value using the array syntax.
      */
     auto ref V opIndex(KK)(auto ref KK key)
-    if (!is(KK == size_t))
     {
         return *(key in this);
     }
@@ -4959,4 +4956,17 @@ public:
 
     destruct(hmsi);
 }
+
+@nogc unittest
+{
+    HashMap_AB!(int, int) aa;
+    assert(1 !in aa);
+}
+
+@nogc unittest
+{
+    HashMap_AB!(int, int) aa;
+    aa[0] = 0;
+}
+
 
