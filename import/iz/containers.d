@@ -3065,7 +3065,23 @@ unittest
     assert((lpbsi == "rat") is null);
 }
 
-private size_t fnv1Impl(bool fnv1a = false)(ubyte[] data)
+
+/**
+ * Default hash function used in the HashSet and the HashMap
+ */
+pragma(inline, true)
+size_t fnv1(V, bool fnv1a = false)(auto ref V value)
+{
+    static if (isBasicType!V || is(V==struct) || is(V == union))
+        return fnv1Impl!fnv1a(cast(ubyte*) &value, V.sizeof);
+    else static if (isArray!V)
+        return fnv1Impl!fnv1a(cast(ubyte*) value.ptr, value.length * (ElementEncodingType!V).sizeof);
+    else static if (isPointer!V || is(V == class) || is(V == interface))
+        return fnv1Impl!fnv1a(cast(ubyte*) value, V.sizeof);
+    else static assert(0);
+}
+
+private size_t fnv1Impl(bool fnv1a = false)(ubyte* data, size_t length)
 {
     static if (size_t.sizeof == 8)
         size_t h = 0xCBF29CE484222325UL;
@@ -3074,36 +3090,49 @@ private size_t fnv1Impl(bool fnv1a = false)(ubyte[] data)
     else static assert(0);
 
     static if (size_t.sizeof == 8)
-    foreach (immutable ubyte i; data)
+    foreach (immutable i; 0..length)
     {
         static if (fnv1a)
         {
-            h ^= i;
+            h ^= *data++;
             h *= 0x100000001B3UL;
         }
         else
         {
             h *= 0x100000001B3UL;
-            h ^= i;
+            h ^= *data++;
         }
     }
     else static if (size_t.sizeof == 4)
-    foreach (immutable ubyte i; data)
+    foreach (immutable i; 0..length)
     {
         static if (fnv1a)
         {
-            h ^= i;
+            h ^= *data++;
             h *= 0x1000193U;
         }
         else
         {
             h *= 0x1000193U;
-            h ^= i;
+            h ^= *data++;
         }
     }
     else static assert(0);
     return h;
 }
+
+
+/**
+ * Enumerates the hashset and hashmap insertion mode
+ */
+enum
+{
+    /// Buckets are already reserved.
+    imReserved = false,
+    /// Always reserves a bucket.
+    imExpand = true
+}
+
 
 /**
  * Enumerates the collision handling modes that
@@ -3117,17 +3146,6 @@ enum CollisionHandling
     bucketArray,
     /// Assumes the hash function not to produce collisions.
     none,
-}
-
-/**
- * Enumerates the hashset and hashmap insertion mode
- */
-enum
-{
-    /// Buckets are already reserved.
-    imReserved = false,
-    /// Always reserves a bucket.
-    imExpand = true
 }
 
 private alias CH = CollisionHandling;
@@ -3152,19 +3170,6 @@ template HashMap(CollisionHandling ch = CH.linearProbe)
         static assert(0);
 }
 
-/**
- * Default hash function used in the HashSet and the HashMap
- */
-pragma(inline, true)
-size_t fnv1(V, bool fnv1a = false)(auto ref V value)
-{
-    static if (isBasicType!V)
-        auto v = *cast(ubyte[V.sizeof]*) &value;
-    else static if (isArray!V)
-        auto v = cast(ubyte[]) value;
-    else static assert(0);
-    return fnv1Impl!fnv1a(v);
-}
 
 private struct RangeForLpSet(T)
 {
@@ -3222,8 +3227,8 @@ public:
  */
 struct HashSet_LP(K, alias hasherFun = fnv1)
 {
-    static assert (is(typeof( (){size_t r = hasherFun(K.init);}  )),
-        "invalid hash function");
+    //static assert (is(typeof( (){size_t r = hasherFun(K.init);}  )),
+      //  "invalid hash function");
     static assert (!is(K == void),
         "invalid Key type");
 
@@ -4969,4 +4974,19 @@ public:
     aa[0] = 0;
 }
 
+@nogc unittest
+{
+    HashMap_AB!(string, void*) aa0;
+    aa0[""] = null;
+    HashMap_AB!(void*, string) aa1;
+    //aa1[null] = "";
+}
+
+@nogc unittest
+{
+    struct Foo {}
+    HashMap_AB!(Foo,Foo) a1;
+    //class Bar {  override bool opEquals(Object) pure @nogc nothrow {return true;} }
+    //HashMap_AB!(Bar,Bar) a1;
+}
 
