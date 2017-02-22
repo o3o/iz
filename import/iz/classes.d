@@ -64,7 +64,7 @@ private:
     static if (isAAKeyValid!(ItemClass, aaKey))
     {
         alias KeyType = typeof(__traits(getMember, ItemClass, aaKey));
-        ItemClass[KeyType] _aa;
+        HashMap_LP!(KeyType, ItemClass) _aa;
     }
 
 protected:
@@ -84,6 +84,8 @@ public:
     {
         clear;
         destruct(_items);
+        static if (isAAKeyValid!(ItemClass, aaKey))
+            destruct(_aa);
         callInheritedDtor();
     }
 
@@ -247,8 +249,7 @@ public:
      * parameter passed as key during instanciation as the same value as `key`.
      */
     static if (isAAKeyValid!(ItemClass, aaKey))
-    const(ItemClass)* opBinaryRight(string op = "in")(KeyType key)
-    if (op == "in")
+    const(ItemClass)* opBinaryRight(string op : "in", K)(auto ref K key)
     {
         return key in _aa;
     }
@@ -261,12 +262,10 @@ public:
     void updateAA()
     {
         _aa.clear;
-        enum getValue = "auto v = item." ~ aaKey ~ ";";
+        _aa.reserve(_items.length);
+        enum getValue = "_aa.insert!false(item." ~ aaKey ~ ", item);";
         foreach(item; _items)
-        {
             mixin(getValue);
-            _aa[v] = item;
-        }
     }
 
 }
@@ -302,7 +301,7 @@ unittest
         mixin PropertyPublisherImpl;
         mixin inheritedDtor;
 
-        @SetGet string name;
+        @SetGet char[] name;
         @SetGet int value;
 
         this()
@@ -313,7 +312,7 @@ unittest
         this(string name, int value)
         {
             collectPublications!ItemT;
-            this.name = name;
+            this.name = name.dup;
             this.value = value;
         }
     }
