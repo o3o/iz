@@ -3973,10 +3973,10 @@ public:
             return null;
     }
 
-    V* opIndex(KK)(auto ref KK key)
+    auto ref V opIndex(KK)(auto ref KK key)
     if (!is(KK == size_t))
     {
-        return key in this;
+        return *(key in this);
     }
 
     /**
@@ -4046,13 +4046,13 @@ public:
     hmsi["bat"] = 3;
     hmsi["bug"] = 4;
     assert(hmsi.count == 2);
-    assert(*hmsi["bat"] == 3);
-    assert(*hmsi["bug"] == 4);
+    assert(hmsi["bat"] == 3);
+    assert(hmsi["bug"] == 4);
     hmsi["bat"] = 4;
     hmsi["bug"] = 3;
     assert(hmsi.count == 2);
-    assert(*hmsi["bat"] == 4);
-    assert(*hmsi["bug"] == 3);
+    assert(hmsi["bat"] == 4);
+    assert(hmsi["bug"] == 3);
 
     destruct(hmsi);
 }
@@ -4848,10 +4848,10 @@ public:
     /**
      * Support for retrieving a value using the array syntax.
      */
-    V* opIndex(KK)(auto ref KK key)
+    auto ref V opIndex(KK)(auto ref KK key)
     if (!is(KK == size_t))
     {
-        return key in this;
+        return *(key in this);
     }
 
     /**
@@ -4949,13 +4949,13 @@ public:
     hmsi["bat"] = 3;
     hmsi["bug"] = 4;
     assert(hmsi.count == 2);
-    assert(*hmsi["bat"] == 3);
-    assert(*hmsi["bug"] == 4);
+    assert(hmsi["bat"] == 3);
+    assert(hmsi["bug"] == 4);
     hmsi["bat"] = 4;
     hmsi["bug"] = 3;
     assert(hmsi.count == 2);
-    assert(*hmsi["bat"] == 4);
-    assert(*hmsi["bug"] == 3);
+    assert(hmsi["bat"] == 4);
+    assert(hmsi["bug"] == 3);
 
     destruct(hmsi);
 }
