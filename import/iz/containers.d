@@ -279,9 +279,10 @@ public:
      * Params:
      *      value = An array literal.
      * Throw:
-     *      A ConvException if T is not converitble to string.
+     *      A ConvException if T is not convertible to string.
      */
-    void fromString(C = char)(const(C)[] value)
+    void fromString(C)(const(C)[] value)
+    if (isSomeChar!C)
     {
         static if (__traits(compiles, to!T("")))
         {
@@ -298,14 +299,9 @@ public:
     }
 
     /// Returns a mutable (deep) copy of the array.
-    Array!T dup()() return
+    Array!T dup()()
     {
-        Array!T result;
-        result._granularity = _granularity;
-        result.length = _length;
-        const size_t sz = _granularity * _blockCount;
-        moveMem(result._elems, _elems, sz);
-        result.postblitElements;
+        Array!T result = this;
         return result;
     }
 
