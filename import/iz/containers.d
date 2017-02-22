@@ -3119,6 +3119,17 @@ enum CollisionHandling
     none,
 }
 
+/**
+ * Enumerates the hashset and hashmap insertion mode
+ */
+enum
+{
+    /// Buckets are already reserved.
+    imReserved = false,
+    /// Always reserves a bucket.
+    imExpand = true
+}
+
 private alias CH = CollisionHandling;
 
 /// Aliases an hashset implementation, by default HashSet_AB.
@@ -3324,6 +3335,8 @@ public:
      * Tries to insert key(s) in the set.
      *
      * Params:
+     *      mode = If true (imExpand) then reserves a slot else (imReserved)
+     *          assumes a previous call to $(D reserve()).
      *      key = either single keys, array of keys, or both.
      * Throws:
      *      An out of memory Error if an internal call to $(D reserve()) fails.
@@ -3331,10 +3344,11 @@ public:
      *      If the key is added or if it's already included then returns $(D true),
      *      otherwise $(D false).
      */
-    bool insert(bool rsv = true)(auto ref K key)
+    bool insert(alias mode)(auto ref K key) @nogc
+    if (isImplicitlyConvertible!(typeof(mode), bool))
     {
         bool result;
-        static if (rsv)
+        static if (mode)
             reserve(1);
         Slot.FindResult fr = find(key);
         if (fr.slot is null || *fr.slot != key)
@@ -3781,6 +3795,8 @@ public:
      * Tries to insert a key-value pair in the map.
      *
      * Params:
+     *      mode = If true (imExpand) then reserves a slot else (imReserved)
+     *          assumes a previous call to $(D reserve()).
      *      key = The key.
      *      value = The corresponding value.
      * Throws:
@@ -3789,11 +3805,11 @@ public:
      *      If the key is added or if it's already included then returns $(D true),
      *      otherwise $(D false).
      */
-    bool insert(bool rsv = true)(auto ref K key, auto ref V value)
+    bool insert(alias mode = imExpand)(auto ref K key, auto ref V value) @nogc
+    if (isImplicitlyConvertible!(typeof(mode), bool))
     {
         bool result;
-        static if (rsv)
-        static if (rsv)
+        static if (mode)
             reserve(1);
         Slot.FindResult fr = find(key);
         if (fr.slot is null || *fr.slot != key)
@@ -4369,6 +4385,8 @@ public:
      * Tries to insert key(s) in the set.
      *
      * Params:
+     *      mode = If true (imExpand) then reserves a slot else (imReserved)
+     *          assumes a previous call to $(D reserve()).
      *      key = either single keys, array of keys, or both.
      * Throws:
      *      An out of memory Error if an internal call to $(D reserve()) fails.
@@ -4376,13 +4394,14 @@ public:
      *      If the key is added or if it's already included then returns $(D true),
      *      otherwise $(D false).
      */
-    bool insert(bool rsv = true)(auto ref K key)
+    bool insert(alias mode = true)(auto ref K key) @nogc
+    if (isImplicitlyConvertible!(typeof(mode), bool))
     {
         bool result;
         if (!_buckets.length || key !in this)
         {
             result = true;
-            static if (rsv)
+            static if (mode)
                 reserve(1);
             const size_t h = hasher(key);
             assert(h < _buckets.length);
@@ -4699,6 +4718,8 @@ public:
      * Tries to insert a key-value pair in the set.
      *
      * Params:
+     *      mode = If true (imExpand) then reserves a slot else (imReserved)
+     *          assumes a previous call to $(D reserve()).
      *      key = The key.
      *      value = The value.
      * Throws:
@@ -4707,7 +4728,8 @@ public:
      *      If the key is added or if it's already included then returns $(D true),
      *      otherwise $(D false).
      */
-    bool insert(bool rsv = true)(auto ref K key, auto ref V value)
+    bool insert(alias mode = imExpand)(auto ref K key, auto ref V value) @nogc
+    if (isImplicitlyConvertible!(typeof(mode), bool))
     {
         bool result;
         const size_t h = hasher(key);
@@ -4715,7 +4737,7 @@ public:
         if (!_buckets.length || key !in this)
         {
             result = true;
-            static if (rsv)
+            static if (mode)
                 reserve(1);
             _buckets[h].insert(key, value);
             ++_count;
