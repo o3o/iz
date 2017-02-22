@@ -3349,7 +3349,7 @@ public:
      *      If the key is added or if it's already included then returns $(D true),
      *      otherwise $(D false).
      */
-    bool insert(alias mode)(auto ref K key) @nogc
+    bool insert(alias mode)(ref K key) @nogc
     if (isImplicitlyConvertible!(typeof(mode), bool))
     {
         bool result;
@@ -3372,6 +3372,13 @@ public:
         else if (*fr.slot == key)
             result = true;
         return result;
+    }
+
+    /// ditto
+    bool insert(alias mode = true)(K key) @nogc
+    if (isImplicitlyConvertible!(typeof(mode), bool))
+    {
+        return insert!mode(key);
     }
 
     /// ditto
@@ -3810,7 +3817,7 @@ public:
      *      If the key is added or if it's already included then returns $(D true),
      *      otherwise $(D false).
      */
-    bool insert(alias mode = imExpand)(auto ref K key, auto ref V value) @nogc
+    bool insert(alias mode = imExpand)(ref K key, auto ref V value) @nogc
     if (isImplicitlyConvertible!(typeof(mode), bool))
     {
         bool result;
@@ -3838,6 +3845,13 @@ public:
             _slots[fr.endHash] = n;
         }
         return result;
+    }
+
+    /// ditto
+    bool insert(alias mode = imExpand)(K key, V value) @nogc
+    if (isImplicitlyConvertible!(typeof(mode), bool))
+    {
+        return insert!mode(key, value);
     }
 
     /**
@@ -3885,7 +3899,7 @@ public:
     /**
      * Support for inserting using the array syntax. Forwards $(D insert()).
      */
-    void opIndexAssign()(auto ref V value, auto ref K key)
+    void opIndexAssign(KK)(auto ref V value, auto ref KK key)
     {
         insert(key, value);
     }
@@ -4400,7 +4414,7 @@ public:
      *      If the key is added or if it's already included then returns $(D true),
      *      otherwise $(D false).
      */
-    bool insert(alias mode = true)(auto ref K key) @nogc
+    bool insert(alias mode = true)(ref K key) @nogc
     if (isImplicitlyConvertible!(typeof(mode), bool))
     {
         bool result;
@@ -4415,6 +4429,13 @@ public:
             ++_count;
         }
         return result;
+    }
+
+    /// ditto
+    bool insert(alias mode = true)(K key) @nogc
+    if (isImplicitlyConvertible!(typeof(mode), bool))
+    {
+        return insert!mode(key);
     }
 
     /// ditto
@@ -4730,7 +4751,7 @@ public:
      *      If the key is added or if it's already included then returns $(D true),
      *      otherwise $(D false).
      */
-    bool insert(alias mode = imExpand)(auto ref K key, auto ref V value) @nogc
+    bool insert(alias mode = imExpand)(ref K key, auto ref V value) @nogc
     if (isImplicitlyConvertible!(typeof(mode), bool))
     {
         bool result;
@@ -4753,6 +4774,13 @@ public:
             _buckets[h].insert(key, value);
         }
         return result;
+    }
+
+    /// ditto
+    bool insert(alias mode = imExpand)(K key, V value) @nogc
+    if (isImplicitlyConvertible!(typeof(mode), bool))
+    {
+        return insert!mode(key, value);
     }
 
     /**
@@ -4859,7 +4887,7 @@ public:
     /**
      * Support for assigning using the array syntax.
      */
-    void opIndexAssign()(auto ref V value, auto ref K key)
+    void opIndexAssign(KK)(auto ref V value, auto ref KK key)
     {
         insert(key, value);
     }
@@ -4980,6 +5008,13 @@ public:
     aa0[""] = null;
     HashMap_AB!(void*, string) aa1;
     //aa1[null] = "";
+}
+
+unittest
+{
+    HashSet_AB!(const(char)[]) aa0;
+    string s = "s";
+    aa0.insert(s);
 }
 
 @nogc unittest
