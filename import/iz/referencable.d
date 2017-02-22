@@ -24,12 +24,12 @@ private template isReferenceType(T)
 /**
  * Associates an pointer (a reference) to an unique ID (ulong).
  */
-private alias itemsById = void*[char[]];
+private alias ItemsById = void*[char[]];
 
 /**
  * itemsById for a type (identified by a string).
  */
-private alias refStore = itemsById[string];
+private alias ItemsByIdByType = ItemsById[string];
 
 /**
  * The Referencable manager associates variables of a particular type to
@@ -46,7 +46,7 @@ static struct ReferenceMan
 
 private:
 
-    static __gshared refStore fStore;
+    static __gshared ItemsByIdByType _store;
 
 public:
 
@@ -63,7 +63,7 @@ public:
      */
     static bool isTypeStored(RT)()
     {
-        return ((RT.stringof in fStore) !is null);
+        return ((RT.stringof in _store) !is null);
     }
 
     /**
@@ -92,14 +92,14 @@ public:
      * Support for the in operator.
      * Evaluates to true if the variable is referenced otherwise false.
      */
-    static bool opBinaryRight(string op, RT)(RT* aReference)
-    if (!isReferenceType!RT && op == "in")
+    static bool opBinaryRight(string op : "in", RT)(RT* aReference)
+    if (!isReferenceType!RT)
     {
         return (referenceID!RT(aReference) != "");
     }
 
-    static bool opBinaryRight(string op, RT)(RT aReference)
-    if (isReferenceType!RT && op == "in")
+    static bool opBinaryRight(string op : "in", RT)(RT aReference)
+    if (isReferenceType!RT)
     {
         return (referenceID!RT(aReference) != "");
     }
@@ -109,10 +109,7 @@ public:
      */
     static void reset()
     {
-        version(DigitalMars)
-            fStore.clear;
-        else
-            fStore = fStore.init;
+        _store.clear;
     }
 // -----------------------------------------------------------------------------
 // Add stuff ------------------------------------------------------------------+
@@ -126,7 +123,7 @@ public:
      */
     static void storeType(RT)()
     {
-        fStore[RT.stringof][""] = null;
+        _store[RT.stringof][""] = null;
     }
 
     /**
@@ -140,7 +137,7 @@ public:
      * Returns:
      *      The unique string used to identify the reference.
      */
-    static string getIDProposal(RT)(RT* aReference)
+    static const(char)[] getIDProposal(RT)(RT* aReference)
     {
         // already stored ? returns current ID
         const string ID = referenceID(aReference);
@@ -154,10 +151,10 @@ public:
         }
 
         // try to get an available ID in the existing range
-        foreach(immutable i; 0 .. fStore[RT.stringof].length)
+        foreach(immutable i; 0 .. _store[RT.stringof].length)
         {
             import std.string: format;
-            if (fStore[RT.stringof][i] == null)
+            if (_store[RT.stringof][i] == null)
                 return format("entry_%d", i);
         }
 
@@ -165,7 +162,7 @@ public:
         foreach(immutable i; 0 .. ulong.max)
         {
             import std.string: format;
-            if (i > fStore[RT.stringof].length)
+            if (i > _store[RT.stringof].length)
                 return format("entry_%d", i);
         }
 
@@ -183,7 +180,7 @@ public:
      * Returns:
      *      true if the reference is added otherwise false.
      */
-    static bool storeReference(RT)(RT* aReference, in char[] anID)
+    static bool storeReference(RT)(RT* aReference, const(char)[] anID)
     if (!isReferenceType!RT)
     {
         if (anID == "") return false;
@@ -192,12 +189,12 @@ public:
         if (curr == aReference) return true;
         if (curr != null) return false;
         //
-        fStore[RT.stringof][anID] = aReference;
+        _store[RT.stringof][anID] = aReference;
         return true;
     }
 
     /// ditto
-    static bool storeReference(RT)(RT aReference, in char[] anID)
+    static bool storeReference(RT)(RT aReference, const(char)[] anID)
     if (isReferenceType!RT)
     {
         if (anID == "") return false;
@@ -206,7 +203,7 @@ public:
         if (curr == aReference) return true;
         if (curr !is null) return false;
         //
-        fStore[RT.stringof][anID] = cast(RT*)aReference;
+        _store[RT.stringof][anID] = cast(RT*)aReference;
         return true;
     }
 
@@ -222,7 +219,7 @@ public:
      */
     static void removeReferences(RT)()
     {
-        if (auto t = RT.stringof in fStore)
+        if (auto t = RT.stringof in _store)
             t.clear;
     }
 
@@ -231,16 +228,9 @@ public:
      */
     static void clear()
     {
-        version(DigitalMars)
-        {
-            foreach(k; fStore.byKey)
-                fStore[k].clear;
-            fStore.clear;
-        }
-        else
-        {
-            fStore = fStore.init;
-        }
+        foreach(k; _store.byKey)
+            _store[k].clear;
+        _store.clear;
     }
 
     /**
@@ -253,10 +243,10 @@ public:
      * Returns:
      *      The reference if it's found otherwise null.
      */
-    static auto removeReference(RT)(in char[] anID)
+    static auto removeReference(RT)(const(char)[] anID)
     {
         auto result = reference!RT(anID);
-        if (result) fStore[RT.stringof][anID] = null;
+        if (result) _store[RT.stringof][anID] = null;
         return result;
     }
 
@@ -271,7 +261,7 @@ public:
     if (!isReferenceType!RT)
     {
         if (auto id = referenceID!RT(aReference))
-            fStore[RT.stringof][id] = null;
+            _store[RT.stringof][id] = null;
     }
 
     /// ditto
@@ -279,7 +269,7 @@ public:
     if (isReferenceType!RT)
     {
         if (auto id = referenceID!RT(aReference))
-            fStore[RT.stringof][id] = null;
+            _store[RT.stringof][id] = null;
     }
 
 // -----------------------------------------------------------------------------
@@ -299,17 +289,17 @@ public:
     if (!isReferenceType!RT)
     {
         if (!isTypeStored!RT) return "";
-        foreach (k; fStore[RT.stringof].keys)
+        foreach (k; _store[RT.stringof].keys)
         {
             static if (!is(RT == delegate))
             {
-                if (fStore[RT.stringof][k] == aReference)
+                if (_store[RT.stringof][k] == aReference)
                     return k;
             }
             else
             {
                 struct Dg {void* a,b;}
-                auto stored = *cast(Dg*) fStore[RT.stringof][k];
+                auto stored = *cast(Dg*) _store[RT.stringof][k];
                 auto passed = *cast(Dg*) aReference;
                 if (stored.a == passed.a && stored.b == passed.b)
                     return k;
@@ -323,9 +313,9 @@ public:
     if (isReferenceType!RT)
     {
         if (!isTypeStored!RT) return "";
-        foreach (k; fStore[RT.stringof].keys)
+        foreach (k; _store[RT.stringof].keys)
         {
-            if (fStore[RT.stringof][k] == cast(void*)aReference)
+            if (_store[RT.stringof][k] == cast(void*)aReference)
                 return k;
         }
         return "";
@@ -342,21 +332,21 @@ public:
      * Returns:
      *      A non empty string if the variable is referenced.
      */
-    static const(char)[] referenceID(bool dg = false)(in char[] type, void* aReference)
+    static const(char)[] referenceID(bool dg = false)(const(char)[] type, void* aReference)
     {
         if (type == "") return "";
-        if (type !in fStore) return "";
-        foreach (k; fStore[type].keys)
+        if (type !in _store) return "";
+        foreach (k; _store[type].keys)
         {
             static if (!dg)
             {
-                if (fStore[type][k] == aReference)
+                if (_store[type][k] == aReference)
                     return k;
             }
             else
             {
                 struct Dg {void* a,b;}
-                auto stored = *cast(Dg*) fStore[type][k];
+                auto stored = *cast(Dg*) _store[type][k];
                 auto passed = *cast(Dg*) aReference;
                 if (stored.a == passed.a && stored.b == passed.b)
                     return k;
@@ -376,23 +366,23 @@ public:
      *      Null if the operation fails otherwise a pointer to a RT, or
      *      a RT if RT is a reference type.
      */
-    static RT* reference(RT)(in char[] anID)
+    static RT* reference(RT)(const(char)[] anID)
     if (!isReferenceType!RT)
     {
         if (anID == "") return null;
         if (!isTypeStored!RT) return null;
-        if (void** result = anID in fStore[RT.stringof])
+        if (void** result = anID in _store[RT.stringof])
             return *cast(RT**) result;
         else
             return null;
     }
 
-    static RT reference(RT)(in char[] anID)
+    static RT reference(RT)(const(char)[] anID)
     if (isReferenceType!RT)
     {
         if (anID == "") return null;
         if (!isTypeStored!RT) return null;
-        if (void* result = anID in fStore[RT.stringof])
+        if (void* result = anID in _store[RT.stringof])
             return *cast(RT*) result;
         else
             return null;
@@ -408,12 +398,12 @@ public:
      * Returns:
      *      Null if the operation fails otherwise a raw pointer.
      */
-    static void* reference(in char[] type, in char[] anID)
+    static void* reference(const(char)[] type, const(char)[] anID)
     {
         import std.stdio;
         if (anID == "") return null;
-        if (type !in fStore) return null;
-        if (void** result = anID in fStore[type])
+        if (type !in _store) return null;
+        if (void** result = anID in _store[type])
             return *result;
         else
             return null;
