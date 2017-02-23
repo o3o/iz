@@ -210,12 +210,14 @@ public:
     /**
      * Indicates how many block the array is made of.
      */
+    pragma(inline, true)
     size_t blockCount() const pure nothrow @safe @nogc
     {
         return _blockCount;
     }
 
     /// Sets or gets the element count.
+    pragma(inline, true)
     size_t length() const pure nothrow @safe @nogc
     {
         return _length;
@@ -250,6 +252,7 @@ public:
      * Pointer to the first element.
      * As it's always assigned It cannot be used to determine if the array is empty.
      */
+    pragma(inline, true)
     Ptr ptr() pure nothrow @nogc
     {
         return _elems;
@@ -3213,7 +3216,6 @@ public:
 
     void popFront() @nogc
     {
-        PF curr;
         ++index;
         next();
     }
@@ -4446,10 +4448,7 @@ private:
         foreach (immutable i; 0..old.length)
         {
             foreach (immutable j; 0..old[i]._array.length)
-            {
-                const size_t h = hasher(old[i]._array[j]);
                 insert!false(old[i]._array[j]);
-            }
         }
         destruct(old);
     }
@@ -4804,10 +4803,7 @@ private:
         foreach (immutable i; 0..old.length)
         {
             foreach (immutable j; 0..old[i]._array.length)
-            {
-                const size_t h = hasher(old[i]._array[j][0]);
                 insert!false(old[i]._array[j][0], old[i]._array[j][1]);
-            }
         }
         destruct(old);
     }
