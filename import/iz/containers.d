@@ -331,6 +331,7 @@ public:
     }
 
     /// Support for the array syntax.
+    pragma(inline, true)
     ref T opIndex(size_t i) const pure @nogc
     {
         return *rwPtr(i);
@@ -3181,8 +3182,15 @@ template HashMap(CollisionHandling ch = CH.linearProbe)
         static assert(0);
 }
 
+private enum
+{
+    rngNoMap,
+    rngMapByKey,
+    rngMapByValue,
+    rngMapByKeyValue,
+}
 
-private struct RangeForLpSet(T)
+private struct RangeForLpSet(T, alias rngKind = rngNoMap)
 {
 
 private:
@@ -3223,8 +3231,15 @@ public:
     bool empty() @nogc
     {return index >= _hashOrMap.length;}
 
-    F front() @nogc
-    {return *(*_hashOrMap)[index];}
+    ref front() @nogc
+    {
+        static if (rngKind == rngNoMap || rngKind == rngMapByKeyValue)
+            return *(*_hashOrMap)[index];
+        else static if (rngKind == rngMapByKey)
+            return (*(*_hashOrMap)[index])[0];
+        else static if (rngKind == rngMapByValue)
+            return (*(*_hashOrMap)[index])[1];
+    }
 }
 
 /**
@@ -3916,6 +3931,63 @@ public:
     }
 
     /**
+     * Support for the assignment operators on a value
+     */
+    void opIndexOpAssign(string op, VV, KK)(auto ref VV value, auto ref KK key)
+    {
+        if (auto p = key in this)
+        {
+            mixin("(*p)" ~ op ~ "= value;");
+        }
+        else
+        {
+            V v;
+            mixin("v" ~ op ~ "= value;");
+            insert(key, v);
+        }
+    }
+
+    /**
+     * Support for the unary operators on a value
+     */
+    /*void opIndexUnary(string op, KK)(auto ref KK key)
+    if (op == "++" || op == "--")
+    {
+        if (auto p = key in this)
+        {
+            mixin("(*p)" ~ op ~ ";");
+        }
+        else
+        {
+            V v;
+            mixin("v" ~ op ~ ";");
+            insert(key, v);
+        }
+    }
+
+    auto ref opIndexUnary(string op, KK)(auto ref KK key)
+    if (op != "++" && op != "--")
+    {
+        mixin("return " ~ op ~ "(opIndex(key));");
+    }*/
+
+    /**
+     * Returns an input range consisting of each key
+     */
+    auto byKey() return @nogc
+    {
+        return RangeForLpSet!(MapT,rngMapByKey)(&this);
+    }
+
+    /**
+     * Returns an input range consisting of each value
+     */
+    auto byValue() return @nogc
+    {
+        return RangeForLpSet!(MapT,rngMapByValue)(&this);
+    }
+
+    /**
      * Returns an input range consisting of each non-null key-value pair.
      */
     auto byKeyValue() return @nogc
@@ -4003,6 +4075,7 @@ public:
             return null;
     }
 
+    /// ditto
     auto ref V opIndex(KK)(auto ref KK key)
     if (!is(KK == size_t))
     {
@@ -4261,6 +4334,7 @@ public:
         return result;
     }
 
+    pragma(inline, true)
     K* getKey(KK)(ref KK key)
     {
         K* result;
@@ -4354,7 +4428,7 @@ public:
     size_t length() @nogc const pure nothrow {return _array.length;}
 }
 
-private struct RangeForAbSet(T)
+private struct RangeForAbSet(T, alias rngKind = rngNoMap)
 {
 
 private:
@@ -4385,29 +4459,36 @@ public:
         if (_currBucket)
         {
             ++_keyIndex;
-            if (_keyIndex == _currBucket.length)
+            if (_keyIndex >= _currBucket.length)
             {
                 _currBucket = null;
                 _keyIndex = 0;
+                ++_bucketIndex;
             }
         }
         if (!_currBucket)
         {
             while (_bucketIndex < _hashSetOrMap._buckets.length)
             {
-                ++_bucketIndex;
                 _currBucket = (*_hashSetOrMap).bucket(_bucketIndex);
                 if (_currBucket.length)
                     break;
+                else
+                    ++_bucketIndex;
             }
             if (_bucketIndex == _hashSetOrMap._buckets.length)
                 _currBucket = null;
         }
     }
 
-    auto ref front()
+    auto ref front() @nogc
     {
-        return _currBucket._array[_keyIndex];
+        static if (rngKind == rngNoMap || rngKind == rngMapByKeyValue)
+            return _currBucket._array[_keyIndex];
+        else static if (rngKind == rngMapByKey)
+            return _currBucket._array[_keyIndex][0];
+        else static if (rngKind == rngMapByValue)
+            return _currBucket._array[_keyIndex][1];
     }
 }
 
@@ -4617,6 +4698,7 @@ public:
      * Returns:
      *      $(D null) if the key is not present otherwise a pointer to the key.
      */
+    pragma(inline, true)
     K* opBinaryRight(string op : "in", KK)(auto ref KK key)
     {
         return _buckets[hasher(key)].getKey(key);
@@ -4796,14 +4878,17 @@ private:
 
     void reHash()()
     {
-        _count = 0;
+        //_count = 0;
         Array!BucketT old = _buckets;
         foreach (immutable i; 0.._buckets.length)
             _buckets[i].clear;
         foreach (immutable i; 0..old.length)
         {
             foreach (immutable j; 0..old[i]._array.length)
-                insert!false(old[i]._array[j][0], old[i]._array[j][1]);
+            {
+                const h = hasher(old[i]._array[j][0]);
+                _buckets[h].insert(old[i]._array[j][0], old[i]._array[j][1]);
+            }
         }
         destruct(old);
     }
@@ -4835,19 +4920,21 @@ public:
         bool result;
         if (!_buckets.length)
             reserve(1);
-        const size_t h = hasher(key);
-        assert(h < _buckets.length);
         if (key !in this)
         {
             result = true;
             static if (mode)
                 reserve(1);
+            const size_t h = hasher(key);
+            assert(h < _buckets.length);
             _buckets[h].insert(key, value);
             ++_count;
         }
         else
         {
             result = true;
+            const size_t h = hasher(key);
+            assert(h < _buckets.length);
             _buckets[h].remove(key);
             _buckets[h].insert(key, value);
         }
@@ -4971,11 +5058,44 @@ public:
     }
 
     /**
+     * Support for the assignment operators on a value
+     */
+    void opIndexOpAssign(string op, VV, KK)(auto ref VV value, auto ref KK key)
+    {
+        if (auto p = key in this)
+        {
+            mixin("(*p) " ~ op ~ "= value;");
+        }
+        else
+        {
+            V v;
+            mixin("v" ~ op ~ "= value;");
+            insert(key, v);
+        }
+    }
+
+    /**
      * Returns an input range that iterates the key-value pairs.
      */
     auto byKeyValue()
     {
         return RangeForAbSet!HashMapT(&this);
+    }
+
+    /**
+     * Returns an input range that iterates the keys.
+     */
+    auto byKey()
+    {
+        return RangeForAbSet!(HashMapT,rngMapByKey)(&this);
+    }
+
+    /**
+     * Returns an input range that iterates the values.
+     */
+    auto byValue()
+    {
+        return RangeForAbSet!(HashMapT,rngMapByValue)(&this);
     }
 
     /**
@@ -5007,7 +5127,6 @@ public:
 @nogc unittest
 {
     HashMap_AB!(string, int) hmsi;
-    hmsi.reserve(15);
 
     hmsi.insert("cat", 0);
     hmsi.insert("dog", 1);
@@ -5119,5 +5238,52 @@ unittest
         a2.remove(b);
         destruct!true(b);
     }
+}
+
+//TODO-cHashMaps: proper support for post++/--
+version (none) unittest
+{
+    {
+        HashMap_LP!(string, size_t) aa;
+        aa["0"] += 1;
+        assert(aa["0"] == 1);
+        aa["0"]++ ;
+        assert(aa["0"] == 2);
+    }
+    {
+        HashMap_AB!(string, size_t) aa;
+        aa["0"] += 1;
+        assert(aa["0"] == 1);
+        aa["0"]++ ;
+        assert(aa["0"] == 2);
+    }
+    {
+        //HashMap_LP!(string, size_t) aa;
+        //aa["0"]++;
+        //assert(aa["0"] == 1);
+        //aa["0"]-= 1;
+        //assert(aa["0"] == 0);
+    }
+}
+
+unittest
+{
+    import std.algorithm;
+    HashMap_AB!(string, int) aa;
+    aa.insert("0",2);
+    aa["0"] += 0;
+    aa.insert("1",2);
+    assert("1" in aa);
+    aa["1"] += 0;
+    assert(aa.count == 2);
+    auto rng = aa.byValue;
+    assert(!rng.empty);
+    assert(rng.front == 2);
+    rng.popFront;
+    assert(!rng.empty);
+    assert(rng.front == 2);
+    rng.popFront;
+    assert(rng.empty);
+    destruct(aa);
 }
 
