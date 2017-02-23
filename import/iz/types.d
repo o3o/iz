@@ -713,3 +713,10 @@ unittest
     static assert(!hasElaborateSelfEquals!Baz);
 }
 
+version(DigitalMars) {} else
+{
+    enum isCopyable(S) = is(typeof(
+        { S foo = S.init; S copy = foo; }
+    ));
+}
+
