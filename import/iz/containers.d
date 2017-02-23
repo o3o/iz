@@ -3248,7 +3248,7 @@ private:
     size_t _count;
 
     pragma(inline, true)
-    size_t hasher(KK)(auto ref KK key) @nogc
+    size_t hasher(KK)(auto ref KK key)
     {
         return hasherFun(key) & (_slots.length - 1);
     }
@@ -3277,7 +3277,7 @@ private:
     }
 
     //pragma(inline, true)
-    Slot.FindResult find(KK)(auto ref KK key) @nogc
+    Slot.FindResult find(KK)(auto ref KK key)
     {
         Slot.FindResult fr;
         const size_t hb = hasher(key);
@@ -3519,7 +3519,7 @@ public:
     /**
      * Support for the array syntax.
      */
-    K* opIndex(const size_t index) @nogc
+    K* opIndex(const size_t index)
     {
         return &_slots[index]._key;
     }
@@ -3527,7 +3527,7 @@ public:
     /**
      * Returns an input range consisting of each non-null key.
      */
-    auto byKey() return @nogc
+    auto byKey()
     {
         return RangeForLpSet!HashSetT(&this);
     }
@@ -3826,7 +3826,7 @@ public:
      *      If the key is added or if it's already included then returns $(D true),
      *      otherwise $(D false).
      */
-    bool insert(alias mode = imExpand)(ref K key, auto ref V value)
+    bool insert(alias mode = imExpand)(ref K key, auto ref V value) @nogc
     if (isImplicitlyConvertible!(typeof(mode), bool))
     {
         bool result;
@@ -4547,7 +4547,7 @@ public:
      * Returns:
      *      $(D true) if the key was included otherwise $(D false).
      */
-    bool remove()(auto ref K key) @nogc
+    bool remove()(auto ref K key)
     {
         const size_t h = hasher(key);
         const bool result = _buckets[h].remove(key);
@@ -4618,7 +4618,7 @@ public:
      * Returns:
      *      $(D null) if the key is not present otherwise a pointer to the key.
      */
-    K* opBinaryRight(string op : "in", KK)(auto ref KK key) @nogc
+    K* opBinaryRight(string op : "in", KK)(auto ref KK key)
     {
         return _buckets[hasher(key)].getKey(key);
     }
@@ -4833,7 +4833,7 @@ public:
      *      If the key is added or if it's already included then returns $(D true),
      *      otherwise $(D false).
      */
-    bool insert(alias mode = imExpand)(ref K key, auto ref V value)
+    bool insert(alias mode = imExpand)(ref K key, auto ref V value) @nogc
     if (isImplicitlyConvertible!(typeof(mode), bool))
     {
         bool result;
@@ -5103,7 +5103,10 @@ unittest
 {
     struct Foo {}
     HashMap_AB!(Foo,Foo) a1;
-    class Bar {override bool opEquals(Object o) const pure @nogc nothrow {return o is this;}}
+    class Bar
+    {
+        override bool opEquals(Object o) const pure @nogc nothrow {return o is this;}
+    }
     {HashMap_AB!(Bar,Bar) a2;}
     {HashMap_LP!(Bar,Bar) a2;}
     {
@@ -5111,12 +5114,14 @@ unittest
         Bar b = construct!Bar;
         a2.insert(b);
         a2.remove(b);
+        destruct!true(b);
     }
     {
         HashSet_LP!(Bar) a2;
         Bar b = construct!Bar;
         a2.insert(b);
         a2.remove(b);
+        destruct!true(b);
     }
 }
 
