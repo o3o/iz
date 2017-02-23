@@ -3019,15 +3019,27 @@ public:
     {
         static if (!isMap)
         {
-            return key == _key;
+            static if (hasElaborateSelfEquals!K)
+                return _key.opEquals(key);
+            else
+                return _key == key;
         }
         else
         {
-            if (key == _key)
-                return cast(const(V)*) &_value;
+            static if (hasElaborateSelfEquals!K)
+            {
+                if (_key.opEquals(key))
+                    return cast(const(V)*) &_value;
+                else
+                    return cast(const(V)*) null;
+            }
             else
-                return cast(const(V)*) null;
-
+            {
+                if (key == _key)
+                    return cast(const(V)*) &_value;
+                else
+                    return cast(const(V)*) null;
+            }
         }
     }
 
@@ -3265,7 +3277,7 @@ private:
     }
 
     //pragma(inline, true)
-    Slot.FindResult find(KK)(auto ref KK key)
+    Slot.FindResult find(KK)(auto ref KK key) @nogc
     {
         Slot.FindResult fr;
         const size_t hb = hasher(key);
@@ -4152,12 +4164,30 @@ public:
         {
             static if (!isMap)
             {
-                if (_array[i] != key)
-                    continue;
+                static if (hasElaborateSelfEquals!K)
+                {
+                    if (!_array[i].opEquals(key))
+                        continue;
+                }
+                else
+                {
+                    if (_array[i] != key)
+                        continue;
+                }
             }
-            else if (_array[i][0] != key)
-                continue;
-
+            else
+            {
+                static if (hasElaborateSelfEquals!K)
+                {
+                    if (!_array[i][0].opEquals(key))
+                        continue;
+                }
+                else
+                {
+                    if (_array[i][0] != key)
+                        continue;
+                }
+            }
             result = true;
             if (i == 0)
             {
@@ -4189,18 +4219,40 @@ public:
         {
             static if (isMap)
             {
-                if (_array[i][0] == key)
+                static if (hasElaborateSelfEquals!K)
                 {
-                    result = i;
-                    break;
+                    if (_array[i][0].opEquals(key))
+                    {
+                        result = i;
+                        break;
+                    }
+                }
+                else
+                {
+                    if (_array[i][0] == key)
+                    {
+                        result = i;
+                        break;
+                    }
                 }
             }
             else
             {
-                if (_array[i] == key)
+                static if (hasElaborateSelfEquals!K)
                 {
-                    result = i;
-                    break;
+                    if (_array[i].opEquals(key))
+                    {
+                        result = i;
+                        break;
+                    }
+                }
+                else
+                {
+                    if (_array[i] == key)
+                    {
+                        result = i;
+                        break;
+                    }
                 }
             }
         }
@@ -4215,18 +4267,40 @@ public:
         {
             static if (isMap)
             {
-                if (_array[i][0] == key)
+                static if (hasElaborateSelfEquals!K)
                 {
-                    result = &_array[i][0];
-                    break;
+                    if (_array[i][0].opEquals(key))
+                    {
+                        result = &_array[i][0];
+                        break;
+                    }
+                }
+                else
+                {
+                    if (_array[i][0] == key)
+                    {
+                        result = &_array[i][0];
+                        break;
+                    }
                 }
             }
             else
             {
-                if (_array[i] == key)
+                static if (hasElaborateSelfEquals!K)
                 {
-                    result = &_array[i];
-                    break;
+                    if (_array[i].opEquals(key))
+                    {
+                        result = &_array[i];
+                        break;
+                    }
+                }
+                else
+                {
+                    if (_array[i] == key)
+                    {
+                        result = &_array[i];
+                        break;
+                    }
                 }
             }
         }
@@ -4240,10 +4314,21 @@ public:
         if (const size_t j =  _array.length)
             foreach (immutable i; 0..j)
         {
-            if (_array[i][0] == key)
+            static if (hasElaborateSelfEquals!K)
             {
-                result = &_array[i][1];
-                    break;
+                if (_array[i][0].opEquals(key))
+                {
+                    result = &_array[i][1];
+                        break;
+                }
+            }
+            else
+            {
+                if (_array[i][0] == key)
+                {
+                    result = &_array[i][1];
+                        break;
+                }
             }
         }
         return result;
@@ -4411,7 +4496,7 @@ public:
      *      If the key is added or if it's already included then returns $(D true),
      *      otherwise $(D false).
      */
-    bool insert(alias mode = true)(ref K key)
+    bool insert(alias mode = true)(ref K key) @nogc
     if (isImplicitlyConvertible!(typeof(mode), bool))
     {
         bool result;
@@ -4533,7 +4618,7 @@ public:
      * Returns:
      *      $(D null) if the key is not present otherwise a pointer to the key.
      */
-    K* opBinaryRight(string op : "in", KK)(auto ref KK key)
+    K* opBinaryRight(string op : "in", KK)(auto ref KK key) @nogc
     {
         return _buckets[hasher(key)].getKey(key);
     }
@@ -5014,14 +5099,24 @@ unittest
     aa0.insert(s);
 }
 
-unittest
+@nogc unittest
 {
     struct Foo {}
     HashMap_AB!(Foo,Foo) a1;
-    class Bar {  override bool opEquals(Object) pure @nogc nothrow {return true;} }
+    class Bar {override bool opEquals(Object o) const pure @nogc nothrow {return o is this;}}
     {HashMap_AB!(Bar,Bar) a2;}
     {HashMap_LP!(Bar,Bar) a2;}
-    {HashSet_AB!(Bar) a2;}
-    {HashSet_LP!(Bar) a2;}
+    {
+        HashSet_AB!(Bar) a2;
+        Bar b = construct!Bar;
+        a2.insert(b);
+        a2.remove(b);
+    }
+    {
+        HashSet_LP!(Bar) a2;
+        Bar b = construct!Bar;
+        a2.insert(b);
+        a2.remove(b);
+    }
 }
 
