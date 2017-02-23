@@ -678,3 +678,38 @@ unittest
     static assert(isCppClass!Bar);
 }
 
+/**
+ * Indicates wether the type passed as template parameter has a custom
+ * $(D opEquals) function that allows self comparison.
+ *
+ * This triat mostly allows compare objects, with a known derived type, in
+ * $(D @nogc) code.
+ */
+template hasElaborateSelfEquals(T)
+{
+    static if (is(T == class) || is(T == struct))
+    {
+        static if (is(T == class))
+            alias B = Object;
+        else
+            alias B = Unqual!T;
+        static if (__traits(hasMember, T, "opEquals")
+            && Parameters!(T.opEquals).length == 1
+            && is(Unqual!(Parameters!(T.opEquals)[0]) : B))
+            enum bool hasElaborateSelfEquals = true;
+        else
+            enum bool hasElaborateSelfEquals = false;
+    }
+    else enum bool hasElaborateSelfEquals = false;
+}
+///
+unittest
+{
+    struct Foo {}
+    struct Bar {bool opEquals(const(Bar)){return true;}}
+    struct Baz {bool opEquals(Foo){return true;}}
+    static assert(!hasElaborateSelfEquals!Foo);
+    static assert(hasElaborateSelfEquals!Bar);
+    static assert(!hasElaborateSelfEquals!Baz);
+}
+
