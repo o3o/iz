@@ -3195,7 +3195,7 @@ private struct RangeForLpSet(T, alias rngKind = rngNoMap)
 
 private:
 
-    alias PF = ReturnType!(T.opIndex);
+    alias PF = ReturnType!(T.slot);
     alias F = PointerTarget!PF;
 
     size_t index;
@@ -3204,9 +3204,9 @@ private:
     //pragma(inline, true)
     void next()
     {
-        while (index < _hashOrMap.length)
+        while (index < _hashOrMap.slotCount)
         {
-            if ((*_hashOrMap)[index])
+            if ((*_hashOrMap).slot(index))
                 break;
             else
                 ++index;
@@ -3229,16 +3229,16 @@ public:
     }
 
     bool empty() @nogc
-    {return index >= _hashOrMap.length;}
+    {return index >= _hashOrMap.slotCount;}
 
     ref front() @nogc
     {
         static if (rngKind == rngNoMap || rngKind == rngMapByKeyValue)
-            return *(*_hashOrMap)[index];
+            return *(*_hashOrMap).slot(index);
         else static if (rngKind == rngMapByKey)
-            return (*(*_hashOrMap)[index])[0];
+            return (*(*_hashOrMap).slot(index))[0];
         else static if (rngKind == rngMapByValue)
-            return (*(*_hashOrMap)[index])[1];
+            return (*(*_hashOrMap).slot(index))[1];
     }
 }
 
@@ -3493,6 +3493,11 @@ public:
 
     /**
      * Minimizes the memory usage.
+     *
+     * Should be used after removal and only if $(D count() < slotCount()).
+     *
+     * Throws:
+     *      An out of memory Error if the reallocation fails.
      */
     void minimize()()
     {
@@ -3534,15 +3539,20 @@ public:
     }
 
     /**
-     * Support for the array syntax.
+     * Provides an access to the keys.
+     *
+     * Params:
+     *      index = The slot index. Must be in the $(D 0..slotCount()) range.
+     * Returns:
+     *      A pointer the nth key.
      */
-    K* opIndex(const size_t index)
+    K* slot(const size_t index)
     {
         return &_slots[index]._key;
     }
 
     /**
-     * Returns an input range consisting of each non-null key.
+     * Returns an input range that consists of each non-null key.
      */
     auto byKey()
     {
@@ -3550,24 +3560,24 @@ public:
     }
 
     /**
-     * Returns the count of non-null elements in the set.
+     * Returns the keys count.
+     *
+     * This matches to $(D byKey.walkLength).
      */
     size_t count() @nogc {return _count;}
 
     /**
-     * Returns the length of the set.
+     * Returns the slots count.
      */
-    size_t length() @nogc {return _slots.length;}
-
-    /// ditto
-    alias opDollar = length;
+    size_t slotCount() @nogc {return _slots.length;}
 }
 ///
 @nogc unittest
 {
     HashSet_LP!string commands;
-    // can insert up to 16 element without reallocation
+    // can insert up to 16 elements without reallocation
     commands.reserve(15);
+    assert(commands.slotCount == 16);
     // appends elements
     commands.insert("move");
     commands.insert("insert");
@@ -3580,7 +3590,7 @@ public:
     assert("insert" !in commands);
     // empties and frees memory
     commands.clear;
-    // manually manged implies to destruct by hand
+    // manually managed implies to destruct by hand
     import iz.memory;
     destruct(commands);
 }
@@ -3590,7 +3600,7 @@ public:
     HashSet_LP!string hss;
 
     hss.reserve(7);
-    assert(hss.length == 8);
+    assert(hss.slotCount == 8);
 
     foreach(i; 0 .. hss._slots.length)
         assert(hss._slots[i] is null);
@@ -3661,7 +3671,7 @@ public:
 
     hss.clear;
     assert(hss.count == 0);
-    assert(hss.length == 0);
+    assert(hss.slotCount == 0);
 
     hss.reserve(8);
     import std.algorithm: among;
@@ -3675,11 +3685,11 @@ public:
     assert((r.front).among("cow","yak"));
     r.popFront;
     assert(r.empty);
-    assert(hss.length == 16);
+    assert(hss.slotCount == 16);
 
     assert(hss.count == 2);
     hss.minimize;
-    assert(hss.length < 16);
+    assert(hss.slotCount < 16);
 
     destruct(hss);
 }
@@ -3705,7 +3715,7 @@ public:
     destruct(co);
 }
 
- unittest
+@nogc unittest
 {
     {
         HashSet_LP!string co = HashSet_LP!string("ab", "ab", "cd");
@@ -3902,6 +3912,9 @@ public:
 
     /**
      * Clears and empties the set.
+     *
+     * Throws:
+     *      An out of memory Error if the reallocation fails.
      */
     void clear() @nogc
     {
@@ -3914,10 +3927,17 @@ public:
     }
 
     /**
-     * Support for appending an element. Forwards $(D insert()) with a default-
-     * initialized value.
+     * Support for appending an element.
+     *
+     * Forwards $(D insert()) with a default initialized value.
+     *
+     * Params:
+     *      key = The key to insert.
+     * Returns:
+     *      If the key is added or if it's already included then returns $(D true),
+     *      otherwise $(D false).
      */
-    auto opOpAssign(string op : "~")(auto ref K key)
+    bool opOpAssign(string op : "~")(auto ref K key)
     {
         return insert(key, V.init);
     }
@@ -3931,7 +3951,7 @@ public:
     }
 
     /**
-     * Support for the assignment operators on a value
+     * Support for the assignment operators on a value.
      */
     void opIndexOpAssign(string op, VV, KK)(auto ref VV value, auto ref KK key)
     {
@@ -3948,31 +3968,7 @@ public:
     }
 
     /**
-     * Support for the unary operators on a value
-     */
-    /*void opIndexUnary(string op, KK)(auto ref KK key)
-    if (op == "++" || op == "--")
-    {
-        if (auto p = key in this)
-        {
-            mixin("(*p)" ~ op ~ ";");
-        }
-        else
-        {
-            V v;
-            mixin("v" ~ op ~ ";");
-            insert(key, v);
-        }
-    }
-
-    auto ref opIndexUnary(string op, KK)(auto ref KK key)
-    if (op != "++" && op != "--")
-    {
-        mixin("return " ~ op ~ "(opIndex(key));");
-    }*/
-
-    /**
-     * Returns an input range consisting of each key
+     * Returns an input range consisting of each key.
      */
     auto byKey() return @nogc
     {
@@ -3980,7 +3976,7 @@ public:
     }
 
     /**
-     * Returns an input range consisting of each value
+     * Returns an input range consisting of each value.
      */
     auto byValue() return @nogc
     {
@@ -4019,6 +4015,8 @@ public:
 
     /**
      * Minimizes the memory usage.
+     *
+     * Should be used after removal and only if $(D count() < slotCount()).
      */
     void minimize()()
     {
@@ -4061,13 +4059,15 @@ public:
     }
 
     /**
-     * Support for the array syntax.
+     * Provides an access to the key-value pairs.
      *
+     * Params
+     *      index = The pair index. Must be in the $(D 0..slotCount()) range.
      * Returns:
      *      A pointer to a tuple that contains, when not null, the
      *      key and the value of the element pointed by $(D_PARAM index).
      */
-    MapPair* opIndex(const size_t index) @nogc
+    MapPair* slot(const size_t index) @nogc
     {
         if (auto r = _slots[index])
             return r.ptr;
@@ -4083,18 +4083,43 @@ public:
     }
 
     /**
-     * Returns the count of non-null elements in the set.
+     * Returns the key-value pairs count.
+     *
+     * This matches to $(D byKeyValue.walkLength).
      */
     size_t count() @nogc {return _count;}
 
     /**
-     * Returns the length of the set.
+     * Returns the slots counts.
      */
-    size_t length() @nogc {return _slots.length;}
-
-    /// ditto
-    alias opDollar = length;
+    size_t slotCount() @nogc {return _slots.length;}
 }
+///
+@nogc unittest
+{
+    HashMap_LP!(string, size_t) stock;
+    // can insert up to 16 elements without reallocation
+    stock.reserve(15);
+    assert(stock.slotCount == 16);
+    // appends elements, various syntax allowed
+    stock.insert("pen", 8);
+    stock["gum"] += 32;
+    stock["ruler"] += 12;
+    stock ~= "tape roll";
+    // test for inclusion, various syntax allowed
+    assert("gum" in stock);
+    assert(stock["ruler"] == 12);
+    assert(stock["tape roll"] == 0);
+    // remove something
+    stock.remove("ruler");
+    assert("ruler" !in stock);
+    // empties and frees memory
+    stock.clear;
+    // manually managed implies to destruct by hand
+    import iz.memory;
+    destruct(stock);
+}
+
 
 @nogc unittest
 {
@@ -4705,7 +4730,12 @@ public:
     }
 
     /**
-     * Returns the nth bucket.
+     * Provides an access to the buckets.
+     *
+     * Params:
+     *      index = The bucket index. Must be in the $(D 0..bucketCount()) range.
+     * Returns:
+     *      A never null, pointer to a bucket.
      */
     BucketT* bucket(const size_t index) pure nothrow @nogc
     {
@@ -4713,7 +4743,7 @@ public:
     }
 
     /**
-     * Returns an input range that iterates the keys.
+     * Returns: an input range that allows to iterate the keys.
      */
     auto byKey()
     {
@@ -4721,17 +4751,17 @@ public:
     }
 
     /**
-     * Returns the elements count.
+     * Returns: the elements count.
      */
     size_t count() pure nothrow @nogc {return _count;}
 
     /**
-     * Returns the buckets count.
+     * Returns: the buckets count.
      */
-    size_t length() pure nothrow @nogc {return _buckets.length;}
+    size_t bucketCount() pure nothrow @nogc {return _buckets.length;}
 
     /**
-     * Returns the count of synonyms
+     * Returns: the collisions count.
      */
     size_t collisions() pure nothrow @nogc
     {
@@ -4741,9 +4771,29 @@ public:
                 _buckets[i]._array.length - 1 : 0;
         return result;
     }
-
-    /// ditto
-    alias opDollar = length;
+}
+///
+@nogc unittest
+{
+    HashSet_AB!string commands;
+    // can insert up to 16 elements without reallocation
+    commands.reserve(15);
+    assert(commands.bucketCount == 16);
+    // appends elements
+    commands.insert("move");
+    commands.insert("insert");
+    commands.insert("delete");
+    // test for inclusion
+    assert("move" in commands);
+    // remove something
+    commands.remove("insert");
+    assert(commands.count == 2);
+    assert("insert" !in commands);
+    // empties and frees memory
+    commands.clear;
+    // manually managed implies to destruct by hand
+    import iz.memory;
+    destruct(commands);
 }
 
 @nogc unittest
@@ -4751,7 +4801,7 @@ public:
     HashSet_AB!string hss;
 
     assert(hss.insert("cat"));
-    assert(hss.length == 2);
+    assert(hss.bucketCount == 2);
     assert("dog" !in hss);
     assert("cat" in hss);
 
@@ -4831,9 +4881,9 @@ public:
     r.popFront;
     assert(r.empty);
 
-    assert(hss.length == 32);
+    assert(hss.bucketCount == 32);
     hss.minimize;
-    assert(hss.length == 2);
+    assert(hss.bucketCount == 2);
 
     destruct(hss);
 }
@@ -5034,7 +5084,28 @@ public:
     }
 
     /**
-     * Returns the nth bucket.
+     * Support for appending an element.
+     *
+     * Forwards $(D insert()) with a default initialized value.
+     *
+     * Params:
+     *      key = The key to insert.
+     * Returns:
+     *      If the key is added or if it's already included then returns $(D true),
+     *      otherwise $(D false).
+     */
+    bool opOpAssign(string op : "~")(auto ref K key)
+    {
+        return insert(key, V.init);
+    }
+
+    /**
+     * Provides an access to the buckets.
+     *
+     * Params:
+     *      index = The bucket index. Must be in the $(D 0..bucketCount()) range.
+     * Returns:
+     *      A never null pointer to a bucket.
      */
     BucketT* bucket(const size_t index) pure nothrow @nogc
     {
@@ -5058,7 +5129,7 @@ public:
     }
 
     /**
-     * Support for the assignment operators on a value
+     * Support for the assignment operators on a value.
      */
     void opIndexOpAssign(string op, VV, KK)(auto ref VV value, auto ref KK key)
     {
@@ -5075,7 +5146,7 @@ public:
     }
 
     /**
-     * Returns an input range that iterates the key-value pairs.
+     * Returns: an input range that allows to iterate the key-value pairs.
      */
     auto byKeyValue()
     {
@@ -5083,7 +5154,7 @@ public:
     }
 
     /**
-     * Returns an input range that iterates the keys.
+     * Returns: an input range that allows to iterate the keys.
      */
     auto byKey()
     {
@@ -5091,7 +5162,7 @@ public:
     }
 
     /**
-     * Returns an input range that iterates the values.
+     * Returns: an input range that allows to iterate the values.
      */
     auto byValue()
     {
@@ -5099,17 +5170,17 @@ public:
     }
 
     /**
-     * Returns the elements count.
+     * Returns: the elements count.
      */
     size_t count() pure nothrow @nogc {return _count;}
 
     /**
      * Returns the buckets count.
      */
-    size_t length() pure nothrow @nogc {return _buckets.length;}
+    size_t bucketCount() pure nothrow @nogc {return _buckets.length;}
 
     /**
-     * Returns the count of synonyms
+     * Returns: the collisions count.
      */
     size_t collisions() pure nothrow @nogc
     {
@@ -5119,9 +5190,31 @@ public:
                 _buckets[i]._array.length - 1 : 0;
         return result;
     }
-
-    /// ditto
-    alias opDollar = length;
+}
+///
+@nogc unittest
+{
+    HashMap_AB!(string, size_t) stock;
+    // can insert up to 16 elements without reallocation
+    stock.reserve(15);
+    assert(stock.bucketCount == 16);
+    // appends elements, various syntax allowed
+    stock.insert("pen", 8);
+    stock["gum"] += 32;
+    stock["ruler"] += 12;
+    stock ~= "tape roll";
+    // test for inclusion, various syntax allowed
+    assert("gum" in stock);
+    assert(stock["ruler"] == 12);
+    assert(stock["tape roll"] == 0);
+    // remove something
+    stock.remove("ruler");
+    assert("ruler" !in stock);
+    // empties and frees memory
+    stock.clear;
+    // manually managed implies to destruct by hand
+    import iz.memory;
+    destruct(stock);
 }
 
 @nogc unittest
@@ -5251,18 +5344,26 @@ version (none) unittest
         assert(aa["0"] == 2);
     }
     {
-        HashMap_AB!(string, size_t) aa;
-        aa["0"] += 1;
-        assert(aa["0"] == 1);
-        aa["0"]++ ;
-        assert(aa["0"] == 2);
+        //HashMap_AB!(string, size_t) aa;
+        //aa["0"]++;
+        //assert(aa["0"] == 1);
+        //aa["0"]++ ;
+        //assert(aa["0"] == 2);
+        //aa["1"]++;
+        //assert(aa["1"] == 1);
+        //aa["1"]-- ;
+        //assert(aa["1"] == 0);
     }
     {
         //HashMap_LP!(string, size_t) aa;
         //aa["0"]++;
         //assert(aa["0"] == 1);
-        //aa["0"]-= 1;
-        //assert(aa["0"] == 0);
+        //aa["0"]++;
+        //assert(aa["0"] == 2);
+        //aa["1"]++;
+        //assert(aa["1"] == 1);
+        //aa["1"]-- ;
+        //assert(aa["1"] == 0);
     }
 }
 
