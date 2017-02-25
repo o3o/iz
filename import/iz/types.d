@@ -293,11 +293,11 @@ unittest
 }
 
 /**
- * Indicates wether an aggregate can be used with the `in` operator.
+ * Indicates wether an aggregate can be used with the $(D in) operator.
  *
  * Params:
  *      T = The aggregate or an associative array type.
- *      A = The type of the `in` left hand side argument.
+ *      A = The type of the $(D in) left hand side argument.
  */
 template hasInOperator(T, A)
 {

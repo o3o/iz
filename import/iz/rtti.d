@@ -98,7 +98,7 @@ package alias BasicRtTypes = AliasSeq!(
 );
 
 /**
- * Indicates if `T` is a basic runtime type (fixed length, not array, no type identifier)
+ * Indicates if $(D T) is a basic runtime type (fixed length, not array, no type identifier)
  */
 template isBasicRtType(T)
 {
@@ -110,8 +110,8 @@ template isBasicRtType(T)
  * Indicates the size of a variable according to its RtType
  *
  * Returns:
- *      `0` is returned if the size is variable otherwise the equivalent
- *      of the .sizeof property.
+ *      $(D 0) is returned if the size is variable otherwise the equivalent
+ *      of the $(D .sizeof) property.
  */
 ubyte size(RtType type)
 {
@@ -162,10 +162,10 @@ unittest
  * Params:
  *      t = Either a RtType or a pointer to a Rtti.
  * Returns:
- *      For the basic types, always the equivalent of the keyword .stringof property.
- *      For the other types, if `t` is a RtType then "struct" then "enum", "Object",
- *      etc are returned, otherwise if `t` is a pointer to a Rtti then the type
- *      identifier is returned, e.g "E" for `enum E {e}`.
+ *      For the basic types, always the equivalent of the keyword $(D .stringof) property.
+ *      For the other types, if $(D t) is a RtType then "struct", "enum", "Object", etc
+ *      are returned, otherwise if $(D t) is a pointer to a $(D Rtti) then the type
+ *      identifier is returned, e.g "E" for $(D enum E {e}).
  */
 string typeString(T)(T t)
 {
@@ -545,7 +545,7 @@ struct Rtti
 
 /**
  * Returns the Rtti for the type that has its .stringof property
- * equal to `typeString`.
+ * equal to $(D typeString).
  */
 const(Rtti)* getRtti(const(char)[] typeString)
 {

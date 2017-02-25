@@ -208,6 +208,7 @@ Like free() but for @safe context.
 Foo* foo = <a href="iz/memory.html#construct">construct</a>!Foo;
 // initializer well skipped
 assert(foo.a != 42);
+<a href="iz/memory.html#destruct">destruct</a>(foo);
 
 </code></pre>
 
@@ -485,7 +486,9 @@ if(Objs.length > 1)
 </td></tr>
 </table>
 </div>
-</div></div><a class="anchor" id="registerFactoryClass"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/memory.html#registerFactoryClass">registerFactoryClass</a>(T)(string name = "") 
+</div></div><a class="anchor" id="registerFactoryClass"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/memory.html#registerFactoryClass">registerFactoryClass</a>(T, F)(
+    ref F f, 
+    string name = "") 
 if(is(T == class) && !isAbstractClass!T)
 </code></pre>
 <div class="section"><h2></h2>
@@ -508,12 +511,15 @@ in the main thread.
 </p>
 </td></tr>
 <tr class="param"><td class="paramName">name</td><td class="paramDoc"><p>The name used to register the class.
-     By default the <pre style="display:inline;" class="d_inline_code">T.stringof</pre> is used.
+     By default the <code class="d_inline_code">T.stringof</code> is used.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">f</td><td class="paramDoc"><p>The class repository, a hashmap of TypeInfo_Class by string.
 </p>
 </td></tr>
 </table>
 </div>
-</div></div><a class="anchor" id="registerFactoryClasses"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/memory.html#registerFactoryClasses">registerFactoryClasses</a>(A...)()
+</div></div><a class="anchor" id="registerFactoryClasses"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/memory.html#registerFactoryClasses">registerFactoryClasses</a>(A1, A2 = <a href="http://dlang.org/type.html#basic-data-types">void</a>, A3 = <a href="http://dlang.org/type.html#basic-data-types">void</a>, A4 = <a href="http://dlang.org/type.html#basic-data-types">void</a>, A5 = <a href="http://dlang.org/type.html#basic-data-types">void</a>, A6 = <a href="http://dlang.org/type.html#basic-data-types">void</a>, A7 = <a href="http://dlang.org/type.html#basic-data-types">void</a>, A8 = <a href="http://dlang.org/type.html#basic-data-types">void</a>, A9 = <a href="http://dlang.org/type.html#basic-data-types">void</a>, F)(ref F f)
 </code></pre>
 <div class="section"><h2></h2>
 <p>Calls registerClass() for each template argument.
@@ -525,7 +531,19 @@ in the main thread.
 
 
 </div>
-</div></div><a class="anchor" id="factory"></a><div class="symbol"><div class="description"><pre><code>public Object <a href="iz/memory.html#factory">factory</a>(string className)
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">A</td><td class="paramDoc"><p>A list of classes, from one up to nine.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">f</td><td class="paramDoc"><p>The class repository, a hashmap of TypeInfo_Class by string.
+</p>
+</td></tr>
+</table>
+</div>
+</div></div><a class="anchor" id="factory"></a><div class="symbol"><div class="description"><pre><code>public Object <a href="iz/memory.html#factory">factory</a>(F)(
+    ref F f, 
+    string className)
 </code></pre>
 <div class="section"><h2></h2>
 <p>Constructs a class instance using a gc-free factory.
@@ -542,6 +560,9 @@ registered classes don't take the module in account.
 <div class="section"><h2>Parameters</h2>
 <table class="params">
 <tr class="param"><td class="paramName">className</td><td class="paramDoc"><p>the class name, as registered in registerFactoryClass().
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">factory</td><td class="paramDoc"><p>The class repository, a hashmap of TypeInfo_Class by string.
 </p>
 </td></tr>
 </table>

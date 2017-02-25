@@ -264,11 +264,11 @@ static immutable CharSwitch!("[\t..\r]", ' ') whiteChars;
  * because the characters are tested with a switch table that's generated at
  * compile-time rather than reading, with an indirection, a sparse array of booleans.
  *
- * The structure uniquely implements the `in` operator.
+ * The structure uniquely implements the $(D in) operator.
  *
  * Params:
  *      A = Variadic parameters made of literal characters, integer numbers or
- *      character ranges literals, such as `"[0..9]"` or `"[a..z]"`.
+ *      character ranges literals, such as $(D "[0..9]") or $(D "[a..z]").
  */
 struct CharSwitch(A...)
 if (A.length)
@@ -1624,7 +1624,7 @@ public:
                 return suffix[1..$] in *(_nodes[suffix[0]]);
         }
 
-        /// Aliases to the `in` operator.
+        /// Aliases to the $(D in) operator.
         alias find = opBinaryRight!"in";
 
         /**

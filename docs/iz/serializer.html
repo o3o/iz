@@ -47,7 +47,7 @@
 <div class="aggregate-symbol"><a class="anchor" id="isSerializable"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/serializer.html#isSerializable">isSerializable</a>(T)()
 </code></pre>
 <div class="section"><h2></h2>
-<p>Only a sub set of the type representable as a Rtti are serializable.
+<p>Only a subset of the type representable as a Rtti are serializable.
 This template only evaluates to true if it's the case.
 </p>
 
@@ -212,27 +212,26 @@ deserialize.
 </div>
 </div></div><a class="anchor" id="publisherToFile"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/serializer.html#publisherToFile">publisherToFile</a>(
     Object pub, 
-    in <a href="http://dlang.org/type.html#basic-data-types">char</a>[] filename, 
+    const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] filename, 
     <a href="iz/serializer/SerializationFormat.html">SerializationFormat</a> format = <a href="iz/serializer.html#defaultFormat">defaultFormat</a>, 
     <a href="iz/serializer.html#WantAggregateEvent">WantAggregateEvent</a> wae = null, 
     <a href="iz/serializer.html#WantDescriptorEvent">WantDescriptorEvent</a> wde = null)
 </code></pre>
 <div class="section"><h2></h2>
-<p>Serializes a PropertyPublisher to a file.
+<p>Serializes a <code class="d_inline_code">PropertyPublisher</code> to a file.
 </p>
 
 
 </div>
 <div class="section"><h2></h2>
-<p>This helper function works in pair with fileToPublisher().
-It is typically used to save configuration files, session backups, etc.
+<p>This helper function works in pair with <code class="d_inline_code">fileToPublisher()</code>.
 </p>
 
 
 </div>
 <div class="section"><h2>Parameters</h2>
 <table class="params">
-<tr class="param"><td class="paramName">pub</td><td class="paramDoc"><p>The PropertyPublisher to save.
+<tr class="param"><td class="paramName">pub</td><td class="paramDoc"><p>The <code class="d_inline_code">PropertyPublisher</code> to save.
 </p>
 </td></tr>
 <tr class="param"><td class="paramName">filename</td><td class="paramDoc"><p>The target file, always created or overwritten.
@@ -244,21 +243,20 @@ It is typically used to save configuration files, session backups, etc.
 </table>
 </div>
 </div></div><a class="anchor" id="fileToPublisher"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/serializer.html#fileToPublisher">fileToPublisher</a>(
-    in <a href="http://dlang.org/type.html#basic-data-types">char</a>[] filename, 
+    const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] filename, 
     Object pub, 
     <a href="iz/serializer/SerializationFormat.html">SerializationFormat</a> format = <a href="iz/serializer.html#defaultFormat">defaultFormat</a>, 
     <a href="iz/serializer.html#WantAggregateEvent">WantAggregateEvent</a> wae = null, 
     <a href="iz/serializer.html#WantDescriptorEvent">WantDescriptorEvent</a> wde = null)
 </code></pre>
 <div class="section"><h2></h2>
-<p>Deserializes a file to a PropertyPublisher.
+<p>Deserializes a file to a <code class="d_inline_code">PropertyPublisher</code>.
 </p>
 
 
 </div>
 <div class="section"><h2></h2>
-<p>This helper function works in pair with publisherToFile().
-It is typically used to load configuration files, session backups, etc.
+<p>This helper function works in pair with <code class="d_inline_code">publisherToFile()</code>.
 </p>
 
 
@@ -268,7 +266,7 @@ It is typically used to load configuration files, session backups, etc.
 <tr class="param"><td class="paramName">filename</td><td class="paramDoc"><p>The source file.
 </p>
 </td></tr>
-<tr class="param"><td class="paramName">pub</td><td class="paramDoc"><p>The target PropertyPublisher.
+<tr class="param"><td class="paramName">pub</td><td class="paramDoc"><p>The target <code class="d_inline_code">PropertyPublisher</code>.
 </p>
 </td></tr>
 <tr class="param"><td class="paramName">format</td><td class="paramDoc"><p>optional, the serialization format, by default iztext.
@@ -311,7 +309,7 @@ It is typically used to load configuration files, session backups, etc.
     ref <a href="http://dlang.org/type.html#basic-data-types">void</a>* aggregate, 
     out <a href="http://dlang.org/type.html#basic-data-types">bool</a> fromRefererence)
 </code></pre>
-</td><td></td></tr></table><h2>Functions</h2><table><tr><td><a href="iz/serializer.html#isSerializable">isSerializable</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/serializer.html#value2text">value2text</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/serializer.html#text2value">text2value</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/serializer.html#nodeInfo2Declarator">nodeInfo2Declarator</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/serializer.html#setNodeInfo">setNodeInfo</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/serializer.html#publisherToFile">publisherToFile</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/serializer.html#fileToPublisher">fileToPublisher</a><span class="extrainfo"></span></td><td></td><td></td></tr></table><h2>Structs</h2><table><tr><td><a href="iz/serializer/SerNodeInfo.html">SerNodeInfo</a></td><td></td><td></td></tr></table><h2>Classes</h2><table><tr><td><a href="iz/serializer/SerializableReference.html">SerializableReference</a></td><td></td><td></td></tr><tr><td><a href="iz/serializer/IstNode.html">IstNode</a></td><td></td><td></td></tr><tr><td><a href="iz/serializer/Serializer.html">Serializer</a></td><td></td><td></td></tr></table>
+</td><td></td></tr></table><h2>Functions</h2><table><tr><td><a href="iz/serializer.html#isSerializable">isSerializable</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/serializer.html#value2text">value2text</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/serializer.html#text2value">text2value</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/serializer.html#nodeInfo2Declarator">nodeInfo2Declarator</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/serializer.html#setNodeInfo">setNodeInfo</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/serializer.html#publisherToFile">publisherToFile</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/serializer.html#fileToPublisher">fileToPublisher</a><span class="extrainfo"></span></td><td></td><td></td></tr></table><h2>Structs</h2><table><tr><td><a href="iz/serializer/SerNodeInfo.html">SerNodeInfo</a></td><td></td><td></td></tr><tr><td><a href="iz/serializer/IstNodeCache.html">IstNodeCache</a></td><td></td><td></td></tr></table><h2>Classes</h2><table><tr><td><a href="iz/serializer/SerializableReference.html">SerializableReference</a></td><td></td><td></td></tr><tr><td><a href="iz/serializer/IstNode.html">IstNode</a></td><td></td><td></td></tr><tr><td><a href="iz/serializer/Serializer.html">Serializer</a></td><td></td><td></td></tr></table>
 </div>
 </div><script>hljs.initHighlightingOnLoad();</script>
 

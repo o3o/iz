@@ -131,7 +131,7 @@ enum TellRangeAdded;
  * created with construct() they won't be initialized, i.e the
  * static layout representing the initial value of the members is not copied.
  *
- * For example it can be used on a struct that has a `@disable this()` and
+ * For example it can be used on a struct that has a $(D @disable this()) and
  * when the others constructor are suposed to do the initialization job.
  */
 enum NoInit;
@@ -147,7 +147,7 @@ unittest
 
 /**
  * Indicates if an aggregate contains members that might be
- * collected by the garbage collector. This is used in `construct`
+ * collected by the garbage collector. This is used in $(D construct)
  * to determine if the content of a manually allocated aggregate must
  * be declared to the GC.
  */
@@ -274,7 +274,7 @@ unittest
 /**
  * When mixed in class this template has for effect to automatically call the
  * nearest inherited destructor if no destructor is present, otherwise a call
- * to `callInheritedDtor()` should be made in the last LOC of the destructor.
+ * to $(D callInheritedDtor()) should be made in the last LOC of the destructor.
  */
 mixin template inheritedDtor()
 {
@@ -594,7 +594,7 @@ if (Objs.length > 1)
  * Params:
  *      T = A class.
  *      name = The name used to register the class.
- *      By default the `T.stringof` is used.
+ *      By default the $(D T.stringof) is used.
  *      f = The class repository, a hashmap of TypeInfo_Class by string.
  */
 void registerFactoryClass(T, F)(ref F f, string name = "")

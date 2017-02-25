@@ -452,6 +452,7 @@ if(isArray!T && !<a href="iz/types/isMultiDimensionalArray.html">isMultiDimensio
 <pre><code>import std.array: array;
 auto text = "01\r\n23\n45\n".dup;
 <a href="iz/streams/MemoryStream.html">MemoryStream</a> str = <a href="iz/memory.html#construct">construct</a>!<a href="iz/streams/MemoryStream.html">MemoryStream</a>();
+scope(exit) <a href="iz/memory.html#destruct">destruct</a>(str);
 str.<a href="iz/streams.html#write">write</a>(text.ptr, text.length);
 str.position = 0;
 auto _01 = str.<a href="iz/streams.html#readUTF8Line">readUTF8Line</a>.array;
@@ -517,6 +518,7 @@ assert(term == "");
 </div>
 <pre><code>auto text = "01\r\n23\n4à\n".dup;
 <a href="iz/streams/MemoryStream.html">MemoryStream</a> str = <a href="iz/memory.html#construct">construct</a>!<a href="iz/streams/MemoryStream.html">MemoryStream</a>();
+scope(exit) <a href="iz/memory.html#destruct">destruct</a>(str);
 str.<a href="iz/streams.html#write">write</a>(text.ptr, text.length);
 str.position = 0;
 auto _01 = str.<a href="iz/streams.html#readln">readln</a>;

@@ -404,8 +404,8 @@ unittest
 }
 
 /**
- * Allows to get the original `this` of a struct, for example when
- * passed from a `ref` getter function.
+ * Allows to get the original $(D this) of a struct, for example when
+ * passed from a $(D ref) getter function.
  */
 void* getThis(T)(ref T t)
 if (is(T == struct))
@@ -474,7 +474,7 @@ enum PropHint
 
 /**
  * PropHints can be used to set the hints attributed to a property,
- * using the UDA syntax: `@PropHints(...)`
+ * using the UDA syntax: $(D @PropHints(...)).
  */
 alias PropHints = EnumSet!(PropHint, Set8);
 

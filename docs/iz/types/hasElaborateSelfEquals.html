@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <link rel="stylesheet" type="text/css" href="../../style.css"/>
 <script src="../../highlight.pack.js"></script>
-<title>PropAccess</title>
+<title>hasElaborateSelfEquals</title>
 <base href="../../"/>
 <script src="search.js"></script>
 <script src="show_hide.js"></script>
@@ -14,11 +14,11 @@
 <div class="breadcrumbs">
 <table id="results"></table>
 <a href="index.html" class="home">⌂</a><input type="search" id="search" placeholder="Search" onkeyup="searchSubmit(this.value, event)"/>
-<small>iz.<a href=iz/properties.html>properties</a>.</small><span class="highlight">PropAccess</span>
+<small>iz.<a href=iz/types.html>types</a>.</small><span class="highlight">hasElaborateSelfEquals</span>
 </div>
 <div class="sidebar">
-<a href="iz/properties.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
-<a href="iz/properties.html#show-toc" class="show" id="show-toc">&#187;</a>
+<a href="iz/types.html#hide-toc" class="hide" id="hide-toc">&#171;</a>
+<a href="iz/types.html#show-toc" class="show" id="show-toc">&#187;</a>
 <div id="toc-id" class="toc">
 <ul><li><span class="package" onclick="show_hide('iz');"><a href="iz.html">iz</a></span>
 <ul id="iz" style='display:block'>
@@ -29,36 +29,57 @@
 <li>iz.<a href="iz/math.html">math</a></li>
 <li>iz.<a href="iz/memory.html">memory</a></li>
 <li>iz.<a href="iz/observer.html">observer</a></li>
-<li><span class=" selected">iz.<a href="iz/properties.html">properties</a></span>
-</li>
+<li>iz.<a href="iz/properties.html">properties</a></li>
 <li>iz.<a href="iz/referencable.html">referencable</a></li>
 <li>iz.<a href="iz/rtti.html">rtti</a></li>
 <li>iz.<a href="iz/serializer.html">serializer</a></li>
 <li>iz.<a href="iz/streams.html">streams</a></li>
 <li>iz.<a href="iz/strings.html">strings</a></li>
 <li>iz.<a href="iz/sugar.html">sugar</a></li>
-<li>iz.<a href="iz/types.html">types</a></li>
+<li><span class=" selected">iz.<a href="iz/types.html">types</a></span>
+</li>
 </ul>
 </li>
 
 </ul>
 </div></div>
 <div class="content">
-<div class="aggregate-symbol"><div class="description"><pre><code>public enum PropAccess
+<div class="aggregate-symbol"><div class="description"><pre><code>public template hasElaborateSelfEquals(T)
 </code></pre>
 <div class="section"><h2></h2>
-<p>Describes the accessibility of a property.
+<p>Indicates wether the type passed as template parameter has a custom
+<code class="d_inline_code">opEquals</code> function that allows self comparison.
 </p>
 
 
 </div>
 <div class="section"><h2></h2>
+<p>This triat mostly allows compare objects, with a known derived type, in
+<code class="d_inline_code">@nogc</code> code.
+</p>
 
 
 </div>
-</div><div class="section members"><h2>Values</h2><table><tr><td>none</td><td></td><td></td></tr><tr><td>ro</td><td></td><td></td></tr><tr><td>wo</td><td></td><td></td></tr><tr><td>rw</td><td></td><td></td></tr></table>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
 </div>
-</div><script>hljs.initHighlightingOnLoad();</script>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>struct Foo {}
+struct Bar {bool opEquals(const(Bar)){return true;}}
+struct Baz {bool opEquals(Foo){return true;}}
+static assert(!<a href="iz/types/hasElaborateSelfEquals.html">hasElaborateSelfEquals</a>!Foo);
+static assert(<a href="iz/types/hasElaborateSelfEquals.html">hasElaborateSelfEquals</a>!Bar);
+static assert(!<a href="iz/types/hasElaborateSelfEquals.html">hasElaborateSelfEquals</a>!Baz);
+
+</code></pre>
+
+</div>
+</div></div><script>hljs.initHighlightingOnLoad();</script>
 
 </div>
 <footer>

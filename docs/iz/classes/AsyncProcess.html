@@ -123,7 +123,10 @@ struct Catcher
     void bufferAvailable(Object notifier)
     {
         flg = true;
-        assert((cast(<a href="iz/classes/AsyncProcess.html">AsyncProcess</a>) notifier).output.<a href="iz/streams.html#readln">readln</a> == "hello world");
+        <a href="iz/classes/AsyncProcess.html">AsyncProcess</a> proc = cast(<a href="iz/classes/AsyncProcess.html">AsyncProcess</a>) notifier;
+        //TODO-cleaks: <a href="iz/classes/AsyncProcess.html#this">this</a> <a href="iz/streams.html#readln">readln</a> creates a leak
+        string s = proc.output.<a href="iz/streams.html#readln">readln</a>;
+        assert(s == "hello world");
     }
     void terminate(Object notifier)
     {
@@ -141,7 +144,8 @@ runProc.<a href="iz/classes/AsyncProcess.html#onTerminate">onTerminate</a> = &ca
 assert(runProc.<a href="iz/classes/AsyncProcess.html#onOutputBuffer">onOutputBuffer</a>);
 assert(runProc.<a href="iz/classes/AsyncProcess.html#onTerminate">onTerminate</a>);
 runProc.<a href="iz/classes/AsyncProcess.html#execute">execute</a>;
-while (!catcher.ter) {}
+import core.thread;
+while (!catcher.ter) {Thread.sleep(dur!"msecs"(10));}
 assert(runProc.terminated);
 assert(runProc.exitStatus == 0);
 assert(catcher.ter);

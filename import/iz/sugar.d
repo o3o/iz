@@ -1063,7 +1063,7 @@ if (is(PointerTarget!FT == function))
     /// Allows to use this union as a true D delegate.
     T dg;
 
-    /// Helper to call the delegate without accessing `dg`.
+    /// Helper to call the delegate without accessing $(D dg).
     auto opCall(A...)(A a)
     {
         return dg(a);
@@ -1086,7 +1086,7 @@ unittest
 /**
  * Safely cast a value of a type to another, if both have the same size.
  *
- * Unlike `bruteCast`, the same location si not shared between the
+ * Unlike $(D bruteCast), the same location si not shared between the
  * source and the target and no pointer is used.
  * This function is inspired by http://www.forwardscattering.org/post/27
  */

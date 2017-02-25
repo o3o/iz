@@ -61,8 +61,8 @@ the target type.
 if(is(T == struct))
 </code></pre>
 <div class="section"><h2></h2>
-<p>Allows to get the original <pre style="display:inline;" class="d_inline_code"><font color=blue>this</font></pre> of a struct, for example when
-passed from a <pre style="display:inline;" class="d_inline_code"><font color=blue>ref</font></pre> getter function.
+<p>Allows to get the original <code class="d_inline_code">this</code> of a struct, for example when
+passed from a <code class="d_inline_code">ref</code> getter function.
 </p>
 
 
@@ -113,7 +113,7 @@ assert(&foo.bar != &b);
 </code></pre>
 <div class="section"><h2></h2>
 <p>PropHints can be used to set the hints attributed to a property,
-using the UDA syntax: <pre style="display:inline;" class="d_inline_code">@PropHints(...)</pre>
+using the UDA syntax: <code class="d_inline_code">@PropHints(...)</code>.
 </p>
 
 
@@ -268,27 +268,27 @@ are dangling.
 
 
 </div>
-<pre><code>class A: <a href="iz/properties/PropertyPublisher.html">PropertyPublisher</a>
+<pre><code>class A19: <a href="iz/properties/PropertyPublisher.html">PropertyPublisher</a>
 {mixin <a href="iz/properties/PropertyPublisherImpl.html">PropertyPublisherImpl</a>; string c;}
 
-class B: <a href="iz/properties/PropertyPublisher.html">PropertyPublisher</a>
+class B19: <a href="iz/properties/PropertyPublisher.html">PropertyPublisher</a>
 {
     mixin <a href="iz/properties/PropertyPublisherImpl.html">PropertyPublisherImpl</a>;
-    @<a href="iz/properties/SetGet.html">SetGet</a> A _a0;
-    @<a href="iz/properties/SetGet.html">SetGet</a> A _a1;
+    @<a href="iz/properties/SetGet.html">SetGet</a> A19 _a0;
+    @<a href="iz/properties/SetGet.html">SetGet</a> A19 _a1;
     this()
     {
-        _a0 = <a href="iz/memory.html#construct">construct</a>!A;
-        collectPublications!B;
+        _a0 = <a href="iz/memory.html#construct">construct</a>!A19;
+        collectPublications!B19;
         // _a1 not seen by the scanner so not owned
-        _a1 = <a href="iz/memory.html#construct">construct</a>!A;
+        _a1 = <a href="iz/memory.html#construct">construct</a>!A19;
     }
     ~this()
     {
         <a href="iz/memory.html#destruct">destruct</a>(_a1);
     }
 }
-B b = <a href="iz/memory.html#construct">construct</a>!B;
+B19 b = <a href="iz/memory.html#construct">construct</a>!B19;
 // implicitly destructs b._a0.
 <a href="iz/properties.html#destructOwnedPublishers">destructOwnedPublishers</a>(b);
 <a href="iz/memory.html#destruct">destruct</a>(b);

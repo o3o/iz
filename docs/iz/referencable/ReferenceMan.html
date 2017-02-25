@@ -147,8 +147,8 @@ if(!isReferenceType!RT)
 
 
 </div>
-</div></div><a class="anchor" id="opBinaryRight"></a><div class="symbol"><div class="description"><pre><code>private static <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/referencable/ReferenceMan.html#opBinaryRight">opBinaryRight</a>(string op, RT)(RT* aReference) 
-if(!isReferenceType!RT && op == "in")
+</div></div><a class="anchor" id="opBinaryRight"></a><div class="symbol"><div class="description"><pre><code>private static <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/referencable/ReferenceMan.html#opBinaryRight">opBinaryRight</a>(string op : "in", RT)(RT* aReference) 
+if(!isReferenceType!RT)
 </code></pre>
 <div class="section"><h2></h2>
 <p>Support for the in operator.
@@ -193,7 +193,7 @@ storeReference() automatically stores a type when needed.
 </td></tr>
 </table>
 </div>
-</div></div><a class="anchor" id="getIDProposal"></a><div class="symbol"><div class="description"><pre><code>private static string <a href="iz/referencable/ReferenceMan.html#getIDProposal">getIDProposal</a>(RT)(RT* aReference)
+</div></div><a class="anchor" id="getIDProposal"></a><div class="symbol"><div class="description"><pre><code>private static const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] <a href="iz/referencable/ReferenceMan.html#getIDProposal">getIDProposal</a>(RT)(RT* aReference)
 </code></pre>
 <div class="section"><h2></h2>
 <p>Proposes an unique ID for a reference. This is a convenience function
@@ -224,7 +224,7 @@ that will not return the same values for each software session.
 </div>
 </div></div><a class="anchor" id="storeReference"></a><div class="symbol"><div class="description"><pre><code>private static <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/referencable/ReferenceMan.html#storeReference">storeReference</a>(RT)(
     RT* aReference, 
-    in <a href="http://dlang.org/type.html#basic-data-types">char</a>[] anID) 
+    const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] anID) 
 if(!isReferenceType!RT)
 </code></pre>
 <div class="section"><h2></h2>
@@ -258,7 +258,7 @@ if(!isReferenceType!RT)
 </div>
 </div></div><a class="anchor" id="storeReference"></a><div class="symbol"><div class="description"><pre><code>private static <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/referencable/ReferenceMan.html#storeReference">storeReference</a>(RT)(
     RT aReference, 
-    in <a href="http://dlang.org/type.html#basic-data-types">char</a>[] anID) 
+    const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] anID) 
 if(isReferenceType!RT)
 </code></pre>
 <div class="section"><h2></h2>
@@ -321,7 +321,7 @@ if(isReferenceType!RT)
 
 
 </div>
-</div></div><a class="anchor" id="removeReference"></a><div class="symbol"><div class="description"><pre><code>private <a href="iz/referencable/ReferenceMan.html#removeReference">removeReference</a>(RT)(in <a href="http://dlang.org/type.html#basic-data-types">char</a>[] anID)
+</div></div><a class="anchor" id="removeReference"></a><div class="symbol"><div class="description"><pre><code>private <a href="iz/referencable/ReferenceMan.html#removeReference">removeReference</a>(RT)(const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] anID)
 </code></pre>
 <div class="section"><h2></h2>
 <p>Tries to remove the reference matching to an ID.
@@ -454,7 +454,7 @@ if(isReferenceType!RT)
 
 </div>
 </div></div><a class="anchor" id="referenceID"></a><div class="symbol"><div class="description"><pre><code>private static const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] <a href="iz/referencable/ReferenceMan.html#referenceID">referenceID</a>(<a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/sugar.html#dg">dg</a> = false)(
-    in <a href="http://dlang.org/type.html#basic-data-types">char</a>[] type, 
+    const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] type, 
     <a href="http://dlang.org/type.html#basic-data-types">void</a>* aReference)
 </code></pre>
 <div class="section"><h2></h2>
@@ -472,7 +472,7 @@ if(isReferenceType!RT)
 <tr class="param"><td class="paramName">dg</td><td class="paramDoc"><p>indicates if the reference to find points to a delegate.
 </p>
 </td></tr>
-<tr class="param"><td class="paramName">type</td><td class="paramDoc"><p>The <pre style="display:inline;" class="d_inline_code">.stringof</pre> of the type of the reference.
+<tr class="param"><td class="paramName">type</td><td class="paramDoc"><p>The <code class="d_inline_code">.stringof</code> of the type of the reference.
 </p>
 </td></tr>
 <tr class="param"><td class="paramName">aReference</td><td class="paramDoc"><p>A pointer to a variable
@@ -486,7 +486,7 @@ if(isReferenceType!RT)
 
 
 </div>
-</div></div><a class="anchor" id="reference"></a><div class="symbol"><div class="description"><pre><code>private static RT* <a href="iz/referencable/ReferenceMan.html#reference">reference</a>(RT)(in <a href="http://dlang.org/type.html#basic-data-types">char</a>[] anID) 
+</div></div><a class="anchor" id="reference"></a><div class="symbol"><div class="description"><pre><code>private static RT* <a href="iz/referencable/ReferenceMan.html#reference">reference</a>(RT)(const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] anID) 
 if(!isReferenceType!RT)
 </code></pre>
 <div class="section"><h2></h2>
@@ -517,8 +517,8 @@ if(!isReferenceType!RT)
 
 </div>
 </div></div><a class="anchor" id="reference"></a><div class="symbol"><div class="description"><pre><code>private static <a href="http://dlang.org/type.html#basic-data-types">void</a>* <a href="iz/referencable/ReferenceMan.html#reference">reference</a>(
-    in <a href="http://dlang.org/type.html#basic-data-types">char</a>[] type, 
-    in <a href="http://dlang.org/type.html#basic-data-types">char</a>[] anID)
+    const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] type, 
+    const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] anID)
 </code></pre>
 <div class="section"><h2></h2>
 <p>Retrieves a reference without the static type

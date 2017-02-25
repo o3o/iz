@@ -69,8 +69,8 @@
 
 </div>
 <div class="section"><h2>Returns</h2>
-<p><pre style="display:inline;" class="d_inline_code">0</pre> is returned if the size is variable otherwise the equivalent
-     of the .sizeof property.
+<p><code class="d_inline_code">0</code> is returned if the size is variable otherwise the equivalent
+     of the <code class="d_inline_code">.sizeof</code> property.
 </p>
 
 
@@ -120,10 +120,10 @@ assert(re.<a href="iz/rtti.html#getRtti">getRtti</a>.type.<a href="iz/rtti.html#
 </table>
 </div>
 <div class="section"><h2>Returns</h2>
-<p>For the basic types, always the equivalent of the keyword .stringof property.
-     For the other types, if <pre style="display:inline;" class="d_inline_code">t</pre> is a RtType then "struct" then "enum", "Object",
-     etc are returned, otherwise if <pre style="display:inline;" class="d_inline_code">t</pre> is a pointer to a Rtti then the type
-     identifier is returned, e.g "E" for <pre style="display:inline;" class="d_inline_code"><font color=blue>enum</font> E {e}</pre>.
+<p>For the basic types, always the equivalent of the keyword <code class="d_inline_code">.stringof</code> property.
+     For the other types, if <code class="d_inline_code">t</code> is a RtType then "struct", "enum", "Object", etc
+     are returned, otherwise if <code class="d_inline_code">t</code> is a pointer to a <code class="d_inline_code">Rtti</code> then the type
+     identifier is returned, e.g "E" for <code class="d_inline_code">enum E {e}</code>.
 </p>
 
 
@@ -144,7 +144,7 @@ assert(re.<a href="iz/rtti.html#getRtti">getRtti</a>.type.<a href="iz/rtti.html#
 </code></pre>
 <div class="section"><h2></h2>
 <p>Returns the Rtti for the type that has its .stringof property
-equal to <pre style="display:inline;" class="d_inline_code">typeString</pre>.
+equal to <code class="d_inline_code">typeString</code>.
 </p>
 
 
@@ -221,13 +221,13 @@ assert(rtti3.enumInfo.valueType is <a href="iz/rtti.html#getRtti">getRtti</a>!ub
 </code></pre>
 </td><td></td></tr></table><h2>Variables</h2><table><tr><td><a href="iz/rtti.html#binTraits">binTraits</a></td><td><pre><code><a href="iz/rtti/BinTraits.html">BinTraits</a>
 </code></pre>
-</td><td></td></tr></table><h2>Functions</h2><table><tr><td><a href="iz/rtti.html#size">size</a><span class="extrainfo"></span></td><td></td><td>Returns: <p><pre style="display:inline;" class="d_inline_code">0</pre> is returned if the size is variable otherwise the equivalent
-     of the .sizeof property.
+</td><td></td></tr></table><h2>Functions</h2><table><tr><td><a href="iz/rtti.html#size">size</a><span class="extrainfo"></span></td><td></td><td>Returns: <p><code class="d_inline_code">0</code> is returned if the size is variable otherwise the equivalent
+     of the <code class="d_inline_code">.sizeof</code> property.
 </p>
-</td></tr><tr><td><a href="iz/rtti.html#typeString">typeString</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>For the basic types, always the equivalent of the keyword .stringof property.
-     For the other types, if <pre style="display:inline;" class="d_inline_code">t</pre> is a RtType then "struct" then "enum", "Object",
-     etc are returned, otherwise if <pre style="display:inline;" class="d_inline_code">t</pre> is a pointer to a Rtti then the type
-     identifier is returned, e.g "E" for <pre style="display:inline;" class="d_inline_code"><font color=blue>enum</font> E {e}</pre>.
+</td></tr><tr><td><a href="iz/rtti.html#typeString">typeString</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>For the basic types, always the equivalent of the keyword <code class="d_inline_code">.stringof</code> property.
+     For the other types, if <code class="d_inline_code">t</code> is a RtType then "struct", "enum", "Object", etc
+     are returned, otherwise if <code class="d_inline_code">t</code> is a pointer to a <code class="d_inline_code">Rtti</code> then the type
+     identifier is returned, e.g "E" for <code class="d_inline_code">enum E {e}</code>.
 </p>
 </td></tr><tr><td><a href="iz/rtti.html#getRtti">getRtti</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/rtti.html#getRtti">getRtti</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/rtti.html#isPublisingStruct">isPublisingStruct</a><span class="extrainfo"></span></td><td></td><td></td></tr></table><h2>Structs</h2><table><tr><td><a href="iz/rtti/GenericStruct.html">GenericStruct</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/GenericUnion.html">GenericUnion</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/GenericEnum.html">GenericEnum</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/GenericFunPtr.html">GenericFunPtr</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/FunPtrInfo.html">FunPtrInfo</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/ClassInfo.html">ClassInfo</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/EnumInfo.html">EnumInfo</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/BinTraits.html">BinTraits</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/TextTraits.html">TextTraits</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/PubTraits.html">PubTraits</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/StructInfo.html">StructInfo</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/UnionInfo.html">UnionInfo</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/AAInfo.html">AAInfo</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/PointerInfo.html">PointerInfo</a></td><td></td><td></td></tr><tr><td><a href="iz/rtti/Rtti.html">Rtti</a></td><td></td><td></td></tr></table><h2>Templates</h2><table><tr><td><a href="iz/rtti/isBasicRtType.html">isBasicRtType</a></td><td></td><td></td></tr></table>
 </div>

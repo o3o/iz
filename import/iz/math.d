@@ -489,8 +489,8 @@ nothrow pure @safe unittest
  * Wraps a numeric value between 0 and a max value.
  *
  * Params:
- *      bound = a string that indicates if the max is excluded (`")"`), the default
- *          or if the max is included (`"]"`).
+ *      bound = a string that indicates if the max is excluded ($(D ")")), the default
+ *          or if the max is included ($(D "]")).
  *      value = the value to wrap.
  *      max the maximal value.
  */

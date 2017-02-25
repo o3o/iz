@@ -1158,11 +1158,11 @@ alias WantAggregateEvent = void delegate(IstNode node, ref void* aggregate, out 
  * original variable names are passed as hint.
  *
  * Hints:
- * The serializer handles the PropHints of the publications. If `PropHint.dontSet`
- * is in the hints then a property is not restored. If `PropHint.dontGet` is in the
+ * The serializer handles the $(D PropHints) of the publications. If $(D PropHint.dontSet)
+ * is in the hints then a property is not restored. If $(D PropHint.dontGet) is in the
  * hints then the property is not stored. These two hints allow to deprecate some
- * publications, without breaking the restoration. The hint `PropHint.initCare`
- * indicates if a property equal to its initializer is written. For floating point
+ * publications, without breaking the restoration. The hint $(D PropHint.initCare)
+ * indicates that a property equal to its initializer is written. For floating point
  * types there is an exception that is the intializer is considered to be 0.
  */
 class Serializer

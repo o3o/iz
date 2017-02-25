@@ -246,7 +246,7 @@ public:
 
     /**
      * Returns a pointer to the item whose the member that matches to the
-     * parameter passed as key during instanciation as the same value as `key`.
+     * parameter passed as key during instanciation as the same value as $(D key).
      */
     static if (isAAKeyValid!(ItemClass, aaKey))
     const(ItemClass)* opBinaryRight(string op : "in", K)(auto ref K key)
@@ -1031,7 +1031,7 @@ public:
     @Get bool active(){return _active;}
 
     /**
-     * Sets or gets the interval, in milliseconds, between each `onTimer` event.
+     * Sets or gets the interval, in milliseconds, between each $(D onTimer) event.
      *
      * Accuracy is relative to the implementation.
      */
@@ -1044,7 +1044,7 @@ public:
     @Get uint interval() {return _interval;}
 
     /**
-     * Sets or gets the event called when at least `interval` milliseconds
+     * Sets or gets the event called when at least $(D interval) milliseconds
      * have ellapsed.
      */
     @Set void onTimer(void delegate(Object) value)
@@ -1311,7 +1311,7 @@ public:
     /**
      * Sets or gets the environment.
      *
-     * The value returned is changes according to `newEnvironment` property.
+     * The value returned is changes according to $(D newEnvironment) property.
      *
      * Params:
      *      value = a string containing the environment variables,

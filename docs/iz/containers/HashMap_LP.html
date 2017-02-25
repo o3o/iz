@@ -70,9 +70,44 @@
 </td></tr>
 </table>
 </div>
-</div><a class="anchor" id="insert"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/containers/HashMap_LP.html#insert">insert</a>(<a href="http://dlang.org/type.html#basic-data-types">bool</a> rsv = true)(
-    auto ref K key, 
-    auto ref V value)
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code><a href="iz/containers/HashMap_LP.html">HashMap_LP</a>!(string, size_t) stock;
+// can <a href="iz/containers/HashMap_LP.html#insert">insert</a> up to 16 elements without reallocation
+stock.<a href="iz/containers/HashMap_LP.html#reserve">reserve</a>(15);
+assert(stock.<a href="iz/containers/HashMap_LP.html#slotCount">slotCount</a> == 16);
+// appends elements, various syntax allowed
+stock.<a href="iz/containers/HashMap_LP.html#insert">insert</a>("pen", 8);
+stock["gum"] += 32;
+stock["ruler"] += 12;
+stock ~= "tape roll";
+// test for inclusion, various syntax allowed
+assert("gum" in stock);
+assert(stock["ruler"] == 12);
+assert(stock["tape roll"] == 0);
+// <a href="iz/containers/HashMap_LP.html#remove">remove</a> something
+stock.<a href="iz/containers/HashMap_LP.html#remove">remove</a>("ruler");
+assert("ruler" !in stock);
+// empties and frees memory
+stock.<a href="iz/containers/HashMap_LP.html#clear">clear</a>;
+// manually managed implies to <a href="iz/memory.html#destruct">destruct</a> by hand
+import <a href="iz/memory.html">iz.memory</a>;
+<a href="iz/memory.html#destruct">destruct</a>(stock);
+
+</code></pre>
+
+</div>
+</div><a class="anchor" id="insert"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/containers/HashMap_LP.html#insert">insert</a>(alias mode = imExpand)(
+    ref K key, 
+    auto ref V value) @nogc 
+if(isImplicitlyConvertible!(typeof(mode), <a href="http://dlang.org/type.html#basic-data-types">bool</a>))
 </code></pre>
 <div class="section"><h2></h2>
 <p>Tries to insert a key-value pair in the map.
@@ -86,6 +121,52 @@
 </div>
 <div class="section"><h2>Parameters</h2>
 <table class="params">
+<tr class="param"><td class="paramName">mode</td><td class="paramDoc"><p>If true (imExpand) then reserves a slot else (imReserved)
+         assumes a previous call to <code class="d_inline_code">reserve()</code>.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">key</td><td class="paramDoc"><p>The key.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">value</td><td class="paramDoc"><p>The corresponding value.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Throws</h2>
+<p>An out of memory Error if an internal call to <code class="d_inline_code">reserve()</code> fails.
+</p>
+
+
+</div>
+<div class="section"><h2>Returns</h2>
+<p>If the key is added or if it's already included then returns <code class="d_inline_code">true</code>,
+     otherwise <code class="d_inline_code">false</code>.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="insert"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/containers/HashMap_LP.html#insert">insert</a>(alias mode = imExpand)(
+    K key, 
+    V value) @nogc 
+if(isImplicitlyConvertible!(typeof(mode), <a href="http://dlang.org/type.html#basic-data-types">bool</a>))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Tries to insert a key-value pair in the map.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">mode</td><td class="paramDoc"><p>If true (imExpand) then reserves a slot else (imReserved)
+         assumes a previous call to <code class="d_inline_code">reserve()</code>.
+</p>
+</td></tr>
 <tr class="param"><td class="paramName">key</td><td class="paramDoc"><p>The key.
 </p>
 </td></tr>
@@ -137,11 +218,46 @@
 
 
 </div>
-</div></div><a class="anchor" id="opOpAssign"></a><div class="symbol"><div class="description"><pre><code>private <a href="iz/containers/HashMap_LP.html#opOpAssign">opOpAssign</a>(string op : "~")(auto ref K key)
+<div class="section"><h2>Throws</h2>
+<p>An out of memory Error if the reallocation fails.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="opOpAssign"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/containers/HashMap_LP.html#opOpAssign">opOpAssign</a>(string op : "~")(auto ref K key)
 </code></pre>
 <div class="section"><h2></h2>
-<p>Support for appending an element. Forwards <code class="d_inline_code">insert()</code> with a default-
-initialized value.
+<p>Support for appending an element.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>Forwards <code class="d_inline_code">insert()</code> with a default initialized value.
+</p>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">key</td><td class="paramDoc"><p>The key to insert.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>If the key is added or if it's already included then returns <code class="d_inline_code">true</code>,
+     otherwise <code class="d_inline_code">false</code>.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="opIndexAssign"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/HashMap_LP.html#opIndexAssign">opIndexAssign</a>(KK)(
+    auto ref V value, 
+    auto ref KK key)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Support for inserting using the array syntax. Forwards <code class="d_inline_code">insert()</code>.
 </p>
 
 
@@ -150,12 +266,36 @@ initialized value.
 
 
 </div>
-</div></div><a class="anchor" id="opIndexAssign"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/HashMap_LP.html#opIndexAssign">opIndexAssign</a>()(
-    auto ref V value, 
-    auto ref K key)
+</div></div><a class="anchor" id="opIndexOpAssign"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/HashMap_LP.html#opIndexOpAssign">opIndexOpAssign</a>(string op, VV, KK)(
+    auto ref VV value, 
+    auto ref KK key)
 </code></pre>
 <div class="section"><h2></h2>
-<p>Support for inserting using the array syntax. Forwards <code class="d_inline_code">insert()</code>.
+<p>Support for the assignment operators on a value.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="byKey"></a><div class="symbol"><div class="description"><pre><code>private <a href="iz/containers/HashMap_LP.html#byKey">byKey</a>() return @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns an input range consisting of each key.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="byValue"></a><div class="symbol"><div class="description"><pre><code>private <a href="iz/containers/HashMap_LP.html#byValue">byValue</a>() return @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns an input range consisting of each value.
 </p>
 
 
@@ -176,7 +316,7 @@ initialized value.
 
 
 </div>
-</div></div><a class="anchor" id="reserve"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/HashMap_LP.html#reserve">reserve</a>(size_t value) @nogc
+</div></div><a class="anchor" id="reserve"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/HashMap_LP.html#reserve">reserve</a>()(size_t value) @nogc
 </code></pre>
 <div class="section"><h2></h2>
 <p>Reserves slots for at least N supplemental key-value pairs.
@@ -201,7 +341,7 @@ initialized value.
 </td></tr>
 </table>
 </div>
-</div></div><a class="anchor" id="minimize"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/HashMap_LP.html#minimize">minimize</a>() @nogc
+</div></div><a class="anchor" id="minimize"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/HashMap_LP.html#minimize">minimize</a>()()
 </code></pre>
 <div class="section"><h2></h2>
 <p>Minimizes the memory usage.
@@ -210,10 +350,12 @@ initialized value.
 
 </div>
 <div class="section"><h2></h2>
+<p>Should be used after removal and only if <code class="d_inline_code">count() < slotCount()</code>.
+</p>
 
 
 </div>
-</div></div><a class="anchor" id="opBinaryRight"></a><div class="symbol"><div class="description"><pre><code>private const(V)* <a href="iz/containers/HashMap_LP.html#opBinaryRight">opBinaryRight</a>(string op : "in")(auto ref K key)
+</div></div><a class="anchor" id="opBinaryRight"></a><div class="symbol"><div class="description"><pre><code>private V* <a href="iz/containers/HashMap_LP.html#opBinaryRight">opBinaryRight</a>(string op : "in", KK)(auto ref KK key)
 </code></pre>
 <div class="section"><h2></h2>
 <p>Tests the presence of a key in the set.
@@ -239,15 +381,41 @@ initialized value.
 
 
 </div>
-</div></div><a class="anchor" id="opIndex"></a><div class="symbol"><div class="description"><pre><code>private const(MapPair)* <a href="iz/containers/HashMap_LP.html#opIndex">opIndex</a>(const size_t index) @nogc
+</div></div><a class="anchor" id="slot"></a><div class="symbol"><div class="description"><pre><code>private MapPair* <a href="iz/containers/HashMap_LP.html#slot">slot</a>(const size_t index) @nogc
 </code></pre>
 <div class="section"><h2></h2>
-<p>Support for the array syntax.
+<p>Provides an access to the key-value pairs.
 </p>
 
 
 </div>
 <div class="section"><h2></h2>
+<p>Params
+     index = The pair index. Must be in the <code class="d_inline_code">0..slotCount()</code> range.
+</p>
+
+
+</div>
+<div class="section"><h2>Returns</h2>
+<p>A pointer to a tuple that contains, when not null, the
+     key and the value of the element pointed by <i>index</i>.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="opIndex"></a><div class="symbol"><div class="description"><pre><code>private auto ref V <a href="iz/containers/HashMap_LP.html#opIndex">opIndex</a>(KK)(auto ref KK key) 
+if(!is(KK == size_t))
+</code></pre>
+<div class="section"><h2></h2>
+<p>Provides an access to the key-value pairs.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>Params
+     index = The pair index. Must be in the <code class="d_inline_code">0..slotCount()</code> range.
+</p>
 
 
 </div>
@@ -261,7 +429,21 @@ initialized value.
 </div></div><a class="anchor" id="count"></a><div class="symbol"><div class="description"><pre><code>private size_t <a href="iz/containers/HashMap_LP.html#count">count</a>() @nogc
 </code></pre>
 <div class="section"><h2></h2>
-<p>Returns the count of non-null elements in the set.
+<p>Returns the key-value pairs count.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+<p>This matches to <code class="d_inline_code">byKeyValue.walkLength</code>.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="slotCount"></a><div class="symbol"><div class="description"><pre><code>private size_t <a href="iz/containers/HashMap_LP.html#slotCount">slotCount</a>() @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Returns the slots counts.
 </p>
 
 
@@ -270,44 +452,27 @@ initialized value.
 
 
 </div>
-</div></div><a class="anchor" id="length"></a><div class="symbol"><div class="description"><pre><code>private size_t <a href="iz/containers/HashMap_LP.html#length">length</a>() @nogc
-</code></pre>
-<div class="section"><h2></h2>
-<p>Returns the length of the set.
+</div></div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/containers/HashMap_LP.html#insert">insert</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td>Returns: <p>If the key is added or if it's already included then returns <code class="d_inline_code">true</code>,
+     otherwise <code class="d_inline_code">false</code>.
 </p>
-
-
-</div>
-<div class="section"><h2></h2>
-
-
-</div>
-</div></div><a class="anchor" id="opDollar"></a><div class="symbol"><div class="description"><pre><code>alias opDollar = <a href="iz/containers/HashMap_LP.html#length">length</a>
-</code></pre>
-<div class="section"><h2></h2>
-<p>Returns the length of the set.
-</p>
-
-
-</div>
-<div class="section"><h2></h2>
-
-
-</div>
-</div></div><div class="section members"><h2>Aliases</h2><table><tr><td><a href="iz/containers/HashMap_LP.html#opDollar">opDollar</a></td><td><pre><code><a href="iz/containers/HashMap_LP.html#length">length</a>
-</code></pre>
-</td><td></td></tr></table><h2>Functions</h2><table><tr><td><a href="iz/containers/HashMap_LP.html#insert">insert</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>If the key is added or if it's already included then returns <code class="d_inline_code">true</code>,
+</td></tr><tr><td><a href="iz/containers/HashMap_LP.html#insert">insert</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td>Returns: <p>If the key is added or if it's already included then returns <code class="d_inline_code">true</code>,
      otherwise <code class="d_inline_code">false</code>.
 </p>
 </td></tr><tr><td><a href="iz/containers/HashMap_LP.html#remove">remove</a><span class="extrainfo"></span></td><td></td><td>Returns: <p><code class="d_inline_code">true</code> if the key was included otherwise <code class="d_inline_code">false</code>.
 </p>
-</td></tr><tr><td><a href="iz/containers/HashMap_LP.html#clear">clear</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/HashMap_LP.html#opOpAssign">opOpAssign</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/HashMap_LP.html#opIndexAssign">opIndexAssign</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/HashMap_LP.html#byKeyValue">byKeyValue</a><span class="extrainfo"><span class="method-attribs"><span class="attr-return">return</span>, <span class="attr-nogc">@nogc</span></span><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/HashMap_LP.html#reserve">reserve</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/HashMap_LP.html#minimize">minimize</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/HashMap_LP.html#opBinaryRight">opBinaryRight</a><span class="extrainfo"></span></td><td></td><td>Returns: <p><code class="d_inline_code">null</code> if the key is not present otherwise a pointer to the
+</td></tr><tr><td><a href="iz/containers/HashMap_LP.html#clear">clear</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/HashMap_LP.html#opOpAssign">opOpAssign</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>If the key is added or if it's already included then returns <code class="d_inline_code">true</code>,
+     otherwise <code class="d_inline_code">false</code>.
+</p>
+</td></tr><tr><td><a href="iz/containers/HashMap_LP.html#opIndexAssign">opIndexAssign</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/HashMap_LP.html#opIndexOpAssign">opIndexOpAssign</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/HashMap_LP.html#byKey">byKey</a><span class="extrainfo"><span class="method-attribs"><span class="attr-return">return</span>, <span class="attr-nogc">@nogc</span></span><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/HashMap_LP.html#byValue">byValue</a><span class="extrainfo"><span class="method-attribs"><span class="attr-return">return</span>, <span class="attr-nogc">@nogc</span></span><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/HashMap_LP.html#byKeyValue">byKeyValue</a><span class="extrainfo"><span class="method-attribs"><span class="attr-return">return</span>, <span class="attr-nogc">@nogc</span></span><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/HashMap_LP.html#reserve">reserve</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/HashMap_LP.html#minimize">minimize</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/HashMap_LP.html#opBinaryRight">opBinaryRight</a><span class="extrainfo"></span></td><td></td><td>Returns: <p><code class="d_inline_code">null</code> if the key is not present otherwise a pointer to the
          value that mapped.
 </p>
-</td></tr><tr><td><a href="iz/containers/HashMap_LP.html#opIndex">opIndex</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td>Returns: <p>A pointer to a tuple that contains, when not null, the
+</td></tr><tr><td><a href="iz/containers/HashMap_LP.html#slot">slot</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td>Returns: <p>A pointer to a tuple that contains, when not null, the
      key and the value of the element pointed by <i>index</i>.
 </p>
-</td></tr><tr><td><a href="iz/containers/HashMap_LP.html#count">count</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/HashMap_LP.html#length">length</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr></table>
+</td></tr><tr><td><a href="iz/containers/HashMap_LP.html#opIndex">opIndex</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>A pointer to a tuple that contains, when not null, the
+     key and the value of the element pointed by <i>index</i>.
+</p>
+</td></tr><tr><td><a href="iz/containers/HashMap_LP.html#count">count</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/HashMap_LP.html#slotCount">slotCount</a><span class="extrainfo"><span class="method-attribs"><span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr></table>
 </div>
 </div><script>hljs.initHighlightingOnLoad();</script>
 

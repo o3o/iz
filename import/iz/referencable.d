@@ -326,7 +326,7 @@ public:
      *
      * Params:
      *      dg = indicates if the reference to find points to a delegate.
-     *      type = The `.stringof` of the type of the reference.
+     *      type = The $(D .stringof) of the type of the reference.
      *      aReference = A pointer to a variable
      *
      * Returns:

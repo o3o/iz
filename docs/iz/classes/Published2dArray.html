@@ -81,6 +81,7 @@ This class template can only be instantiated if <i>T</i> is a basic type.
 </div>
 <pre><code>alias Publisher = <a href="iz/classes/Published2dArray.html">Published2dArray</a>!uint;
 Publisher pub = <a href="iz/memory.html#construct">construct</a>!Publisher;
+scope(exit) <a href="iz/memory.html#destruct">destruct</a>(pub);
 
 auto array = [[0u,1u],[2u,3u,4u],[5u,6u,7u,8u]];
 pub.<a href="iz/classes/Published2dArray.html#fromArray">fromArray</a>(array);
