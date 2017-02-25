@@ -6,7 +6,7 @@ module iz.serializer;
 import
     std.range, std.typetuple, std.conv, std.traits, std.stdio;
 import
-    iz.memory, iz.containers, iz.strings, iz.rtti;
+    iz.memory, iz.containers, iz.strings, iz.rtti, iz.sugar;
 
 public
 {
@@ -152,7 +152,7 @@ package bool isSerArrayType(T)()
 }
 
 /**
- * Only a sub set of the type representable as a Rtti are serializable.
+ * Only a subset of the type representable as a Rtti are serializable.
  * This template only evaluates to true if it's the case.
  */
 bool isSerializable(T)()
@@ -192,7 +192,7 @@ struct SerNodeInfo
 {
     /// the rtti of the property
     const(Rtti)* rtti;
-    /// a pointer to a PropDescriptor
+    /// a pointer to a $(D PropDescriptor)
     Ptr     descriptor;
     /// the raw value
     Array!ubyte value;
@@ -212,6 +212,49 @@ struct SerNodeInfo
     }
 }
 
+/**
+ * Stores an IST in an associative array.
+ */
+struct IstNodeCache
+{
+
+private:
+
+    IstNode _root;
+    HashMap_AB!(const(char)[], IstNode) _aa;
+
+public:
+
+    @disable this(this);
+
+    ~this()
+    {
+        destruct(_aa);
+    }
+
+    /// Updates the cache.
+    void setRoot(IstNode root)
+    {
+        assert(root);
+        _root = root;
+        _aa.clear;
+
+        size_t count;
+        deepIterate!((a => ++count), "children")(root);
+        _aa.reserve(count);
+        deepIterate!(a => _aa.insert(a.identifiersChain(), a), "children")(root);
+    }
+
+    /// Returns: The node with that matches to an identifier chain.
+    IstNode find(const(char[]) identChain)
+    {
+        if (IstNode* n = identChain in _aa)
+            return *n;
+        else
+            return null;
+    }
+}
+
 /// IST node
 class IstNode
 {
@@ -221,19 +264,6 @@ class IstNode
 private:
 
     SerNodeInfo _info;
-    IstNode[char[]] _cache;
-    bool _cached;
-
-    void updateCache()
-    {
-        _cached = true;
-        _cache = _cache.init;
-        auto thisChain = identifiersChain();
-        foreach(IstNode node; children)
-        {
-            _cache[(thisChain ~ "." ~ node.info.name[]).idup] = node;
-        }
-    }
 
 public:
 
@@ -250,7 +280,6 @@ public:
      */
     IstNode addNewChildren()
     {
-        _cached = false;
         auto result = construct!IstNode;
         addChild(result);
         return result;
@@ -280,8 +309,9 @@ public:
      */
     string parentIdentifiersChain()
     {
-        if (!level) return "";
-        //
+        if (!level)
+            return "";
+
         string[] items;
         IstNode curr = cast(IstNode) parent;
         while (curr)
@@ -302,19 +332,6 @@ public:
         else
             return parentIdentifiersChain ~ "." ~ info.name[].idup;
     }
-
-    /**
-     * Returns the child node whose info.name matches to name.
-     */
-    IstNode findChild(in char[] name)
-    {
-        if (!_cached) updateCache;
-        if (auto r = name in _cache)
-            return *r;
-        else
-            return null;
-    }
-
 }
 //----
 
@@ -1153,6 +1170,7 @@ class Serializer
 
 private:
 
+    IstNodeCache _nodesCache;
     /// the IST root
     IstNode _rootNode;
     /// the current parent node, always represents a PropertyPublisher
@@ -1391,6 +1409,7 @@ public:
     {
         _rootNode.deleteChildren;
         destruct(_rootNode);
+        destruct(_nodesCache);
     }
 
 //---- serialization ----------------------------------------------------------+
@@ -1520,17 +1539,17 @@ public:
 //---- deserialization --------------------------------------------------------+
 
     /**
-     * Restores the IST to a PropertyPublisher.
+     * Restores the IST to a $(D PropertyPublisher).
      *
      * Can be called after $(D streamToIst), which builds the IST without defining
-     * the $(D PropDescriptor) that match to each node. The descriptors are
+     * the $(D PropDescriptor) that matches to a node. The descriptors are
      * dynamically set using the publications of the root. If the procedure doesn't
-     * detect the descriptor that matches to an IST node, and if assigned,
-     * then the events $(D onWantObject) and $(D onWantDescriptor) are called.
+     * detect the descriptor that matches to an IST node then the events
+     * $(D onWantObject) and $(D onWantDescriptor) are called.
      *
      * Params:
-     *      root = The Object from where the restoreation starts. It has to be
-     *      a PropPublisher.
+     *      root = The object from where the restoration starts. It must be
+     *      a $(D PropertyPublisher) or struct that contains $(D PropertyPublisherImpl).
      */
     void istToPublisher(R)(ref R root)
     if (is(R == class) || is(R == struct))
@@ -1644,15 +1663,14 @@ public:
     }
 
     /**
-     * Builds the IST from a Stream and restores from root.
+     * Builds the IST from a $(D Stream) and restores from root.
      *
-     * This method actually call successively $(D streamToIst()) then
-     * $(D istToPublisher()).
+     * This method calls successively $(D streamToIst()) then $(D istToPublisher()).
      *
      * Params:
-     *      inputStream: The Stream that contains the data previously serialized.
-     *      root = The Object from where the restoreation starts. It has to be
-     *      a PropPublisher.
+     *      inputStream: The $(D Stream) that contains the data previously serialized.
+     *      root = The object from where the restoration starts. It must be
+     *      a $(D PropertyPublisher) or struct that contains $(D PropertyPublisherImpl).
      */
     void streamToPublisher(R)(Stream inputStream, ref R root,
         SerializationFormat format = defaultFormat)
@@ -1672,15 +1690,15 @@ public:
     }
 
     /**
-     * Builds the IST from a stream.
+     * Builds the IST from a $(D Stream).
      *
-     * After the call the IST nodes are not yet linked to their PropDescriptor.
+     * After the call the IST nodes are not yet linked to their $(D PropDescriptor).
      * The deserialization process can be achieved manually, using $(D findNode())
      * in pair with $(D restoreProperty()) or automatically, using $(D istToPublisher()).
      * This function can also be used to convert from a format to another.
      *
      * Params:
-     *      inputStream = The stream containing the serialized data.
+     *      inputStream = The $(D Stream) containing the serialized data.
      *      format = The format of the serialized data.
      */
     void streamToIst(Stream inputStream, SerializationFormat format = defaultFormat)
@@ -1726,12 +1744,12 @@ public:
     }
 
     /**
-     * Finds the tree node matching to a name chain.
+     * Finds the tree node matching to an identifier chain.
      *
      * Params:
-     *      cache = Set to true to activate the internal IST node caching.
-     *      This should only be set to true when performing many queries.
-     *      descriptorName = The name chain that identifies the node.
+     *      cache = Set to true to use a cache. In this case $(D updateCache())
+     *      must be called before.
+     *      descriptorName = The chain of properties name that identifies the node.
      * Returns:
      *      A reference to the node that matches to the property or nulll.
      */
@@ -1740,45 +1758,35 @@ public:
         if (_rootNode.info.name == descriptorName)
             return _rootNode;
 
-        IstNode scanNode(IstNode parent, const(char)[] namePipe)
+        static if (cache)
+            return _nodesCache.find(descriptorName);
+        else
         {
-            static if (cache)
+            IstNode result;
+            deepIterate!((IstNode n)
             {
-                if (auto r = parent.findChild(descriptorName))
-                    return r;
-                else foreach(node; parent.children)
+                if (n.identifiersChain() == descriptorName)
                 {
-                    if (auto r = scanNode(node, descriptorName))
-                        return r;
+                    result = n;
+                    return true;
                 }
-                return null;
-            }
-            else
-            {
-                IstNode result;
-                foreach(node; parent.children)
+                else
                 {
-                    auto child = cast(IstNode) node;
-                    if (namePipe ~ "." ~ child.info.name == descriptorName)
-                        return child;
-                    if (child.childrenCount)
-                        result = scanNode(child, namePipe ~ "." ~ child.info.name);
-                    if (result)
-                        return result;
+                    result = null;
+                    return false;
                 }
-                return result;
-            }
+            }, "children")(_rootNode);
+            return result;
         }
-        return scanNode(_rootNode, _rootNode.info.name);
     }
 
     /**
      * Restores the IST from an arbitrary tree node.
      *
      * The process is lead by the nodeInfo associated to the node.
-     * If the descriptor is not defined then wantDescriptorEvent is called.
+     * If the descriptor is not defined then the $(D wantDescriptorEvent) is called.
      * It means that this method can be used to deserialize to an arbitrary descriptor,
-     * for example after a call to streamToIst().
+     * for example after a call to $(D streamToIst()).
      *
      * Params:
      *      node = The IST node from where the restoration starts.
@@ -1826,9 +1834,9 @@ public:
      * PropDescriptor passed as parameter.
      *
      * Params:
-     *      node = An IstNode. Can be determined by a call to findNode()
+     *      node = An IstNode. Can be determined by a call to $(D findNode()).
      *      descriptor = The PropDescriptor whose setter is used to restore the node data.
-     *      if not specified then the onWantDescriptor event may be called.
+     *      if not specified then the $(D onWantDescriptor) event is called.
      */
     void nodeToProperty(T)(IstNode node, PropDescriptor!T* descriptor = null)
     {
@@ -1847,7 +1855,15 @@ public:
     }
 
 //------------------------------------------------------------------------------
-//---- miscellaneous properties -----------------------------------------------+
+//---- miscellaneous  ---------------------------------------------------------+
+
+    /**
+     * Updates the cache optionally used in $(D findNode()).
+     */
+    void updateCache()
+    {
+        _nodesCache.setRoot(this._rootNode);
+    }
 
     /// The IST can be modified, build, cleaned from the root node
     @property IstNode serializationTree(){return _rootNode;}
@@ -1925,17 +1941,16 @@ unittest
 
 // Miscellaneous helpers ------------------------------------------------------+
 /**
- * Serializes a PropertyPublisher to a file.
+ * Serializes a $(D PropertyPublisher) to a file.
  *
- * This helper function works in pair with fileToPublisher().
- * It is typically used to save configuration files, session backups, etc.
+ * This helper function works in pair with $(D fileToPublisher()).
  *
  * Params:
- *      pub = The PropertyPublisher to save.
+ *      pub = The $(D PropertyPublisher) to save.
  *      filename = The target file, always created or overwritten.
  *      format = Optional, the serialization format, by default iztext.
  */
-void publisherToFile(Object pub, in char[] filename,
+void publisherToFile(Object pub, const(char)[] filename,
     SerializationFormat format = defaultFormat,
     WantAggregateEvent wae = null, WantDescriptorEvent wde = null)
 {
@@ -1944,23 +1959,22 @@ void publisherToFile(Object pub, in char[] filename,
     scope(exit) destructEach(str, ser);
     ser.onWantAggregate = wae;
     ser.onWantDescriptor = wde;
-    //
+
     ser.publisherToStream(pub, str, format);
     str.saveToFile(filename);
 }
 
 /**
- * Deserializes a file to a PropertyPublisher.
+ * Deserializes a file to a $(D PropertyPublisher).
  *
- * This helper function works in pair with publisherToFile().
- * It is typically used to load configuration files, session backups, etc.
+ * This helper function works in pair with $(D publisherToFile()).
  *
  * Params:
  *      filename = The source file.
- *      pub = The target PropertyPublisher.
+ *      pub = The target $(D PropertyPublisher).
  *      format = optional, the serialization format, by default iztext.
  */
-void fileToPublisher(in char[] filename, Object pub,
+void fileToPublisher(const(char)[] filename, Object pub,
     SerializationFormat format = defaultFormat,
     WantAggregateEvent wae = null, WantDescriptorEvent wde = null)
 {
@@ -1969,7 +1983,7 @@ void fileToPublisher(in char[] filename, Object pub,
     scope(exit) destructEach(str, ser);
     ser.onWantAggregate = wae;
     ser.onWantDescriptor = wde;
-    //
+
     str.loadFromFile(filename);
     ser.streamToPublisher(str, pub, format);
 }
@@ -2192,13 +2206,22 @@ version(unittest)
         //----
 
         // arbitrarily find a prop ---+
-        assert(ser.findNode("root.anIntArray"));
-        assert(ser.findNode("root.aFloat"));
-        assert(ser.findNode("root.someChars"));
-        assert(!ser.findNode("root."));
-        assert(!ser.findNode("aFloat"));
-        assert(!ser.findNode("root.someChar"));
-        assert(!ser.findNode(""));
+        assert(ser.findNode!false("root.anIntArray"));
+        assert(ser.findNode!false("root.aFloat"));
+        assert(ser.findNode!false("root.someChars"));
+        assert(!ser.findNode!false("root."));
+        assert(!ser.findNode!false("aFloat"));
+        assert(!ser.findNode!false("root.someChar"));
+        assert(!ser.findNode!false(""));
+
+        ser.updateCache;
+        assert(ser.findNode!true("root.anIntArray"));
+        assert(ser.findNode!true("root.aFloat"));
+        assert(ser.findNode!true("root.someChars"));
+        assert(!ser.findNode!true("root."));
+        assert(!ser.findNode!true("aFloat"));
+        assert(!ser.findNode!true("root.someChar"));
+        assert(!ser.findNode!true(""));
         //----
 
         // restore elsewhere that in the declarator ---+
