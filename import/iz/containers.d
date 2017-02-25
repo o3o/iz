@@ -67,9 +67,9 @@ private:
     }
 
     pragma(inline, true)
-    T* rwPtr(size_t index) pure const nothrow @nogc
+    Unqual!T* rwPtr(size_t index) pure const nothrow @nogc
     {
-        return cast(T*) (_elems + index * T.sizeof);
+        return cast(Unqual!T*) (_elems + index * T.sizeof);
     }
 
     struct Range
@@ -131,40 +131,13 @@ public:
         opAssign(value);
     }
 
-    static if (__traits(compiles, to!T("")) && !isSomeChar!(Unqual!T))
-    {
-        /**
-         * Constructs the array from a literal array representation.
-         * This constructor is not available when the element type verifies
-         * isSomeChar.
-         *
-         * Params:
-         *      value = An array literal.
-         * Throw:
-         *      A ConvException if T is not converitble to string.
-         */
-        this(const(char)[] value)
-        {
-            fromString(value);
-        }
-    }
-
     this(this)
     {
-        /*if (_length == 0)
-        {
-            freeMem(_elems);
-            _blockCount = 0;
-            _granularity = 4096;
-        }
-        else*/
-        {
-            Ptr old = _elems;
-            const size_t sz = _granularity * _blockCount;
-            _elems = getMem(sz);
-            moveMem(_elems, old, sz);
-            postblitElements;
-        }
+        Ptr old = _elems;
+        const size_t sz = _granularity * _blockCount;
+        _elems = getMem(sz);
+        moveMem(_elems, old, sz);
+        postblitElements;
     }
 
     ~this()
@@ -258,6 +231,12 @@ public:
         return _elems;
     }
 
+    pragma(inline, true)
+    T* typedPtr() pure nothrow @nogc
+    {
+        return cast(T*) _elems;
+    }
+
     /**
      * Returns the string representation of the array.
      *
@@ -274,31 +253,6 @@ public:
             auto r = opSlice();
             return to!string(r);
         }
-    }
-
-    /**
-     * Sets the array from a literal representation.
-     *
-     * Params:
-     *      value = An array literal.
-     * Throw:
-     *      A ConvException if T is not convertible to string.
-     */
-    void fromString(C)(const(C)[] value)
-    if (isSomeChar!C)
-    {
-        static if (__traits(compiles, to!T("")))
-        {
-            setLength(0);
-            T[] arr;
-
-            scope(success)
-                opAssign(arr);
-
-            arr = to!(T[])(value);
-        }
-        else static assert(false, "don't know how to convert a string to a "
-            ~ T.stringof);
     }
 
     /// Returns a mutable (deep) copy of the array.
@@ -338,7 +292,19 @@ public:
     }
 
     /// Support for the array syntax.
-    void opIndexAssign()(auto ref T item, size_t i) @nogc
+    void opIndexAssign()(ref T item, size_t i) @nogc
+    {
+        *rwPtr(i) = item;
+    }
+
+    void opIndexAssign()(T item, size_t i) @nogc
+    {
+        *rwPtr(i) = item;
+    }
+
+    /// ditto
+    static if (isTemplateInstance!(T) && __traits(isSame, TemplateOf!T, TemplateOf!(typeof(this))))
+    void opIndexAssign()(TemplateArgsOf!(T)[0][] item, size_t i) @nogc
     {
         *rwPtr(i) = item;
     }
@@ -523,26 +489,6 @@ unittest
     assert( floatarr[3] == 0.3f);
     assert( floatarr[4] == 0.4f);
 
-    // copy-cons
-    Array!size_t er = Array!size_t("[]");
-    assert(er.length == 0);
-
-    // leaks
-    version(checkleaks){}
-    else
-    {
-        assertThrown(er = Array!size_t("]"));
-        assertThrown(er = Array!size_t("]"));
-        assertThrown(er = Array!size_t("[,]"));
-        assertThrown(er = Array!size_t("[,"));
-        assertThrown(er = Array!size_t("[0,1,]"));
-        assertThrown(er = Array!size_t("[,0,1]"));
-        assertThrown(er = Array!size_t("[0,1.874f]"));
-    }
-    a = Array!size_t("[10,11,12,13]");
-    assert(a.length == 4);
-    assert(a.toString == "[10, 11, 12, 13]");
-
     // loops
     int i;
     foreach (float aflt; floatarr)
@@ -653,6 +599,15 @@ unittest
     assert(c  == r0);
     assert(c ~ c == r1);
     destructEach(a, b, c);
+}
+
+unittest
+{
+    Array!(Array!(const(char))) a;
+    a.length = 2;
+    a[0] = "first";
+    a[1] = "second".dup;
+    destruct(a);
 }
 
 private mixin template ListHelpers(T)
@@ -5369,7 +5324,6 @@ version (none) unittest
 
 unittest
 {
-    import std.algorithm;
     HashMap_AB!(string, int) aa;
     aa.insert("0",2);
     aa["0"] += 0;
