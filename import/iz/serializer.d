@@ -242,7 +242,7 @@ public:
         size_t count;
         deepIterate!((a => ++count), "children")(root);
         _aa.reserve(count);
-        deepIterate!(a => _aa.insert(a.identifiersChain(), a), "children")(root);
+        deepIterate!(a => _aa.insert!imReserved(a.identifiersChain(), a), "children")(root);
     }
 
     /// Returns: The node with that matches to an identifier chain.
