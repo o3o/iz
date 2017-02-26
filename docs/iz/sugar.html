@@ -1136,6 +1136,43 @@ assert(a == 3);
 </code></pre>
 
 </div>
+</div></div><a class="anchor" id="recursion"></a><div class="symbol"><div class="description"><pre><code>public <a href="iz/sugar.html#recursion">recursion</a>(string Fun = __FUNCTION__, A...)(auto ref A a)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Allows to call recursively the function bein executed.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">a</td><td class="paramDoc"><p>the parameters expected by the function.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Examples</h2>
+<p><pre class="d_code"><font color=blue>long</font> factorial(<font color=blue>long</font> a)
+{
+    <font color=blue>if</font> (a <= 1)
+        <font color=blue>return</font> a;
+     <font color=blue>else</font>
+         <font color=blue>return</font> a * recursion(a-1);
+}</pre>
+</p>
+
+
+</div>
+<div class="section"><h2>Returns</h2>
+<p>The same as the function being executed.
+</p>
+
+
+</div>
 </div></div><div class="description"><div class="section"><h2></h2>
 <p>Several trivial functions and structures
 </p>
@@ -1166,6 +1203,8 @@ assert(a == 3);
 </td></tr><tr><td><a href="iz/sugar.html#throwStaticEx">throwStaticEx</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/sugar.html#throwStaticEx">throwStaticEx</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/sugar.html#setDelegate">setDelegate</a><span class="extrainfo"></span></td><td></td><td></td></tr><tr><td><a href="iz/sugar.html#getDelegate">getDelegate</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td>Returns: <p>A new delegate of type T.
 </p>
 </td></tr><tr><td><a href="iz/sugar.html#opCall">opCall</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/sugar.html#deepIterate">deepIterate</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>True if the iterations have stopped, false otherwise.
+</p>
+</td></tr><tr><td><a href="iz/sugar.html#recursion">recursion</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td>Returns: <p>The same as the function being executed.
 </p>
 </td></tr></table><h2>Structs</h2><table><tr><td><a href="iz/sugar/ArrayRange.html">ArrayRange</a></td><td></td><td></td></tr><tr><td><a href="iz/sugar/DgMembers.html">DgMembers</a></td><td></td><td></td></tr></table><h2>Templates</h2><table><tr><td><a href="iz/sugar/bitCast.html">bitCast</a></td><td></td><td></td></tr><tr><td><a href="iz/sugar/bitCast.html">bitCast</a></td><td></td><td></td></tr></table>
 </div>

@@ -1287,3 +1287,29 @@ unittest
     destruct(root);
 }
 
+/**
+ * Allows to call recursively the function bein executed.
+ *
+ * Params:
+ *      a = the parameters expected by the function.
+ * Examples:
+ *
+ * ---
+ * long factorial(long a)
+ * {
+ *     if (a <= 1)
+ *         return a;
+ *      else
+ *          return a * recursion(a-1);
+ * }
+ * ---
+ *
+ * Returns:
+ *      The same as the function being executed.
+ */
+auto recursion(string Fun = __FUNCTION__ , A...)(auto ref A a)
+{
+    import std.typecons: tuple;
+    mixin("return " ~ Fun ~ "(" ~ a.stringof ~ "[0..$]);");
+}
+

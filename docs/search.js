@@ -904,6 +904,7 @@ var items = [
 {"iz.sugar.bitCast" : "iz/sugar/bitCast.html"},
 {"iz.sugar.IdMode" : "iz/sugar/IdMode.html"},
 {"iz.sugar.deepIterate" : "iz/sugar.html#deepIterate"},
+{"iz.sugar.recursion" : "iz/sugar.html#recursion"},
 {"iz.types" : "iz/types.html"},
 {"iz.types.Ptr" : "iz/types.html#Ptr"},
 {"iz.types.BasicTypes" : "iz/types.html#BasicTypes"},
