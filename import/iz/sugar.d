@@ -1288,7 +1288,7 @@ unittest
 }
 
 /**
- * Allows to call recursively the function bein executed.
+ * Allows to call recursively the function being executed.
  *
  * Params:
  *      a = the parameters expected by the function.
