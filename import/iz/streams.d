@@ -158,9 +158,9 @@ interface StreamPersist
 interface FilePersist8
 {
     /// Saves something to aFilename.
-    void saveToFile(in char[] aFilename);
+    void saveToFile(const(char)[] aFilename);
     /// Loads something to aFilename.
-    void loadFromFile(in char[] aFilename);
+    void loadFromFile(const(char)[] aFilename);
 }
 
 /// Generates all the typed write() and read() of a Stream implementation.
@@ -261,20 +261,20 @@ interface Stream
     /**
      * Sets or gets the stream size.
      */
-    @nogc @property long size();
+    @nogc long size();
     /// ditto
-    @nogc @property void size(long value);
+    @nogc void size(long value);
     /// ditto
-    @nogc @property void size(int value);
+    @nogc void size(int value);
 
     /**
      * Sets or gets the stream position.
      */
-    @nogc @property long position();
+    @nogc long position();
     /// ditto
-    @nogc @property void position(long value);
+    @nogc void position(long value);
     /// ditto
-    @nogc @property void position(int value);
+    @nogc void position(int value);
 
     /**
      * Resets the stream size to 0.
@@ -354,7 +354,7 @@ if (is(ST : Stream))
         }
 
         /// InputRange primitive.
-        @property T front() @nogc
+        T front() @nogc
         {
             T result;
             _str.position = _fpos;
@@ -364,7 +364,7 @@ if (is(ST : Stream))
         }
 
         /// Bidirectional primitive.
-        @property T back() @nogc
+        T back() @nogc
         {
             T result;
             _str.position = _bpos;
@@ -386,7 +386,7 @@ if (is(ST : Stream))
         }
 
         /// InputRange & BidirectionalRange primitive.
-        @property bool empty() @nogc
+        bool empty() @nogc
         {
             return (_fpos == _str.size) || (_fpos + T.sizeof > _str.size)
                     || (_bpos == 0) || (_bpos - T.sizeof < 0);
@@ -1060,7 +1060,7 @@ abstract class SystemStream: Stream, StreamPersist
         }
 
         /// see the Stream interface.
-        @property long size() @nogc
+        long size() @nogc
         {
             if (!_handle.isHandleValid) return 0;
 
@@ -1071,7 +1071,7 @@ abstract class SystemStream: Stream, StreamPersist
         }
 
         /// ditto
-        @property void size(long value) @nogc
+        void size(long value) @nogc
         {
             if (!_handle.isHandleValid) return;
             if (size == value) return;
@@ -1090,7 +1090,7 @@ abstract class SystemStream: Stream, StreamPersist
         }
 
         /// ditto
-        @property void size(int value) @nogc
+        void size(int value) @nogc
         {
             if (!_handle.isHandleValid) return;
             version(Windows)
@@ -1105,13 +1105,13 @@ abstract class SystemStream: Stream, StreamPersist
         }
 
         /// see the Stream interface.
-        @property long position() @nogc
+        long position() @nogc
         {
             return seek(0, SeekMode.cur);
         }
 
         /// ditto
-        @property void position(long value)
+        void position(long value)
         {
             immutable long sz = size;
             if (value >  sz) value = sz;
@@ -1119,7 +1119,7 @@ abstract class SystemStream: Stream, StreamPersist
         }
 
         /// ditto
-        @property void position(int value) @nogc
+        void position(int value) @nogc
         {
             seek(value, SeekMode.beg);
         }
@@ -1127,7 +1127,7 @@ abstract class SystemStream: Stream, StreamPersist
         /**
          * Exposes the handle for additional system stream operations.
          */
-        @property const(StreamHandle) handle() @nogc
+        const(StreamHandle) handle() @nogc
         {return _handle;}
 
         /// see the Stream interface.
@@ -1168,7 +1168,7 @@ class FileStream: SystemStream
         /**
          * Constructs the stream and call openPermissive().
          */
-        this(in char[] aFilename, int creationMode = cmAlways)
+        this(const(char)[] aFilename, int creationMode = cmAlways)
         {
             openPermissive(aFilename, creationMode);
         }
@@ -1176,7 +1176,7 @@ class FileStream: SystemStream
         /**
          * Constructs the stream and call open().
          */
-        this(in char[] aFilename, int access, int share, int creationMode)
+        this(const(char)[] aFilename, int access, int share, int creationMode)
         {
             open(aFilename, access, share, creationMode);
         }
@@ -1189,7 +1189,7 @@ class FileStream: SystemStream
         /**
          * Opens a file for the current user. By default the file is always created or opened.
          */
-        bool openStrict(in char[] aFilename, int creationMode = cmAlways)
+        bool openStrict(const(char)[] aFilename, int creationMode = cmAlways)
         {
             version(Windows)
             {
@@ -1214,7 +1214,7 @@ class FileStream: SystemStream
         /**
          * Opens a shared file. By default the file is always created or opened.
          */
-        bool openPermissive(in char[] aFilename, int creationMode = cmAlways)
+        bool openPermissive(const(char)[] aFilename, int creationMode = cmAlways)
         {
             version(Windows)
             {
@@ -1239,7 +1239,7 @@ class FileStream: SystemStream
          * The fully parametric open version. Do not throw. Under POSIX, access can
          * be already OR-ed with other, unrelated flags (e.g: O_NOFOLLOW or O_NONBLOCK).
          */
-        bool open(in char[] aFilename, int access, int share, int creationMode)
+        bool open(const(char)[] aFilename, int access, int share, int creationMode)
         {
             version(Windows)
             {
@@ -1278,7 +1278,7 @@ class FileStream: SystemStream
         /**
          * Exposes the filename.
          */
-        @property string filename() @nogc {return _filename;}
+        string filename() @nogc {return _filename;}
     }
 }
 
@@ -1390,13 +1390,13 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
 // size -----------------------------------------------------------------------+
 
         /// see the Stream interface.
-        @property long size() @nogc
+        long size() @nogc
         {
             return _size;
         }
 
         /// ditto
-        @property void size(long value) @nogc
+        void size(long value) @nogc
         {
             if (_size == value) return;
             version(X86)
@@ -1414,7 +1414,7 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
         }
 
         /// ditto
-        @property void size(int value) @nogc
+        void size(int value) @nogc
         {
             size(cast(long) value);
         }
@@ -1423,19 +1423,19 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
 // position -------------------------------------------------------------------+
 
         /// see the Stream interface.
-        @property long position() const @nogc
+         long position() const @nogc
         {
             return _position;
         }
 
         /// ditto
-        @property void position(long value) @nogc
+        void position(long value) @nogc
         {
             seek(value, SeekMode.beg);
         }
 
         /// ditto
-        @property void position(int value) @nogc
+        void position(int value) @nogc
         {
             seek(value, SeekMode.beg);
         }
@@ -1547,7 +1547,7 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
 // FilePersist8 ---------------------------------------------------------------+
 
         /// see the FilePersist8 interface.
-        void saveToFile(in char[] aFilename)
+        void saveToFile(const(char)[] aFilename)
         {
             version(Windows)
             {
@@ -1582,7 +1582,7 @@ class MemoryStream: Stream, StreamPersist, FilePersist8
         }
 
         /// see the FilePersist8 interface.
-        void loadFromFile(in char[] aFilename)
+        void loadFromFile(const(char)[] aFilename)
         {
             version(Windows)
             {
