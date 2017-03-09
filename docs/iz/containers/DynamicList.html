@@ -185,7 +185,8 @@ This is a standard doubly linked list, with GC-free heap allocations.
 </div></div><a class="anchor" id="add"></a><div class="symbol"><div class="description"><pre><code>private ptrdiff_t <a href="iz/containers/DynamicList.html#add">add</a>(T[] items) @trusted @nogc
 </code></pre>
 <div class="section"><h2></h2>
-<p>Adds items at the end of the list and returns the last item index.
+<p>ditto
+Adds items at the end of the list and returns the last item index.
 </p>
 
 
@@ -208,10 +209,42 @@ This is a standard doubly linked list, with GC-free heap allocations.
 </div>
 </div></div><a class="anchor" id="insert"></a><div class="symbol"><div class="description"><pre><code>private ptrdiff_t <a href="iz/containers/DynamicList.html#insert">insert</a>(
     size_t position, 
+    ref T item) @trusted @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>ditto
+Inserts an item at a given position.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">position</td><td class="paramDoc"><p>The position where to insert.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">item</td><td class="paramDoc"><p>The item to insert.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>The item index, position if it was valid.
+</p>
+
+
+</div>
+</div></div><a class="anchor" id="insert"></a><div class="symbol"><div class="description"><pre><code>private ptrdiff_t <a href="iz/containers/DynamicList.html#insert">insert</a>(
+    size_t position, 
     T item) @trusted @nogc
 </code></pre>
 <div class="section"><h2></h2>
-<p>Inserts an item at a given position.
+<p>ditto
+Inserts an item at a given position.
 </p>
 
 
@@ -361,6 +394,8 @@ This is a standard doubly linked list, with GC-free heap allocations.
 </div></div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/containers/DynamicList.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/containers/DynamicList.html#opIndex">opIndex</a><span class="extrainfo"><span class="method-attribs"><span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span>, <span class="attr-nothrow">nothrow</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/DynamicList.html#opIndexAssign">opIndexAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span>, <span class="attr-nothrow">nothrow</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/DynamicList.html#opApply">opApply</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/DynamicList.html#opApplyReverse">opApplyReverse</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/DynamicList.html#opAssign">opAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/DynamicList.html#last">last</a><span class="extrainfo"><span class="method-attribs"><span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span>, <span class="attr-nothrow">nothrow</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/DynamicList.html#first">first</a><span class="extrainfo"><span class="method-attribs"><span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span>, <span class="attr-nothrow">nothrow</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/DynamicList.html#find">find</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span></span></span></td><td></td><td>Returns: <p>-1 if item is not present otherwise its index.
 </p>
 </td></tr><tr><td><a href="iz/containers/DynamicList.html#add">add</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/DynamicList.html#add">add</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/DynamicList.html#insert">insert</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/DynamicList.html#insert">insert</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td>Returns: <p>The item index, position if it was valid.
+</p>
+</td></tr><tr><td><a href="iz/containers/DynamicList.html#insert">insert</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td>Returns: <p>The item index, position if it was valid.
 </p>
 </td></tr><tr><td><a href="iz/containers/DynamicList.html#swapItems">swapItems</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/DynamicList.html#swapIndexes">swapIndexes</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/DynamicList.html#remove">remove</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span></span></span></td><td></td><td>Returns: <p>true if the item wasin the list, false otherwise.
 </p>

@@ -143,6 +143,7 @@ var items = [
 {"iz.containers.DynamicList.add" : "iz/containers/DynamicList.html#add"},
 {"iz.containers.DynamicList.insert" : "iz/containers/DynamicList.html#insert"},
 {"iz.containers.DynamicList.insert" : "iz/containers/DynamicList.html#insert"},
+{"iz.containers.DynamicList.insert" : "iz/containers/DynamicList.html#insert"},
 {"iz.containers.DynamicList.swapItems" : "iz/containers/DynamicList.html#swapItems"},
 {"iz.containers.DynamicList.swapIndexes" : "iz/containers/DynamicList.html#swapIndexes"},
 {"iz.containers.DynamicList.remove" : "iz/containers/DynamicList.html#remove"},

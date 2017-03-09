@@ -1,3 +1,4 @@
+#!r: -g -gs
 /**
  * Several implementations of standard containers.
  */
@@ -343,8 +344,14 @@ public:
     void opAssign(E)(auto ref Array!E elements) @nogc
     if (is(Unqual!E == T) || is(E == T))
     {
-        setLength(elements.length);
+        setLength(elements._length);
         moveMem(_elems, elements._elems, T.sizeof * _length);
+        /*setLength(0);
+        _granularity = elements._granularity;
+        _length = elements.length;
+        _elems = elements._elems;
+        _blockCount = elements._blockCount;
+        __postblit();*/
     }
 
     /// Assigns a D array.
@@ -949,15 +956,19 @@ private template dlistPayload(T)
 
     @trusted @nogc nothrow private:
 
-    void* newPld(void* aPrevious, void* aNext, T aData)
+    void* newPld(void* aPrevious, void* aNext, ref T aData)
     {
         auto result = getMem( 2 * size_t.sizeof + T.sizeof);
-
         if (result)
         {
             *cast(size_t*)  (result + prevOffs) = cast(size_t) aPrevious;
             *cast(size_t*)  (result + nextOffs) = cast(size_t) aNext;
-            *cast(T*)       (result + dataOffs) = aData;
+            static if (is(T == struct))
+            {
+                __gshared static T init = T.init;
+                copyMem(result + dataOffs, &init, T.sizeof);
+            }
+            *cast(T*) (result + dataOffs) = aData;
         }
         return result;
     }
@@ -968,6 +979,10 @@ private template dlistPayload(T)
     }
     body
     {
+        static if (is(T==struct))
+        {
+            destruct(getData(aPayload));
+        }
         freeMem(aPayload);
     }
 
@@ -991,7 +1006,7 @@ private template dlistPayload(T)
         *cast(void**) (aPayload + nextOffs) = aNext;
     }
 
-    void setData(void* aPayload, T aData)
+    void setData(void* aPayload, ref T aData)
     in
     {
         assert(aPayload);
@@ -999,6 +1014,10 @@ private template dlistPayload(T)
     body
     {
         *cast(T*) (aPayload + dataOffs) = aData;
+        static if (is(T == struct) && hasMember!(T, "__postblit") && isCopyable!T )
+        {
+            (cast(T*) (aPayload + dataOffs)).__postblit();
+        }
     }
 
     void* getPrev(void* aPayload)
@@ -1047,9 +1066,9 @@ private template dlistPayload(T)
         else return *cast(void**) (aPayload + nextOffs);
     }
 
-    T getData(void* aPayload)
+    ref T getData(void* aPayload)
     {
-        version(X86) asm @nogc nothrow
+        /*version(X86) asm @nogc nothrow
         {
             naked;
             mov     EAX, [EAX + dataOffs];
@@ -1067,7 +1086,7 @@ private template dlistPayload(T)
             mov     RAX, [RDI + dataOffs];
             ret;
         }
-        else return *cast(T*) (aPayload + dataOffs);
+        else*/ return *cast(T*) (aPayload + dataOffs);
     }
 }
 
@@ -1096,7 +1115,7 @@ private:
         return current;
     }
 
-    void* getPayloadFromDt(T item) @trusted
+    void* getPayloadFromDt(ref T item) @trusted
     {
         void* current = _first;
         while (current)
@@ -1123,21 +1142,21 @@ public:
     }
 
     /// Support for the array syntax.
-    T opIndex(ptrdiff_t i) @safe @nogc nothrow
+    ref T opIndex(ptrdiff_t i) @safe @nogc nothrow
     {
         void* _pld = getPayloadFromIx(i);
         return payload.getData(_pld);
     }
 
     /// Support for the array syntax.
-    void opIndexAssign(T item, size_t i) @safe @nogc nothrow
+    void opIndexAssign(ref T item, size_t i) @safe @nogc nothrow
     {
         void* _pld = getPayloadFromIx(i);
         payload.setData(_pld, item);
     }
 
     /// Support for the foreach operator.
-    int opApply(int delegate(T) dg) @trusted
+    int opApply(int delegate(ref T) dg) @trusted
     {
         int result = 0;
         void* current = _first;
@@ -1151,7 +1170,7 @@ public:
     }
 
     /// Support for the foreach_reverse operator.
-    int opApplyReverse(int delegate(T) dg) @trusted
+    int opApplyReverse(int delegate(ref T) dg) @trusted
     {
         int result = 0;
         void* current = _last;
@@ -1209,7 +1228,7 @@ public:
     /**
      * Adds an item at the end of the list and returns its index.
      */
-    ptrdiff_t add(T item) @trusted @nogc
+    ptrdiff_t add(ref T item) @trusted @nogc
     {
         if (!_first)
             return insert(item);
@@ -1220,6 +1239,12 @@ public:
             _last = _pld;
             return _count++;
         }
+    }
+
+    /// ditto
+    ptrdiff_t add(T item) @trusted @nogc
+    {
+        return add(item);
     }
 
     /**
@@ -1235,7 +1260,7 @@ public:
     /**
      * Inserts an item at the beginning of the list.
      */
-    ptrdiff_t insert(T item) @trusted @nogc
+    ptrdiff_t insert(ref T item) @trusted @nogc
     {
         void* _pld = payload.newPld(null, _first, item);
         if (_first) payload.setPrev(_first, _pld);
@@ -1243,6 +1268,12 @@ public:
         _first = _pld;
         ++_count;
         return 0;
+    }
+
+    /// ditto
+    ptrdiff_t insert(T item) @trusted @nogc
+    {
+        return insert(item);
     }
 
     /**
@@ -1254,7 +1285,7 @@ public:
      * Returns:
      *      The item index, position if it was valid.
      */
-    ptrdiff_t insert(size_t position, T item) @trusted @nogc
+    ptrdiff_t insert(size_t position, ref T item) @trusted @nogc
     {
         if (!_first || position == 0)
         {
@@ -1274,6 +1305,12 @@ public:
             _count++;
             return position;
         }
+    }
+
+    /// ditto
+    ptrdiff_t insert(size_t position, T item) @trusted @nogc
+    {
+        return insert(position, item);
     }
 
     /**
@@ -1686,6 +1723,17 @@ unittest
     test!(DynamicList);
 }
 
+unittest
+{
+    alias List = DynamicList!(Array!int);
+    Array!int a;
+    Array!int b = [2,3];
+    List lst = construct!List();
+    lst.add(a);
+    lst.add(b);
+    assert(lst[0].ptr !is a.ptr);
+    destructEach(a,b, lst);
+}
 
 /**
  * TreeItemSiblings is an input range that allows to
@@ -4074,7 +4122,6 @@ public:
     import iz.memory;
     destruct(stock);
 }
-
 
 @nogc unittest
 {

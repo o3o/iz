@@ -58,7 +58,7 @@
 
 </div>
 </div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>public this(
-    in <a href="http://dlang.org/type.html#basic-data-types">char</a>[] aFilename, 
+    const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] aFilename, 
     <a href="http://dlang.org/type.html#basic-data-types">int</a> creationMode = <a href="iz/streams.html#cmAlways">cmAlways</a>)
 </code></pre>
 <div class="section"><h2></h2>
@@ -72,7 +72,7 @@
 
 </div>
 </div></div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>public this(
-    in <a href="http://dlang.org/type.html#basic-data-types">char</a>[] aFilename, 
+    const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] aFilename, 
     <a href="http://dlang.org/type.html#basic-data-types">int</a> access, 
     <a href="http://dlang.org/type.html#basic-data-types">int</a> share, 
     <a href="http://dlang.org/type.html#basic-data-types">int</a> creationMode)
@@ -88,7 +88,7 @@
 
 </div>
 </div></div><a class="anchor" id="openStrict"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/streams/FileStream.html#openStrict">openStrict</a>(
-    in <a href="http://dlang.org/type.html#basic-data-types">char</a>[] aFilename, 
+    const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] aFilename, 
     <a href="http://dlang.org/type.html#basic-data-types">int</a> creationMode = <a href="iz/streams.html#cmAlways">cmAlways</a>)
 </code></pre>
 <div class="section"><h2></h2>
@@ -102,7 +102,7 @@
 
 </div>
 </div></div><a class="anchor" id="openPermissive"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/streams/FileStream.html#openPermissive">openPermissive</a>(
-    in <a href="http://dlang.org/type.html#basic-data-types">char</a>[] aFilename, 
+    const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] aFilename, 
     <a href="http://dlang.org/type.html#basic-data-types">int</a> creationMode = <a href="iz/streams.html#cmAlways">cmAlways</a>)
 </code></pre>
 <div class="section"><h2></h2>
@@ -116,7 +116,7 @@
 
 </div>
 </div></div><a class="anchor" id="open"></a><div class="symbol"><div class="description"><pre><code>public <a href="http://dlang.org/type.html#basic-data-types">bool</a> <a href="iz/streams/FileStream.html#open">open</a>(
-    in <a href="http://dlang.org/type.html#basic-data-types">char</a>[] aFilename, 
+    const(<a href="http://dlang.org/type.html#basic-data-types">char</a>)[] aFilename, 
     <a href="http://dlang.org/type.html#basic-data-types">int</a> access, 
     <a href="http://dlang.org/type.html#basic-data-types">int</a> share, 
     <a href="http://dlang.org/type.html#basic-data-types">int</a> creationMode)
@@ -145,7 +145,7 @@ After the call, handle is not valid anymore.
 
 
 </div>
-</div></div><a class="anchor" id="filename"></a><div class="symbol"><div class="description"><pre><code>public @property string <a href="iz/streams/FileStream.html#filename">filename</a>() @nogc
+</div></div><a class="anchor" id="filename"></a><div class="symbol"><div class="description"><pre><code>public string <a href="iz/streams/FileStream.html#filename">filename</a>() @nogc
 </code></pre>
 <div class="section"><h2></h2>
 <p>Exposes the filename.
