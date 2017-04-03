@@ -493,6 +493,12 @@ public:
         else static assert(0, "opIndex not implemented when indexer is " ~ I.stringof);
     }
 
+    /// Support for the array assignment syntax.
+    void opIndexAssign(bool value, E index)
+    {
+        set(index, value);
+    }
+
     /**
      * Support for "+" and "-" operators.
      * Params:
@@ -706,6 +712,15 @@ public:
 // -----------------------------------------------------------------------------
 // Pascal-ish primitives ------------------------------------------------------+
 
+
+    /**
+     * Sets the bit of a particular member
+     */
+    void set(E member, bool value)
+    {
+        _container ^= (-ubyte(value) ^ _container) & (1 << _infs[member]);
+    }
+
     /**
      * Includes someMembers in the set.
      * This is the primitive used for to the operator "+".     
@@ -715,16 +730,16 @@ public:
     void include(E...)(E someMembers) nothrow @safe
     {
         static if (someMembers.length == 1)
-            _container += _1 << _infs[someMembers];
+            _container |= _1 << _infs[someMembers];
         else foreach(member; someMembers)
-            _container += _1 << _infs[member];
+            _container |= _1 << _infs[member];
     }
 
     /// ditto
     void include(E[] someMembers) nothrow @safe
     {
         foreach(member; someMembers)
-            _container += _1 << _infs[member];
+            _container |= _1 << _infs[member];
     }
 
     /**
@@ -736,9 +751,9 @@ public:
     void exclude(E...)(E someMembers) nothrow @safe
     {
         static if (someMembers.length == 1)
-            _container &= _container ^ (_1 << _infs[someMembers]);
+            _container &= ~(_1 << _infs[someMembers]);
         else foreach(member; someMembers)
-            _container &= _container ^ (_1 << _infs[member]);
+            _container &= ~(_1 << _infs[member]);
     }
 
     /// ditto
@@ -756,7 +771,7 @@ public:
      */
     bool isIncluded(E aMember) const nothrow @safe
     {
-        return (_container == (_container | _1 << _infs[aMember]));
+        return (_container >> _infs[aMember]) & 1;
     }
 //------------------------------------------------------------------------------
 // misc helpers ---------------------------------------------------------------+
@@ -1201,6 +1216,16 @@ version(unittest)
         assert(set3 == 0b0000_0011);
         assert(set1 == 0b0000_0001);
         assert(set2 == 0b0000_0010);
+        set2.set(a8.a1, false),
+        assert(set2 == 0b0000_0000);
+        set2.set(a8.a0, true);
+        set2.set(a8.a1, true);
+        set2.set(a8.a3, true);
+        assert(set2 == 0b0000_1011);
+        set2.set(a8.a3, false);
+        assert(set2 == 0b0000_0011);
+        set2[a8.a4] = true;
+        assert(set2 == 0b0001_0011);
     }
 
     @safe unittest
