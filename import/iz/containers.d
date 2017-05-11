@@ -78,23 +78,23 @@ private:
         private size_t _i;
         private Array!T* _a;
         ///
-        this(ref Array!T array, size_t index = 0)
+        this(ref Array!T array, size_t index = 0) @nogc @trusted
         {
             _a = &array;
             _i = index;
         }
         ///
-        ref T front()
+        ref T front() @nogc
         {
             return _a.opIndex(_i);
         }
         ///
-        void popFront()
+        void popFront() @nogc @safe
         {
             ++_i;
         }
         ///
-        bool empty()
+        bool empty() @nogc @safe
         {
             return _i >= _a._length;
         }
