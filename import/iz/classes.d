@@ -1123,6 +1123,8 @@ public:
     }
 }
 
+//TODO:-cProcess: add option for std.process.Config.suppressConsole
+
 /**
  * Process encapsulates several useful methods of std.process
  * to make a serializable, synchronous process.
@@ -1169,6 +1171,8 @@ protected:
     bool _usePipes;
     bool _errorToOutput;
     bool _newEnvironment;
+    bool _hideConsole;
+    bool _isShellCommand;
 
     /// default, non blocking, execute
     final void internalExec()
@@ -1180,9 +1184,16 @@ protected:
             else r = stdin | stdout | stderrToStdout;
         }
         Config c;
-        if (_newEnvironment) c = Config.newEnv;
-        _ppid = pipeProcess([_executable] ~ _parameters,
-            r, _environment, c, _workingDirectory);
+        if (_newEnvironment)
+            c = Config.newEnv;
+        if (_hideConsole)
+            c |= Config.suppressConsole;
+        if (!_isShellCommand)
+            _ppid = pipeProcess([_executable] ~ _parameters,
+                r, _environment, c, _workingDirectory);
+        else
+            _ppid = pipeShell(_executable ~ " " ~ _parameters.join(' '),
+                r, _environment, c, _workingDirectory);
     }
 
 public:
@@ -1380,6 +1391,30 @@ public:
         import std.array: join;
         return join(_parameters, ' ').idup;
     }
+
+    /**
+     * Sets or gets if the console of the program
+     * is visible.
+     */
+    @Set void hideConsole(bool value)
+    {
+        _hideConsole = value;
+    }
+
+    /// ditto
+    @Get bool hideConsole() {return _hideConsole;}
+
+    /**
+     * Sets or gets if the $(D executable) field actually
+     * represents a shell command.
+     */
+    @Set void isShellCommand(bool value)
+    {
+         _isShellCommand = value;
+    }
+
+    /// ditto
+    @Get bool isShellCommand() {return _isShellCommand;}
 
     /**
      * Waits for the process and only returns when it terminates.
