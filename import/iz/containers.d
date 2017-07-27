@@ -204,7 +204,6 @@ public:
         if (value == _length)
             return;
         size_t oldLen = _length;
-        import iz.types;
         static if (is(T == struct) && !isTuple!T)
         {
             if (value < _length)
@@ -232,6 +231,9 @@ public:
         return _elems;
     }
 
+    /**
+     * Typed pointer to the first element.
+     */
     pragma(inline, true)
     T* typedPtr() pure nothrow @nogc
     {
@@ -298,6 +300,7 @@ public:
         *rwPtr(i) = item;
     }
 
+    /// Ditto
     void opIndexAssign()(T item, size_t i) @nogc
     {
         *rwPtr(i) = item;
@@ -313,7 +316,7 @@ public:
     /// Support for the foreach operator.
     int opApply(scope int delegate(ref T) dg)
     {
-        int result = 0;
+        int result;
         foreach (immutable i; 0 .. _length)
         {
             result = dg(*rwPtr(i));
@@ -325,7 +328,7 @@ public:
     /// Support for the foreach_reverse operator.
     int opApplyReverse(scope int delegate(ref T) dg)
     {
-        int result = 0;
+        int result;
         foreach_reverse (immutable i; 0 .. _length)
         {
             result = dg(*rwPtr(i));
@@ -693,7 +696,7 @@ public:
     /// Support for the foreach operator.
     int opApply(scope int delegate(ref T) dg)
     {
-        int result = 0;
+        int result;
         foreach (immutable i; 0 .. _items.length)
         {
             result = dg(_items[i]);
@@ -705,7 +708,7 @@ public:
     /// Support for the foreach_reverse operator.
     int opApplyReverse(scope int delegate(ref T) dg)
     {
-        int result = 0;
+        int result;
         foreach_reverse(immutable i; 0 .. _items.length)
         {
             result = dg(_items[i]);
@@ -965,7 +968,7 @@ private template dlistPayload(T)
             *cast(size_t*)  (result + nextOffs) = cast(size_t) aNext;
             static if (is(T == struct))
             {
-                __gshared static T init = T.init;
+                __gshared static T init;
                 copyMem(result + dataOffs, &init, T.sizeof);
             }
             *cast(T*) (result + dataOffs) = aData;
@@ -1158,7 +1161,7 @@ public:
     /// Support for the foreach operator.
     int opApply(int delegate(ref T) dg) @trusted
     {
-        int result = 0;
+        int result;
         void* current = _first;
         while (current)
         {
@@ -1172,7 +1175,7 @@ public:
     /// Support for the foreach_reverse operator.
     int opApplyReverse(int delegate(ref T) dg) @trusted
     {
-        int result = 0;
+        int result;
         void* current = _last;
         while (current)
         {
@@ -1892,7 +1895,7 @@ public:
     body
     {
         T result = _front;
-        ptrdiff_t cnt = 0;
+        ptrdiff_t cnt;
         while (true)
         {
             if (cnt++ == index || !result)

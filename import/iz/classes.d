@@ -205,7 +205,7 @@ public:
     /// Support for iterating the items with $(D foreach()).
     int opApply(int delegate(ItemClass) dg)
     {
-        int result = 0;
+        int result;
         foreach(immutable i; 0 .. _items.length)
         {
             result = dg(_items[i]);
@@ -217,7 +217,7 @@ public:
     /// Support for iterating the items with $(D foreach_reverse()).
     int opApplyReverse(int delegate(ItemClass) dg)
     {
-        int result = 0;
+        int result;
         foreach_reverse(immutable i; 0 .. _items.length)
         {
             result = dg(_items[i]);
@@ -585,7 +585,7 @@ protected:
     Array!T _content;
     T[][]* _source;
 
-    uint _setCount = 0, _getCount = 0;
+    uint _setCount, _getCount;
 
     void doSet()
     {

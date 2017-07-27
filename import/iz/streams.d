@@ -1214,7 +1214,7 @@ class FileStream: SystemStream
         /**
          * Opens a shared file. By default the file is always created or opened.
          */
-        bool openPermissive(const(char)[] aFilename, int creationMode = cmAlways)
+        final bool openPermissive(const(char)[] aFilename, int creationMode = cmAlways)
         {
             version(Windows)
             {

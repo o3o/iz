@@ -1173,6 +1173,75 @@ assert(a == 3);
 
 
 </div>
+</div></div><a class="anchor" id="applyWrap"></a><div class="symbol"><div class="description"><pre><code>public string <a href="iz/sugar.html#applyWrap">applyWrap</a>(string f = __FUNCTION__, R...)(ref R returns)
+</code></pre>
+<div class="section"><h2></h2>
+<p>Scans the method wrapped by the caller.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2>Parameters</h2>
+<table class="params">
+<tr class="param"><td class="paramName">f</td><td class="paramDoc"><p>The caller' s name. Autodetected.
+</p>
+</td></tr>
+<tr class="param"><td class="paramName">returns</td><td class="paramDoc"><p>The variables that get the result of each wrapped function.
+     They must be references.
+</p>
+</td></tr>
+</table>
+</div>
+<div class="section"><h2>Returns</h2>
+<p>A string that has to be mixed in the caller's body.
+</p>
+
+
+</div>
+<div class="section "><h2>Example</h2>
+<div class="section"><h2></h2>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+<pre><code>static bool int42, int8, ffree1, ffree2;
+
+static struct Inner
+{
+    void foo(int p0, int p1){int42 = true; int8 = true;}
+    void bar() {ffree1 = true;}
+}
+
+static void freeFunc()
+{
+    ffree2 = true;
+}
+
+static struct Composed
+{
+    Inner inner;
+
+    @<a href="iz/sugar/Wrap.html">Wrap</a>(["Inner:inner:foo", "Inner:inner:bar", "freeFunc"])
+    void foo(int p0, int p1)
+    {
+        mixin(<a href="iz/sugar.html#applyWrap">applyWrap</a>());
+    }
+}
+
+static  Composed c;
+c.foo(42,8);
+assert(int42 & int8 & ffree1 & ffree2);
+
+</code></pre>
+
+</div>
 </div></div><div class="description"><div class="section"><h2></h2>
 <p>Several trivial functions and structures
 </p>
@@ -1206,7 +1275,9 @@ assert(a == 3);
 </p>
 </td></tr><tr><td><a href="iz/sugar.html#recursion">recursion</a><span class="extrainfo"><span class="stor-classes"><span class="attr-auto">auto</span></span></span></td><td></td><td>Returns: <p>The same as the function being executed.
 </p>
-</td></tr></table><h2>Structs</h2><table><tr><td><a href="iz/sugar/ArrayRange.html">ArrayRange</a></td><td></td><td></td></tr><tr><td><a href="iz/sugar/DgMembers.html">DgMembers</a></td><td></td><td></td></tr></table><h2>Templates</h2><table><tr><td><a href="iz/sugar/bitCast.html">bitCast</a></td><td></td><td></td></tr><tr><td><a href="iz/sugar/bitCast.html">bitCast</a></td><td></td><td></td></tr></table>
+</td></tr><tr><td><a href="iz/sugar.html#applyWrap">applyWrap</a><span class="extrainfo"></span></td><td></td><td>Returns: <p>A string that has to be mixed in the caller's body.
+</p>
+</td></tr></table><h2>Structs</h2><table><tr><td><a href="iz/sugar/ArrayRange.html">ArrayRange</a></td><td></td><td></td></tr><tr><td><a href="iz/sugar/DgMembers.html">DgMembers</a></td><td></td><td></td></tr><tr><td><a href="iz/sugar/Wrap.html">Wrap</a></td><td></td><td></td></tr></table><h2>Templates</h2><table><tr><td><a href="iz/sugar/bitCast.html">bitCast</a></td><td></td><td></td></tr><tr><td><a href="iz/sugar/bitCast.html">bitCast</a></td><td></td><td></td></tr></table>
 </div>
 </div><script>hljs.initHighlightingOnLoad();</script>
 

@@ -466,13 +466,13 @@ public:
     }
 
     /// ditto
-    void opAssign(const EnumSetType rhs) nothrow @safe @nogc
+    void opAssign()(auto ref const EnumSetType rhs)
     {
         _container = rhs._container;
     }
 
     /// ditto
-    void opAssign(R)(R rhs) nothrow
+    void opAssign(R)(auto ref R rhs)
     if (!(isArray!R) && isInputRange!R && is(ElementType!R == E))
     {
         _container = 0;

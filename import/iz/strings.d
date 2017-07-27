@@ -1970,7 +1970,7 @@ public:
 
         bool _terminates;
         immutable ubyte _index;
-        Nodes* _nodes = null;
+        Nodes* _nodes;
 
         public this(const ubyte index) pure nothrow @safe @nogc
         {

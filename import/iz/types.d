@@ -394,9 +394,7 @@ unittest
 {
     class A(T){}
     template B(T){class R{}}
-    //pragma(msg, TemplateBase!(A!int).stringof);
     alias F = B!int.R;
-    //pragma(msg, (TemplateBase!F).stringof);
 }
 
 /**

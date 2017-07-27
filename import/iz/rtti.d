@@ -375,13 +375,13 @@ struct StructInfo
     /// The information for the structure.
     StructTraits structSpecialInfo;
 
-    /// Returns the struct information when structType is equal to StructType._binary
+    /// Returns: The struct information when structType is equal to StructType._binary
     const(BinTraits)* binTraits() const
     {
         return &structSpecialInfo.binTraits;
     }
 
-    /// Returns the struct information when structType is equal to StructType._text
+    /// Returns: The struct information when structType is equal to StructType._text
     const(TextTraits)* textTraits() const
     {
         return &structSpecialInfo.textTraits;
@@ -495,48 +495,46 @@ struct Rtti
     /// Attributes for this type
     TypeCtors typeCtors;
 
-    /**
-     * The information for this type.
-     */
+    /// The information for this type.
     Infos infos;
 
-    /// Returns the information valid when type is equal to RtT._callable.
+    /// Returns: A valid information when type is equal to $(D RtT._callable).
     const(FunPtrInfo)* funptrInfo() const
     {
         return &infos.funptrInfo;
     }
 
-    /// Returns the information valid when type is equal to RtT._object.
+    /// Returns: A valid information when type is equal to $(D RtT._object).
     const(ClassInfo)* classInfo() const
     {
         return &infos.classInfo;
     }
 
-    /// Returns the information valid valid when type is equal to RtT._enum.
+    /// Returns: A valid information when type is equal to $(D RtT._enum).
     const(EnumInfo)* enumInfo() const
     {
         return &infos.enumInfo;
     }
 
-    /// Returns the information valid when type is equal to RtT._struct.
+    /// Returns: A valid information when type is equal to $(D RtT._struct).
     const(StructInfo)* structInfo() const
     {
         return &infos.structInfo;
     }
 
-    /// Returns the information valid when type is equal to RtT._aa.
+    /// Returns: A valid information when type is equal to $(D RtT._aa).
     const(AAInfo)* aaInfo() const
     {
         return &infos.aaInfo;
     }
 
-    /// Returns the information valid when type is equal to RtT._pointer.
+    /// Returns: A valid information when type is equal to $(D RtT._pointer).
     const(PointerInfo)* pointerInfo() const
     {
         return &infos.pointerInfo;
     }
 
-    /// Returns the information valid when type is equal to RtT._pointer.
+    /// Returns: A valid information when type is equal to $(D RtT._union).
     const(UnionInfo)* unionInfo() const
     {
         return &infos.unionInfo;

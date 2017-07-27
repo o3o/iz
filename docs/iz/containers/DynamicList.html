@@ -59,7 +59,7 @@ This is a standard doubly linked list, with GC-free heap allocations.
 </div>
 </div><a class="anchor" id="this"></a><div class="symbol"><div class="description"><pre><code>private this(A...)(A elements)
 </code></pre>
-</div></div><a class="anchor" id="opIndex"></a><div class="symbol"><div class="description"><pre><code>private T <a href="iz/containers/DynamicList.html#opIndex">opIndex</a>(ptrdiff_t i) @safe @nogc nothrow
+</div></div><a class="anchor" id="opIndex"></a><div class="symbol"><div class="description"><pre><code>private ref T <a href="iz/containers/DynamicList.html#opIndex">opIndex</a>(ptrdiff_t i) @safe @nogc nothrow
 </code></pre>
 <div class="section"><h2></h2>
 <p>Support for the array syntax.
@@ -72,7 +72,7 @@ This is a standard doubly linked list, with GC-free heap allocations.
 
 </div>
 </div></div><a class="anchor" id="opIndexAssign"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">void</a> <a href="iz/containers/DynamicList.html#opIndexAssign">opIndexAssign</a>(
-    T item, 
+    ref T item, 
     size_t i) @safe @nogc nothrow
 </code></pre>
 <div class="section"><h2></h2>
@@ -85,7 +85,7 @@ This is a standard doubly linked list, with GC-free heap allocations.
 
 
 </div>
-</div></div><a class="anchor" id="opApply"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">int</a> <a href="iz/containers/DynamicList.html#opApply">opApply</a>(<a href="http://dlang.org/type.html#basic-data-types">int</a> delegate(T) dg) @trusted
+</div></div><a class="anchor" id="opApply"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">int</a> <a href="iz/containers/DynamicList.html#opApply">opApply</a>(<a href="http://dlang.org/type.html#basic-data-types">int</a> delegate(ref T) dg) @trusted
 </code></pre>
 <div class="section"><h2></h2>
 <p>Support for the foreach operator.
@@ -97,7 +97,7 @@ This is a standard doubly linked list, with GC-free heap allocations.
 
 
 </div>
-</div></div><a class="anchor" id="opApplyReverse"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">int</a> <a href="iz/containers/DynamicList.html#opApplyReverse">opApplyReverse</a>(<a href="http://dlang.org/type.html#basic-data-types">int</a> delegate(T) dg) @trusted
+</div></div><a class="anchor" id="opApplyReverse"></a><div class="symbol"><div class="description"><pre><code>private <a href="http://dlang.org/type.html#basic-data-types">int</a> <a href="iz/containers/DynamicList.html#opApplyReverse">opApplyReverse</a>(<a href="http://dlang.org/type.html#basic-data-types">int</a> delegate(ref T) dg) @trusted
 </code></pre>
 <div class="section"><h2></h2>
 <p>Support for the foreach_reverse operator.
@@ -170,6 +170,18 @@ This is a standard doubly linked list, with GC-free heap allocations.
 
 
 </div>
+</div></div><a class="anchor" id="add"></a><div class="symbol"><div class="description"><pre><code>private ptrdiff_t <a href="iz/containers/DynamicList.html#add">add</a>(ref T item) @trusted @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Adds an item at the end of the list and returns its index.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
 </div></div><a class="anchor" id="add"></a><div class="symbol"><div class="description"><pre><code>private ptrdiff_t <a href="iz/containers/DynamicList.html#add">add</a>(T item) @trusted @nogc
 </code></pre>
 <div class="section"><h2></h2>
@@ -185,8 +197,19 @@ This is a standard doubly linked list, with GC-free heap allocations.
 </div></div><a class="anchor" id="add"></a><div class="symbol"><div class="description"><pre><code>private ptrdiff_t <a href="iz/containers/DynamicList.html#add">add</a>(T[] items) @trusted @nogc
 </code></pre>
 <div class="section"><h2></h2>
-<p>ditto
-Adds items at the end of the list and returns the last item index.
+<p>Adds items at the end of the list and returns the last item index.
+</p>
+
+
+</div>
+<div class="section"><h2></h2>
+
+
+</div>
+</div></div><a class="anchor" id="insert"></a><div class="symbol"><div class="description"><pre><code>private ptrdiff_t <a href="iz/containers/DynamicList.html#insert">insert</a>(ref T item) @trusted @nogc
+</code></pre>
+<div class="section"><h2></h2>
+<p>Inserts an item at the beginning of the list.
 </p>
 
 
@@ -212,8 +235,7 @@ Adds items at the end of the list and returns the last item index.
     ref T item) @trusted @nogc
 </code></pre>
 <div class="section"><h2></h2>
-<p>ditto
-Inserts an item at a given position.
+<p>Inserts an item at a given position.
 </p>
 
 
@@ -243,8 +265,7 @@ Inserts an item at a given position.
     T item) @trusted @nogc
 </code></pre>
 <div class="section"><h2></h2>
-<p>ditto
-Inserts an item at a given position.
+<p>Inserts an item at a given position.
 </p>
 
 
@@ -393,7 +414,7 @@ Inserts an item at a given position.
 </div>
 </div></div><div class="section members"><h2>Functions</h2><table><tr><td><a href="iz/containers/DynamicList.html#this">this</a></td><td></td><td></td></tr><tr><td><a href="iz/containers/DynamicList.html#opIndex">opIndex</a><span class="extrainfo"><span class="method-attribs"><span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span>, <span class="attr-nothrow">nothrow</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/DynamicList.html#opIndexAssign">opIndexAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span>, <span class="attr-nothrow">nothrow</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/DynamicList.html#opApply">opApply</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/DynamicList.html#opApplyReverse">opApplyReverse</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/DynamicList.html#opAssign">opAssign</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/DynamicList.html#last">last</a><span class="extrainfo"><span class="method-attribs"><span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span>, <span class="attr-nothrow">nothrow</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/DynamicList.html#first">first</a><span class="extrainfo"><span class="method-attribs"><span class="attr-safe">@safe</span>, <span class="attr-nogc">@nogc</span>, <span class="attr-nothrow">nothrow</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/DynamicList.html#find">find</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span></span></span></td><td></td><td>Returns: <p>-1 if item is not present otherwise its index.
 </p>
-</td></tr><tr><td><a href="iz/containers/DynamicList.html#add">add</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/DynamicList.html#add">add</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/DynamicList.html#insert">insert</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/DynamicList.html#insert">insert</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td>Returns: <p>The item index, position if it was valid.
+</td></tr><tr><td><a href="iz/containers/DynamicList.html#add">add</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/DynamicList.html#add">add</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/DynamicList.html#add">add</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/DynamicList.html#insert">insert</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/DynamicList.html#insert">insert</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td></td></tr><tr><td><a href="iz/containers/DynamicList.html#insert">insert</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td>Returns: <p>The item index, position if it was valid.
 </p>
 </td></tr><tr><td><a href="iz/containers/DynamicList.html#insert">insert</a><span class="extrainfo"><span class="method-attribs"><span class="attr-trusted">@trusted</span>, <span class="attr-nogc">@nogc</span></span></span></td><td></td><td>Returns: <p>The item index, position if it was valid.
 </p>

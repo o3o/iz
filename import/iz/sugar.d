@@ -817,7 +817,7 @@ if (isInputRange!Range && is(typeof((ElementType!Range).init))
 {
     import std.range.primitives: front, empty, popFront;
 
-    size_t result = 0;
+    size_t result;
     const(ElementType!Range) noone = (ElementType!Range).init;
     while (!range.empty)
     {
@@ -1311,5 +1311,134 @@ auto recursion(string Fun = __FUNCTION__ , A...)(auto ref A a)
 {
     import std.typecons: tuple;
     mixin("return " ~ Fun ~ "(" ~ a.stringof ~ "[0..$]);");
+}
+
+/**
+ * Used the annotate the member functions that wrap other member functions.
+ * Each instance must specify aither the type, the instance and the name of the
+ * function that's wrapped or the name of a context-free function.
+ * Each string must be colon-separated.
+ */
+struct Wrap{string[] targets;}
+///
+unittest
+{
+    struct Foo
+    {
+        @Wrap(["Type:instance:name", "freeFunction"])
+        void foo(){}
+    }
+}
+
+/**
+ * Scans the method wrapped by the caller.
+ *
+ * Params:
+ *      f = The caller' s name. Autodetected.
+ *      returns = The variables that get the result of each wrapped function.
+ *      They must be references.
+ *
+ * Returns:
+ *      A string that has to be mixed in the caller's body.
+ */
+string applyWrap(string f = __FUNCTION__, R...)(ref R returns)
+{
+    static assert(R.length == 0, "returns are not implemented yet");
+
+    import std.array: array;
+    import std.algorithm.iteration: splitter;
+    import std.meta: aliasSeqOf;
+    import std.range: iota;
+    import std.string: join;
+    import std.traits: getUDAs, Parameters, ParameterIdentifierTuple,  ReturnType;
+
+    alias attrbs = getUDAs!(mixin(f), Wrap);
+    alias params = Parameters!(mixin(f));
+
+    string result;
+
+    foreach(i; aliasSeqOf!(iota(0, attrbs.length)))
+    {
+        foreach(j; aliasSeqOf!(iota(0, attrbs[i].targets.length)))
+        {
+            enum s = splitter(attrbs[i].targets[j], ":").array;
+
+            if (s.length != 3 && s.length != 1)
+            {
+                assert(0, "Invalid Type:instance:method specifier: \n"
+                    ~ attrbs[i].targets[j]);
+            }
+            static if (s.length == 3)
+            {
+                static assert (__traits(hasMember, mixin(s[0]), s[2]), s[0]  ~
+                    " has no member named " ~ s[2]);
+                enum typeDotMethod = s[0] ~ "." ~ s[2];
+                enum instanceDotMethod = s[1] ~ "." ~ s[2];
+                alias p = Parameters!(mixin(typeDotMethod));
+                alias r = ReturnType!(mixin(typeDotMethod));
+            }
+            else
+            {
+                alias p = Parameters!(mixin(s[0]));
+                alias r = ReturnType!(mixin(s[0]));
+            }
+
+            static if (!p.length)
+            {
+                static if (s.length == 3)
+                    result ~= instanceDotMethod ~ ";";
+                else
+                    result ~= s[0] ~ ";";
+            }
+            else static if (is(p == params))
+            {
+                static if (s.length == 3)
+                {
+                    alias n = ParameterIdentifierTuple!(mixin(typeDotMethod));
+                    result ~= instanceDotMethod ~ "(" ~ [n[0..$]].join(", ") ~ ");";
+                }
+                else
+                {
+                    alias n = ParameterIdentifierTuple!(mixin(s[0]));
+                    result ~= s[0] ~ "(" ~ [n[0..$]].join(", ") ~ ");";
+                }
+            }
+            else static assert(0, "incompatible parameters: \n"
+                ~ "got     :" ~ p.stringof ~ "\n"
+                ~ "expected:" ~ params.stringof);
+        }
+    }
+    return result;
+}
+///
+version (none) unittest
+{
+    static bool int42, int8, ffree1, ffree2;
+
+    static struct Inner
+    {
+        void foo(int p0, int p1){int42 = true; int8 = true;}
+        void bar() {ffree1 = true;}
+    }
+
+    static void freeFunc()
+    {
+        ffree2 = true;
+    }
+
+    static struct Composed
+    {
+        Inner inner;
+
+        @Wrap(["Inner:inner:foo", "Inner:inner:bar", "freeFunc"])
+        void foo(int p0, int p1)
+        {
+            mixin(applyWrap());
+        }
+    }
+
+    static  Composed c;
+    c.foo(42,8);
+    assert(int42 & int8 & ffree1 & ffree2);
 }
 
