@@ -815,65 +815,62 @@ body
     char[64] buffer;
     size_t count;
     long strPos;
-    ubyte numSkips;
+    ulong numSkips;
     bool checkN;
     _rd: while (true)
     {
         strPos = str.position;
         count = str.read(buffer.ptr, 64);
         char c;
-        foreach(immutable i; 0..count)
+        foreach (immutable i; 0..count)
         {
-            assert(numSkips <= 5);
+            assert(numSkips <= 6);
 
             c = buffer[i];
             switch(c)
             {
-                case '\n':
-                    if (numSkips == 0)
+            case '\n':
+                if (numSkips == 0)
+                {
+                    str.position = strPos + i + 1;
+                    static if (keepTerminator)
                     {
-                        str.position = strPos + i + 1;
-                        static if (keepTerminator)
+                        if (checkN)
                         {
-                            if (checkN)
-                            {
-                                result ~= "\r\n";
-                                checkN = false;
-                            }
-                            else
-                                result ~= "\n";
+                            result ~= "\r\n";
+                            checkN = false;
                         }
-                        break _rd;
+                        else
+                            result ~= "\n";
                     }
-                    else goto default;
-                case '\r':
-                    if (numSkips == 0)
+                    break _rd;
+                }
+                else goto default;
+            case '\r':
+                if (numSkips == 0)
+                {
+                    checkN = true;
+                    break;
+                }
+                else goto default;
+            default:
+                if (numSkips)
+                    --numSkips;
+                else
+                {
+                    if (!assumeANSI && c >= 192)
                     {
-                        checkN = true;
-                        break;
+                        __gshared static immutable ubyte[] charWidthTab =
+                        [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                         2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                         3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+                         4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 1, 1];
+
+                        import std.algorithm.comparison : min;
+                        numSkips = min(charWidthTab.ptr[c - 192], str.size - str.position);
                     }
-                    else goto default;
-                default:
-                    if (numSkips)
-                        --numSkips;
-                    else
-                    {
-                        if (!assumeANSI && c >= 0x80)
-                        {
-                            switch (0xF0 & c)
-                            {
-			                    case 0xE0:
-				                    numSkips += 2;
-				                    break;
-			                    case 0xF0:
-				                    numSkips += 3;
-				                    break;
-			                    default:
-				                    numSkips += 1;
-                            }
-                        }
-                    }
-                    result ~= c;
+                }
+                result ~= c;
             }
         }
         if (count != 64)
