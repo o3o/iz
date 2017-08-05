@@ -620,7 +620,7 @@ unittest
 }
 
 /**
- * Decodes an UTF8 line in a Stream.
+ * Decodes an UTF8 line from a Stream.
  *
  * Params:
  *      keepTerminator = Indicates wether the line ending is included in the result.
@@ -628,7 +628,7 @@ unittest
  * Returns:
  *      A dchar input range that represents a line.
  */
-auto readUTF8Line(bool keepTerminator = false)(Stream str)
+auto decodeLine(bool keepTerminator = false)(Stream str)
 in
 {
     assert(str !is null);
@@ -797,14 +797,16 @@ unittest
 /**
  * Reads a line in a Stream, without decoding.
  *
+ * Content is assumed to be encoded in UTF-8.
+ *
  * Params:
  *      keepTerminator = Indicates wether the line ending is included in the result.
+ *      buffLen = The buffer length, by default 64.
  *      str = The Stream where a line is read.
- *      assumeANSI = When set to true, multi bytes characters are not detected.
  * Returns:
  *      An array of char.
  */
-const(char)[] readln(bool keepTerminator = false)(Stream str, bool assumeANSI = false)
+const(char)[] readln(bool keepTerminator = false, size_t buffLen = 64)(Stream str)
 in
 {
     assert(str !is null);
@@ -812,25 +814,23 @@ in
 body
 {
     char[] result;
-    char[64] buffer;
+    char[buffLen] buffer;
     size_t count;
     long strPos;
-    ulong numSkips;
     bool checkN;
     _rd: while (true)
     {
         strPos = str.position;
-        count = str.read(buffer.ptr, 64);
-        char c;
+        count = str.read(buffer.ptr, buffLen);
         foreach (immutable i; 0..count)
         {
-            assert(numSkips <= 5);
-
-            c = buffer[i];
-            switch(c)
+            switch(buffer[i])
             {
+            case '\r':
+                checkN = true;
+                break;
             case '\n':
-                assert(numSkips == 0);
+                result ~= buffer[0..i - ubyte(checkN)];
                 str.position = strPos + i + 1;
                 static if (keepTerminator)
                 {
@@ -843,33 +843,11 @@ body
                         result ~= "\n";
                 }
                 break _rd;
-            case '\r':
-                assert(numSkips == 0),
-                checkN = true;
-                break;
             default:
-                if (numSkips)
-                {
-                    --numSkips;
-                }
-                else
-                {
-                    if (!assumeANSI && c >= 192)
-                    {
-                        static immutable ubyte[64] charWidthTab =
-                        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                         2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-                         3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 0, 0];
-
-                        import std.algorithm.comparison : min;
-                        numSkips = min(charWidthTab.ptr[c - 192], str.size - str.position  - count + i);
-                    }
-                }
-                result ~= c;
             }
         }
-        if (count != 64)
+        result ~= buffer[0..count];
+        if (count != buffLen)
             break;
     }
     return result;
@@ -882,19 +860,19 @@ unittest
     scope(exit) destruct(str);
     str.write(text.ptr, text.length);
     str.position = 0;
-    auto _01 = str.readln;
-    assert(_01 == "01");
-    auto _23 = str.readln;
+    const _01 = str.readln;
+    assert(_01 == "01", _01);
+    const _23 = str.readln;
     assert(_23 == "23");
-    auto _45 = str.readln;
+    const _45 = str.readln;
     assert(_45 == "4à");
-    auto term = str.readln;
-    assert(term == "");
+    const term = str.readln;
+    assert(term == "", term);
 }
 
 unittest
 {
-    auto text = "éà".dup;
+    const text = "éà".dup;
     MemoryStream str = construct!MemoryStream();
     str.write(text.ptr, text.length);
     str.position = 0;
@@ -904,7 +882,7 @@ unittest
 
 unittest
 {
-    auto text = "éàç\n".dup;
+    const text = "éàç\n".dup;
     MemoryStream str = construct!MemoryStream();
     str.write(text.ptr, text.length);
     str.position = 0;
@@ -914,27 +892,38 @@ unittest
 
 unittest
 {
+    // 2 buffers
+    const text = "éàééééééééés23d1f32sfdséééééééééééééééééééééé\n".dup;
+    MemoryStream str = construct!MemoryStream();
+    str.write(text.ptr, text.length);
+    str.position = 0;
+    scope(exit) destruct(str);
+    assert(str.readln!(true) == text);
+}
+
+unittest
+{
     auto text = "01\r\n23\n4à\r\n".dup;
     MemoryStream str = construct!MemoryStream();
     scope(exit) destruct(str);
     str.write(text.ptr, text.length);
     str.position = 0;
-    auto _01 = str.readln!true;
+    const _01 = str.readln!true;
     assert(_01 == "01\r\n");
-    auto _23 = str.readln!true;
+    const _23 = str.readln!true;
     assert(_23 == "23\n");
-    auto _45 = str.readln!true;
+    const _45 = str.readln!true;
     assert(_45 == "4à\r\n");
-    auto term = str.readln!true;
+    const term = str.readln!true;
     assert(term == "");
 
     text = "こんにちは\nは".dup;
     str.clear;
     str.write(text.ptr, text.length);
     str.position = 0;
-    auto _1 = str.readln;
+    const _1 = str.readln;
     assert(_1 == "こんにちは");
-    auto _2 = str.readln;
+    const _2 = str.readln;
     assert(_2 == "は");
 }
 
