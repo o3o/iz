@@ -735,13 +735,13 @@ unittest
     scope(exit) destruct(str);
     str.write(text.ptr, text.length);
     str.position = 0;
-    auto _01 = str.readUTF8Line.array;
+    auto _01 = str.decodeLine.array;
     assert(_01 == "01");
-    auto _23 = str.readUTF8Line.array;
+    auto _23 = str.decodeLine.array;
     assert(_23 == "23");
-    auto _45 = str.readUTF8Line.array;
+    auto _45 = str.decodeLine.array;
     assert(_45 == "45");
-    auto term = str.readUTF8Line.array;
+    auto term = str.decodeLine.array;
     assert(term == "");
 }
 
@@ -753,9 +753,9 @@ unittest
     scope(exit) destruct(str);
     str.write(text.ptr, text.length);
     str.position = 0;
-    auto _01 = str.readUTF8Line.array;
+    auto _01 = str.decodeLine.array;
     assert(_01 == "01\r23");
-    auto _45 = str.readUTF8Line.array;
+    auto _45 = str.decodeLine.array;
     assert(_45 == "é5é");
 }
 
@@ -767,13 +767,13 @@ unittest
     scope(exit) destruct(str);
     str.write(text.ptr, text.length);
     str.position = 0;
-    auto ln0 = str.readUTF8Line.array;
+    auto ln0 = str.decodeLine.array;
     assert(ln0 == "");
     assert(str.position != str.size);
-    auto ln1 = str.readUTF8Line.array;
+    auto ln1 = str.decodeLine.array;
     assert(ln1 == "");
     assert(str.position != str.size);
-    auto ln2 = str.readUTF8Line.array;
+    auto ln2 = str.decodeLine.array;
     assert(ln2 == "");
     assert(str.position == str.size);
 }
@@ -786,11 +786,11 @@ unittest
     scope(exit) destruct(str);
     str.write(text.ptr, text.length);
     str.position = 0;
-    auto _01 = str.readUTF8Line!(true).array;
+    auto _01 = str.decodeLine!(true).array;
     assert(_01 == "01\r\n");
-    auto _23 = str.readUTF8Line!(true).array;
+    auto _23 = str.decodeLine!(true).array;
     assert(_23 == "23\n");
-    auto _45 = str.readUTF8Line!(true).array;
+    auto _45 = str.decodeLine!(true).array;
     assert(_45 == "45");
 }
 
