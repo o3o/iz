@@ -824,50 +824,46 @@ body
         char c;
         foreach (immutable i; 0..count)
         {
-            assert(numSkips <= 6);
+            assert(numSkips <= 5);
 
             c = buffer[i];
             switch(c)
             {
             case '\n':
-                if (numSkips == 0)
+                assert(numSkips == 0);
+                str.position = strPos + i + 1;
+                static if (keepTerminator)
                 {
-                    str.position = strPos + i + 1;
-                    static if (keepTerminator)
+                    if (checkN)
                     {
-                        if (checkN)
-                        {
-                            result ~= "\r\n";
-                            checkN = false;
-                        }
-                        else
-                            result ~= "\n";
+                        result ~= "\r\n";
+                        checkN = false;
                     }
-                    break _rd;
+                    else
+                        result ~= "\n";
                 }
-                else goto default;
+                break _rd;
             case '\r':
-                if (numSkips == 0)
-                {
-                    checkN = true;
-                    break;
-                }
-                else goto default;
+                assert(numSkips == 0),
+                checkN = true;
+                break;
             default:
                 if (numSkips)
+                {
                     --numSkips;
+                }
                 else
                 {
                     if (!assumeANSI && c >= 192)
                     {
-                        __gshared static immutable ubyte[] charWidthTab =
-                        [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                        static immutable ubyte[64] charWidthTab =
+                        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                          2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-                         3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-                         4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 1, 1];
+                         3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 0, 0];
 
                         import std.algorithm.comparison : min;
-                        numSkips = min(charWidthTab.ptr[c - 192], str.size - str.position);
+                        numSkips = min(charWidthTab.ptr[c - 192], str.size - str.position  - count + i);
                     }
                 }
                 result ~= c;
@@ -894,6 +890,26 @@ unittest
     assert(_45 == "4à");
     auto term = str.readln;
     assert(term == "");
+}
+
+unittest
+{
+    auto text = "éà".dup;
+    MemoryStream str = construct!MemoryStream();
+    str.write(text.ptr, text.length);
+    str.position = 0;
+    scope(exit) destruct(str);
+    assert(str.readln == "éà");
+}
+
+unittest
+{
+    auto text = "éàç\n".dup;
+    MemoryStream str = construct!MemoryStream();
+    str.write(text.ptr, text.length);
+    str.position = 0;
+    scope(exit) destruct(str);
+    assert(str.readln == "éàç");
 }
 
 unittest
